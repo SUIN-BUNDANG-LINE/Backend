@@ -1,0 +1,24 @@
+spring:
+  profiles.include:
+    - secret
+  jpa:
+    database: mysql
+    show-sql: true
+    hibernate:
+      ddl-auto: update # TODO: 나중에 none으로 변경
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    generate-ddl: false
+
+springdoc:
+  packages-to-scan: com.sbl.sulmun2yong
+  default-consumes-media-type: application/json;charset=UTF-8
+  default-produces-media-type: application/json;charset=UTF-8
+
+  swagger-ui:
+    path: /
+    disable-swagger-default-url: true
+    display-request-duration: true
+    operations-sorter: alpha
