@@ -1,3 +1,10 @@
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+fun getCurrentDateTime(): String {
+    return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"))
+}
+
 plugins {
     id("org.springframework.boot") version "3.3.1"
     id("io.spring.dependency-management") version "1.1.5"
@@ -5,6 +12,7 @@ plugins {
     kotlin("jvm") version "1.9.24"
     kotlin("plugin.spring") version "1.9.24"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
+    id("com.google.cloud.tools.jib") version "3.4.0"
 }
 
 group = "com.sbl"
@@ -40,6 +48,27 @@ dependencies {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
+}
+
+jib {
+    from {
+        image = "openjdk:17-slim"
+        auth {
+            username = project.findProperty("DOCKER_ID") as String?
+            password = project.findProperty("DOCKER_PASSWORD") as String?
+        }
+    }
+    to {
+        image = "${project.findProperty("DOCKER_ID")}/${project.findProperty("DOCKER_IMAGE_NAME")}"
+        auth {
+            username = project.findProperty("DOCKER_ID") as String?
+            password = project.findProperty("DOCKER_PASSWORD") as String?
+        }
+        tags = setOf("latest", getCurrentDateTime())
+    }
+    container {
+        jvmFlags = listOf("-Xms128m", "-Xmx128m")
     }
 }
 
