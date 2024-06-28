@@ -51,9 +51,9 @@ jobs:
             - name: EC2에 배포
               uses: appleboy/ssh-action@v0.1.7
               with:
-                  host: ${{ secrets.EC2_HOST }}
+                  host: ${{ secrets.DEVELOP_EC2_HOST }}
                   username: ${{ secrets.EC2_USER }}
-                  key: ${{ secrets.EC2_KEY }}
+                  key: ${{ secrets.DEVELOP_EC2_KEY }}
                   script: |
                       docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
                       docker stop ${{ env.CONTAINER_NAME }} || true
