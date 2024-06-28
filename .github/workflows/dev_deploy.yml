@@ -31,7 +31,7 @@ jobs:
               run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
             - name: Jib로 Docker 이미지 빌드 및 푸시
-              run: ./gradlew jib -Ddocker.id=${{ secrets.DOCKER_USERNAME }} -Ddocker.password=${{ secrets.DOCKER_PASSWORD }} -Ddocker.image.name=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}
+              run: ./gradlew jib -Ddocker.id="${{ secrets.DOCKER_USERNAME }}" -Ddocker.password="${{ secrets.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}"
 
     deploy:
         name: 배포 작업
