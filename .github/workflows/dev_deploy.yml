@@ -1,0 +1,59 @@
+name: Docker Hub Push & 개발 서버 EC2 배포
+
+on:
+    push:
+        branches:
+            - develop
+    workflow_dispatch: # 수동 실행 이벤트 추가
+
+jobs:
+    build:
+        name: 빌드 작업
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 코드 체크아웃
+              uses: actions/checkout@v2
+
+            - name: JDK 17 설정
+              uses: actions/setup-java@v2
+              with:
+                  distribution: 'corretto'
+                  java-version: '17'
+
+            - name: Gradle 설정
+              uses: gradle/gradle-build-action@v2
+
+            - name: Gradle로 빌드
+              run: ./gradlew clean build
+
+            - name: Docker Hub에 로그인
+              run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+            - name: Jib로 Docker 이미지 빌드 및 푸시
+              run: ./gradlew jib -Ddocker.id=${{ secrets.DOCKER_USERNAME }} -Ddocker.password=${{ secrets.DOCKER_PASSWORD }} -Ddocker.image.name=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}
+
+    deploy:
+        name: 배포 작업
+        needs: build
+        runs-on: ubuntu-latest
+
+        env:
+            CONTAINER_NAME: sulmun2yong-develop-server
+
+        steps:
+            - name: EC2에 배포
+              uses: appleboy/ssh-action@v0.1.7
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.EC2_KEY }}
+                  script: |
+                      docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
+                      docker stop ${{ env.CONTAINER_NAME }} || true
+                      docker rm ${{ env.CONTAINER_NAME }} || true
+                      docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
+                        -e SPRING_DATASOURCE_URL=${{ secrets.DEVELOP_RDS_URL }} \
+                        -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
+                        -e SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }} \
+                        ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
