@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   sulmun2yong-test-db:
-    image: mysql:latest
+    image: mysql:8.0.35
     container_name: sulmun2yong-test-db
     restart: always
     environment:
