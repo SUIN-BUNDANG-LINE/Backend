@@ -55,10 +55,10 @@ jobs:
                   username: ${{ secrets.EC2_USER }}
                   key: ${{ secrets.DEVELOP_EC2_KEY }}
                   script: |
-                      docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
-                      docker stop ${{ env.CONTAINER_NAME }} || true
-                      docker rm ${{ env.CONTAINER_NAME }} || true
-                      docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
+                      sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
+                      sudo docker stop ${{ env.CONTAINER_NAME }} || true
+                      sudo docker rm ${{ env.CONTAINER_NAME }} || true
+                      sudo docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
                         -e SPRING_DATASOURCE_URL=${{ secrets.DEVELOP_RDS_URL }} \
                         -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
                         -e SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }} \
