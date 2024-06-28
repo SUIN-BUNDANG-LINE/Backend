@@ -28,7 +28,7 @@ jobs:
               run: ./gradlew clean build
 
             - name: Docker Hub에 로그인
-              run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+              run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
             - name: Jib로 Docker 이미지 빌드 및 푸시
               run: ./gradlew jib -Ddocker.id=${{ secrets.DOCKER_USERNAME }} -Ddocker.password=${{ secrets.DOCKER_PASSWORD }} -Ddocker.image.name=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}
