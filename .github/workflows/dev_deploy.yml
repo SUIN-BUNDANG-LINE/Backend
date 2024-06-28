@@ -24,6 +24,12 @@ jobs:
             - name: Gradle 설정
               uses: gradle/gradle-build-action@v2
 
+            - name: 환경 변수 설정
+              run: |
+                echo "DOCKER_ID=${{ secrets.DOCKER_USERNAME }}" >> gradle.properties
+                echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> gradle.properties
+                echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}" >> gradle.properties
+
             - name: Gradle로 빌드
               run: ./gradlew clean build
 
