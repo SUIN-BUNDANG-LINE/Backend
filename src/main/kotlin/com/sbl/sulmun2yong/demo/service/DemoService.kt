@@ -2,7 +2,6 @@ package com.sbl.sulmun2yong.demo.service
 
 import com.sbl.sulmun2yong.demo.entity.Demo
 import com.sbl.sulmun2yong.demo.repository.DemoRepository
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import org.springframework.stereotype.Service
 
 @Service
