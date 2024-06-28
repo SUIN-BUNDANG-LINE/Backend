@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - develop
+    workflow_dispatch: # 수동 실행 이벤트 추가
 
 jobs:
     build:
