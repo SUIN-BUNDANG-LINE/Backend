@@ -8,9 +8,10 @@ import jakarta.persistence.Id
 
 @Entity
 class Demo(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long,
     @Column(nullable = false, length = 100)
     val title: String,
-)
+) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0
+}
