@@ -20,6 +20,6 @@ class ApiResponse<T> private constructor(
     data class ApiResponseBody<T>(
         val code: String,
         val message: String,
-        val data: T?,
+        val result: T?,
     )
 }
