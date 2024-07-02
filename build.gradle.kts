@@ -32,6 +32,9 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
+    // validation
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
     // Swagger
     implementation("org.springdoc:springdoc-openapi:2.3.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
