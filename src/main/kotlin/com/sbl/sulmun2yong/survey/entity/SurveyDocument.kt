@@ -18,5 +18,5 @@ data class SurveyDocument(
     var thumbnail: String,
     var finishMessage: String,
     var targetParticipants: Int,
-    var enddate: Date,
+    var endDate: Date,
 ) : BaseTimeDocument()
