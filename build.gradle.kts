@@ -42,6 +42,9 @@ dependencies {
     // mysql
     runtimeOnly("com.mysql:mysql-connector-j")
 
+    // mongoDB
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
     // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
