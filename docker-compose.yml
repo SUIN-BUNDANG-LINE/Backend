@@ -1,21 +1,37 @@
 version: '3.7'
 
 services:
-  sulmun2yong-test-db:
-    image: mysql:8.0.35
-    container_name: sulmun2yong-test-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    expose:
-      - "3306"
-    ports:
-      - "3306:3306"
-    volumes:
-      - sulmun2yong-test-db:/var/lib/mysql
+    sulmun2yong-test-db:
+        image: mysql:8.0.35
+        container_name: sulmun2yong-test-db
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        expose:
+            - "3306"
+        ports:
+            - "3306:3306"
+        volumes:
+            - sulmun2yong-test-db:/var/lib/mysql
+
+    sulmun2yong-test-mongodb:
+        image: mongo:latest
+        container_name: sulmun2yong-test-mongodb
+        restart: always
+        environment:
+            MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        expose:
+            - "27017"
+        ports:
+            - "27017:27017"
+        volumes:
+            - sulmun2yong-test-mongodb:/data/db
 
 volumes:
-  sulmun2yong-test-db:
+    sulmun2yong-test-db:
+    sulmun2yong-test-mongodb:
