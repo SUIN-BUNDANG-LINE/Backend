@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import java.util.Date
 import java.util.UUID
 
 // TODO: Section 추가하기
@@ -14,7 +15,7 @@ data class SurveyDocument(
     val title: String,
     val description: String,
     val thumbnail: String,
-    val endDate: String,
+    val endDate: Date,
     val status: SurveyStatus,
     val finishMessage: String,
     val targetParticipants: Int?,
