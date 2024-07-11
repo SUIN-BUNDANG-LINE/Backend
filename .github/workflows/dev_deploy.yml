@@ -56,11 +56,10 @@ jobs:
                   key: ${{ secrets.DEVELOP_EC2_KEY }}
                   script: |
                       echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-                      sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
-                      sudo docker stop ${{ env.CONTAINER_NAME }} || true
-                      sudo docker rm ${{ env.CONTAINER_NAME }} || true
-                      sudo docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
-                        -e SPRING_DATASOURCE_URL=${{ secrets.DEVELOP_RDS_URL }} \
-                        -e SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }} \
-                        -e SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }} \
+                      docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
+                      docker stop ${{ env.CONTAINER_NAME }} || true
+                      docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
+                        -e SPRING_DATA_MONGODB_URI=${{ secrets.DEVELOP_MONGODB_URL }} \
+                        -e SPRING_DATA_MONGODB_DATABASE=${{ secrets.DEVELOP_MONGODB_DATABASE }} \
                         ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
+                      docker image prune -af
