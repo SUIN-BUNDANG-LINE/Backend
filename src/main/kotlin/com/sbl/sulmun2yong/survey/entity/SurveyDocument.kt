@@ -22,7 +22,7 @@ data class SurveyDocument(
     val rewards: List<RewardSubDocument>,
 ) : BaseTimeDocument() {
     data class RewardSubDocument(
-        val id: UUID,
+        val rewardId: UUID,
         val name: String,
         val category: String,
         val count: Int,
