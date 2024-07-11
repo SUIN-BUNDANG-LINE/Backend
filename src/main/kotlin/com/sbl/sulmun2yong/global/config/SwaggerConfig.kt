@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.global.swagger
+package com.sbl.sulmun2yong.global.config
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
