@@ -58,9 +58,10 @@ jobs:
                   username: ${{ secrets.EC2_USER }}
                   key: ${{ secrets.DEVELOP_EC2_KEY }}
                   script: |
-                      echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+                      echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
                       docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
                       docker stop ${{ env.CONTAINER_NAME }} || true
+                      docker rm ${{ env.CONTAINER_NAME }} || true
                       docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
                         -e SPRING_DATA_MONGODB_URI=${{ secrets.DEVELOP_MONGODB_URL }} \
                         -e SPRING_DATA_MONGODB_DATABASE=${{ secrets.DEVELOP_MONGODB_DATABASE }} \
