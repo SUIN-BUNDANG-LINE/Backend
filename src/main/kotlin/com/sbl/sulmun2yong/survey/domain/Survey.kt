@@ -8,7 +8,7 @@ data class Survey(
     val title: String,
     val description: String,
     val thumbnail: String,
-    val endDate: Date,
+    val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
     val targetParticipants: Int?,

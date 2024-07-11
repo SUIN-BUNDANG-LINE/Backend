@@ -24,7 +24,7 @@ data class SurveyListResponse(
                             title = it.title,
                             description = it.description,
                             targetParticipants = it.targetParticipants,
-                            endDate = it.endDate,
+                            finishedAt = it.finishedAt,
                             rewardCount = it.getRewardCount(),
                             rewards = it.rewards.toRewardInfoResponses(),
                         )
@@ -40,7 +40,7 @@ data class SurveyListResponse(
         val description: String,
         val targetParticipants: Int?,
         val rewardCount: Int,
-        val endDate: Date,
+        val finishedAt: Date,
         val rewards: List<RewardInfoResponse>,
     )
 

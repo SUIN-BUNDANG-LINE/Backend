@@ -45,7 +45,7 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
             title = this.title,
             description = this.description,
             thumbnail = this.thumbnail,
-            endDate = this.endDate,
+            finishedAt = this.finishedAt,
             status = this.status,
             finishMessage = this.finishMessage,
             targetParticipants = this.targetParticipants,
