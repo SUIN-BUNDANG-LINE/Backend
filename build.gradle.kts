@@ -1,9 +1,7 @@
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-fun getCurrentDateTime(): String {
-    return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"))
-}
+fun getCurrentDateTime(): String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"))
 
 plugins {
     id("org.springframework.boot") version "3.3.1"
@@ -28,8 +26,13 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // mvc
+    implementation("org.springframework.boot:spring-boot-starter-mustache")
 
     // jpa (RDBMS 사용 전 까지는 비활성화)
 //    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -45,6 +48,9 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
     // mongoDB
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+    // mongodb
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     // test
