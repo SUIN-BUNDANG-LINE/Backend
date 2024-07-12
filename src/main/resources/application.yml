@@ -22,3 +22,6 @@ springdoc:
     disable-swagger-default-url: true
     display-request-duration: true
     operations-sorter: alpha
+
+frontend:
+    base-url: http://localhost:3000

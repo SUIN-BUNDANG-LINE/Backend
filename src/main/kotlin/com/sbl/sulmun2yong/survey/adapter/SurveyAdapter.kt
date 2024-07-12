@@ -5,12 +5,14 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.entity.SurveyDocument
+import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class SurveyAdapter(private val surveyRepository: SurveyRepository) {
@@ -25,6 +27,8 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
         val surveys = surveyDocuments.content.map { it.toDomain() }
         return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
     }
+
+    fun findSurvey(surveyId: UUID) = surveyRepository.findById(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
 
     private fun getSurveySort(
         sortType: SurveySortType,
