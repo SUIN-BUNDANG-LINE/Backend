@@ -1,28 +1,38 @@
-package com.sbl.sulmun2yong.member.config
+package com.sbl.sulmun2yong.global.config
 
+import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
-@EnableWebSecurity // 스프링 시큐리티 필터가 스프링 필터 체인에 등록이 됩니다
-class SecurityConfig {
+class SecurityConfig(
+    private val customOAuth2Service: CustomOAuth2Service,
+) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http.csrf {
-            it.disable()
-        }
-        http.authorizeHttpRequests {
-            it.requestMatchers("/user/**").authenticated()
-            it.requestMatchers("/manager/**").hasRole("MANAGER or ADMIN")
-            it.requestMatchers("/admin/**").hasRole("ADMIN")
-            it.anyRequest().permitAll()
-        }
-        http.formLogin {
-            it.loginPage("/loginForm")
-        }
+        http
+            .csrf { csrf ->
+                csrf.disable()
+            }.authorizeHttpRequests { authorize ->
+                authorize
+                    .requestMatchers("/api/v1/oauth2/**")
+                    .hasRole("ADMIN")
+                authorize
+                    .requestMatchers("/frontend/user/**")
+                    .authenticated()
+                authorize
+                    .anyRequest()
+                    .permitAll()
+            }.oauth2Login { oauth2 ->
+                oauth2
+                    .loginPage("/frontend/loginForm")
+                oauth2.userInfoEndpoint { userInfo ->
+                    userInfo.userService(customOAuth2Service)
+                }
+                oauth2.defaultSuccessUrl("/frontend", true)
+            }
         return http.build()
     }
 }

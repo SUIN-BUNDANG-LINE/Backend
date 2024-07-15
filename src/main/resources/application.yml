@@ -1,6 +1,7 @@
 spring:
-  profiles.include:
+    profiles.include:
     - secret
+    - oauth2
 #  jpa:
 #    database: mysql
 #    show-sql: true
@@ -25,3 +26,4 @@ springdoc:
 
 frontend:
     base-url: http://localhost:3000
+
