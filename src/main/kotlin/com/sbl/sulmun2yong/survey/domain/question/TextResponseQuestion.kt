@@ -12,8 +12,6 @@ data class TextResponseQuestion(
     override val choices = null
     override val isAllowOther = false
 
-    override fun isValidResponse(responseCommand: ResponseCommand): Boolean {
-        // TODO: 유효성 검사 로직 구현하기
-        return true
-    }
+    override fun isValidResponse(responseCommand: ResponseCommand) =
+        responseCommand.responseDetails.size == 1 && !responseCommand.responseDetails.first().isEtc
 }

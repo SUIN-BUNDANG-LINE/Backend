@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.exception.InvalidQuestionException
 import java.util.UUID
 
 data class SingleChoiceQuestion(
@@ -12,8 +13,13 @@ data class SingleChoiceQuestion(
 ) : Question {
     override val questionType: QuestionType = QuestionType.SINGLE_CHOICE
 
+    init {
+        if (choices.isEmpty()) throw InvalidQuestionException()
+    }
+
     override fun isValidResponse(responseCommand: ResponseCommand): Boolean {
-        // TODO: 유효성 검사 로직 구현하기
-        return true
+        if (responseCommand.responseDetails.size != 1) return false
+        if (responseCommand.responseDetails.first().isEtc) return isAllowOther
+        return choices.contains(responseCommand.responseDetails.first().content)
     }
 }
