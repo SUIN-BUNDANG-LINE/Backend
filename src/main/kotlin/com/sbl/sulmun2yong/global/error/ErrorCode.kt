@@ -13,6 +13,8 @@ enum class ErrorCode(
 
     // Survey (SV)
     SURVEY_NOT_FOUND(HttpStatus.NOT_FOUND, "SV0002", "설문을 찾을 수 없습니다."),
+    INVALID_QUESTION(HttpStatus.BAD_REQUEST, "SV0003", "유효하지 않은 질문입니다."),
+    INVALID_RESPONSE_COMMAND(HttpStatus.BAD_REQUEST, "SV0004", "유효하지 않은 응답 커맨드입니다."),
 
     // OAuth2 (OA)
     PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "OA0001", "지원하지 않는 소셜 로그인입니다."),
