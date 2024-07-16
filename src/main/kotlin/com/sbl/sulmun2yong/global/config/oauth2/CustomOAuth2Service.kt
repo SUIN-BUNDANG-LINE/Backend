@@ -15,51 +15,44 @@ import org.springframework.stereotype.Service
 class CustomOAuth2Service(
     private val userService: UserService,
 ) : DefaultOAuth2UserService() {
-    private var dataFromOAuth2Request = DataFromOAuth2Request()
-
     override fun loadUser(oAuth2UserRequest: OAuth2UserRequest): OAuth2User {
         val oAuth2User: OAuth2User = super.loadUser(oAuth2UserRequest)
 
-        println(oAuth2User)
-        setDataFromOAuth2Request(oAuth2UserRequest, oAuth2User)
+        val oAuth2UserInfo = getOAuth2UserInfo(oAuth2UserRequest, oAuth2User)
+        val oAuth2UserInfoDTO = OAuth2UserInfoDTO.of(oAuth2UserInfo)
 
-        userService.join(dataFromOAuth2Request)
-
-        val userSession: UserSession = userService.getUserSession(dataFromOAuth2Request)
+        userService.join(oAuth2UserInfoDTO)
+        val userSession: UserSession = userService.getUserSession(oAuth2UserInfoDTO)
 
         return CustomOAuth2User(userSession, oAuth2User.attributes)
     }
 
-    private fun setDataFromOAuth2Request(
-        userRequest: OAuth2UserRequest,
+    private fun getOAuth2UserInfo(
+        oAuth2UserRequest: OAuth2UserRequest,
         oAuth2User: OAuth2User,
-    ) {
-        val registrationId = userRequest.clientRegistration.registrationId
+    ): OAuth2UserInfo {
+        val registrationId = oAuth2UserRequest.clientRegistration.registrationId
         val attributes = oAuth2User.attributes
-        val oAuth2UserInfo: OAuth2UserInfo =
-            when (registrationId) {
-                "google" -> {
-                    println("구글 로그인 요청")
-                    GoogleUserInfo(attributes)
-                }
-                "naver" -> {
-                    println("네이버 로그인 요청")
-                    println(attributes)
-                    NaverUserInfo(attributes["response"] as Map<String, Any>)
-                }
-                "kakao" -> {
-                    println("카카오 로그인 요청")
-                    KakaoUserInfo(attributes)
-                }
-                else -> {
-                    throw IllegalArgumentException("지원하지 않는 소셜 로그인입니다.")
-                }
+        return when (registrationId) {
+            "google" -> {
+                println("구글 로그인 요청")
+                GoogleUserInfo(attributes)
             }
 
-        this.dataFromOAuth2Request =
-            DataFromOAuth2Request(
-                provider = oAuth2UserInfo.getProvider(),
-                providerId = oAuth2UserInfo.getProviderId(),
-            )
+            "naver" -> {
+                println("네이버 로그인 요청")
+                println(attributes)
+                NaverUserInfo(attributes["response"] as Map<String, Any>)
+            }
+
+            "kakao" -> {
+                println("카카오 로그인 요청")
+                KakaoUserInfo(attributes)
+            }
+
+            else -> {
+                throw IllegalArgumentException("지원하지 않는 소셜 로그인입니다.")
+            }
+        }
     }
 }

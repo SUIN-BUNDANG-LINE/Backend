@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.user.service
 
-import com.sbl.sulmun2yong.global.config.oauth2.DataFromOAuth2Request
+import com.sbl.sulmun2yong.global.config.oauth2.OAuth2UserInfoDTO
 import com.sbl.sulmun2yong.user.adapter.UserAdapter
 import com.sbl.sulmun2yong.user.dto.response.UserSession
 import org.springframework.stereotype.Service
@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service
 class UserService(
     private val userAdapter: UserAdapter,
 ) {
-    fun join(dataFromOAuth2Request: DataFromOAuth2Request) {
-        userAdapter.join(dataFromOAuth2Request)
+    fun join(oAuth2UserInfoDTO: OAuth2UserInfoDTO) {
+        userAdapter.join(oAuth2UserInfoDTO)
     }
 
-    fun getUserSession(dataFromOAuth2Request: DataFromOAuth2Request): UserSession {
-        val user = userAdapter.find(dataFromOAuth2Request)
+    fun getUserSession(oAuth2UserInfoDTO: OAuth2UserInfoDTO): UserSession {
+        val user = userAdapter.find(oAuth2UserInfoDTO)
         return UserSession.of(user.id, user.role)
     }
 }

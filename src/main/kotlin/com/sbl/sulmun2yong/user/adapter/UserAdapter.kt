@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.user.adapter
 
-import com.sbl.sulmun2yong.global.config.oauth2.DataFromOAuth2Request
+import com.sbl.sulmun2yong.global.config.oauth2.OAuth2UserInfoDTO
 import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.entity.UserDocument
 import com.sbl.sulmun2yong.user.repository.UserRepository
@@ -11,18 +11,18 @@ import java.util.UUID
 class UserAdapter(
     private val userRepository: UserRepository,
 ) {
-    fun join(dataFromOAuth2Request: DataFromOAuth2Request) {
-        val provider = dataFromOAuth2Request.provider
-        val providerId = dataFromOAuth2Request.providerId
+    fun join(OAuth2UserInfoDTO: OAuth2UserInfoDTO) {
+        val provider = OAuth2UserInfoDTO.provider
+        val providerId = OAuth2UserInfoDTO.providerId
         val existingMember = userRepository.findByProviderAndProviderId(provider, providerId)
 
         if (existingMember.isPresent) {
             return
         }
-        userRepository.save(dataFromOAuth2Request.toDocument())
+        userRepository.save(OAuth2UserInfoDTO.toDocument())
     }
 
-    private fun DataFromOAuth2Request.toDocument() =
+    private fun OAuth2UserInfoDTO.toDocument() =
         UserDocument(
             id = UUID.randomUUID().toString(),
             provider = this.provider,
@@ -30,9 +30,9 @@ class UserAdapter(
             nickname = this.nickname,
         )
 
-    fun find(dataFromOAuth2Request: DataFromOAuth2Request): User =
+    fun find(OAuth2UserInfoDTO: OAuth2UserInfoDTO): User =
         userRepository
-            .findByProviderAndProviderId(dataFromOAuth2Request.provider, dataFromOAuth2Request.providerId)
+            .findByProviderAndProviderId(OAuth2UserInfoDTO.provider, OAuth2UserInfoDTO.providerId)
             .orElseThrow { IllegalArgumentException("가입되지 않은 회원입니다.") }
             .toDomain()
 

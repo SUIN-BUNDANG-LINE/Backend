@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 
 @Controller
-@RequestMapping("/api/v1/member")
+@RequestMapping("/user")
 class UserController(
     private val userService: UserService,
 )

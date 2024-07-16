@@ -17,4 +17,17 @@ class CustomOAuth2User(
         val authorities = SimpleGrantedAuthority(userSession.role)
         return mutableListOf(authorities)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other !is CustomOAuth2User)
+            {
+                return false
+            }
+        return userSession.id == other.userSession.id
+    }
+
+    override fun hashCode(): Int = userSession.id.hashCode()
 }

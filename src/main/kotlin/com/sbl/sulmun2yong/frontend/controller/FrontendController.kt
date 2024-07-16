@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 
 @Controller
 @RequestMapping("/frontend")
-class FrontendMemberController {
+class FrontendController {
     @GetMapping("", "/")
     fun index(): String = "index"
 
@@ -21,4 +21,7 @@ class FrontendMemberController {
 
     @GetMapping("/joinForm")
     fun joinForm(): String = "joinForm"
+
+    @GetMapping("/invalidSession")
+    fun invalidSession(): String = "invalidSession"
 }
