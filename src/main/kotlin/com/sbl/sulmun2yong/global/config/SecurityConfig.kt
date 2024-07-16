@@ -32,16 +32,18 @@ class SecurityConfig(
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-                defaultSuccessUrl("/", true)
             }
             logout {
                 logoutUrl = "/user/logout"
-                logoutSuccessUrl = "/"
+                invalidateHttpSession = false
+                logoutSuccessHandler = CustomLogoutSuccessHandler(sessionRegistry())
             }
             sessionManagement {
                 invalidSessionUrl = "/frontend/invalid-session"
                 sessionConcurrency {
-                    maximumSessions = 2
+                    expiredUrl = "/frontend/expired"
+                    invalidSessionUrl = "/frontend/invalid-session"
+                    maximumSessions = 1
                     maxSessionsPreventsLogin = false
                     sessionRegistry = sessionRegistry()
                 }

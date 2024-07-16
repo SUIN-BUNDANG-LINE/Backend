@@ -5,5 +5,5 @@ import org.springframework.stereotype.Service
 
 @Service
 class AdminService {
-    fun getAllLoggedInUsers(allUsers: List<Any>): UserSessionsResponse = UserSessionsResponse.of()
+    fun getAllLoggedInUsers(customOAuth2Users: List<Any>): UserSessionsResponse = UserSessionsResponse(customOAuth2Users)
 }

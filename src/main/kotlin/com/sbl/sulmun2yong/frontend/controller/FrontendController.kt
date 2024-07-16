@@ -12,4 +12,7 @@ class FrontendController {
 
     @GetMapping("/invalid-session")
     fun invalidSession(): String = "invalid-session"
+
+    @GetMapping("/expired")
+    fun expired(): String = "expired"
 }
