@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.user.dto.request
 
 import com.sbl.sulmun2yong.global.config.oauth2.provider.OAuth2UserInfo
+import com.sbl.sulmun2yong.global.util.RandomNicknameGenerator
 import com.sbl.sulmun2yong.user.domain.UserRole
 import com.sbl.sulmun2yong.user.entity.UserDocument
 import java.util.UUID
@@ -8,7 +9,6 @@ import java.util.UUID
 data class UserJoinRequest(
     val provider: String = "",
     val providerId: String = "",
-    val nickname: String = "",
     val phoneNumber: String = "",
 ) {
     companion object {
@@ -22,10 +22,11 @@ data class UserJoinRequest(
 
     fun toDocument() =
         UserDocument(
-            id = UUID.randomUUID().toString(),
+            id = UUID.randomUUID(),
             provider = this.provider,
             providerId = this.providerId,
             phoneNumber = this.phoneNumber,
-            role = if (this.phoneNumber.isEmpty()) UserRole.ROLE_USER.role else UserRole.ROLE_AUTHENTICATED_USER.role,
+            nickname = RandomNicknameGenerator.generate(),
+            role = if (this.phoneNumber.isEmpty()) UserRole.ROLE_USER else UserRole.ROLE_AUTHENTICATED_USER,
         )
 }

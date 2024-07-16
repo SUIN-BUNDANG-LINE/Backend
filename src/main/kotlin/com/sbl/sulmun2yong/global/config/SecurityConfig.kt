@@ -7,13 +7,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.core.session.SessionRegistryImpl
-import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
 class SecurityConfig(
     private val customOAuth2Service: CustomOAuth2Service,
-    private val userDetailsService: UserDetailsService,
 ) {
     @Bean
     fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
@@ -30,18 +28,18 @@ class SecurityConfig(
                 authorize("/**", permitAll)
             }
             oauth2Login {
-                loginPage = "/frontend/loginForm"
+                loginPage = "/frontend/login"
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-                defaultSuccessUrl("/frontend", true)
+                defaultSuccessUrl("/", true)
             }
             logout {
                 logoutUrl = "/user/logout"
-                logoutSuccessUrl = "/frontend"
+                logoutSuccessUrl = "/"
             }
             sessionManagement {
-                invalidSessionUrl = "/frontend"
+                invalidSessionUrl = "/frontend/invalid-session"
                 sessionConcurrency {
                     maximumSessions = 2
                     maxSessionsPreventsLogin = false

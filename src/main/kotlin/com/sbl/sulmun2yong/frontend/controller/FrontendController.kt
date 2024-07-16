@@ -7,21 +7,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 @Controller
 @RequestMapping("/frontend")
 class FrontendController {
-    @GetMapping("", "/")
-    fun index(): String = "index"
+    @GetMapping("/login")
+    fun login(): String = "login"
 
-    @GetMapping("/user")
-    fun user(): String = "user"
-
-    @GetMapping("/admin")
-    fun admin(): String = "admin"
-
-    @GetMapping("/loginForm")
-    fun login(): String = "loginForm"
-
-    @GetMapping("/joinForm")
-    fun joinForm(): String = "joinForm"
-
-    @GetMapping("/invalidSession")
-    fun invalidSession(): String = "invalidSession"
+    @GetMapping("/invalid-session")
+    fun invalidSession(): String = "invalid-session"
 }

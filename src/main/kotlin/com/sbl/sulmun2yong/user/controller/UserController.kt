@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.user.controller
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2User
+import com.sbl.sulmun2yong.user.dto.response.UserProfileResponse
 import com.sbl.sulmun2yong.user.service.UserService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.stereotype.Controller
@@ -17,7 +18,5 @@ class UserController(
     @ResponseBody
     fun getUserProfile(
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User,
-    ) {
-        userService.getUserProfile(customOAuth2User.name)
-    }
+    ): UserProfileResponse = userService.getUserProfile(customOAuth2User.name)
 }

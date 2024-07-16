@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.user.controller
 
+import com.sbl.sulmun2yong.user.dto.response.UserSessionsResponse
 import com.sbl.sulmun2yong.user.service.AdminService
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.stereotype.Controller
@@ -15,8 +16,5 @@ class AdminController(
 ) {
     @GetMapping("/sessions/logged-in-users")
     @ResponseBody
-    fun getAllLoggedInUsers() {
-        val allLoggedInUsers = adminService.getAllLoggedInUsers(sessionRegistry.allPrincipals)
-        return allLoggedInUsers
-    }
+    fun getAllLoggedInUsers(): UserSessionsResponse = adminService.getAllLoggedInUsers(sessionRegistry.allPrincipals)
 }

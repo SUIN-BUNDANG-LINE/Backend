@@ -5,16 +5,17 @@ import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.domain.UserRole
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
+import java.util.UUID
 
 @Document(collection = "users")
 data class UserDocument(
     @Id
-    val id: String,
+    val id: UUID,
     val provider: String,
     val providerId: String,
-    val nickname: String = "",
+    val nickname: String,
     val phoneNumber: String,
-    val role: String = UserRole.ROLE_USER.role,
+    val role: UserRole,
     val isDeleted: Boolean = false,
 ) : BaseTimeDocument() {
     fun toDomain() =
