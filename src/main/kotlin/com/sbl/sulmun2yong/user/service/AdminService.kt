@@ -8,7 +8,7 @@ class AdminService {
     fun getAllLoggedInUsers(allUsers: List<Any>) {
         for (user in allUsers) {
             if (user is CustomOAuth2User) {
-                println(user.name)
+                println(user.attributes)
             }
         }
     }

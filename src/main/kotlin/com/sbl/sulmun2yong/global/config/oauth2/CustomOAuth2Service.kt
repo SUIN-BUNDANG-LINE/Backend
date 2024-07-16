@@ -19,10 +19,13 @@ class CustomOAuth2Service(
         val oAuth2User: OAuth2User = super.loadUser(oAuth2UserRequest)
 
         val oAuth2UserInfo = getOAuth2UserInfo(oAuth2UserRequest, oAuth2User)
-        val oAuth2UserInfoDTO = OAuth2UserInfoDTO.of(oAuth2UserInfo)
 
+        val oAuth2UserInfoDTO = OAuth2UserInfoDTO.of(oAuth2UserInfo)
         userService.join(oAuth2UserInfoDTO)
-        val userSession: UserSession = userService.getUserSession(oAuth2UserInfoDTO)
+
+        val provider = oAuth2UserInfo.getNickname()
+        val providerId = oAuth2UserInfo.getProviderId()
+        val userSession: UserSession = userService.getUserSession(provider, providerId)
 
         return CustomOAuth2User(userSession, oAuth2User.attributes)
     }
@@ -41,7 +44,6 @@ class CustomOAuth2Service(
 
             "naver" -> {
                 println("네이버 로그인 요청")
-                println(attributes)
                 NaverUserInfo(attributes["response"] as Map<String, Any>)
             }
 

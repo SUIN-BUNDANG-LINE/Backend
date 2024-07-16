@@ -22,10 +22,9 @@ class CustomOAuth2User(
         if (this === other) {
             return true
         }
-        if (other !is CustomOAuth2User)
-            {
-                return false
-            }
+        if (other !is CustomOAuth2User) {
+            return false
+        }
         return userSession.id == other.userSession.id
     }
 

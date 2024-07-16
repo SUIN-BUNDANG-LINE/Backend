@@ -8,4 +8,6 @@ class KakaoUserInfo(
     override fun getProviderId(): String = attributes["id"].toString()
 
     override fun getNickname(): String = attributes["nickname"] as String
+
+    override fun getPhoneNumber(): String = ""
 }

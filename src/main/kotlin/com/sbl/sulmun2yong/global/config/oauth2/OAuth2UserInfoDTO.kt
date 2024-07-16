@@ -6,12 +6,14 @@ data class OAuth2UserInfoDTO(
     val provider: String = "",
     val providerId: String = "",
     val nickname: String = "",
+    val phoneNumber: String = "",
 ) {
     companion object {
         fun of(oAuth2UserInfo: OAuth2UserInfo) =
             OAuth2UserInfoDTO(
                 provider = oAuth2UserInfo.getProvider(),
                 providerId = oAuth2UserInfo.getProviderId(),
+                phoneNumber = oAuth2UserInfo.getPhoneNumber(),
             )
     }
 }

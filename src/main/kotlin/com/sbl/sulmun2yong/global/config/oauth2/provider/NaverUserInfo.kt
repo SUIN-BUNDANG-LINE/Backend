@@ -8,4 +8,6 @@ class NaverUserInfo(
     override fun getProviderId(): String = attributes["id"] as String
 
     override fun getNickname(): String = attributes["name"] as String
+
+    override fun getPhoneNumber(): String = attributes["mobile"] as String
 }

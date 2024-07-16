@@ -6,4 +6,6 @@ interface OAuth2UserInfo {
     fun getProviderId(): String
 
     fun getNickname(): String
+
+    fun getPhoneNumber(): String
 }

@@ -8,4 +8,6 @@ class GoogleUserInfo(
     override fun getProviderId(): String = attributes["sub"] as String
 
     override fun getNickname(): String = attributes["name"] as String
+
+    override fun getPhoneNumber(): String = ""
 }

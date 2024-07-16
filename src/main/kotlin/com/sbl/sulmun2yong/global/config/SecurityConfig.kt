@@ -39,7 +39,7 @@ class SecurityConfig(
                 defaultSuccessUrl("/frontend", true)
             }
             logout {
-                logoutUrl = "/api/v1/oauth2/logout"
+                logoutUrl = "/user/logout"
                 logoutSuccessUrl = "/frontend"
             }
             sessionManagement {
