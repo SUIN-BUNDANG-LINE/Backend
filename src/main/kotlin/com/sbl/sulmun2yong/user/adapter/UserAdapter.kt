@@ -1,9 +1,7 @@
 package com.sbl.sulmun2yong.user.adapter
 
-import com.sbl.sulmun2yong.global.config.oauth2.OAuth2UserInfoDTO
 import com.sbl.sulmun2yong.user.domain.User
-import com.sbl.sulmun2yong.user.domain.UserRole
-import com.sbl.sulmun2yong.user.entity.UserDocument
+import com.sbl.sulmun2yong.user.dto.request.UserJoinRequest
 import com.sbl.sulmun2yong.user.repository.UserRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -12,25 +10,17 @@ import java.util.UUID
 class UserAdapter(
     private val userRepository: UserRepository,
 ) {
-    fun join(oAuth2UserInfoDTO: OAuth2UserInfoDTO) {
-        val provider = oAuth2UserInfoDTO.provider
-        val providerId = oAuth2UserInfoDTO.providerId
+    fun join(userJoinRequest: UserJoinRequest) {
+        val provider = userJoinRequest.provider
+        val providerId = userJoinRequest.providerId
         val existingUser = userRepository.findByProviderAndProviderId(provider, providerId)
 
         if (existingUser.isPresent) {
             return
         }
-        userRepository.save(oAuth2UserInfoDTO.toDocument())
-    }
 
-    private fun OAuth2UserInfoDTO.toDocument() =
-        UserDocument(
-            id = UUID.randomUUID().toString(),
-            provider = this.provider,
-            providerId = this.providerId,
-            phoneNumber = this.phoneNumber,
-            role = if (this.phoneNumber.isEmpty()) UserRole.ROLE_USER.role else UserRole.ROLE_AUTHENTICATED_USER.role,
-        )
+        userRepository.save(userJoinRequest.toDocument())
+    }
 
     fun find(
         provider: String,
@@ -46,14 +36,4 @@ class UserAdapter(
             .findById(UUID.fromString(id))
             .orElseThrow { IllegalArgumentException("존재하지 않는 회원입니다.") }
             .toDomain()
-
-    private fun UserDocument.toDomain() =
-        User(
-            id = this.id,
-            provider = this.provider,
-            providerId = this.providerId,
-            nickname = this.nickname,
-            phoneNumber = this.phoneNumber,
-            role = this.role,
-        )
 }

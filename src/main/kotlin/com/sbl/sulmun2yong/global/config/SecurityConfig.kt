@@ -7,16 +7,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.core.session.SessionRegistryImpl
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.session.HttpSessionEventPublisher
 
 @Configuration
 class SecurityConfig(
     private val customOAuth2Service: CustomOAuth2Service,
+    private val userDetailsService: UserDetailsService,
 ) {
-    @Bean
-    fun httpSessionEventPublisher(): HttpSessionEventPublisher = HttpSessionEventPublisher()
-
     @Bean
     fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
 

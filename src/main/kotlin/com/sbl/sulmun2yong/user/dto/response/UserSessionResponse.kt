@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.user.dto.response
 
 import com.sbl.sulmun2yong.user.domain.UserRole
 
-class UserSession(
+class UserSessionResponse(
     val id: String = "",
     val role: String = UserRole.ROLE_USER.role,
 ) {
@@ -10,6 +10,6 @@ class UserSession(
         fun of(
             id: String,
             role: String,
-        ) = UserSession(id, role)
+        ) = UserSessionResponse(id, role)
     }
 }

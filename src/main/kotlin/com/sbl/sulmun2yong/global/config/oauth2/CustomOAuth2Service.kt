@@ -4,7 +4,8 @@ import com.sbl.sulmun2yong.global.config.oauth2.provider.GoogleUserInfo
 import com.sbl.sulmun2yong.global.config.oauth2.provider.KakaoUserInfo
 import com.sbl.sulmun2yong.global.config.oauth2.provider.NaverUserInfo
 import com.sbl.sulmun2yong.global.config.oauth2.provider.OAuth2UserInfo
-import com.sbl.sulmun2yong.user.dto.response.UserSession
+import com.sbl.sulmun2yong.user.dto.request.UserJoinRequest
+import com.sbl.sulmun2yong.user.dto.response.UserSessionResponse
 import com.sbl.sulmun2yong.user.service.UserService
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
@@ -20,14 +21,13 @@ class CustomOAuth2Service(
 
         val oAuth2UserInfo = getOAuth2UserInfo(oAuth2UserRequest, oAuth2User)
 
-        val oAuth2UserInfoDTO = OAuth2UserInfoDTO.of(oAuth2UserInfo)
-        userService.join(oAuth2UserInfoDTO)
+        userService.join(UserJoinRequest.of(oAuth2UserInfo))
 
         val provider = oAuth2UserInfo.getNickname()
         val providerId = oAuth2UserInfo.getProviderId()
-        val userSession: UserSession = userService.getUserSession(provider, providerId)
+        val userSessionResponse: UserSessionResponse = userService.getUserSession(provider, providerId)
 
-        return CustomOAuth2User(userSession, oAuth2User.attributes)
+        return CustomOAuth2User(userSessionResponse, oAuth2User.attributes)
     }
 
     private fun getOAuth2UserInfo(
