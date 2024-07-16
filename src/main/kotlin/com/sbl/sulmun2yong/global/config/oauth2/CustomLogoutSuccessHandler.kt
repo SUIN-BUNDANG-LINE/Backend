@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.global.config
 
+import com.sbl.sulmun2yong.global.util.SessionRegistryCleaner
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -22,24 +23,21 @@ class CustomLogoutSuccessHandler(
         response.addCookie(cookie)
 
         if (authentication == null) {
-            response.status = HttpServletResponse.SC_OK
-            response.sendRedirect("/")
+            redirect(response)
             return
         }
+        // 세션 레지스트리에서 제거
+        SessionRegistryCleaner.removeSessionByAuthentication(sessionRegistry, authentication)
 
         // 세션 무효화
         request.session.invalidate()
 
-        // 세션 레지스트리에서 제거
-        sessionRegistry
-            .getAllSessions(authentication.principal, false)
-            .forEach { sessionInformation ->
-                sessionRegistry.removeSessionInformation(sessionInformation.sessionId)
-            }
-
-        response.status = HttpServletResponse.SC_OK
-
         // 리디렉션
+        redirect(response)
+    }
+
+    private fun redirect(response: HttpServletResponse) {
+        response.status = HttpServletResponse.SC_OK
         response.sendRedirect("/")
     }
 }

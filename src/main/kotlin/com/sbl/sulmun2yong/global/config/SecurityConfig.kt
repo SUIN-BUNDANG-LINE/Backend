@@ -10,14 +10,15 @@ import org.springframework.security.core.session.SessionRegistryImpl
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
-class SecurityConfig(
-    private val customOAuth2Service: CustomOAuth2Service,
-) {
+class SecurityConfig {
     @Bean
     fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(
+        http: HttpSecurity,
+        customOAuth2Service: CustomOAuth2Service,
+    ): SecurityFilterChain {
         http {
             csrf {
                 disable()
