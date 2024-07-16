@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.user.controller
 
+import com.sbl.sulmun2yong.user.controller.doc.AdminApiDoc
 import com.sbl.sulmun2yong.user.dto.response.UserSessionsResponse
 import com.sbl.sulmun2yong.user.service.AdminService
 import org.springframework.security.core.session.SessionRegistry
@@ -13,8 +14,8 @@ import org.springframework.web.bind.annotation.ResponseBody
 class AdminController(
     private val sessionRegistry: SessionRegistry,
     private val adminService: AdminService,
-) {
+) : AdminApiDoc {
     @GetMapping("/sessions/logged-in-users")
     @ResponseBody
-    fun getAllLoggedInUsers(): UserSessionsResponse = adminService.getAllLoggedInUsers(sessionRegistry.allPrincipals)
+    override fun getAllLoggedInUsers(): UserSessionsResponse = adminService.getAllLoggedInUsers(sessionRegistry.allPrincipals)
 }

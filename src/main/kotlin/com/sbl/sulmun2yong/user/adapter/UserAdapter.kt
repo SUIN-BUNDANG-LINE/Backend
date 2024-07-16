@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.user.adapter
 
 import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.dto.request.UserJoinRequest
+import com.sbl.sulmun2yong.user.exception.UserNotFoundException
 import com.sbl.sulmun2yong.user.repository.UserRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -28,12 +29,12 @@ class UserAdapter(
     ): User =
         userRepository
             .findByProviderAndProviderId(provider, providerId)
-            .orElseThrow { IllegalArgumentException("가입되지 않은 회원입니다.") }
+            .orElseThrow { UserNotFoundException() }
             .toDomain()
 
     fun find(id: String): User =
         userRepository
             .findById(UUID.fromString(id))
-            .orElseThrow { IllegalArgumentException("존재하지 않는 회원입니다.") }
+            .orElseThrow { UserNotFoundException() }
             .toDomain()
 }

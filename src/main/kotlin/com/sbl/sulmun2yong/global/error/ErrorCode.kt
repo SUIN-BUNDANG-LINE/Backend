@@ -13,4 +13,7 @@ enum class ErrorCode(
 
     // Survey (SV)
     SURVEY_NOT_FOUND(HttpStatus.NOT_FOUND, "SV0002", "설문을 찾을 수 없습니다."),
+
+    // User (US)
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "US0001", "회원을 찾을 수 없습니다."),
 }

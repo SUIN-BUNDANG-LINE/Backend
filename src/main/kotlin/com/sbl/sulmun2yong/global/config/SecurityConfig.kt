@@ -43,7 +43,7 @@ class SecurityConfig(
                 sessionConcurrency {
                     expiredUrl = "/frontend/expired"
                     invalidSessionUrl = "/frontend/invalid-session"
-                    maximumSessions = 1
+                    maximumSessions = 2
                     maxSessionsPreventsLogin = false
                     sessionRegistry = sessionRegistry()
                 }
