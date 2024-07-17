@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
+import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
 
 data class Section(
@@ -30,8 +31,17 @@ data class Section(
     }
 
     fun findNextSectionId(sectionResponses: List<SectionResponse>): UUID? {
-        // TODO: sectionResponses 유효한지 확인
         // TODO: sectionResponses 이용하여 routeDetails에서 nextSectionId를 찾아서 반환
+        for (question in questions) {
+            val findInResponse = sectionResponses.find { it.questionId == question.id }
+            if (question.isRequired && findInResponse == null) {
+                throw InvalidSectionResponseException()
+            }
+            if (findInResponse != null && !question.isValidResponse(findInResponse.questionResponses)) {
+                throw InvalidSectionResponseException()
+            }
+        }
+
         return null
     }
 }
