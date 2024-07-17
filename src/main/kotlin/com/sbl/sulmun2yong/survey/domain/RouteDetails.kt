@@ -16,7 +16,7 @@ sealed class RouteDetails(val type: SectionRouteType) {
         }
 
         fun findNextSectionId(responseDetail: ResponseDetail): UUID? {
-            val content = if (responseDetail.isEtc) null else responseDetail.content
+            val content = if (responseDetail.isOther) null else responseDetail.content
             val routeConfig =
                 sectionRouteConfigs.find { it.content == content }
                     ?: throw InvalidRouteDetailsException()

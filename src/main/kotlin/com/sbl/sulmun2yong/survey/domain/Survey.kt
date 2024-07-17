@@ -22,7 +22,7 @@ data class Survey(
         // TODO: 섹션은 하나 이상 존재해야한다.
     }
 
-    fun validateResponse(surveyResponses: List<SurveyResponse>) {
+    fun validateResponse(sectionResponses: List<SectionResponse>) {
         // TODO: 응답한 섹션 순서가 유효한지 검증
     }
 

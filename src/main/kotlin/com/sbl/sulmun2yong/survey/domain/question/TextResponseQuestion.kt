@@ -13,5 +13,5 @@ data class TextResponseQuestion(
     override val isAllowOther = false
 
     override fun isValidResponse(responseCommand: ResponseCommand) =
-        responseCommand.responseDetails.size == 1 && !responseCommand.responseDetails.first().isEtc
+        responseCommand.responses.size == 1 && !responseCommand.responses.first().isOther
 }

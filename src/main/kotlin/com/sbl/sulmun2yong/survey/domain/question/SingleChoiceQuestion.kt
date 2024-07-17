@@ -19,8 +19,8 @@ data class SingleChoiceQuestion(
     }
 
     override fun isValidResponse(responseCommand: ResponseCommand): Boolean {
-        if (responseCommand.responseDetails.size != 1) return false
-        if (responseCommand.responseDetails.first().isEtc) return isAllowOther
-        return choices.contains(responseCommand.responseDetails.first().content)
+        if (responseCommand.responses.size != 1) return false
+        if (responseCommand.responses.first().isOther) return isAllowOther
+        return choices.contains(responseCommand.responses.first().content)
     }
 }

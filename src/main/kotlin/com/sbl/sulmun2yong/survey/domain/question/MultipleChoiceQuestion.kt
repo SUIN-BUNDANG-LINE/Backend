@@ -19,9 +19,9 @@ data class MultipleChoiceQuestion(
     }
 
     override fun isValidResponse(responseCommand: ResponseCommand): Boolean {
-        for (responseDetail in responseCommand.responseDetails) {
+        for (responseDetail in responseCommand.responses) {
             println(responseDetail)
-            if (responseDetail.isEtc) {
+            if (responseDetail.isOther) {
                 if (isAllowOther) continue
                 return false
             } else if (!choices.contains(responseDetail.content)) {
