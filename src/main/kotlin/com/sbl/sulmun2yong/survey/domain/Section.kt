@@ -31,7 +31,6 @@ data class Section(
     }
 
     fun findNextSectionId(sectionResponses: List<SectionResponse>): UUID? {
-        // TODO: sectionResponses 이용하여 routeDetails에서 nextSectionId를 찾아서 반환
         for (question in questions) {
             val findInResponse = sectionResponses.find { it.questionId == question.id }
             if (question.isRequired && findInResponse == null) {
@@ -42,6 +41,21 @@ data class Section(
             }
         }
 
-        return null
+        return when (routeDetails) {
+            is RouteDetails.SetByChoice -> {
+                val sectionResponse =
+                    sectionResponses.find { it.questionId == routeDetails.keyQuestionId }
+                        ?: throw InvalidSectionResponseException()
+                routeDetails.findNextSectionId(sectionResponse.questionResponses.responseDetails.first())
+            }
+
+            is RouteDetails.NumericalOrder -> {
+                routeDetails.nextSectionId
+            }
+
+            is RouteDetails.SetByUser -> {
+                routeDetails.nextSectionId
+            }
+        }
     }
 }
