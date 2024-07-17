@@ -15,6 +15,7 @@ data class SingleChoiceQuestion(
 
     init {
         if (choices.isEmpty()) throw InvalidQuestionException()
+        if (choices.size != choices.distinct().size) throw InvalidQuestionException()
     }
 
     override fun isValidResponse(responseCommand: ResponseCommand): Boolean {

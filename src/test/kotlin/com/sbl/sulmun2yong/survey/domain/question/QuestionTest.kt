@@ -91,7 +91,7 @@ class QuestionTest {
     }
 
     @Test
-    fun `단일 선택 질문과 다중 선택 질문의 선택지는 비어있으면 안된다`() {
+    fun `단일 선택 질문과 다중 선택 질문의 선택지는 비어있거나 내용이 중복되면 안된다`() {
         // given, when, then
         assertThrows<InvalidQuestionException> {
             SingleChoiceQuestion(
@@ -111,6 +111,28 @@ class QuestionTest {
                 description = "다중 선택 질문 설명",
                 isRequired = false,
                 choices = listOf(),
+                isAllowOther = true,
+            )
+        }
+
+        assertThrows<InvalidQuestionException> {
+            SingleChoiceQuestion(
+                id = UUID.randomUUID(),
+                title = "단일 선택 질문 제목",
+                description = "단일 선택 질문 설명",
+                isRequired = false,
+                choices = listOf("a", "a", "b"),
+                isAllowOther = true,
+            )
+        }
+
+        assertThrows<InvalidQuestionException> {
+            MultipleChoiceQuestion(
+                id = UUID.randomUUID(),
+                title = "다중 선택 질문 제목",
+                description = "다중 선택 질문 설명",
+                isRequired = false,
+                choices = listOf("a", "a", "b"),
                 isAllowOther = true,
             )
         }
