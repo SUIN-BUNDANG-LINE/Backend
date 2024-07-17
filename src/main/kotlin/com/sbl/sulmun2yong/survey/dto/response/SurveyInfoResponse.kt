@@ -11,7 +11,7 @@ data class SurveyInfoResponse(
     val status: SurveyStatus,
     val finishedAt: Date,
     val currentParticipants: Int,
-    val targetParticipants: Int?,
+    val targetParticipants: Int,
     val thumbnail: String,
     val rewards: List<RewardInfoResponse>,
 ) {

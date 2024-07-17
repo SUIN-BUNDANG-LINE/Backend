@@ -38,7 +38,7 @@ data class SurveyListResponse(
         val thumbnail: String,
         val title: String,
         val description: String,
-        val targetParticipants: Int?,
+        val targetParticipants: Int,
         val rewardCount: Int,
         val finishedAt: Date,
         val rewards: List<RewardInfoResponse>,

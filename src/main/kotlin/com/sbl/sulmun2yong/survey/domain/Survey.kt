@@ -8,14 +8,24 @@ data class Survey(
     val title: String,
     val description: String,
     val thumbnail: String,
+    val publishedAt: Date?,
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipants: Int?,
+    val targetParticipants: Int,
     val rewards: List<Reward>,
-    val createdAt: Date,
-    val updatedAt: Date,
+    val sections: List<Section>,
 ) {
+    init {
+        // TODO: publishedAt이 finishedAt보다 나중일 수 없다.
+        // TODO: publishedAt은 SurveyStatus가 NOT_STARTED일 때만 null이다.
+        // TODO: 섹션은 하나 이상 존재해야한다.
+    }
+
+    fun validateResponse(surveyResponses: List<SurveyResponse>) {
+        // TODO: 응답한 섹션 순서가 유효한지 검증
+    }
+
     fun getRewardCount(): Int {
         return rewards.sumOf { it.count }
     }
