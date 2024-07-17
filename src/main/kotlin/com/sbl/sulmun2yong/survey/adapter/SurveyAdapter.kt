@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.survey.adapter
 
 import com.sbl.sulmun2yong.survey.domain.Reward
-import com.sbl.sulmun2yong.survey.domain.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
@@ -59,7 +58,7 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
             targetParticipants = this.targetParticipants,
             rewards = this.rewards.map { it.toDomain() },
             // TODO: 실제 sections를 넣기
-            sections = listOf(Section(UUID.randomUUID(), "section1", "section1", RouteDetails.NumericalOrder(null), emptyList())),
+            sections = listOf(Section.create()),
         )
 
     private fun SurveyDocument.RewardSubDocument.toDomain() =

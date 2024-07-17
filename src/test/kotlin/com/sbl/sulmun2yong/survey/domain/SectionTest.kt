@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import java.util.UUID
@@ -76,6 +77,26 @@ class SectionTest {
             choicesABC,
             true,
         )
+
+    @Test
+    fun `기본 섹션을 생성할 수 있다`() {
+        // given
+        val id = UUID.randomUUID()
+        val mockedUUID = mockStatic(UUID::class.java)
+        mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(id)
+
+        // when
+        val section = Section.create()
+
+        // then
+        with(section) {
+            assertEquals(id, this.id)
+            assertEquals("", this.title)
+            assertEquals("", this.description)
+            assertEquals(RouteDetails.NumericalOrder(null), this.routeDetails)
+            assertEquals(emptyList(), this.questions)
+        }
+    }
 
     @Test
     fun `번호순 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {

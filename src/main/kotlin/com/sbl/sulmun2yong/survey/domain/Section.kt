@@ -30,6 +30,17 @@ data class Section(
         }
     }
 
+    companion object {
+        fun create() =
+            Section(
+                id = UUID.randomUUID(),
+                title = "",
+                description = "",
+                routeDetails = RouteDetails.NumericalOrder(null),
+                questions = emptyList(),
+            )
+    }
+
     fun findNextSectionId(sectionResponses: List<SectionResponse>): UUID? {
         for (question in questions) {
             val findInResponse = sectionResponses.find { it.questionId == question.id }
