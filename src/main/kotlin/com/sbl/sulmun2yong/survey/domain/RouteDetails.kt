@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.exception.InvalidRouteDetailsException
 import java.util.UUID
 
 sealed class RouteDetails(val type: SectionRouteType) {
@@ -10,9 +11,26 @@ sealed class RouteDetails(val type: SectionRouteType) {
         val keyQuestionId: UUID,
         val sectionRouteConfigs: List<SectionRouteConfig>,
     ) : RouteDetails(SectionRouteType.SET_BY_CHOICE) {
+        init {
+            if (sectionRouteConfigs.size != getContentsSet().size) throw InvalidRouteDetailsException()
+        }
+
         fun findNextSectionId(responseDetail: ResponseDetail): UUID? {
-            // TODO responseDetail을 이용하여 SectionRouteConfig에서 nextSectionId를 찾아서 반환
-            return null
+            val content = if (responseDetail.isEtc) null else responseDetail.content
+            val routeConfig =
+                sectionRouteConfigs.find { it.content == content }
+                    ?: throw InvalidRouteDetailsException()
+            return routeConfig.nextSectionId
+        }
+
+        private fun getContentsSet() = sectionRouteConfigs.map { it.content }.toSet()
+
+        fun isValidSectionRouteConfig(
+            isAllowOther: Boolean,
+            choices: List<String>,
+        ): Boolean {
+            val choicesSet = if (isAllowOther) choices.toSet() + null else choices.toSet()
+            return getContentsSet() == choicesSet
         }
     }
 
