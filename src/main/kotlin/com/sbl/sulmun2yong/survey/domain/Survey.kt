@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import java.util.Date
 import java.util.UUID
 
@@ -25,7 +26,13 @@ data class Survey(
     }
 
     fun validateResponse(sectionResponses: List<SectionResponse>) {
-        // TODO: 응답한 섹션 순서가 유효한지 검증
+        var currentSectionId: UUID? = sections.first().id
+        for (sectionResponse in sectionResponses) {
+            if (currentSectionId != sectionResponse.sectionId) throw InvalidSurveyResponseException()
+            val section = sections.find { it.id == currentSectionId } ?: throw InvalidSurveyResponseException()
+            currentSectionId = section.findNextSectionId(sectionResponse.questionResponses)
+        }
+        if (currentSectionId != null) throw InvalidSurveyResponseException()
     }
 
     fun getRewardCount(): Int {
