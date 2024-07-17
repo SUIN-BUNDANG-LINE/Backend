@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import java.util.Date
 import java.util.UUID
 
@@ -17,9 +18,10 @@ data class Survey(
     val sections: List<Section>,
 ) {
     init {
-        // TODO: publishedAt이 finishedAt보다 나중일 수 없다.
-        // TODO: publishedAt은 SurveyStatus가 NOT_STARTED일 때만 null이다.
-        // TODO: 섹션은 하나 이상 존재해야한다.
+        if (sections.isEmpty()) throw InvalidSurveyException()
+        if (publishedAt == null && status != SurveyStatus.NOT_STARTED) throw InvalidSurveyException()
+        if (publishedAt != null && publishedAt.after(finishedAt)) throw InvalidSurveyException()
+        if (targetParticipants < getRewardCount()) throw InvalidSurveyException()
     }
 
     fun validateResponse(sectionResponses: List<SectionResponse>) {
