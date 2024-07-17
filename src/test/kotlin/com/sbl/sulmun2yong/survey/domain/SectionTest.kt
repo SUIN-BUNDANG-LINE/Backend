@@ -82,19 +82,21 @@ class SectionTest {
     fun `기본 섹션을 생성할 수 있다`() {
         // given
         val id = UUID.randomUUID()
-        val mockedUUID = mockStatic(UUID::class.java)
-        mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(id)
 
-        // when
-        val section = Section.create()
+        mockStatic(UUID::class.java).use { mockedUUID ->
+            mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(id)
 
-        // then
-        with(section) {
-            assertEquals(id, this.id)
-            assertEquals("", this.title)
-            assertEquals("", this.description)
-            assertEquals(RouteDetails.NumericalOrder(null), this.routeDetails)
-            assertEquals(emptyList(), this.questions)
+            // when
+            val section = Section.create()
+
+            // then
+            with(section) {
+                assertEquals(id, this.id)
+                assertEquals("", this.title)
+                assertEquals("", this.description)
+                assertEquals(RouteDetails.NumericalOrder(null), this.routeDetails)
+                assertEquals(emptyList(), this.questions)
+            }
         }
     }
 
