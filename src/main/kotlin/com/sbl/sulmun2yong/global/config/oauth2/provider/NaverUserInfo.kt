@@ -9,7 +9,7 @@ class NaverUserInfo(
         attributes["response"] as? Map<String, Any>
             ?: throw NaverAttributeCastingFailedException()
 
-    override fun getProvider(): String = "naver"
+    override fun getProvider(): Provider = Provider.NAVER
 
     override fun getProviderId(): String = nestedAttributes["id"] as String
 

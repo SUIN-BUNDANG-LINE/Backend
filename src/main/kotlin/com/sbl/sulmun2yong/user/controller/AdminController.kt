@@ -5,13 +5,11 @@ import com.sbl.sulmun2yong.user.dto.response.UserSessionsResponse
 import com.sbl.sulmun2yong.user.service.AdminService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.session.SessionRegistry
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.bind.annotation.RestController
 
-@Controller
-@RequestMapping("/api/v1/admin")
+@RestController("/api/v1/admin")
 class AdminController(
     private val sessionRegistry: SessionRegistry,
     private val adminService: AdminService,

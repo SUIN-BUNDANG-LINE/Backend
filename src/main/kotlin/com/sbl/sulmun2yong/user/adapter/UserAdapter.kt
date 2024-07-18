@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.user.adapter
 
+import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
 import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.entity.UserDocument
 import com.sbl.sulmun2yong.user.exception.UserNotFoundException
@@ -15,20 +16,18 @@ class UserAdapter(
         userRepository.save(UserDocument.of(user))
     }
 
-    fun findByProviderAndProviderId(
-        provider: String,
-        providerId: String,
-    ): User =
-        userRepository
-            .findByProviderAndProviderId(provider, providerId)
-            .orElseThrow { UserNotFoundException() }
-            .toDomain()
-
-    fun findById(id: UUID): User =
+    fun getById(id: UUID): User =
         userRepository
             .findById(id)
             .orElseThrow { UserNotFoundException() }
             .toDomain()
 
-    fun countByNicknameRegex(nicknamePattern: String): Long = userRepository.countByNicknameRegex(nicknamePattern)
+    fun findByProviderAndProviderId(
+        provider: Provider,
+        providerId: String,
+    ): User? =
+        userRepository
+            .findByProviderAndProviderId(provider, providerId)
+            .map { it.toDomain() }
+            .orElse(null)
 }

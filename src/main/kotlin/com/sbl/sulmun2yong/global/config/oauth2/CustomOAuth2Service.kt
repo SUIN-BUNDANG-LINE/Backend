@@ -6,12 +6,9 @@ import com.sbl.sulmun2yong.global.config.oauth2.provider.NaverUserInfo
 import com.sbl.sulmun2yong.global.config.oauth2.provider.OAuth2UserInfo
 import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
 import com.sbl.sulmun2yong.global.config.oauth2.provider.exception.ProviderNotFoundException
-import com.sbl.sulmun2yong.global.util.RandomNicknameGenerator
 import com.sbl.sulmun2yong.global.util.SessionRegistryCleaner
 import com.sbl.sulmun2yong.user.adapter.UserAdapter
 import com.sbl.sulmun2yong.user.domain.User
-import com.sbl.sulmun2yong.user.domain.UserRole
-import com.sbl.sulmun2yong.user.exception.UserNotFoundException
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.session.SessionRegistry
@@ -19,7 +16,6 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
-import java.util.UUID
 
 @Service
 class CustomOAuth2Service(
@@ -32,32 +28,19 @@ class CustomOAuth2Service(
 
         expireUserSession(sessionRegistry)
 
-        val nickname = RandomNicknameGenerator.generate()
-        val nicknameRegex = "${Regex.escape(nickname)}#[0-9]+$"
-        val nicknameCount = userAdapter.countByNicknameRegex(nicknameRegex)
-        val taggedNickname = "$nickname#${nicknameCount + 1}"
-
         val oAuth2UserInfo = getOAuth2UserInfo(oAuth2UserRequest, oAuth2User)
         val provider = oAuth2UserInfo.getProvider()
         val providerId = oAuth2UserInfo.getProviderId()
+        val phoneNumber: String? = oAuth2UserInfo.getPhoneNumber()
 
-        val phoneNumber = oAuth2UserInfo.getPhoneNumber()
-        val newRole = phoneNumber?.let { UserRole.ROLE_AUTHENTICATED_USER } ?: UserRole.ROLE_USER
+        val user: User? = userAdapter.findByProviderAndProviderId(provider, providerId)
         val upsertedUser =
-            try {
-                val user = userAdapter.findByProviderAndProviderId(provider, providerId)
-                val role = user.role.takeIf { it == UserRole.ROLE_ADMIN } ?: newRole
-                user.copy(phoneNumber = phoneNumber, role = role)
-            } catch (e: UserNotFoundException) {
-                User(
-                    id = UUID.randomUUID(),
+            user?.withUpdatePhoneNumber(phoneNumber)
+                ?: User.create(
                     provider = provider,
                     providerId = providerId,
-                    nickname = taggedNickname,
                     phoneNumber = phoneNumber,
-                    role = newRole,
                 )
-            }
 
         userAdapter.join(upsertedUser)
         return CustomOAuth2User(upsertedUser.id, upsertedUser.role, oAuth2User.attributes)

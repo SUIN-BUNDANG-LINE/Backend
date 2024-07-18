@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.user.entity
 
+import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.domain.UserRole
@@ -11,7 +12,7 @@ import java.util.UUID
 class UserDocument private constructor(
     @Id
     val id: UUID,
-    val provider: String,
+    val provider: Provider,
     val providerId: String,
     val nickname: String,
     val phoneNumber: String?,

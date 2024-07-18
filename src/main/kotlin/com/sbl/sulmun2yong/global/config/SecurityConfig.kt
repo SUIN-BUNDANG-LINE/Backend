@@ -27,24 +27,23 @@ class SecurityConfig {
             csrf {
                 disable()
             }
-            authorizeHttpRequests {
-                authorize("/api/v1/admin/**", hasRole("ADMIN"))
-                authorize("/api/v1/user/**", authenticated)
-                authorize("/**", permitAll)
-            }
             oauth2Login {
-                loginPage = "/user/login"
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-            }
-            exceptionHandling {
-                authenticationEntryPoint = HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
             }
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
                 logoutSuccessHandler = CustomLogoutSuccessHandler(sessionRegistry())
+            }
+            authorizeHttpRequests {
+                authorize("/api/v1/admin/**", hasRole("ADMIN"))
+                authorize("/api/v1/user/**", authenticated)
+                authorize("/**", permitAll)
+            }
+            exceptionHandling {
+                authenticationEntryPoint = HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
             }
             sessionManagement {
                 invalidSessionStrategy = CustomInvalidSessionStrategy()

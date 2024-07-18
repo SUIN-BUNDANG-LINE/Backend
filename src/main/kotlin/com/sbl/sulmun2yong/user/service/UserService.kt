@@ -10,7 +10,7 @@ class UserService(
     private val userAdapter: UserAdapter,
 ) {
     fun getUserProfile(id: UUID): UserProfileResponse {
-        val user = userAdapter.findById(id)
+        val user = userAdapter.getById(id)
         return UserProfileResponse.of(user)
     }
 }
