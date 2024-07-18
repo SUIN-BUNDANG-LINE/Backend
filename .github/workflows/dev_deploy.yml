@@ -24,11 +24,14 @@ jobs:
             - name: Gradle 설정
               uses: gradle/gradle-build-action@v2
 
+            - name: Set up application-oauth2.yml
+              run: echo "${{ secrets.OAUTH2_YML_CONTENT }}" > src/main/resources/application-oauth2.yml
+
             - name: 환경 변수 설정
               run: |
-                echo "DOCKER_ID=${{ secrets.DOCKER_USERNAME }}" >> gradle.properties
-                echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> gradle.properties
-                echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}" >> gradle.properties
+                  echo "DOCKER_ID=${{ secrets.DOCKER_USERNAME }}" >> gradle.properties
+                  echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> gradle.properties
+                  echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}" >> gradle.properties
 
             - name: ktlint 포매팅 진행
               run: ./gradlew ktlintFormat
