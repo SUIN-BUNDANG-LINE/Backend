@@ -25,7 +25,8 @@ jobs:
               uses: gradle/gradle-build-action@v2
 
             - name: Set up application-oauth2.yml
-              run: echo "${{ secrets.OAUTH2_YML_CONTENT }}" > src/main/resources/application-oauth2.yml
+              run: |
+                echo "${{ secrets.OAUTH2_YML_CONTENT }}" > src/main/resources/application-oauth2.yml
 
             - name: 환경 변수 설정
               run: |
