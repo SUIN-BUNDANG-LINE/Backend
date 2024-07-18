@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
-import com.sbl.sulmun2yong.survey.exception.InvalidQuestionException
 import java.util.UUID
 
 data class MultipleChoiceQuestion(
@@ -8,15 +7,10 @@ data class MultipleChoiceQuestion(
     override val title: String,
     override val description: String,
     override val isRequired: Boolean,
-    override val choices: List<String>,
+    override val choices: Choices,
     override val isAllowOther: Boolean,
 ) : Question {
     override val questionType: QuestionType = QuestionType.MULTIPLE_CHOICE
-
-    init {
-        if (choices.isEmpty()) throw InvalidQuestionException()
-        if (choices.size != choices.distinct().size) throw InvalidQuestionException()
-    }
 
     override fun isValidResponse(responseCommand: ResponseCommand): Boolean {
         for (responseDetail in responseCommand.responses) {

@@ -8,7 +8,7 @@ interface Question {
     val title: String
     val description: String
     val isRequired: Boolean
-    val choices: List<String>?
+    val choices: Choices?
     val isAllowOther: Boolean
 
     fun isValidResponse(responseCommand: ResponseCommand): Boolean

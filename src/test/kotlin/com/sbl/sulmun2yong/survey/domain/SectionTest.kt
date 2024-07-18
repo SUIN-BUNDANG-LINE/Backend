@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.survey.domain.question.Choices
 import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.ResponseCommand
@@ -22,7 +23,7 @@ class SectionTest {
     private val a = "a"
     private val b = "b"
     private val c = "c"
-    private val choicesABC = listOf(a, b, c)
+    private val choicesABC = Choices(listOf(a, b, c))
 
     private val tQuestionId = UUID.randomUUID()
     private val tQuestionTitle = "textResponseQuestionTitle"
