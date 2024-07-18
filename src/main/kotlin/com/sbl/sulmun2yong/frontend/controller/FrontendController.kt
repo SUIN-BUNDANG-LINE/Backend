@@ -10,10 +10,4 @@ import org.springframework.web.bind.annotation.RequestMapping
 class FrontendController {
     @GetMapping("/login")
     fun login(): String = "login"
-
-    @GetMapping("/invalid-session")
-    fun invalidSession(): String = "invalid-session"
-
-    @GetMapping("/expired")
-    fun expired(): String = "expired"
 }

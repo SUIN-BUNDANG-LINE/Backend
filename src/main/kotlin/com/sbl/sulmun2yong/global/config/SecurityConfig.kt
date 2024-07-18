@@ -28,8 +28,8 @@ class SecurityConfig {
                 disable()
             }
             authorizeHttpRequests {
-                authorize("/admin/**", hasRole("ADMIN"))
-                authorize("/user/**", authenticated)
+                authorize("/api/v1/admin/**", hasRole("ADMIN"))
+                authorize("/api/v1/user/**", authenticated)
                 authorize("/**", permitAll)
             }
             oauth2Login {

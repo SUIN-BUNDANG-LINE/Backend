@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 
 @Tag(name = "Admin", description = "관리자 API")
-@RequestMapping("/admin")
+@RequestMapping("/api/v1/admin")
 interface AdminApiDoc {
     @Operation(summary = "로그인한 사용자 조회")
     @GetMapping("/sessions/logged-in-users")

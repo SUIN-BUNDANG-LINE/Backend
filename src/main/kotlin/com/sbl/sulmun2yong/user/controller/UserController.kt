@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 import java.util.UUID
 
 @Controller
-@RequestMapping("/user")
+@RequestMapping("/api/v1/user")
 class UserController(
     private val userService: UserService,
 ) : UserApiDoc {

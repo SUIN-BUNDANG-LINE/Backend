@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/api/v1/admin")
 class AdminController(
     private val sessionRegistry: SessionRegistry,
     private val adminService: AdminService,
