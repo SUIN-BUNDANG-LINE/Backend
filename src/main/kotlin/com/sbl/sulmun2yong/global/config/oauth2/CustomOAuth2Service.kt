@@ -42,7 +42,7 @@ class CustomOAuth2Service(
                     phoneNumber = phoneNumber,
                 )
 
-        userAdapter.join(upsertedUser)
+        userAdapter.save(upsertedUser)
         return CustomOAuth2User(upsertedUser.id, upsertedUser.role, oAuth2User.attributes)
     }
 

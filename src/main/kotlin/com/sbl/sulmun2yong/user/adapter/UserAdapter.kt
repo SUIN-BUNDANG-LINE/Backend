@@ -12,7 +12,7 @@ import java.util.UUID
 class UserAdapter(
     private val userRepository: UserRepository,
 ) {
-    fun join(user: User) {
+    fun save(user: User) {
         userRepository.save(UserDocument.of(user))
     }
 
