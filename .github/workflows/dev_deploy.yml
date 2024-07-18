@@ -11,6 +11,9 @@ jobs:
         name: 빌드 작업
         runs-on: ubuntu-latest
 
+        env:
+            OAUTH2_YML_CONTENT: ${{ secrets.OAUTH2_YML_CONTENT }}
+
         steps:
             - name: 코드 체크아웃
               uses: actions/checkout@v2
@@ -26,7 +29,7 @@ jobs:
 
             - name: Set up application-oauth2.yml
               run: |
-                echo "${{ secrets.OAUTH2_YML_CONTENT }}" > src/main/resources/application-oauth2.yml
+                echo "${OAUTH2_YML_CONTENT}" > src/main/resources/application-oauth2.yml
 
             - name: 환경 변수 설정
               run: |
