@@ -1,9 +1,7 @@
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-fun getCurrentDateTime(): String {
-    return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"))
-}
+fun getCurrentDateTime(): String = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"))
 
 plugins {
     id("org.springframework.boot") version "3.3.1"
@@ -31,11 +29,22 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
+    // TODO: 프론트엔드와 연동되면 삭제 예정
+    // MVC
+    implementation("org.springframework.boot:spring-boot-starter-mustache")
+
+    // security
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
     // jpa (RDBMS 사용 전 까지는 비활성화)
-//    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    // implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // mysql (MySQL 사용 전 까지는 비활성화)
-//    runtimeOnly("com.mysql:mysql-connector-j")
+    // runtimeOnly("com.mysql:mysql-connector-j")
+
+    // mongoDB
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     // validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -43,9 +52,6 @@ dependencies {
     // Swagger
     implementation("org.springdoc:springdoc-openapi:2.3.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
-
-    // mongoDB
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
