@@ -9,5 +9,5 @@ class KakaoUserInfo(
 
     override fun getNickname(): String = attributes["nickname"] as String
 
-    override fun getPhoneNumber(): String = ""
+    override fun getPhoneNumber(): String? = null
 }

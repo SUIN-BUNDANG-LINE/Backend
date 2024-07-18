@@ -7,5 +7,5 @@ interface OAuth2UserInfo {
 
     fun getNickname(): String
 
-    fun getPhoneNumber(): String
+    fun getPhoneNumber(): String?
 }

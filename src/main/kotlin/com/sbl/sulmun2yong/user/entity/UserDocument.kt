@@ -8,20 +8,20 @@ import org.springframework.data.mongodb.core.mapping.Document
 import java.util.UUID
 
 @Document(collection = "users")
-data class UserDocument(
+class UserDocument private constructor(
     @Id
     val id: UUID,
     val provider: String,
     val providerId: String,
     val nickname: String,
-    val phoneNumber: String,
+    val phoneNumber: String?,
     val role: UserRole,
     val isDeleted: Boolean = false,
 ) : BaseTimeDocument() {
     companion object {
         fun of(user: User): UserDocument =
             UserDocument(
-                id = UUID.randomUUID(),
+                id = user.id,
                 provider = user.provider,
                 providerId = user.providerId,
                 nickname = user.nickname,

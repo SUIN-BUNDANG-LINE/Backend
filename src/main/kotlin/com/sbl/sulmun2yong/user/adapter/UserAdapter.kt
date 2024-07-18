@@ -12,22 +12,17 @@ class UserAdapter(
     private val userRepository: UserRepository,
 ) {
     fun join(user: User) {
-        val provider = user.provider
-        val providerId = user.providerId
         userRepository.save(UserDocument.of(user))
     }
 
     fun findByProviderAndProviderId(
         provider: String,
         providerId: String,
-    ): User? {
-        val userDocument = userRepository.findByProviderAndProviderId(provider, providerId)
-        return if (userDocument.isPresent) {
-            userDocument.get().toDomain()
-        } else {
-            null
-        }
-    }
+    ): User =
+        userRepository
+            .findByProviderAndProviderId(provider, providerId)
+            .orElseThrow { UserNotFoundException() }
+            .toDomain()
 
     fun findById(id: UUID): User =
         userRepository
@@ -35,7 +30,5 @@ class UserAdapter(
             .orElseThrow { UserNotFoundException() }
             .toDomain()
 
-    fun countByNickname(nickname: String): Long =
-        userRepository
-            .countByNickname(nickname)
+    fun countByNicknameRegex(nicknamePattern: String): Long = userRepository.countByNicknameRegex(nicknamePattern)
 }

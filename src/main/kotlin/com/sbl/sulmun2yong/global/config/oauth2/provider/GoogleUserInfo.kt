@@ -9,5 +9,5 @@ class GoogleUserInfo(
 
     override fun getNickname(): String = attributes["name"] as String
 
-    override fun getPhoneNumber(): String = ""
+    override fun getPhoneNumber(): String? = null
 }

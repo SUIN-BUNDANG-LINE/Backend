@@ -5,11 +5,11 @@ import org.springframework.data.mongodb.repository.MongoRepository
 import java.util.Optional
 import java.util.UUID
 
-interface UserRepository : MongoRepository<UserDocument, UUID> {
+interface UserRepository :
+    MongoRepository<UserDocument, UUID>,
+    UserRepositoryCustom {
     fun findByProviderAndProviderId(
         provider: String,
         providerId: String,
     ): Optional<UserDocument>
-
-    fun countByNickname(nickname: String): Long
 }

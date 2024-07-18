@@ -6,7 +6,7 @@ import com.sbl.sulmun2yong.user.domain.UserRole
 class UserProfileResponse(
     var provider: String,
     var nickname: String,
-    var phoneNumber: String,
+    var phoneNumber: String?,
     var role: UserRole,
 ) {
     companion object {

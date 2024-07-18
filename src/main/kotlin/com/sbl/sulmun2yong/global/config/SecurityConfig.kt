@@ -1,13 +1,17 @@
 package com.sbl.sulmun2yong.global.config
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
+import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStrategy
+import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomInvalidSessionStrategy
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.core.session.SessionRegistryImpl
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.HttpStatusEntryPoint
 
 @Configuration
 class SecurityConfig {
@@ -29,10 +33,13 @@ class SecurityConfig {
                 authorize("/**", permitAll)
             }
             oauth2Login {
-                loginPage = "/frontend/login"
+                loginPage = "/user/login"
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
+            }
+            exceptionHandling {
+                authenticationEntryPoint = HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
             }
             logout {
                 logoutUrl = "/user/logout"
@@ -40,11 +47,11 @@ class SecurityConfig {
                 logoutSuccessHandler = CustomLogoutSuccessHandler(sessionRegistry())
             }
             sessionManagement {
-                invalidSessionUrl = "/frontend/invalid-session"
+                invalidSessionStrategy = CustomInvalidSessionStrategy()
                 sessionConcurrency {
-                    expiredUrl = "/frontend/expired"
-                    invalidSessionUrl = "/frontend/invalid-session"
-                    maximumSessions = 2
+                    expiredSessionStrategy = CustomExpiredSessionStrategy()
+                    invalidSessionStrategy = CustomInvalidSessionStrategy()
+                    maximumSessions = 1
                     maxSessionsPreventsLogin = false
                     sessionRegistry = sessionRegistry()
                 }

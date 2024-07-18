@@ -68,7 +68,7 @@ class RandomNicknameGenerator {
                 "성실한",
                 "충실한",
                 "헌신적인",
-                "열정 넘치는",
+                "열정있는",
             )
 
         val animalNames =
