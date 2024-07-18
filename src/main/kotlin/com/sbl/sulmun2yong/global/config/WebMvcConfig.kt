@@ -21,6 +21,7 @@ class WebMvcConfig(
             .allowedHeaders("*")
     }
 
+    // TODO: 프론트엔드와 연동되면 삭제 예정
     override fun configureViewResolvers(registry: ViewResolverRegistry) {
         val resolver = MustacheViewResolver()
         resolver.setCharset("UTF-8")

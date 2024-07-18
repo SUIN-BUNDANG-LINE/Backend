@@ -10,4 +10,6 @@ interface UserRepository : MongoRepository<UserDocument, UUID> {
         provider: String,
         providerId: String,
     ): Optional<UserDocument>
+
+    fun countByNickname(nickname: String): Long
 }

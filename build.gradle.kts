@@ -28,9 +28,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.springframework.boot:spring-boot-starter-logging")
 
-    // mvc
+    // TODO: 프론트엔드와 연동되면 삭제 예정
+    // MVC
     implementation("org.springframework.boot:spring-boot-starter-mustache")
 
     // security

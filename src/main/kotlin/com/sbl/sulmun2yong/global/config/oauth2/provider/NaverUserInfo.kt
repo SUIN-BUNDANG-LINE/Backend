@@ -1,13 +1,19 @@
 package com.sbl.sulmun2yong.global.config.oauth2.provider
 
+import com.sbl.sulmun2yong.global.config.oauth2.provider.exception.NaverAttributeCastingFailedException
+
 class NaverUserInfo(
-    private val attributes: Map<String, Any>,
+    attributes: Map<String, Any>,
 ) : OAuth2UserInfo {
+    private val nestedAttributes: Map<String, Any> =
+        attributes["response"] as? Map<String, Any>
+            ?: throw NaverAttributeCastingFailedException()
+
     override fun getProvider(): String = "naver"
 
-    override fun getProviderId(): String = attributes["id"] as String
+    override fun getProviderId(): String = nestedAttributes["id"] as String
 
-    override fun getNickname(): String = attributes["name"] as String
+    override fun getNickname(): String = nestedAttributes["name"] as String
 
-    override fun getPhoneNumber(): String = attributes["mobile"] as String
+    override fun getPhoneNumber(): String = nestedAttributes["mobile"] as String
 }

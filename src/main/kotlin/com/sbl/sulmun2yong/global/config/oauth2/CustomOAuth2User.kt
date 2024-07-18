@@ -1,20 +1,23 @@
 package com.sbl.sulmun2yong.global.config.oauth2
 
-import com.sbl.sulmun2yong.user.dto.response.UserIdAndRoleResponse
+import com.sbl.sulmun2yong.user.domain.UserRole
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
+import java.util.UUID
 
 class CustomOAuth2User(
-    private val userIdAndRoleResponse: UserIdAndRoleResponse,
+    private val id: UUID,
+    private val role: UserRole,
+    // TODO: attributes 통일
     private val attributes: MutableMap<String, Any>,
 ) : OAuth2User {
-    override fun getName(): String = userIdAndRoleResponse.id
+    override fun getName(): String = id.toString()
 
     override fun getAttributes(): MutableMap<String, Any> = attributes
 
     override fun getAuthorities(): MutableCollection<GrantedAuthority> {
-        val authorities = SimpleGrantedAuthority(userIdAndRoleResponse.role)
+        val authorities = SimpleGrantedAuthority(role.name)
         return mutableListOf(authorities)
     }
 
@@ -25,8 +28,8 @@ class CustomOAuth2User(
         if (other !is CustomOAuth2User) {
             return false
         }
-        return userIdAndRoleResponse.id == other.userIdAndRoleResponse.id
+        return id == other.id
     }
 
-    override fun hashCode(): Int = userIdAndRoleResponse.id.hashCode()
+    override fun hashCode(): Int = id.hashCode()
 }

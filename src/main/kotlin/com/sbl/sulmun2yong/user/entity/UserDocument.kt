@@ -18,13 +18,25 @@ data class UserDocument(
     val role: UserRole,
     val isDeleted: Boolean = false,
 ) : BaseTimeDocument() {
-    fun toDomain() =
+    companion object {
+        fun of(user: User): UserDocument =
+            UserDocument(
+                id = UUID.randomUUID(),
+                provider = user.provider,
+                providerId = user.providerId,
+                nickname = user.nickname,
+                phoneNumber = user.phoneNumber,
+                role = user.role,
+            )
+    }
+
+    fun toDomain(): User =
         User(
-            id = this.id,
-            provider = this.provider,
-            providerId = this.providerId,
-            nickname = this.nickname,
-            phoneNumber = this.phoneNumber,
-            role = this.role,
+            id = id,
+            provider = provider,
+            providerId = providerId,
+            nickname = nickname,
+            phoneNumber = phoneNumber,
+            role = role,
         )
 }
