@@ -18,11 +18,14 @@ data class Survey(
     val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
+    private val sectionIdSet = sections.map { it.id }.toSet()
+
     init {
         if (sections.isEmpty()) throw InvalidSurveyException()
         if (publishedAt == null && status != SurveyStatus.NOT_STARTED) throw InvalidSurveyException()
         if (publishedAt != null && publishedAt.after(finishedAt)) throw InvalidSurveyException()
         if (targetParticipants < getRewardCount()) throw InvalidSurveyException()
+        sections.map { it.validateRouteDetails() }
     }
 
     fun validateResponse(sectionResponses: List<SectionResponse>) {
@@ -37,5 +40,10 @@ data class Survey(
 
     fun getRewardCount(): Int {
         return rewards.sumOf { it.count }
+    }
+
+    private fun Section.validateRouteDetails() {
+        val isRouteDetailsValid = this.routeDetails.isRouteDetailsSectionIdValid(sectionIdSet)
+        if (!isRouteDetailsValid) throw InvalidSurveyException()
     }
 }
