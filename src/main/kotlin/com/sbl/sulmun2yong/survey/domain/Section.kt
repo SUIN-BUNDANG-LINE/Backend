@@ -57,7 +57,7 @@ data class Section(
                 val sectionResponse =
                     sectionResponse.find { it.questionId == routeDetails.keyQuestionId }
                         ?: throw InvalidSectionResponseException()
-                routeDetails.findNextSectionId(sectionResponse.responses.first())
+                routeDetails.findNextSectionId(sectionResponse.first())
             }
 
             is RouteDetails.NumericalOrder -> {

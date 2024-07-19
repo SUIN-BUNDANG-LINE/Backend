@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class QuestionResponse(
     val questionId: UUID,
-    val responses: List<ResponseDetail>,
+    private val responses: List<ResponseDetail>,
 ) : List<ResponseDetail> by responses {
     init {
         if (responses.isEmpty()) throw InvalidResponseCommandException()
