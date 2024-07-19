@@ -318,9 +318,10 @@ class SectionTest {
     @Test
     fun `섹션은 응답들을 확인하고, 필수 응답 질문에 답변을 하지 않으면 예외를 반환한다`() {
         // given
+        val id = UUID.randomUUID()
         val section =
             Section(
-                id = UUID.randomUUID(),
+                id = id,
                 title = "title",
                 description = "description",
                 routeDetails =
@@ -337,20 +338,27 @@ class SectionTest {
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
             )
 
-        val questionResponses1s: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
-                QuestionResponse(sQuestionId, listOf(ResponseDetail("a"))),
+        val sectionResponse1s =
+            SectionResponse(
+                id,
+                listOf(
+                    QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                    QuestionResponse(sQuestionId, listOf(ResponseDetail("a"))),
+                ),
             )
-        val questionResponses2s: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
-                QuestionResponse(mQuestionId, listOf(ResponseDetail("a"))),
+
+        val sectionResponse2s =
+            SectionResponse(
+                id,
+                listOf(
+                    QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                    QuestionResponse(mQuestionId, listOf(ResponseDetail("a"))),
+                ),
             )
 
         // when, then
-        assertDoesNotThrow { section.findNextSectionId(questionResponses1s) }
-        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(questionResponses2s) }
+        assertDoesNotThrow { section.findNextSectionId(sectionResponse1s) }
+        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse2s) }
     }
 
     @Test
@@ -370,28 +378,33 @@ class SectionTest {
 
         val questions = listOf(question1, question2)
 
-        val section = Section(UUID.randomUUID(), "title", "description", RouteDetails.NumericalOrder(null), questions)
+        val id = UUID.randomUUID()
+        val section = Section(id, "title", "description", RouteDetails.NumericalOrder(null), questions)
 
-        val questionResponses: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(questionId1, listOf(ResponseDetail("a"))),
-                QuestionResponse(questionId2, listOf(ResponseDetail("a"))),
+        val sectionResponse =
+            SectionResponse(
+                id,
+                listOf(
+                    QuestionResponse(questionId1, listOf(ResponseDetail("a"))),
+                    QuestionResponse(questionId2, listOf(ResponseDetail("a"))),
+                ),
             )
 
         // when, then
-        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(questionResponses) }
+        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse) }
     }
 
     @Test
     fun `번호순 라우팅 방식의 섹션은 nextQuestionId로 다음 섹션을 결정한다`() {
         // given
-        val sectionId = UUID.randomUUID()
+        val nextSectionId = UUID.randomUUID()
+        val currentSectionId = UUID.randomUUID()
         val section =
             Section(
-                id = UUID.randomUUID(),
+                id = currentSectionId,
                 title = "title",
                 description = "description",
-                routeDetails = RouteDetails.NumericalOrder(sectionId),
+                routeDetails = RouteDetails.NumericalOrder(nextSectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
         val questionResponses: List<QuestionResponse> =
@@ -402,8 +415,8 @@ class SectionTest {
             )
 
         // when, then
-        assertEquals(sectionId, section.findNextSectionId(listOf()))
-        assertEquals(sectionId, section.findNextSectionId(questionResponses))
+        assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
+        assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, questionResponses)))
     }
 
     @Test
@@ -438,21 +451,27 @@ class SectionTest {
                 questions = questions,
             )
 
-        val questionResponses1s: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(tQuestionId, listOf(ResponseDetail(a))),
-                QuestionResponse(sQuestionId, listOf(ResponseDetail(a))),
+        val sectionResponse1s =
+            SectionResponse(
+                id,
+                listOf(
+                    QuestionResponse(tQuestionId, listOf(ResponseDetail(a))),
+                    QuestionResponse(sQuestionId, listOf(ResponseDetail(a))),
+                ),
             )
 
-        val questionResponses2s: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(mQuestionId, listOf(ResponseDetail(b))),
-                QuestionResponse(sQuestionId, listOf(ResponseDetail(a, true))),
+        val sectionResponse2s =
+            SectionResponse(
+                id,
+                listOf(
+                    QuestionResponse(mQuestionId, listOf(ResponseDetail(b))),
+                    QuestionResponse(sQuestionId, listOf(ResponseDetail(a, true))),
+                ),
             )
 
         // when
-        val nextSectionId1 = section.findNextSectionId(questionResponses1s)
-        val nextSectionId2 = section.findNextSectionId(questionResponses2s)
+        val nextSectionId1 = section.findNextSectionId(sectionResponse1s)
+        val nextSectionId2 = section.findNextSectionId(sectionResponse2s)
 
         // then
         assertEquals(sectionId1, nextSectionId1)
@@ -462,24 +481,28 @@ class SectionTest {
     @Test
     fun `유저 기반 라우팅 방식의 섹션은 nextQuestionId로 다음 섹션을 결정한다`() {
         // given
-        val sectionId = UUID.randomUUID()
+        val nextSectionId = UUID.randomUUID()
+        val currentSectionId = UUID.randomUUID()
         val section =
             Section(
-                id = UUID.randomUUID(),
+                id = currentSectionId,
                 title = "title",
                 description = "description",
-                routeDetails = RouteDetails.SetByUser(sectionId),
+                routeDetails = RouteDetails.SetByUser(nextSectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
-        val questionResponses: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
-                QuestionResponse(sQuestionId, listOf(ResponseDetail("a", true))),
-                QuestionResponse(mQuestionId, listOf(ResponseDetail("b"))),
+        val questionResponses =
+            SectionResponse(
+                currentSectionId,
+                listOf(
+                    QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                    QuestionResponse(sQuestionId, listOf(ResponseDetail("a", true))),
+                    QuestionResponse(mQuestionId, listOf(ResponseDetail("b"))),
+                ),
             )
 
         // when, then
-        assertEquals(sectionId, section.findNextSectionId(listOf()))
-        assertEquals(sectionId, section.findNextSectionId(questionResponses))
+        assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
+        assertEquals(nextSectionId, section.findNextSectionId(questionResponses))
     }
 }

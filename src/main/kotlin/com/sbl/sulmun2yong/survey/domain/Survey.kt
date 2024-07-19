@@ -41,7 +41,7 @@ data class Survey(
         for (sectionResponse in sectionResponses) {
             if (currentSectionId != sectionResponse.sectionId) throw InvalidSurveyResponseException()
             val section = findSectionById(currentSectionId) ?: throw InvalidSurveyResponseException()
-            currentSectionId = section.findNextSectionId(sectionResponse.questionResponses)
+            currentSectionId = section.findNextSectionId(sectionResponse)
         }
         // 최종적인 섹션 ID가 null이 아니면 끝까지 응답하지 않은 것이므로 예외를 발생시킨다.
         if (currentSectionId != null) throw InvalidSurveyResponseException()

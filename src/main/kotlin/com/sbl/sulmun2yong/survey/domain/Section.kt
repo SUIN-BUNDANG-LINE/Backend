@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.domain.question.Question
-import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
@@ -42,9 +41,9 @@ data class Section(
             )
     }
 
-    fun findNextSectionId(questionResponses: List<QuestionResponse>): UUID? {
+    fun findNextSectionId(sectionResponse: SectionResponse): UUID? {
         for (question in questions) {
-            val findInResponse = questionResponses.find { it.questionId == question.id }
+            val findInResponse = sectionResponse.find { it.questionId == question.id }
             if (question.isRequired && findInResponse == null) {
                 throw InvalidSectionResponseException()
             }
@@ -56,7 +55,7 @@ data class Section(
         return when (routeDetails) {
             is RouteDetails.SetByChoice -> {
                 val sectionResponse =
-                    questionResponses.find { it.questionId == routeDetails.keyQuestionId }
+                    sectionResponse.find { it.questionId == routeDetails.keyQuestionId }
                         ?: throw InvalidSectionResponseException()
                 routeDetails.findNextSectionId(sectionResponse.responses.first())
             }

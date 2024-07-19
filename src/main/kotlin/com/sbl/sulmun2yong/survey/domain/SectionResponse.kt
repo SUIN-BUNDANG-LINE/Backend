@@ -6,4 +6,4 @@ import java.util.UUID
 data class SectionResponse(
     val sectionId: UUID,
     val questionResponses: List<QuestionResponse>,
-)
+) : List<QuestionResponse> by questionResponses
