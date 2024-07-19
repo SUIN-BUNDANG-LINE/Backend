@@ -5,7 +5,11 @@ import com.sbl.sulmun2yong.survey.exception.InvalidRouteDetailsException
 import java.util.UUID
 
 sealed class RouteDetails(val type: SectionRouteType) {
-    data class NumericalOrder(val nextSectionId: UUID?) : RouteDetails(SectionRouteType.NUMERICAL_ORDER)
+    abstract fun isRouteDetailsSectionIdValid(sectionIdSet: Set<UUID>): Boolean
+
+    data class NumericalOrder(val nextSectionId: UUID?) : RouteDetails(SectionRouteType.NUMERICAL_ORDER) {
+        override fun isRouteDetailsSectionIdValid(sectionIdSet: Set<UUID>) = nextSectionId == null || sectionIdSet.contains(nextSectionId)
+    }
 
     data class SetByChoice(
         val keyQuestionId: UUID,
@@ -13,6 +17,11 @@ sealed class RouteDetails(val type: SectionRouteType) {
     ) : RouteDetails(SectionRouteType.SET_BY_CHOICE) {
         init {
             if (sectionRouteConfigs.size != getContentsSet().size) throw InvalidRouteDetailsException()
+        }
+
+        override fun isRouteDetailsSectionIdValid(sectionIdSet: Set<UUID>): Boolean {
+            val nextSectionIdSet = sectionRouteConfigs.map { it.nextSectionId }.toSet()
+            return nextSectionIdSet.all { it == null || sectionIdSet.contains(it) }
         }
 
         fun findNextSectionId(responseDetail: ResponseDetail): UUID? {
@@ -34,7 +43,9 @@ sealed class RouteDetails(val type: SectionRouteType) {
         }
     }
 
-    data class SetByUser(val nextSectionId: UUID?) : RouteDetails(SectionRouteType.SET_BY_USER)
+    data class SetByUser(val nextSectionId: UUID?) : RouteDetails(SectionRouteType.SET_BY_USER) {
+        override fun isRouteDetailsSectionIdValid(sectionIdSet: Set<UUID>) = nextSectionId == null || sectionIdSet.contains(nextSectionId)
+    }
 }
 
 data class SectionRouteConfig(
