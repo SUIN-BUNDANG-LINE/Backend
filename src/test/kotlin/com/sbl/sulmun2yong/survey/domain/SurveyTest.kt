@@ -153,18 +153,25 @@ class SurveyTest {
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
         val sectionId4 = UUID.randomUUID()
+        val mockRouteDetails = mock<RouteDetails.SetByChoice>()
+        `when`(mockRouteDetails.isRouteDetailsSectionIdValid(any())).thenReturn(true)
+
         val section1 = mock<Section>()
         `when`(section1.id).thenReturn(sectionId1)
         `when`(section1.findNextSectionId(any())).thenReturn(sectionId2)
+        `when`(section1.routeDetails).thenReturn(mockRouteDetails)
         val section2 = mock<Section>()
         `when`(section2.id).thenReturn(sectionId2)
         `when`(section2.findNextSectionId(any())).thenReturn(sectionId3)
+        `when`(section2.routeDetails).thenReturn(mockRouteDetails)
         val section3 = mock<Section>()
         `when`(section3.id).thenReturn(sectionId3)
         `when`(section3.findNextSectionId(any())).thenReturn(null)
+        `when`(section3.routeDetails).thenReturn(mockRouteDetails)
         val section4 = mock<Section>()
         `when`(section4.id).thenReturn(sectionId4)
         `when`(section4.findNextSectionId(any())).thenReturn(null)
+        `when`(section4.routeDetails).thenReturn(mockRouteDetails)
 
         val survey =
             Survey(
@@ -259,6 +266,80 @@ class SurveyTest {
                 targetParticipants = 8,
                 rewards = rewards,
                 sections = listOf(Section.create()),
+            )
+        }
+    }
+
+    @Test
+    fun `설문에 속한 각 섹션의 RouteDetails의 SectionId는 설문에 속한 섹션의 ID여야 한다`() {
+        // given
+        val sectionId1 = UUID.randomUUID()
+        val sectionId2 = UUID.randomUUID()
+        val sectionId3 = UUID.randomUUID()
+        val sectionId4 = UUID.randomUUID()
+
+        val validSectionIdSet = setOf(sectionId1, sectionId2, sectionId3)
+        val invalidSectionIdSet = setOf(sectionId1, sectionId2, sectionId4)
+
+        // 해당 RouteDetails의 SectionId는 validSectionIdSet에 속한 ID이다.
+        // 즉, 설문의 섹션 중 validSectionIdSet에 속하지 않은 섹션 ID를 가진 섹션이 있으면 예외가 발생한다.
+        val mockSetByChoice = mock<RouteDetails.SetByChoice>()
+        `when`(mockSetByChoice.isRouteDetailsSectionIdValid(validSectionIdSet)).thenReturn(true)
+        `when`(mockSetByChoice.isRouteDetailsSectionIdValid(invalidSectionIdSet)).thenReturn(false)
+        val mockSetByUser = mock<RouteDetails.SetByUser>()
+        `when`(mockSetByUser.isRouteDetailsSectionIdValid(validSectionIdSet)).thenReturn(true)
+        `when`(mockSetByUser.isRouteDetailsSectionIdValid(invalidSectionIdSet)).thenReturn(false)
+        val mockNumericalOrder = mock<RouteDetails.NumericalOrder>()
+        `when`(mockNumericalOrder.isRouteDetailsSectionIdValid(validSectionIdSet)).thenReturn(true)
+        `when`(mockNumericalOrder.isRouteDetailsSectionIdValid(invalidSectionIdSet)).thenReturn(false)
+
+        val section1 = mock<Section>()
+        `when`(section1.id).thenReturn(sectionId1)
+        `when`(section1.findNextSectionId(any())).thenReturn(sectionId2)
+        `when`(section1.routeDetails).thenReturn(mockSetByChoice)
+        val section2 = mock<Section>()
+        `when`(section2.id).thenReturn(sectionId2)
+        `when`(section2.findNextSectionId(any())).thenReturn(sectionId3)
+        `when`(section2.routeDetails).thenReturn(mockSetByUser)
+        val section3 = mock<Section>()
+        `when`(section3.id).thenReturn(sectionId3)
+        `when`(section3.findNextSectionId(any())).thenReturn(null)
+        `when`(section3.routeDetails).thenReturn(mockNumericalOrder)
+        val section4 = mock<Section>()
+        `when`(section4.id).thenReturn(sectionId4)
+        `when`(section4.findNextSectionId(any())).thenReturn(null)
+        `when`(section4.routeDetails).thenReturn(mockNumericalOrder)
+
+        // when, then
+        assertDoesNotThrow {
+            Survey(
+                id = UUID.randomUUID(),
+                title = "a",
+                description = "elementum",
+                thumbnail = "option",
+                publishedAt = Date(finishedAt.time - 24 * 60 * 60 * 10000),
+                finishedAt = finishedAt,
+                status = SurveyStatus.IN_PROGRESS,
+                finishMessage = "b",
+                targetParticipants = 200,
+                rewards = rewards,
+                sections = listOf(section1, section2, section3),
+            )
+        }
+
+        assertThrows<InvalidSurveyException> {
+            Survey(
+                id = UUID.randomUUID(),
+                title = "a",
+                description = "elementum",
+                thumbnail = "option",
+                publishedAt = Date(finishedAt.time - 24 * 60 * 60 * 10000),
+                finishedAt = finishedAt,
+                status = SurveyStatus.IN_PROGRESS,
+                finishMessage = "b",
+                targetParticipants = 200,
+                rewards = rewards,
+                sections = listOf(section1, section2, section4),
             )
         }
     }
