@@ -21,29 +21,34 @@ data class Survey(
     private val sectionIdSet = sections.map { it.id }.toSet()
 
     init {
-        if (sections.isEmpty()) throw InvalidSurveyException()
-        if (publishedAt == null && status != SurveyStatus.NOT_STARTED) throw InvalidSurveyException()
-        if (publishedAt != null && publishedAt.after(finishedAt)) throw InvalidSurveyException()
-        if (targetParticipants < getRewardCount()) throw InvalidSurveyException()
-        sections.map { it.validateRouteDetails() }
+        validateSurvey()
     }
 
+    private fun validateSurvey() {
+        require(sections.isNotEmpty()) { throw InvalidSurveyException() }
+        // 각 섹션의 경로 설정에 해당하는 섹션 ID들은 유효해야한다.
+        require(isAllRouteDetailsValid()) { throw InvalidSurveyException() }
+        require(publishedAt != null || status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyException() }
+        require(publishedAt == null || finishedAt.after(publishedAt)) { throw InvalidSurveyException() }
+        require(targetParticipants >= getRewardCount()) { throw InvalidSurveyException() }
+    }
+
+    // 설문의 응답에 해당하는 섹션이 유효한지, 설문의 흐름이 유효한지 확인한다.
     fun validateResponse(sectionResponses: List<SectionResponse>) {
         var currentSectionId: UUID? = sections.first().id
+        // 응답을 차례대로 확인하면서 유효한 응답인지, 섹션의 흐름이 올바른지 확인한다.
         for (sectionResponse in sectionResponses) {
             if (currentSectionId != sectionResponse.sectionId) throw InvalidSurveyResponseException()
-            val section = sections.find { it.id == currentSectionId } ?: throw InvalidSurveyResponseException()
+            val section = findSectionById(currentSectionId) ?: throw InvalidSurveyResponseException()
             currentSectionId = section.findNextSectionId(sectionResponse.questionResponses)
         }
+        // 최종적인 섹션 ID가 null이 아니면 끝까지 응답하지 않은 것이므로 예외를 발생시킨다.
         if (currentSectionId != null) throw InvalidSurveyResponseException()
     }
 
-    fun getRewardCount(): Int {
-        return rewards.sumOf { it.count }
-    }
+    fun getRewardCount() = rewards.sumOf { it.count }
 
-    private fun Section.validateRouteDetails() {
-        val isRouteDetailsValid = this.routeDetails.isRouteDetailsSectionIdValid(sectionIdSet)
-        if (!isRouteDetailsValid) throw InvalidSurveyException()
-    }
+    private fun isAllRouteDetailsValid() = sections.all { it.routeDetails.isRouteDetailsSectionIdValid(sectionIdSet) }
+
+    private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
 }
