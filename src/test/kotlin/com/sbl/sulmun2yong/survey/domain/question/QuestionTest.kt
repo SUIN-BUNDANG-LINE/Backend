@@ -16,16 +16,18 @@ class QuestionTest {
     private val etcDetailA = ResponseDetail(a, true)
     private val etcDetailD = ResponseDetail(d, true)
 
-    private val singleResponseA = ResponseCommand(listOf(detailA))
-    private val singleResponseD = ResponseCommand(listOf(detailD))
-    private val etcSingleResponseA = ResponseCommand(listOf(etcDetailA))
-    private val etcSingleResponseD = ResponseCommand(listOf(etcDetailD))
+    private val questionId = UUID.randomUUID()
 
-    private val multipleResponseAB = ResponseCommand(listOf(detailA, detailB))
-    private val multipleResponseCD = ResponseCommand(listOf(detailC, detailD))
-    private val multipleResponseCEtcA = ResponseCommand(listOf(detailC, etcDetailA))
-    private val multipleResponseABEtcA = ResponseCommand(listOf(detailA, detailB, etcDetailA))
-    private val multipleResponseABEtcD = ResponseCommand(listOf(detailA, detailB, etcDetailD))
+    private val singleResponseA = QuestionResponse(questionId, listOf(detailA))
+    private val singleResponseD = QuestionResponse(questionId, listOf(detailD))
+    private val etcSingleResponseA = QuestionResponse(questionId, listOf(etcDetailA))
+    private val etcSingleResponseD = QuestionResponse(questionId, listOf(etcDetailD))
+
+    private val multipleResponseAB = QuestionResponse(questionId, listOf(detailA, detailB))
+    private val multipleResponseCD = QuestionResponse(questionId, listOf(detailC, detailD))
+    private val multipleResponseCEtcA = QuestionResponse(questionId, listOf(detailC, etcDetailA))
+    private val multipleResponseABEtcA = QuestionResponse(questionId, listOf(detailA, detailB, etcDetailA))
+    private val multipleResponseABEtcD = QuestionResponse(questionId, listOf(detailA, detailB, etcDetailD))
 
     private val choicesABC = Choices(listOf(a, b, c))
     private val choicesA = Choices(listOf(a))
@@ -35,7 +37,7 @@ class QuestionTest {
         // 선택지가 없고, 기타 응답을 허용할 수 없고, 질문 유형이 TEXT_RESPONSE다
 
         // given
-        val id = UUID.randomUUID()
+        val id = questionId
         val title = "주관식 질문 제목"
         val description = "주관식 질문 설명"
         val isRequired = true
@@ -68,7 +70,7 @@ class QuestionTest {
         // given
         val question: Question =
             TextResponseQuestion(
-                id = UUID.randomUUID(),
+                id = questionId,
                 title = "주관식 질문 제목",
                 description = "주관식 질문 설명",
                 isRequired = true,
@@ -93,7 +95,7 @@ class QuestionTest {
         // 선택지가 하나 이상 있고, 기타 응답을 허용할 수 있고, 질문 유형이 SINGLE_CHOICE다
 
         // given
-        val id = UUID.randomUUID()
+        val id = questionId
         val title = "단일 선택 질문 제목"
         val description = "단일 선택 질문 설명"
         val isRequired = true
@@ -129,7 +131,7 @@ class QuestionTest {
         // given
         val questionABC: Question =
             SingleChoiceQuestion(
-                id = UUID.randomUUID(),
+                id = questionId,
                 title = "단일 선택 질문 제목 1",
                 description = "단일 선택 질문 설명 1",
                 isRequired = true,
@@ -139,7 +141,7 @@ class QuestionTest {
 
         val questionABCEtc: Question =
             SingleChoiceQuestion(
-                id = UUID.randomUUID(),
+                id = questionId,
                 title = "단일 선택 질문 제목 2",
                 description = "단일 선택 질문 설명 2",
                 isRequired = false,
@@ -177,7 +179,7 @@ class QuestionTest {
         // 선택지가 하나 이상 있고, 기타 응답을 허용할 수 있고, 질문 유형이 MULTIPLE_CHOICE다
 
         // given
-        val id = UUID.randomUUID()
+        val id = questionId
         val title = "다중 선택 질문 제목"
         val description = "다중 선택 질문 설명"
         val isRequired = false
@@ -213,7 +215,7 @@ class QuestionTest {
         // given
         val questionABC: Question =
             MultipleChoiceQuestion(
-                id = UUID.randomUUID(),
+                id = questionId,
                 title = "제목 1",
                 description = "선택지가 A,B,C",
                 isRequired = false,
@@ -223,7 +225,7 @@ class QuestionTest {
 
         val questionABCEtc: Question =
             MultipleChoiceQuestion(
-                id = UUID.randomUUID(),
+                id = questionId,
                 title = "제목 2",
                 description = "선택지가 A,B,C고 기타 응답 허용",
                 isRequired = true,
@@ -233,7 +235,7 @@ class QuestionTest {
 
         val questionAEtc: Question =
             MultipleChoiceQuestion(
-                id = UUID.randomUUID(),
+                id = questionId,
                 title = "제목 3",
                 description = "선택지가 A고 기타 응답 허용",
                 isRequired = false,

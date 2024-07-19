@@ -11,5 +11,5 @@ interface Question {
     val choices: Choices?
     val isAllowOther: Boolean
 
-    fun isValidResponse(responseCommand: ResponseCommand): Boolean
+    fun isValidResponse(questionResponse: QuestionResponse): Boolean
 }

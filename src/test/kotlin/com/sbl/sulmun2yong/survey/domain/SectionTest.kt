@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.survey.domain
 import com.sbl.sulmun2yong.survey.domain.question.Choices
 import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.Question
-import com.sbl.sulmun2yong.survey.domain.question.ResponseCommand
+import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
@@ -339,13 +339,13 @@ class SectionTest {
 
         val questionResponses1s: List<QuestionResponse> =
             listOf(
-                QuestionResponse(tQuestionId, ResponseCommand(listOf(ResponseDetail("a")))),
-                QuestionResponse(sQuestionId, ResponseCommand(listOf(ResponseDetail("a")))),
+                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                QuestionResponse(sQuestionId, listOf(ResponseDetail("a"))),
             )
         val questionResponses2s: List<QuestionResponse> =
             listOf(
-                QuestionResponse(tQuestionId, ResponseCommand(listOf(ResponseDetail("a")))),
-                QuestionResponse(mQuestionId, ResponseCommand(listOf(ResponseDetail("a")))),
+                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                QuestionResponse(mQuestionId, listOf(ResponseDetail("a"))),
             )
 
         // when, then
@@ -372,14 +372,14 @@ class SectionTest {
 
         val section = Section(UUID.randomUUID(), "title", "description", RouteDetails.NumericalOrder(null), questions)
 
-        val questionRespons: List<QuestionResponse> =
+        val questionResponses: List<QuestionResponse> =
             listOf(
-                QuestionResponse(questionId1, ResponseCommand(listOf(ResponseDetail("a")))),
-                QuestionResponse(questionId2, ResponseCommand(listOf(ResponseDetail("a")))),
+                QuestionResponse(questionId1, listOf(ResponseDetail("a"))),
+                QuestionResponse(questionId2, listOf(ResponseDetail("a"))),
             )
 
         // when, then
-        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(questionRespons) }
+        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(questionResponses) }
     }
 
     @Test
@@ -394,16 +394,16 @@ class SectionTest {
                 routeDetails = RouteDetails.NumericalOrder(sectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
-        val questionRespons: List<QuestionResponse> =
+        val questionResponses: List<QuestionResponse> =
             listOf(
-                QuestionResponse(tQuestionId, ResponseCommand(listOf(ResponseDetail("a")))),
-                QuestionResponse(sQuestionId, ResponseCommand(listOf(ResponseDetail("a", true)))),
-                QuestionResponse(mQuestionId, ResponseCommand(listOf(ResponseDetail("b")))),
+                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                QuestionResponse(sQuestionId, listOf(ResponseDetail("a", true))),
+                QuestionResponse(mQuestionId, listOf(ResponseDetail("b"))),
             )
 
         // when, then
         assertEquals(sectionId, section.findNextSectionId(listOf()))
-        assertEquals(sectionId, section.findNextSectionId(questionRespons))
+        assertEquals(sectionId, section.findNextSectionId(questionResponses))
     }
 
     @Test
@@ -440,14 +440,14 @@ class SectionTest {
 
         val questionResponses1s: List<QuestionResponse> =
             listOf(
-                QuestionResponse(tQuestionId, ResponseCommand(listOf(ResponseDetail(a)))),
-                QuestionResponse(sQuestionId, ResponseCommand(listOf(ResponseDetail(a)))),
+                QuestionResponse(tQuestionId, listOf(ResponseDetail(a))),
+                QuestionResponse(sQuestionId, listOf(ResponseDetail(a))),
             )
 
         val questionResponses2s: List<QuestionResponse> =
             listOf(
-                QuestionResponse(mQuestionId, ResponseCommand(listOf(ResponseDetail(b)))),
-                QuestionResponse(sQuestionId, ResponseCommand(listOf(ResponseDetail(a, true)))),
+                QuestionResponse(mQuestionId, listOf(ResponseDetail(b))),
+                QuestionResponse(sQuestionId, listOf(ResponseDetail(a, true))),
             )
 
         // when
@@ -471,15 +471,15 @@ class SectionTest {
                 routeDetails = RouteDetails.SetByUser(sectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
-        val questionRespons: List<QuestionResponse> =
+        val questionResponses: List<QuestionResponse> =
             listOf(
-                QuestionResponse(tQuestionId, ResponseCommand(listOf(ResponseDetail("a")))),
-                QuestionResponse(sQuestionId, ResponseCommand(listOf(ResponseDetail("a", true)))),
-                QuestionResponse(mQuestionId, ResponseCommand(listOf(ResponseDetail("b")))),
+                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                QuestionResponse(sQuestionId, listOf(ResponseDetail("a", true))),
+                QuestionResponse(mQuestionId, listOf(ResponseDetail("b"))),
             )
 
         // when, then
         assertEquals(sectionId, section.findNextSectionId(listOf()))
-        assertEquals(sectionId, section.findNextSectionId(questionRespons))
+        assertEquals(sectionId, section.findNextSectionId(questionResponses))
     }
 }

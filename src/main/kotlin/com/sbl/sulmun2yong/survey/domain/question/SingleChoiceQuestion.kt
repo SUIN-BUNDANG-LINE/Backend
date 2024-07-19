@@ -12,9 +12,9 @@ data class SingleChoiceQuestion(
 ) : Question {
     override val questionType: QuestionType = QuestionType.SINGLE_CHOICE
 
-    override fun isValidResponse(responseCommand: ResponseCommand): Boolean {
-        if (responseCommand.responses.size != 1) return false
-        if (responseCommand.responses.first().isOther) return isAllowOther
-        return choices.contains(responseCommand.responses.first().content)
+    override fun isValidResponse(questionResponse: QuestionResponse): Boolean {
+        if (questionResponse.size != 1) return false
+        if (questionResponse.first().isOther) return isAllowOther
+        return choices.contains(questionResponse.first().content)
     }
 }

@@ -1,10 +1,12 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
 import com.sbl.sulmun2yong.survey.exception.InvalidResponseCommandException
+import java.util.UUID
 
-data class ResponseCommand(
+data class QuestionResponse(
+    val questionId: UUID,
     val responses: List<ResponseDetail>,
-) {
+) : List<ResponseDetail> by responses {
     init {
         if (responses.isEmpty()) throw InvalidResponseCommandException()
         if (responses.hasDuplicates()) throw InvalidResponseCommandException()
@@ -15,8 +17,3 @@ data class ResponseCommand(
 
     private fun List<ResponseDetail>.hasInvalidEtcCount(): Boolean = this.count { it.isOther } > 1
 }
-
-data class ResponseDetail(
-    val content: String,
-    val isOther: Boolean = false,
-)

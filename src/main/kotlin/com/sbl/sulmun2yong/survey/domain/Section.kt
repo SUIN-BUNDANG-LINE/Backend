@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.domain.question.Question
+import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
@@ -47,7 +48,7 @@ data class Section(
             if (question.isRequired && findInResponse == null) {
                 throw InvalidSectionResponseException()
             }
-            if (findInResponse != null && !question.isValidResponse(findInResponse.responses)) {
+            if (findInResponse != null && !question.isValidResponse(findInResponse)) {
                 throw InvalidSectionResponseException()
             }
         }
@@ -57,7 +58,7 @@ data class Section(
                 val sectionResponse =
                     questionResponses.find { it.questionId == routeDetails.keyQuestionId }
                         ?: throw InvalidSectionResponseException()
-                routeDetails.findNextSectionId(sectionResponse.responses.responses.first())
+                routeDetails.findNextSectionId(sectionResponse.responses.first())
             }
 
             is RouteDetails.NumericalOrder -> {
