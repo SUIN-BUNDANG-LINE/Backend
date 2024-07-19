@@ -120,4 +120,42 @@ class RouteDetailsTest {
         assertEquals(sectionRouteConfigs[2].nextSectionId, nextSectionId3)
         assertThrows<InvalidRouteDetailsException> { setByChoice.findNextSectionId(ResponseDetail("c", false)) }
     }
+
+    @Test
+    fun `RouteDetails는 섹션 ID 집합을 받으면, RouteDetails의 nextSectionId가 유효한지 확인할 수 있다`() {
+        // given
+        val sectionId1 = UUID.randomUUID()
+        val sectionId2 = UUID.randomUUID()
+        val sectionId3 = UUID.randomUUID()
+
+        val numericalOrder1 = RouteDetails.NumericalOrder(sectionId1)
+        val numericalOrder2 = RouteDetails.NumericalOrder(sectionId3)
+        val setByUser1 = RouteDetails.SetByUser(null)
+        val setByUser2 = RouteDetails.SetByUser(sectionId3)
+
+        val sectionRouteConfigs =
+            listOf(
+                SectionRouteConfig("a", sectionId1),
+                SectionRouteConfig("b", sectionId2),
+            )
+        val setByChoice = RouteDetails.SetByChoice(UUID.randomUUID(), sectionRouteConfigs)
+
+        val sectionIdSet = setOf(sectionId1, sectionId2)
+
+        // when
+        val result1 = numericalOrder1.isRouteDetailsSectionIdValid(sectionIdSet)
+        val result2 = numericalOrder2.isRouteDetailsSectionIdValid(sectionIdSet)
+        val result3 = setByUser1.isRouteDetailsSectionIdValid(sectionIdSet)
+        val result4 = setByUser2.isRouteDetailsSectionIdValid(sectionIdSet)
+        val result5 = setByChoice.isRouteDetailsSectionIdValid(sectionIdSet)
+        val result6 = setByChoice.isRouteDetailsSectionIdValid(setOf(sectionId1, sectionId3))
+
+        // then
+        assertEquals(true, result1)
+        assertEquals(false, result2)
+        assertEquals(true, result3)
+        assertEquals(false, result4)
+        assertEquals(true, result5)
+        assertEquals(false, result6)
+    }
 }
