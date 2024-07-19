@@ -228,9 +228,10 @@ class SurveyTest {
         `when`(section4.findNextSectionId(any())).thenReturn(null)
         `when`(section4.routeDetails).thenReturn(mockRouteDetails)
 
+        val id = UUID.randomUUID()
         val survey =
             Survey(
-                id = UUID.randomUUID(),
+                id = id,
                 title = "a",
                 description = "elementum",
                 thumbnail = "option",
@@ -243,18 +244,24 @@ class SurveyTest {
                 sections = listOf(section1, section2, section3),
             )
 
-        val surveyResponse1: List<SectionResponse> =
-            listOf(
-                SectionResponse(sectionId1, listOf()),
-                SectionResponse(sectionId2, listOf()),
-                SectionResponse(sectionId3, listOf()),
+        val surveyResponse1 =
+            SurveyResponse(
+                id,
+                listOf(
+                    SectionResponse(sectionId1, listOf()),
+                    SectionResponse(sectionId2, listOf()),
+                    SectionResponse(sectionId3, listOf()),
+                ),
             )
 
-        val surveyResponse2: List<SectionResponse> =
-            listOf(
-                SectionResponse(sectionId1, listOf()),
-                SectionResponse(sectionId2, listOf()),
-                SectionResponse(sectionId4, listOf()),
+        val surveyResponse2 =
+            SurveyResponse(
+                id,
+                listOf(
+                    SectionResponse(sectionId1, listOf()),
+                    SectionResponse(sectionId2, listOf()),
+                    SectionResponse(sectionId4, listOf()),
+                ),
             )
 
         // when, then

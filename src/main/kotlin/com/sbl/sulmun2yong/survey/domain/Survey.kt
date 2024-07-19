@@ -35,10 +35,10 @@ data class Survey(
     }
 
     // 설문의 응답에 해당하는 섹션이 유효한지, 설문의 흐름이 유효한지 확인한다.
-    fun validateResponse(sectionResponses: List<SectionResponse>) {
+    fun validateResponse(surveyResponse: SurveyResponse) {
         var currentSectionId: UUID? = sections.first().id
         // 응답을 차례대로 확인하면서 유효한 응답인지, 섹션의 흐름이 올바른지 확인한다.
-        for (sectionResponse in sectionResponses) {
+        for (sectionResponse in surveyResponse) {
             if (currentSectionId != sectionResponse.sectionId) throw InvalidSurveyResponseException()
             val section = findSectionById(currentSectionId) ?: throw InvalidSurveyResponseException()
             currentSectionId = section.findNextSectionId(sectionResponse)
