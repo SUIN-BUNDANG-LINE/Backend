@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
-import com.sbl.sulmun2yong.survey.exception.InvalidResponseCommandException
+import com.sbl.sulmun2yong.survey.exception.InvalidQuestionResponseException
 import java.util.UUID
 
 data class QuestionResponse(
@@ -8,9 +8,9 @@ data class QuestionResponse(
     private val responses: List<ResponseDetail>,
 ) : List<ResponseDetail> by responses {
     init {
-        if (responses.isEmpty()) throw InvalidResponseCommandException()
-        if (responses.hasDuplicates()) throw InvalidResponseCommandException()
-        if (responses.hasInvalidEtcCount()) throw InvalidResponseCommandException()
+        if (responses.isEmpty()) throw InvalidQuestionResponseException()
+        if (responses.hasDuplicates()) throw InvalidQuestionResponseException()
+        if (responses.hasInvalidEtcCount()) throw InvalidQuestionResponseException()
     }
 
     private fun List<ResponseDetail>.hasDuplicates(): Boolean = this.size != this.distinctBy { it }.size
