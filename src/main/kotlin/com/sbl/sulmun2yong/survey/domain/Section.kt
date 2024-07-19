@@ -41,9 +41,9 @@ data class Section(
             )
     }
 
-    fun findNextSectionId(questionRespons: List<QuestionResponse>): UUID? {
+    fun findNextSectionId(questionResponses: List<QuestionResponse>): UUID? {
         for (question in questions) {
-            val findInResponse = questionRespons.find { it.questionId == question.id }
+            val findInResponse = questionResponses.find { it.questionId == question.id }
             if (question.isRequired && findInResponse == null) {
                 throw InvalidSectionResponseException()
             }
@@ -55,7 +55,7 @@ data class Section(
         return when (routeDetails) {
             is RouteDetails.SetByChoice -> {
                 val sectionResponse =
-                    questionRespons.find { it.questionId == routeDetails.keyQuestionId }
+                    questionResponses.find { it.questionId == routeDetails.keyQuestionId }
                         ?: throw InvalidSectionResponseException()
                 routeDetails.findNextSectionId(sectionResponse.responses.responses.first())
             }
