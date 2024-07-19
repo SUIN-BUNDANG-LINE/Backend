@@ -87,6 +87,61 @@ class SurveyTest {
     }
 
     @Test
+    fun `설문을 생성할 때 섹션들의 ID가 중복되면 예외가 발생한다`() {
+        // given
+        val sectionId1 = UUID.randomUUID()
+        val sectionId2 = UUID.randomUUID()
+        val sectionId3 = UUID.randomUUID()
+        val mockRouteDetails = mock<RouteDetails.SetByChoice>()
+        `when`(mockRouteDetails.isRouteDetailsSectionIdValid(any())).thenReturn(true)
+
+        val section1 = mock<Section>()
+        `when`(section1.id).thenReturn(sectionId1)
+        `when`(section1.findNextSectionId(any())).thenReturn(sectionId2)
+        `when`(section1.routeDetails).thenReturn(mockRouteDetails)
+        val section2 = mock<Section>()
+        `when`(section2.id).thenReturn(sectionId2)
+        `when`(section2.findNextSectionId(any())).thenReturn(sectionId3)
+        `when`(section2.routeDetails).thenReturn(mockRouteDetails)
+        val section3 = mock<Section>()
+        `when`(section3.id).thenReturn(sectionId3)
+        `when`(section3.findNextSectionId(any())).thenReturn(null)
+        `when`(section3.routeDetails).thenReturn(mockRouteDetails)
+
+        assertDoesNotThrow {
+            Survey(
+                id = UUID.randomUUID(),
+                title = "a",
+                description = "elementum",
+                thumbnail = "option",
+                publishedAt = Date(finishedAt.time - 24 * 60 * 60 * 10000),
+                finishedAt = finishedAt,
+                status = SurveyStatus.IN_PROGRESS,
+                finishMessage = "b",
+                targetParticipants = 200,
+                rewards = rewards,
+                sections = listOf(section1, section2, section3),
+            )
+        }
+
+        assertThrows<InvalidSurveyException> {
+            Survey(
+                id = UUID.randomUUID(),
+                title = "a",
+                description = "elementum",
+                thumbnail = "option",
+                publishedAt = Date(finishedAt.time - 24 * 60 * 60 * 10000),
+                finishedAt = finishedAt,
+                status = SurveyStatus.IN_PROGRESS,
+                finishMessage = "b",
+                targetParticipants = 200,
+                rewards = rewards,
+                sections = listOf(section1, section2, section1),
+            )
+        }
+    }
+
+    @Test
     fun `설문의 시작일이 마감일 이후면 예외가 발생한다`() {
         // given
         val publishedAt = Date(finishedAt.time + 24 * 60 * 60 * 1000)

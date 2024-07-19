@@ -28,6 +28,7 @@ data class Survey(
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         // 각 섹션의 경로 설정에 해당하는 섹션 ID들은 유효해야한다.
         require(isAllRouteDetailsValid()) { throw InvalidSurveyException() }
+        require(sections.size == sectionIdSet.size) { throw InvalidSurveyException() }
         require(publishedAt != null || status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyException() }
         require(publishedAt == null || finishedAt.after(publishedAt)) { throw InvalidSurveyException() }
         require(targetParticipants >= getRewardCount()) { throw InvalidSurveyException() }
