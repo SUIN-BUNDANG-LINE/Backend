@@ -122,7 +122,7 @@ class RouteDetailsTest {
     }
 
     @Test
-    fun `RouteDetails는 섹션 ID 집합을 받으면, RouteDetails의 nextSectionId가 유효한지 확인할 수 있다`() {
+    fun `RouteDetails는 목적지가 될 수 있는 SectionId의 집합을 가져올 수 있다`() {
         // given
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
@@ -140,22 +140,23 @@ class RouteDetailsTest {
             )
         val setByChoice = RouteDetails.SetByChoice(UUID.randomUUID(), sectionRouteConfigs)
 
-        val sectionIdSet = setOf(sectionId1, sectionId2)
+        val sectionIdSet1 = setOf(sectionId1)
+        val sectionIdSet3 = setOf(sectionId3)
+        val sectionIdSetNull = setOf<UUID?>(null)
+        val sectionIdSet12 = setOf(sectionId1, sectionId2)
 
         // when
-        val result1 = numericalOrder1.isRouteDetailsSectionIdValid(sectionIdSet)
-        val result2 = numericalOrder2.isRouteDetailsSectionIdValid(sectionIdSet)
-        val result3 = setByUser1.isRouteDetailsSectionIdValid(sectionIdSet)
-        val result4 = setByUser2.isRouteDetailsSectionIdValid(sectionIdSet)
-        val result5 = setByChoice.isRouteDetailsSectionIdValid(sectionIdSet)
-        val result6 = setByChoice.isRouteDetailsSectionIdValid(setOf(sectionId1, sectionId3))
+        val result1 = numericalOrder1.getDestinationSectionIdSet()
+        val result2 = numericalOrder2.getDestinationSectionIdSet()
+        val result3 = setByUser1.getDestinationSectionIdSet()
+        val result4 = setByUser2.getDestinationSectionIdSet()
+        val result5 = setByChoice.getDestinationSectionIdSet()
 
         // then
-        assertEquals(true, result1)
-        assertEquals(false, result2)
-        assertEquals(true, result3)
-        assertEquals(false, result4)
-        assertEquals(true, result5)
-        assertEquals(false, result6)
+        assertEquals(sectionIdSet1, result1)
+        assertEquals(sectionIdSet3, result2)
+        assertEquals(sectionIdSetNull, result3)
+        assertEquals(sectionIdSet3, result4)
+        assertEquals(sectionIdSet12, result5)
     }
 }

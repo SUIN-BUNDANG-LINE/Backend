@@ -26,12 +26,11 @@ data class Survey(
 
     private fun validateSurvey() {
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
-        // 각 섹션의 경로 설정에 해당하는 섹션 ID들은 유효해야한다.
-        require(isAllRouteDetailsValid()) { throw InvalidSurveyException() }
-        require(sections.size == sectionIdSet.size) { throw InvalidSurveyException() }
-        require(publishedAt != null || status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyException() }
-        require(publishedAt == null || finishedAt.after(publishedAt)) { throw InvalidSurveyException() }
-        require(targetParticipants >= getRewardCount()) { throw InvalidSurveyException() }
+        require(isDestinationSectionIdContainsAll()) { throw InvalidSurveyException() }
+        require(isSectionsUnique()) { throw InvalidSurveyException() }
+        require(isSurveyStatusValid()) { throw InvalidSurveyException() }
+        require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
+        require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
     }
 
     // 설문의 응답에 해당하는 섹션이 유효한지, 설문의 흐름이 유효한지 확인한다.
@@ -39,17 +38,26 @@ data class Survey(
         var currentSectionId: UUID? = sections.first().id
         // 응답을 차례대로 확인하면서 유효한 응답인지, 섹션의 흐름이 올바른지 확인한다.
         for (sectionResponse in surveyResponse) {
-            if (currentSectionId != sectionResponse.sectionId) throw InvalidSurveyResponseException()
+            require(currentSectionId == sectionResponse.sectionId) { throw InvalidSurveyResponseException() }
             val section = findSectionById(currentSectionId) ?: throw InvalidSurveyResponseException()
             currentSectionId = section.findNextSectionId(sectionResponse)
         }
         // 최종적인 섹션 ID가 null이 아니면 끝까지 응답하지 않은 것이므로 예외를 발생시킨다.
-        if (currentSectionId != null) throw InvalidSurveyResponseException()
+        require(currentSectionId == null) { throw InvalidSurveyResponseException() }
     }
 
     fun getRewardCount() = rewards.sumOf { it.count }
 
-    private fun isAllRouteDetailsValid() = sections.all { it.routeDetails.isRouteDetailsSectionIdValid(sectionIdSet) }
+    private fun isDestinationSectionIdContainsAll() =
+        sections.all { sectionIdSet.containsAll(it.getDestinationSectionIdSet().filterNotNull()) }
+
+    private fun isSectionsUnique() = sections.size == sectionIdSet.size
+
+    private fun isSurveyStatusValid() = publishedAt != null || status == SurveyStatus.NOT_STARTED
+
+    private fun isFinishedAtAfterPublishedAt() = publishedAt == null || finishedAt.after(publishedAt)
+
+    private fun isTargetParticipantsEnough() = targetParticipants >= getRewardCount()
 
     private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
 }

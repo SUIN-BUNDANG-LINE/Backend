@@ -69,4 +69,6 @@ data class Section(
             }
         }
     }
+
+    fun getDestinationSectionIdSet() = routeDetails.getDestinationSectionIdSet()
 }
