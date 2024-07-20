@@ -7,6 +7,11 @@ import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
+import com.sbl.sulmun2yong.survey.domain.routing.NumericalOrderRouting
+import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfig
+import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfigs
+import com.sbl.sulmun2yong.survey.domain.routing.SetByChoiceRouting
+import com.sbl.sulmun2yong.survey.domain.routing.SetByUserRouting
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
@@ -95,7 +100,7 @@ class SectionTest {
                 assertEquals(id, this.id)
                 assertEquals("", this.title)
                 assertEquals("", this.description)
-                assertEquals(RouteDetails.NumericalOrder(null), this.routeDetails)
+                assertEquals(NumericalOrderRouting(null), this.routeDetails)
                 assertEquals(emptyList(), this.questions)
             }
         }
@@ -107,7 +112,7 @@ class SectionTest {
         val id = UUID.randomUUID()
         val title = "title"
         val description = "description"
-        val routeDetails = RouteDetails.NumericalOrder(null)
+        val routeDetails = NumericalOrderRouting(null)
         val questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion)
 
         // when
@@ -147,14 +152,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = sQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, null),
-                                SectionRouteConfig(c, sectionId1),
-                                SectionRouteConfig(null, sectionId2),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, null),
+                                    SectionRouteConfig(c, sectionId1),
+                                    SectionRouteConfig(null, sectionId2),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
@@ -168,14 +175,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = UUID.randomUUID(),
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, sectionId2),
-                                SectionRouteConfig(c, null),
-                                SectionRouteConfig(null, sectionId2),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, sectionId2),
+                                    SectionRouteConfig(c, null),
+                                    SectionRouteConfig(null, sectionId2),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
@@ -189,14 +198,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = mQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, sectionId2),
-                                SectionRouteConfig(c, null),
-                                SectionRouteConfig(null, sectionId2),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, sectionId2),
+                                    SectionRouteConfig(c, null),
+                                    SectionRouteConfig(null, sectionId2),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
@@ -210,14 +221,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = sQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, sectionId2),
-                                SectionRouteConfig(c, null),
-                                SectionRouteConfig(null, null),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, sectionId2),
+                                    SectionRouteConfig(c, null),
+                                    SectionRouteConfig(null, null),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, allowOtherSQuestion, allowOtherMQuestion),
@@ -231,14 +244,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = sQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, sectionId2),
-                                SectionRouteConfig(c, null),
-                                SectionRouteConfig("invalid", sectionId2),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, sectionId2),
+                                    SectionRouteConfig(c, null),
+                                    SectionRouteConfig("invalid", sectionId2),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredSQuestion, allowOtherMQuestion),
@@ -252,12 +267,14 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = sQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, sectionId2),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, sectionId2),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredSQuestion, allowOtherMQuestion),
@@ -271,14 +288,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = sQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, sectionId1),
-                                SectionRouteConfig(b, null),
-                                SectionRouteConfig(c, null),
-                                SectionRouteConfig(null, sectionId2),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, sectionId1),
+                                    SectionRouteConfig(b, null),
+                                    SectionRouteConfig(c, null),
+                                    SectionRouteConfig(null, sectionId2),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredSQuestion, allowOtherMQuestion),
@@ -292,7 +311,7 @@ class SectionTest {
         val id = UUID.randomUUID()
         val title = "title"
         val description = "description"
-        val routeDetails = RouteDetails.SetByUser(null)
+        val routeDetails = SetByUserRouting(null)
         val questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion)
 
         // when
@@ -325,14 +344,16 @@ class SectionTest {
                 title = "title",
                 description = "description",
                 routeDetails =
-                    RouteDetails.SetByChoice(
+                    SetByChoiceRouting(
                         keyQuestionId = sQuestionId,
                         sectionRouteConfigs =
-                            listOf(
-                                SectionRouteConfig(a, null),
-                                SectionRouteConfig(b, null),
-                                SectionRouteConfig(c, null),
-                                SectionRouteConfig(null, null),
+                            SectionRouteConfigs(
+                                listOf(
+                                    SectionRouteConfig(a, null),
+                                    SectionRouteConfig(b, null),
+                                    SectionRouteConfig(c, null),
+                                    SectionRouteConfig(null, null),
+                                ),
                             ),
                     ),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
@@ -379,7 +400,7 @@ class SectionTest {
         val questions = listOf(question1, question2)
 
         val id = UUID.randomUUID()
-        val section = Section(id, "title", "description", RouteDetails.NumericalOrder(null), questions)
+        val section = Section(id, "title", "description", NumericalOrderRouting(null), questions)
 
         val sectionResponse =
             SectionResponse(
@@ -404,7 +425,7 @@ class SectionTest {
                 id = currentSectionId,
                 title = "title",
                 description = "description",
-                routeDetails = RouteDetails.NumericalOrder(nextSectionId),
+                routeDetails = NumericalOrderRouting(nextSectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
         val questionResponses: List<QuestionResponse> =
@@ -432,14 +453,16 @@ class SectionTest {
         val title = "title"
         val description = "description"
         val routeDetails =
-            RouteDetails.SetByChoice(
+            SetByChoiceRouting(
                 keyQuestionId = sQuestionId,
                 sectionRouteConfigs =
-                    listOf(
-                        SectionRouteConfig(a, sectionId1),
-                        SectionRouteConfig(b, sectionId2),
-                        SectionRouteConfig(c, sectionId3),
-                        SectionRouteConfig(null, null),
+                    SectionRouteConfigs(
+                        listOf(
+                            SectionRouteConfig(a, sectionId1),
+                            SectionRouteConfig(b, sectionId2),
+                            SectionRouteConfig(c, sectionId3),
+                            SectionRouteConfig(null, null),
+                        ),
                     ),
             )
         val section =
@@ -488,7 +511,7 @@ class SectionTest {
                 id = currentSectionId,
                 title = "title",
                 description = "description",
-                routeDetails = RouteDetails.SetByUser(nextSectionId),
+                routeDetails = SetByUserRouting(nextSectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
         val questionResponses =

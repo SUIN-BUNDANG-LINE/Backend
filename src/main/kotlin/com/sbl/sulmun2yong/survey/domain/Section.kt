@@ -2,6 +2,9 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.routing.NumericalOrderRouting
+import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.routing.SetByChoiceRouting
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
@@ -18,9 +21,9 @@ data class Section(
     }
 
     private fun validateSection() {
-        if (routeDetails is RouteDetails.SetByChoice) {
+        if (routeDetails is SetByChoiceRouting) {
             val keyQuestion = findKeyQuestion() ?: throw InvalidSectionException()
-            require(routeDetails.getContentsSet() == keyQuestion.getChoiceSet()) { throw InvalidSectionException() }
+            require(keyQuestion.isEqualToChoices(routeDetails.getContentSet())) { throw InvalidSectionException() }
         }
     }
 
@@ -30,7 +33,7 @@ data class Section(
                 id = UUID.randomUUID(),
                 title = "",
                 description = "",
-                routeDetails = RouteDetails.NumericalOrder(null),
+                routeDetails = NumericalOrderRouting(null),
                 questions = emptyList(),
             )
     }
@@ -39,7 +42,7 @@ data class Section(
 
     fun findNextSectionId(sectionResponse: SectionResponse): UUID? {
         validateSectionResponse(sectionResponse)
-        return getNextSectionId(sectionResponse)
+        return routeDetails.findNextSectionId(sectionResponse)
     }
 
     private fun validateSectionResponse(sectionResponse: SectionResponse) {
@@ -55,20 +58,8 @@ data class Section(
         }
     }
 
-    private fun getNextSectionId(sectionResponse: SectionResponse): UUID? {
-        return when (routeDetails) {
-            is RouteDetails.SetByChoice -> {
-                val keyQuestionId = routeDetails.keyQuestionId
-                val keyQuestionResponse = sectionResponse.findQuestionResponse(keyQuestionId) ?: throw InvalidSectionResponseException()
-                routeDetails.findNextSectionId(keyQuestionResponse.first())
-            }
-            is RouteDetails.NumericalOrder -> routeDetails.nextSectionId
-            is RouteDetails.SetByUser -> routeDetails.nextSectionId
-        }
-    }
-
     private fun findKeyQuestion(): SingleChoiceQuestion? {
-        val setByChoiceRouting = routeDetails as? RouteDetails.SetByChoice ?: return null
+        val setByChoiceRouting = routeDetails as? SetByChoiceRouting ?: return null
         val question = questions.find { it.id == setByChoiceRouting.keyQuestionId } ?: return null
         return if (question.canBeKeyQuestion()) question as SingleChoiceQuestion else null
     }

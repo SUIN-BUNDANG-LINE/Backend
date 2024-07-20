@@ -12,11 +12,13 @@ data class SingleChoiceQuestion(
 ) : Question {
     override val questionType: QuestionType = QuestionType.SINGLE_CHOICE
 
+    private val choiceSet = if (isAllowOther) choices.toSet() + null else choices.toSet()
+
     override fun isValidResponse(questionResponse: QuestionResponse): Boolean {
         if (questionResponse.size != 1) return false
         if (questionResponse.first().isOther) return isAllowOther
         return choices.contains(questionResponse.first().content)
     }
 
-    fun getChoiceSet() = if (isAllowOther) choices.toSet() + null else choices.toSet()
+    fun isEqualToChoices(contentSet: Set<String?>) = contentSet == choiceSet
 }

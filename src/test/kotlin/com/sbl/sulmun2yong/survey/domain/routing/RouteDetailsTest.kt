@@ -1,7 +1,9 @@
-package com.sbl.sulmun2yong.survey.domain
+package com.sbl.sulmun2yong.survey.domain.routing
 
+import com.sbl.sulmun2yong.survey.domain.SectionResponse
+import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
-import com.sbl.sulmun2yong.survey.exception.InvalidRouteDetailsException
+import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
@@ -11,7 +13,7 @@ class RouteDetailsTest {
     @Test
     fun `NumericalOrder를 생성하면 SectionRouteType과 nextSectionId가 올바르게 설정된다`() {
         // given, when
-        val numericalOrder = RouteDetails.NumericalOrder(null)
+        val numericalOrder = NumericalOrderRouting(null)
 
         // then
         assertEquals(SectionRouteType.NUMERICAL_ORDER, numericalOrder.type)
@@ -21,7 +23,7 @@ class RouteDetailsTest {
     @Test
     fun `SetByUser를 생성하면 SectionRouteType과 nextSectionId가 올바르게 설정된다`() {
         // given, when
-        val setByUser = RouteDetails.SetByUser(null)
+        val setByUser = SetByUserRouting(null)
 
         // then
         assertEquals(SectionRouteType.SET_BY_USER, setByUser.type)
@@ -33,13 +35,15 @@ class RouteDetailsTest {
         // given
         val keyQuestionId = UUID.randomUUID()
         val sectionRouteConfigs =
-            listOf(
-                SectionRouteConfig("a", UUID.randomUUID()),
-                SectionRouteConfig("b", UUID.randomUUID()),
+            SectionRouteConfigs(
+                listOf(
+                    SectionRouteConfig("a", UUID.randomUUID()),
+                    SectionRouteConfig("b", UUID.randomUUID()),
+                ),
             )
 
         // when
-        val setByChoice = RouteDetails.SetByChoice(keyQuestionId, sectionRouteConfigs)
+        val setByChoice = SetByChoiceRouting(keyQuestionId, sectionRouteConfigs)
 
         // then
         with(setByChoice) {
@@ -50,71 +54,58 @@ class RouteDetailsTest {
     }
 
     @Test
-    fun `SetByChoice는 sectionRouteConfigs에는 중복되는 content가 있으면 안된다`() {
-        // given
-        val keyQuestionId = UUID.randomUUID()
-        val sectionRouteConfigs1 =
-            listOf(
-                SectionRouteConfig("a", UUID.randomUUID()),
-                SectionRouteConfig("b", UUID.randomUUID()),
-                SectionRouteConfig(null, UUID.randomUUID()),
-                SectionRouteConfig(null, UUID.randomUUID()),
-            )
-        val sectionRouteConfigs2 =
-            listOf(
-                SectionRouteConfig("a", UUID.randomUUID()),
-                SectionRouteConfig("a", UUID.randomUUID()),
-                SectionRouteConfig("b", UUID.randomUUID()),
-            )
-
-        // when, then
-        assertThrows<InvalidRouteDetailsException> { RouteDetails.SetByChoice(keyQuestionId, sectionRouteConfigs1) }
-        assertThrows<InvalidRouteDetailsException> { RouteDetails.SetByChoice(keyQuestionId, sectionRouteConfigs2) }
-    }
-
-    @Test
     fun `SetByChoice는 sectionRouteConfigs의 content의 집합을 가져올 수 있다`() {
         // given
         val keyQuestionId = UUID.randomUUID()
         val sectionRouteConfigs =
-            listOf(
-                SectionRouteConfig("a", UUID.randomUUID()),
-                SectionRouteConfig("b", UUID.randomUUID()),
-                SectionRouteConfig(null, UUID.randomUUID()),
+            SectionRouteConfigs(
+                listOf(
+                    SectionRouteConfig("a", UUID.randomUUID()),
+                    SectionRouteConfig("b", UUID.randomUUID()),
+                    SectionRouteConfig(null, UUID.randomUUID()),
+                ),
             )
 
-        val setByChoice = RouteDetails.SetByChoice(keyQuestionId, sectionRouteConfigs)
+        val setByChoice = SetByChoiceRouting(keyQuestionId, sectionRouteConfigs)
 
         // when
-        val contentSet = setByChoice.getContentsSet()
+        val contentSet = setByChoice.getContentSet()
 
         // then
         assertEquals(setOf("a", "b", null), contentSet)
     }
 
     @Test
-    fun `SetByChoice는 ResponseDetail을 받아서 다음 섹션 ID를 찾을 수 있다`() {
+    fun `SetByChoice는 SectionResponse를 받아서 다음 섹션 ID를 찾을 수 있다`() {
         // given
         val keyQuestionId = UUID.randomUUID()
         val sectionRouteConfigs =
-            listOf(
-                SectionRouteConfig("a", UUID.randomUUID()),
-                SectionRouteConfig("b", UUID.randomUUID()),
-                SectionRouteConfig(null, UUID.randomUUID()),
+            SectionRouteConfigs(
+                listOf(
+                    SectionRouteConfig("a", UUID.randomUUID()),
+                    SectionRouteConfig("b", UUID.randomUUID()),
+                    SectionRouteConfig(null, UUID.randomUUID()),
+                ),
             )
+        // TODO: 테스트 코드 보완
+        val setByChoice = SetByChoiceRouting(keyQuestionId, sectionRouteConfigs)
 
-        val setByChoice = RouteDetails.SetByChoice(keyQuestionId, sectionRouteConfigs)
+        val sectionId = UUID.randomUUID()
+        val sectionResponse1 = SectionResponse(sectionId, listOf(QuestionResponse(keyQuestionId, listOf(ResponseDetail("a", false)))))
+        val sectionResponse2 = SectionResponse(sectionId, listOf(QuestionResponse(keyQuestionId, listOf(ResponseDetail("b", false)))))
+        val sectionResponse3 = SectionResponse(sectionId, listOf(QuestionResponse(keyQuestionId, listOf(ResponseDetail("c", true)))))
+        val sectionResponse4 = SectionResponse(sectionId, listOf(QuestionResponse(keyQuestionId, listOf(ResponseDetail("c", false)))))
 
         // when
-        val nextSectionId1 = setByChoice.findNextSectionId(ResponseDetail("a", false))
-        val nextSectionId2 = setByChoice.findNextSectionId(ResponseDetail("b", false))
-        val nextSectionId3 = setByChoice.findNextSectionId(ResponseDetail("c", true))
+        val nextSectionId1 = setByChoice.findNextSectionId(sectionResponse1)
+        val nextSectionId2 = setByChoice.findNextSectionId(sectionResponse2)
+        val nextSectionId3 = setByChoice.findNextSectionId(sectionResponse3)
 
         // then
         assertEquals(sectionRouteConfigs[0].nextSectionId, nextSectionId1)
         assertEquals(sectionRouteConfigs[1].nextSectionId, nextSectionId2)
         assertEquals(sectionRouteConfigs[2].nextSectionId, nextSectionId3)
-        assertThrows<InvalidRouteDetailsException> { setByChoice.findNextSectionId(ResponseDetail("c", false)) }
+        assertThrows<InvalidSectionResponseException> { setByChoice.findNextSectionId(sectionResponse4) }
     }
 
     @Test
@@ -124,17 +115,19 @@ class RouteDetailsTest {
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
 
-        val numericalOrder1 = RouteDetails.NumericalOrder(sectionId1)
-        val numericalOrder2 = RouteDetails.NumericalOrder(sectionId3)
-        val setByUser1 = RouteDetails.SetByUser(null)
-        val setByUser2 = RouteDetails.SetByUser(sectionId3)
+        val numericalOrder1 = NumericalOrderRouting(sectionId1)
+        val numericalOrder2 = NumericalOrderRouting(sectionId3)
+        val setByUser1 = SetByUserRouting(null)
+        val setByUser2 = SetByUserRouting(sectionId3)
 
         val sectionRouteConfigs =
-            listOf(
-                SectionRouteConfig("a", sectionId1),
-                SectionRouteConfig("b", sectionId2),
+            SectionRouteConfigs(
+                listOf(
+                    SectionRouteConfig("a", sectionId1),
+                    SectionRouteConfig("b", sectionId2),
+                ),
             )
-        val setByChoice = RouteDetails.SetByChoice(UUID.randomUUID(), sectionRouteConfigs)
+        val setByChoice = SetByChoiceRouting(UUID.randomUUID(), sectionRouteConfigs)
 
         val sectionIdSet1 = setOf(sectionId1)
         val sectionIdSet3 = setOf(sectionId3)

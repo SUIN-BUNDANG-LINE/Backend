@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.domain
+package com.sbl.sulmun2yong.survey.domain.routing
 
 enum class SectionRouteType {
     NUMERICAL_ORDER,
