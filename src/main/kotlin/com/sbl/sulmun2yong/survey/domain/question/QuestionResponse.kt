@@ -8,12 +8,12 @@ data class QuestionResponse(
     private val responses: List<ResponseDetail>,
 ) : List<ResponseDetail> by responses {
     init {
-        if (responses.isEmpty()) throw InvalidQuestionResponseException()
-        if (responses.hasDuplicates()) throw InvalidQuestionResponseException()
-        if (responses.hasInvalidEtcCount()) throw InvalidQuestionResponseException()
+        require(responses.isNotEmpty()) { throw InvalidQuestionResponseException() }
+        require(isUnique()) { throw InvalidQuestionResponseException() }
+        require(isEtcNotMoreThenOne()) { throw InvalidQuestionResponseException() }
     }
 
-    private fun List<ResponseDetail>.hasDuplicates(): Boolean = this.size != this.distinctBy { it }.size
+    private fun isUnique() = this.size == this.toSet().size
 
-    private fun List<ResponseDetail>.hasInvalidEtcCount(): Boolean = this.count { it.isOther } > 1
+    private fun isEtcNotMoreThenOne() = this.count { it.isOther } <= 1
 }
