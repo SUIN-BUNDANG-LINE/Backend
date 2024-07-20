@@ -41,6 +41,7 @@ data class Section(
     fun getDestinationSectionIdSet() = routeDetails.getDestinationSectionIdSet()
 
     fun findNextSectionId(sectionResponse: SectionResponse): UUID? {
+        require(sectionResponse.sectionId == id) { throw InvalidSectionResponseException() }
         validateSectionResponse(sectionResponse)
         return routeDetails.findNextSectionId(sectionResponse)
     }

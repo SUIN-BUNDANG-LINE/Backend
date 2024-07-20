@@ -201,7 +201,7 @@ class SectionTest {
     }
 
     @Test
-    fun `섹션은 응답들을 확인하고, 필수 응답 질문에 답변을 하지 않으면 예외를 반환한다`() {
+    fun `섹션은 응답들을 확인하고, id가 다르거나, 필수 응답 질문에 답변을 하지 않으면 예외를 반환한다`() {
         // given
         val id = UUID.randomUUID()
         val section =
@@ -229,9 +229,19 @@ class SectionTest {
                 ),
             )
 
+        val sectionResponse3s =
+            SectionResponse(
+                UUID.randomUUID(),
+                listOf(
+                    createQuestionResponse(tQuestionId, listOf("a")),
+                    createQuestionResponse(mQuestionId, listOf("a")),
+                ),
+            )
+
         // when, then
         assertDoesNotThrow { section.findNextSectionId(sectionResponse1s) }
         assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse2s) }
+        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse3s) }
     }
 
     @Test
