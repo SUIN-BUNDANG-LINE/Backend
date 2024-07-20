@@ -4,6 +4,9 @@ import com.sbl.sulmun2yong.survey.domain.question.Choices
 import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
 import java.util.UUID
 
 object QuestionFixtureFactory {
@@ -48,4 +51,17 @@ object QuestionFixtureFactory {
         choices = choices,
         isAllowOther = isAllowOther,
     )
+
+    fun createMockQuestion(
+        id: UUID = UUID.randomUUID(),
+        isRequired: Boolean = true,
+        isResponseValid: Boolean = true,
+    ): TextResponseQuestion {
+        val mockQuestion = mock<TextResponseQuestion>()
+        `when`(mockQuestion.id).thenReturn(id)
+        `when`(mockQuestion.isRequired).thenReturn(isRequired)
+        `when`(mockQuestion.isValidResponse(any())).thenReturn(isResponseValid)
+        `when`(mockQuestion.canBeKeyQuestion()).thenReturn(isRequired)
+        return mockQuestion
+    }
 }

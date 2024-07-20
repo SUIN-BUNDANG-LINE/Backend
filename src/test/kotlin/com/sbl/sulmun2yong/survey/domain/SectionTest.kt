@@ -1,12 +1,17 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createMockQuestion
+import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createMultipleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createSingleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createTextResponseQuestion
+import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createQuestionResponse
+import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createMockSetByChoiceRouting
+import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.DESCRIPTION
+import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.TITLE
+import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.createSection
 import com.sbl.sulmun2yong.survey.domain.question.Choices
-import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
-import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.routing.NumericalOrderRouting
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfig
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfigs
@@ -17,10 +22,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.`when`
-import org.mockito.kotlin.any
 import java.util.UUID
 import kotlin.test.assertEquals
 
@@ -31,57 +33,34 @@ class SectionTest {
     private val choicesABC = Choices(listOf(a, b, c))
 
     private val tQuestionId = UUID.randomUUID()
-    private val tQuestionTitle = "textResponseQuestionTitle"
-    private val tQuestionDescription = "textResponseQuestionDescription"
-    private val requiredTQuestion =
-        TextResponseQuestion(tQuestionId, tQuestionTitle, tQuestionDescription, true)
-    private val tQuestion =
-        TextResponseQuestion(tQuestionId, tQuestionTitle, tQuestionDescription, false)
+    private val requiredTQuestion = createTextResponseQuestion(tQuestionId)
+    private val tQuestion = createTextResponseQuestion(id = tQuestionId, isRequired = false)
 
     private val sQuestionId = UUID.randomUUID()
-    private val sQuestionTitle = "singleChoiceQuestionTitle"
-    private val sQuestionDescription = "singleChoiceQuestionDescription"
     private val requiredAllowOtherSQuestion =
-        SingleChoiceQuestion(
-            sQuestionId,
-            sQuestionTitle,
-            sQuestionDescription,
-            true,
-            choicesABC,
-            true,
+        createSingleChoiceQuestion(
+            id = sQuestionId,
+            choices = choicesABC,
         )
-
     private val allowOtherSQuestion =
-        SingleChoiceQuestion(
-            sQuestionId,
-            sQuestionTitle,
-            sQuestionDescription,
-            false,
-            choicesABC,
-            true,
+        createSingleChoiceQuestion(
+            id = sQuestionId,
+            choices = choicesABC,
+            isRequired = false,
         )
-
     private val requiredSQuestion =
-        SingleChoiceQuestion(
-            sQuestionId,
-            sQuestionTitle,
-            sQuestionDescription,
-            true,
-            choicesABC,
-            false,
+        createSingleChoiceQuestion(
+            id = sQuestionId,
+            choices = choicesABC,
+            isAllowOther = false,
         )
 
     private val mQuestionId = UUID.randomUUID()
-    private val mQuestionTitle = "multipleChoiceQuestionTitle"
-    private val mQuestionDescription = "multipleChoiceQuestionDescription"
     private val allowOtherMQuestion =
-        MultipleChoiceQuestion(
-            mQuestionId,
-            mQuestionTitle,
-            mQuestionDescription,
-            false,
-            choicesABC,
-            true,
+        createMultipleChoiceQuestion(
+            id = mQuestionId,
+            isRequired = false,
+            choices = choicesABC,
         )
 
     @Test
@@ -110,17 +89,13 @@ class SectionTest {
     fun `번호순 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val title = "title"
-        val description = "description"
         val routeDetails = NumericalOrderRouting(null)
         val questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion)
 
         // when
         val section =
-            Section(
+            createSection(
                 id = id,
-                title = title,
-                description = description,
                 routeDetails = routeDetails,
                 questions = questions,
             )
@@ -128,8 +103,8 @@ class SectionTest {
         // then
         with(section) {
             assertEquals(id, this.id)
-            assertEquals(title, this.title)
-            assertEquals(description, this.description)
+            assertEquals(TITLE + id, this.title)
+            assertEquals(DESCRIPTION + id, this.description)
             assertEquals(routeDetails, this.routeDetails)
             assertEquals(questions, this.questions)
         }
@@ -141,120 +116,44 @@ class SectionTest {
         // 해당 질문의 유형이 SINGLE_CHOICE고, 필수 응답 질문이여야 한다.
         // sectionRouteConfigs에 해당 질문의 선택지, 기타 응답에 대한 라우팅이 설정되어 있어야 한다.
 
-        // given
-        val sectionId1 = UUID.randomUUID()
-        val sectionId2 = UUID.randomUUID()
-
-        // when, then
         assertDoesNotThrow {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
-                routeDetails =
-                    SetByChoiceRouting(
-                        keyQuestionId = sQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, null),
-                                    SectionRouteConfig(c, sectionId1),
-                                    SectionRouteConfig(null, sectionId2),
-                                ),
-                            ),
-                    ),
+            createSection(
+                routeDetails = createMockSetByChoiceRouting(keyQuestionId = sQuestionId),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
             )
         }
 
         // keyQuestionId에 해당하는 질문이 없으면 예외를 반환한다.
         assertThrows<InvalidSectionException> {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
-                routeDetails =
-                    SetByChoiceRouting(
-                        keyQuestionId = UUID.randomUUID(),
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, sectionId2),
-                                    SectionRouteConfig(c, null),
-                                    SectionRouteConfig(null, sectionId2),
-                                ),
-                            ),
-                    ),
+            createSection(
+                routeDetails = createMockSetByChoiceRouting(),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
             )
         }
 
         // 유형이 SINGLE_CHOICE가 아니면 예외를 반환한다.
         assertThrows<InvalidSectionException> {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
-                routeDetails =
-                    SetByChoiceRouting(
-                        keyQuestionId = mQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, sectionId2),
-                                    SectionRouteConfig(c, null),
-                                    SectionRouteConfig(null, sectionId2),
-                                ),
-                            ),
-                    ),
+            createSection(
+                routeDetails = createMockSetByChoiceRouting(keyQuestionId = mQuestionId),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
             )
         }
 
         // 필수 응답 질문이 아니면 예외를 반환한다.
         assertThrows<InvalidSectionException> {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
-                routeDetails =
-                    SetByChoiceRouting(
-                        keyQuestionId = sQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, sectionId2),
-                                    SectionRouteConfig(c, null),
-                                    SectionRouteConfig(null, null),
-                                ),
-                            ),
-                    ),
+            createSection(
+                routeDetails = createMockSetByChoiceRouting(keyQuestionId = sQuestionId),
                 questions = listOf(requiredTQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
         }
 
         // 선택지가 올바르지 않으면 예외를 반환한다(유효하지 않은 선택지 내용이 포함됨).
         assertThrows<InvalidSectionException> {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
+            createSection(
                 routeDetails =
-                    SetByChoiceRouting(
+                    createMockSetByChoiceRouting(
                         keyQuestionId = sQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, sectionId2),
-                                    SectionRouteConfig(c, null),
-                                    SectionRouteConfig("invalid", sectionId2),
-                                ),
-                            ),
+                        contentSet = setOf(a, b, c, "invalid"),
                     ),
                 questions = listOf(requiredTQuestion, requiredSQuestion, allowOtherMQuestion),
             )
@@ -262,20 +161,11 @@ class SectionTest {
 
         // 선택지가 올바르지 않으면 예외를 반환한다(선택지 일부가 누락됨).
         assertThrows<InvalidSectionException> {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
+            createSection(
                 routeDetails =
-                    SetByChoiceRouting(
+                    createMockSetByChoiceRouting(
                         keyQuestionId = sQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, sectionId2),
-                                ),
-                            ),
+                        contentSet = setOf(a, b),
                     ),
                 questions = listOf(requiredTQuestion, requiredSQuestion, allowOtherMQuestion),
             )
@@ -283,23 +173,8 @@ class SectionTest {
 
         // 선택지가 올바르지 않으면 예외를 반환한다(isAllowOther가 false인데 null 선택지 포함).
         assertThrows<InvalidSectionException> {
-            Section(
-                id = UUID.randomUUID(),
-                title = "title",
-                description = "description",
-                routeDetails =
-                    SetByChoiceRouting(
-                        keyQuestionId = sQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, sectionId1),
-                                    SectionRouteConfig(b, null),
-                                    SectionRouteConfig(c, null),
-                                    SectionRouteConfig(null, sectionId2),
-                                ),
-                            ),
-                    ),
+            createSection(
+                routeDetails = createMockSetByChoiceRouting(keyQuestionId = sQuestionId),
                 questions = listOf(requiredTQuestion, requiredSQuestion, allowOtherMQuestion),
             )
         }
@@ -309,26 +184,17 @@ class SectionTest {
     fun `유저 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val title = "title"
-        val description = "description"
         val routeDetails = SetByUserRouting(null)
         val questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion)
 
         // when
-        val section =
-            Section(
-                id = id,
-                title = title,
-                description = description,
-                routeDetails = routeDetails,
-                questions = questions,
-            )
+        val section = createSection(id = id, routeDetails = routeDetails, questions = questions)
 
         // then
         with(section) {
             assertEquals(id, this.id)
-            assertEquals(title, this.title)
-            assertEquals(description, this.description)
+            assertEquals(TITLE + id, this.title)
+            assertEquals(DESCRIPTION + id, this.description)
             assertEquals(routeDetails, this.routeDetails)
             assertEquals(questions, this.questions)
         }
@@ -339,23 +205,9 @@ class SectionTest {
         // given
         val id = UUID.randomUUID()
         val section =
-            Section(
+            createSection(
                 id = id,
-                title = "title",
-                description = "description",
-                routeDetails =
-                    SetByChoiceRouting(
-                        keyQuestionId = sQuestionId,
-                        sectionRouteConfigs =
-                            SectionRouteConfigs(
-                                listOf(
-                                    SectionRouteConfig(a, null),
-                                    SectionRouteConfig(b, null),
-                                    SectionRouteConfig(c, null),
-                                    SectionRouteConfig(null, null),
-                                ),
-                            ),
-                    ),
+                routeDetails = createMockSetByChoiceRouting(keyQuestionId = sQuestionId),
                 questions = listOf(requiredTQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion),
             )
 
@@ -363,8 +215,8 @@ class SectionTest {
             SectionResponse(
                 id,
                 listOf(
-                    QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
-                    QuestionResponse(sQuestionId, listOf(ResponseDetail("a"))),
+                    createQuestionResponse(tQuestionId, listOf("a")),
+                    createQuestionResponse(sQuestionId, listOf("a")),
                 ),
             )
 
@@ -372,8 +224,8 @@ class SectionTest {
             SectionResponse(
                 id,
                 listOf(
-                    QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
-                    QuestionResponse(mQuestionId, listOf(ResponseDetail("a"))),
+                    createQuestionResponse(tQuestionId, listOf("a")),
+                    createQuestionResponse(mQuestionId, listOf("a")),
                 ),
             )
 
@@ -386,21 +238,13 @@ class SectionTest {
     fun `섹션은 응답들을 확인하고, 각 질문에 유효하지 않은 답변을 하면 예외를 반환한다`() {
         // given
         val questionId1 = UUID.randomUUID()
-        val question1 = mock(Question::class.java)
-        `when`(question1.id).thenReturn(questionId1)
-        `when`(question1.isRequired).thenReturn(true)
-        `when`(question1.isValidResponse(any())).thenReturn(true)
-
+        val question1 = createMockQuestion(id = questionId1, isRequired = true, isResponseValid = true)
         val questionId2 = UUID.randomUUID()
-        val question2 = mock(Question::class.java)
-        `when`(question2.id).thenReturn(questionId2)
-        `when`(question2.isRequired).thenReturn(true)
-        `when`(question2.isValidResponse(any())).thenReturn(false)
-
+        val question2 = createMockQuestion(id = questionId2, isRequired = true, isResponseValid = false)
         val questions = listOf(question1, question2)
 
         val id = UUID.randomUUID()
-        val section = Section(id, "title", "description", NumericalOrderRouting(null), questions)
+        val section = createSection(id = id, routeDetails = NumericalOrderRouting(null), questions = questions)
 
         val sectionResponse =
             SectionResponse(
@@ -428,30 +272,30 @@ class SectionTest {
                 routeDetails = NumericalOrderRouting(nextSectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )
-        val questionResponses: List<QuestionResponse> =
-            listOf(
-                QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
-                QuestionResponse(sQuestionId, listOf(ResponseDetail("a", true))),
-                QuestionResponse(mQuestionId, listOf(ResponseDetail("b"))),
+        val sectionResponse =
+            SectionResponse(
+                currentSectionId,
+                listOf(
+                    QuestionResponse(tQuestionId, listOf(ResponseDetail("a"))),
+                    QuestionResponse(sQuestionId, listOf(ResponseDetail("a", true))),
+                    QuestionResponse(mQuestionId, listOf(ResponseDetail("b"))),
+                ),
             )
 
         // when, then
         assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
-        assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, questionResponses)))
+        assertEquals(nextSectionId, section.findNextSectionId(sectionResponse))
     }
 
     @Test
     fun `선택지 기반 라우팅 방식의 섹션은 응답에 기반하여 다음 섹션을 결정한다`() {
         // give
         val questions = listOf(tQuestion, requiredAllowOtherSQuestion, allowOtherMQuestion)
-
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
 
         val id = UUID.randomUUID()
-        val title = "title"
-        val description = "description"
         val routeDetails =
             SetByChoiceRouting(
                 keyQuestionId = sQuestionId,
@@ -466,10 +310,8 @@ class SectionTest {
                     ),
             )
         val section =
-            Section(
+            createSection(
                 id = id,
-                title = title,
-                description = description,
                 routeDetails = routeDetails,
                 questions = questions,
             )
@@ -507,10 +349,8 @@ class SectionTest {
         val nextSectionId = UUID.randomUUID()
         val currentSectionId = UUID.randomUUID()
         val section =
-            Section(
+            createSection(
                 id = currentSectionId,
-                title = "title",
-                description = "description",
                 routeDetails = SetByUserRouting(nextSectionId),
                 questions = listOf(tQuestion, allowOtherSQuestion, allowOtherMQuestion),
             )

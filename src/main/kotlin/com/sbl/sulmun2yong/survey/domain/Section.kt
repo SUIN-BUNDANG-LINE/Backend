@@ -48,13 +48,8 @@ data class Section(
     private fun validateSectionResponse(sectionResponse: SectionResponse) {
         questions.forEach { question ->
             val response = sectionResponse.find { it.questionId == question.id }
-            require(!question.isRequired || response != null) { throw InvalidSectionResponseException() }
-            if (question.isRequired && response == null) {
-                throw InvalidSectionResponseException()
-            }
-            if (response != null && !question.isValidResponse(response)) {
-                throw InvalidSectionResponseException()
-            }
+            if (question.isRequired && response == null) throw InvalidSectionResponseException()
+            require(response == null || question.isValidResponse(response)) { throw InvalidSectionResponseException() }
         }
     }
 
