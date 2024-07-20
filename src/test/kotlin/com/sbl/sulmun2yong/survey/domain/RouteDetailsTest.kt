@@ -73,7 +73,7 @@ class RouteDetailsTest {
     }
 
     @Test
-    fun `SetByChoice는 keyQuestion의 isAllowOther와 선택지들로 sectionRouteConfigs가 유효한지 판단할 수 있다`() {
+    fun `SetByChoice는 sectionRouteConfigs의 content의 집합을 가져올 수 있다`() {
         // given
         val keyQuestionId = UUID.randomUUID()
         val sectionRouteConfigs =
@@ -86,14 +86,10 @@ class RouteDetailsTest {
         val setByChoice = RouteDetails.SetByChoice(keyQuestionId, sectionRouteConfigs)
 
         // when
-        val valid1 = setByChoice.isValidSectionRouteConfig(true, listOf("a", "b"))
-        val invalid1 = setByChoice.isValidSectionRouteConfig(false, listOf("a", "b"))
-        val invalid2 = setByChoice.isValidSectionRouteConfig(true, listOf("a", "b", "c"))
+        val contentSet = setByChoice.getContentsSet()
 
         // then
-        assertEquals(true, valid1)
-        assertEquals(false, invalid1)
-        assertEquals(false, invalid2)
+        assertEquals(setOf("a", "b", null), contentSet)
     }
 
     @Test

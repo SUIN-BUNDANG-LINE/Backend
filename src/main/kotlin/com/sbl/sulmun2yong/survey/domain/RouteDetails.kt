@@ -29,15 +29,7 @@ sealed class RouteDetails(val type: SectionRouteType) {
             return routeConfig.nextSectionId
         }
 
-        private fun getContentsSet() = sectionRouteConfigs.map { it.content }.toSet()
-
-        fun isValidSectionRouteConfig(
-            isAllowOther: Boolean,
-            choices: List<String>,
-        ): Boolean {
-            val choicesSet = if (isAllowOther) choices.toSet() + null else choices.toSet()
-            return getContentsSet() == choicesSet
-        }
+        fun getContentsSet() = sectionRouteConfigs.map { it.content }.toSet()
     }
 
     data class SetByUser(val nextSectionId: UUID?) : RouteDetails(SectionRouteType.SET_BY_USER) {

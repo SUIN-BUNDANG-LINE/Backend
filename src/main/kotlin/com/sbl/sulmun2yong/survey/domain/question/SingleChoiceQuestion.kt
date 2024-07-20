@@ -17,4 +17,6 @@ data class SingleChoiceQuestion(
         if (questionResponse.first().isOther) return isAllowOther
         return choices.contains(questionResponse.first().content)
     }
+
+    fun getChoiceSet() = if (isAllowOther) choices.toSet() + null else choices.toSet()
 }
