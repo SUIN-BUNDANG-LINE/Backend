@@ -40,6 +40,21 @@ class QuestionTest {
     }
 
     @Test
+    fun `Question은 keyQuestion이 될 수 있는지 확인할 수 있다`() {
+        // given
+        val singleChoiceQuestion1: Question = createSingleChoiceQuestion()
+        val singleChoiceQuestion2: Question = createSingleChoiceQuestion(isRequired = false)
+        val textResponseQuestion: Question = createTextResponseQuestion()
+        val multipleChoiceQuestion: Question = createMultipleChoiceQuestion()
+
+        // when, then
+        assertEquals(true, singleChoiceQuestion1.canBeKeyQuestion())
+        assertEquals(false, singleChoiceQuestion2.canBeKeyQuestion())
+        assertEquals(false, textResponseQuestion.canBeKeyQuestion())
+        assertEquals(false, multipleChoiceQuestion.canBeKeyQuestion())
+    }
+
+    @Test
     fun `주관식 질문을 생성하면 올바르게 정보가 설정된다`() {
         // 주관식 질문은 선택지가 없고, 기타 응답을 허용할 수 없고, 질문 유형이 TEXT_RESPONSE다.
         // given
@@ -105,6 +120,25 @@ class QuestionTest {
         // when, then
         validateResponses(allowOtherQuestion, allowOtherQuestionExpected)
         validateResponses(notAllowOtherQuestion, notAllowOtherQuestionExpected)
+    }
+
+    @Test
+    fun `단일 선택 질문은 content 집합을 받아서 선택지의 content와 같은지 확인할 수 있다`() {
+        // given
+        val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
+        val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
+
+        // when
+        val isAllowEqual1 = allowOtherQuestion.isEqualToChoices(setOf(a, b, c, null))
+        val isAllowEqual2 = allowOtherQuestion.isEqualToChoices(setOf(a, b, d, null))
+        val isNotAllowEqual1 = notAllowOtherQuestion.isEqualToChoices(setOf(a, b, c))
+        val isNotAllowEqual2 = notAllowOtherQuestion.isEqualToChoices(setOf(a, b, c, null))
+
+        // then
+        assertEquals(true, isAllowEqual1)
+        assertEquals(false, isAllowEqual2)
+        assertEquals(true, isNotAllowEqual1)
+        assertEquals(false, isNotAllowEqual2)
     }
 
     @Test
