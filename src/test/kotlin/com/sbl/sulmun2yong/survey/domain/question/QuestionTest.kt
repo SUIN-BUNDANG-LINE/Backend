@@ -30,6 +30,7 @@ class QuestionTest {
             createQuestionResponse(id = questionId, contents = listOf(d), isOtherContent = a),
             createQuestionResponse(id = questionId, contents = listOf(a, b), isOtherContent = a),
             createQuestionResponse(id = questionId, contents = listOf(a, b), isOtherContent = d),
+            createQuestionResponse(id = UUID.randomUUID(), contents = listOf(a)),
         )
 
     private fun validateResponses(
@@ -80,10 +81,10 @@ class QuestionTest {
     fun `주관식 질문은 응답을 받으면 유효성을 검증할 수 있다`() {
         // 주관식 질문은 하나의 응답만 받을 수 있고, 기타 응답을 받을 수 없다.
         // given
-        val question = createTextResponseQuestion()
+        val question = createTextResponseQuestion(id = questionId)
 
         // when, then
-        val expected = listOf(true, true, false, false, false, false, false, false, false)
+        val expected = listOf(true, true, false, false, false, false, false, false, false, false)
         validateResponses(question, expected)
     }
 
@@ -114,8 +115,8 @@ class QuestionTest {
         // given
         val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
         val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
-        val allowOtherQuestionExpected = listOf(true, false, true, true, false, false, false, false, false)
-        val notAllowOtherQuestionExpected = listOf(true, false, false, false, false, false, false, false, false)
+        val allowOtherQuestionExpected = listOf(true, false, true, true, false, false, false, false, false, false)
+        val notAllowOtherQuestionExpected = listOf(true, false, false, false, false, false, false, false, false, false)
 
         // when, then
         validateResponses(allowOtherQuestion, allowOtherQuestionExpected)
@@ -169,9 +170,9 @@ class QuestionTest {
         val questionABC = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a, b, c)), isAllowOther = false)
         val questionABCEtc = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a, b, c)))
         val questionAEtc = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a)))
-        val questionABCExpected = listOf(true, false, false, false, true, false, false, false, false)
-        val questionABCEtcExpected = listOf(true, false, true, true, true, false, false, true, true)
-        val questionAEtcExpected = listOf(true, false, true, true, false, false, false, false, false)
+        val questionABCExpected = listOf(true, false, false, false, true, false, false, false, false, false)
+        val questionABCEtcExpected = listOf(true, false, true, true, true, false, false, true, true, false)
+        val questionAEtcExpected = listOf(true, false, true, true, false, false, false, false, false, false)
 
         // when, then
         validateResponses(questionABC, questionABCExpected)

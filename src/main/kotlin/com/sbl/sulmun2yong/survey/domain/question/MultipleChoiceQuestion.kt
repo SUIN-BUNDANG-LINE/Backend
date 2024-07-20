@@ -12,7 +12,7 @@ data class MultipleChoiceQuestion(
 ) : Question {
     override val questionType: QuestionType = QuestionType.MULTIPLE_CHOICE
 
-    override fun isValidResponse(questionResponse: QuestionResponse): Boolean {
+    override fun validateQuestionResponse(questionResponse: QuestionResponse): Boolean {
         for (responseDetail in questionResponse) {
             if (responseDetail.isOther) {
                 if (isAllowOther) continue

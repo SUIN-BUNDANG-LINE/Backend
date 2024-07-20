@@ -14,7 +14,7 @@ data class SingleChoiceQuestion(
 
     private val choiceSet = if (isAllowOther) choices.toSet() + null else choices.toSet()
 
-    override fun isValidResponse(questionResponse: QuestionResponse): Boolean {
+    override fun validateQuestionResponse(questionResponse: QuestionResponse): Boolean {
         if (questionResponse.size != 1) return false
         if (questionResponse.first().isOther) return isAllowOther
         return choices.contains(questionResponse.first().content)
