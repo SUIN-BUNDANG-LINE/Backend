@@ -18,6 +18,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import java.time.Instant
 import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -77,8 +78,19 @@ class SurveyTest {
     }
 
     @Test
+    fun `설문의 마감일이 현재 날짜로 부터 90일 이후면 예외가 발생한다`() {
+        // given
+        val finishedAt = Date(Date.from(Instant.now()).time + 100 * 24 * 60 * 60 * 1000)
+
+        // when, then
+        assertThrows<InvalidSurveyException> { createSurvey(finishedAt = finishedAt) }
+    }
+
+    @Test
     fun `설문의 시작일은 설문이 시작 전일 때만 null이다`() {
+        assertDoesNotThrow { createSurvey(publishedAt = null, status = SurveyStatus.NOT_STARTED) }
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.IN_PROGRESS) }
+        assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.IN_MODIFICATION) }
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.CLOSED) }
     }
 
@@ -134,7 +146,7 @@ class SurveyTest {
     }
 
     @Test
-    fun `설문의 리워드 개수는 목표 참여자 수 이하이다`() {
+    fun `설문의 목표 참여자 수는 설문의 리워드 개수 이상이다`() {
         assertThrows<InvalidSurveyException> { createSurvey(targetParticipants = REWARD_COUNT - 1) }
     }
 
