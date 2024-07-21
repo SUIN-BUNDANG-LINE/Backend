@@ -16,7 +16,7 @@ object SurveyFixtureFactory {
     val FINISHED_AT = Date.from(Instant.now())!!
     val PUBLISHED_AT = Date(FINISHED_AT.time - 24 * 60 * 60 * 10000)
     const val FINISH_MESSAGE = "설문이 종료되었습니다."
-    const val TARGET_PARTICIPANTS = 100
+    const val TARGET_PARTICIPANT_COUNT = 100
     val REWARDS =
         listOf(
             Reward(UUID.randomUUID(), "아메리카노", "커피", 3),
@@ -35,7 +35,7 @@ object SurveyFixtureFactory {
         finishedAt: Date = FINISHED_AT,
         status: SurveyStatus = SURVEY_STATUS,
         finishMessage: String = FINISH_MESSAGE,
-        targetParticipants: Int = TARGET_PARTICIPANTS,
+        targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
         rewards: List<Reward> = REWARDS,
         sections: List<Section> = SECTIONS,
     ) = Survey(
@@ -47,7 +47,7 @@ object SurveyFixtureFactory {
         finishedAt = finishedAt,
         status = status,
         finishMessage = finishMessage + id,
-        targetParticipantCount = targetParticipants,
+        targetParticipantCount = targetParticipantCount,
         rewards = rewards,
         sections = sections,
     )

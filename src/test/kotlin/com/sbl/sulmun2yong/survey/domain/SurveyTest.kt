@@ -9,7 +9,7 @@ import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.REWARDS
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.REWARD_COUNT
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.SECTIONS
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.SURVEY_STATUS
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TARGET_PARTICIPANTS
+import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TARGET_PARTICIPANT_COUNT
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.THUMBNAIL
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.createSurvey
@@ -41,7 +41,7 @@ class SurveyTest {
             assertEquals(PUBLISHED_AT, this.publishedAt)
             assertEquals(SURVEY_STATUS, this.status)
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
-            assertEquals(TARGET_PARTICIPANTS, this.targetParticipantCount)
+            assertEquals(TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
             assertEquals(REWARDS, this.rewards)
             assertEquals(SECTIONS, this.sections)
         }
@@ -147,7 +147,7 @@ class SurveyTest {
 
     @Test
     fun `설문의 목표 참여자 수는 설문의 리워드 개수 이상이다`() {
-        assertThrows<InvalidSurveyException> { createSurvey(targetParticipants = REWARD_COUNT - 1) }
+        assertThrows<InvalidSurveyException> { createSurvey(targetParticipantCount = REWARD_COUNT - 1) }
     }
 
     @Test
