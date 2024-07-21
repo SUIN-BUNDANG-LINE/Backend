@@ -55,7 +55,7 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
             publishedAt = this.createdAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            targetParticipants = this.targetParticipants,
+            targetParticipantCount = this.targetParticipants,
             rewards = this.rewards.map { it.toDomain() },
             // TODO: 실제 sections를 넣기
             sections = listOf(Section.create()),

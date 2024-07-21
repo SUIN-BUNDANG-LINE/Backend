@@ -41,7 +41,7 @@ class SurveyTest {
             assertEquals(PUBLISHED_AT, this.publishedAt)
             assertEquals(SURVEY_STATUS, this.status)
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
-            assertEquals(TARGET_PARTICIPANTS, this.targetParticipants)
+            assertEquals(TARGET_PARTICIPANTS, this.targetParticipantCount)
             assertEquals(REWARDS, this.rewards)
             assertEquals(SECTIONS, this.sections)
         }

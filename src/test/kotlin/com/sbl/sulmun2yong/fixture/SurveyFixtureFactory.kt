@@ -47,7 +47,7 @@ object SurveyFixtureFactory {
         finishedAt = finishedAt,
         status = status,
         finishMessage = finishMessage + id,
-        targetParticipants = targetParticipants,
+        targetParticipantCount = targetParticipants,
         rewards = rewards,
         sections = sections,
     )

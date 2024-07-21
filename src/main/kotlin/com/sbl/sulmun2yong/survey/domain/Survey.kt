@@ -15,7 +15,7 @@ data class Survey(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipants: Int,
+    val targetParticipantCount: Int,
     val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
@@ -61,7 +61,7 @@ data class Survey(
 
     private fun isFinishedAtBeforeDayLimit() = finishedAt.before(Date(Date.from(Instant.now()).time + finishDayLimit * 24 * 60 * 60 * 1000))
 
-    private fun isTargetParticipantsEnough() = targetParticipants >= getRewardCount()
+    private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
     private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
 }

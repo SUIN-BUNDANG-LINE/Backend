@@ -23,7 +23,7 @@ data class SurveyListResponse(
                             thumbnail = it.thumbnail,
                             title = it.title,
                             description = it.description,
-                            targetParticipants = it.targetParticipants,
+                            targetParticipants = it.targetParticipantCount,
                             finishedAt = it.finishedAt,
                             rewardCount = it.getRewardCount(),
                             rewards = it.rewards.toRewardInfoResponses(),
