@@ -1,11 +1,8 @@
 package com.sbl.sulmun2yong.survey.adapter
 
-import com.sbl.sulmun2yong.survey.domain.Reward
-import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
-import com.sbl.sulmun2yong.survey.entity.SurveyDocument
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.data.domain.Page
@@ -29,7 +26,7 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
         return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
     }
 
-    fun findSurvey(surveyId: UUID) = surveyRepository.findById(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
+    fun getSurvey(surveyId: UUID) = surveyRepository.findById(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
 
     private fun getSurveySort(
         sortType: SurveySortType,
@@ -43,29 +40,4 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
             }
         }
     }
-
-    private fun SurveyDocument.toDomain() =
-        Survey(
-            id = this.id,
-            title = this.title,
-            description = this.description,
-            thumbnail = this.thumbnail,
-            finishedAt = this.finishedAt,
-            // TODO: 실제 publishedAt을 넣기
-            publishedAt = this.createdAt,
-            status = this.status,
-            finishMessage = this.finishMessage,
-            targetParticipantCount = this.targetParticipants,
-            rewards = this.rewards.map { it.toDomain() },
-            // TODO: 실제 sections를 넣기
-            sections = listOf(Section.create()),
-        )
-
-    private fun SurveyDocument.RewardSubDocument.toDomain() =
-        Reward(
-            id = this.rewardId,
-            name = this.name,
-            category = this.category,
-            count = this.count,
-        )
 }
