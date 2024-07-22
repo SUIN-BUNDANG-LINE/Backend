@@ -14,7 +14,7 @@ import java.util.UUID
 @Tag(name = "SurveyInfo", description = "설문 정보 관련 API")
 interface SurveyInfoApiDoc {
     @Operation(summary = "설문 목록 페이지네이션 조회")
-    @GetMapping("/surveys/list")
+    @GetMapping("/list")
     fun getSurveysWithPagination(
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(defaultValue = "0") page: Int,
@@ -23,7 +23,7 @@ interface SurveyInfoApiDoc {
     ): ResponseEntity<SurveyListResponse>
 
     @Operation(summary = "설문 정보 조회")
-    @GetMapping("/surveys/info/{survey-id}")
+    @GetMapping("/info/{survey-id}")
     fun getSurveyInfo(
         @PathVariable("survey-id") surveyId: UUID,
     ): ResponseEntity<SurveyInfoResponse>
