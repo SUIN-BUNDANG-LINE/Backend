@@ -4,15 +4,18 @@ import com.sbl.sulmun2yong.survey.controller.doc.SurveyInfoApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
 import com.sbl.sulmun2yong.survey.service.SurveyInfoService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-@RestController("/api/v1/surveys")
+@RestController
+@RequestMapping("/api/v1/surveys")
 class SurveyInfoController(private val surveyInfoService: SurveyInfoService) : SurveyInfoApiDoc {
     @GetMapping("/list")
     override fun getSurveysWithPagination(
@@ -30,6 +33,13 @@ class SurveyInfoController(private val surveyInfoService: SurveyInfoService) : S
     override fun getSurveyInfo(
         @PathVariable("survey-id") surveyId: UUID,
     ): ResponseEntity<SurveyInfoResponse> {
-        return ResponseEntity.ok(surveyInfoService.getSurvey(surveyId))
+        return ResponseEntity.ok(surveyInfoService.getSurveyInfo(surveyId))
+    }
+
+    @GetMapping("/progress/{survey-id}")
+    override fun getSurveyProgressInfo(
+        @PathVariable("survey-id") surveyId: UUID,
+    ): ResponseEntity<SurveyProgressInfoResponse> {
+        return ResponseEntity.ok(surveyInfoService.getSurveyProgressInfo(surveyId))
     }
 }

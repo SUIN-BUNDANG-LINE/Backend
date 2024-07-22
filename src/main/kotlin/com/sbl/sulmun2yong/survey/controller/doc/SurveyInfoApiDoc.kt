@@ -3,6 +3,7 @@ package com.sbl.sulmun2yong.survey.controller.doc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
@@ -27,4 +28,10 @@ interface SurveyInfoApiDoc {
     fun getSurveyInfo(
         @PathVariable("survey-id") surveyId: UUID,
     ): ResponseEntity<SurveyInfoResponse>
+
+    @Operation(summary = "설문 진행 정보 조회")
+    @GetMapping("/progress/{survey-id}")
+    fun getSurveyProgressInfo(
+        @PathVariable("survey-id") surveyId: UUID,
+    ): ResponseEntity<SurveyProgressInfoResponse>
 }
