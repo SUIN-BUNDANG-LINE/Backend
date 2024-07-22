@@ -10,6 +10,7 @@ import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
 
 class CustomLogoutSuccessHandler(
+    private val baseUrl: String,
     private val sessionRegistry: SessionRegistry,
 ) : LogoutSuccessHandler {
     override fun onLogoutSuccess(
@@ -28,6 +29,6 @@ class CustomLogoutSuccessHandler(
         response.status = HttpStatus.OK.value()
 
         // 리디렉트
-        response.sendRedirect("localhost:3000/logout/authorizaiton")
+        response.sendRedirect("$baseUrl/logout/authorizaiton")
     }
 }

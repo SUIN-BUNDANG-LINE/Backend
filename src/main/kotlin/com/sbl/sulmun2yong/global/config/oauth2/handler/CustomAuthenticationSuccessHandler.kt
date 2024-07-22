@@ -5,7 +5,9 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 
-class CustomAuthenticationSuccessHandler : AuthenticationSuccessHandler {
+class CustomAuthenticationSuccessHandler(
+    private val baseUrl: String,
+) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -15,6 +17,6 @@ class CustomAuthenticationSuccessHandler : AuthenticationSuccessHandler {
         response.status = HttpStatus.OK.value()
 
         // 리디렉트
-        response.sendRedirect("http://localhost:3000/loqin/authorization")
+        response.sendRedirect("$baseUrl/loqin/authorization")
     }
 }
