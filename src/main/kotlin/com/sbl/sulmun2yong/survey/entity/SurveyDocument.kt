@@ -18,7 +18,7 @@ data class SurveyDocument(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipants: Int?,
+    val targetParticipants: Int,
     val rewards: List<RewardSubDocument>,
 ) : BaseTimeDocument() {
     data class RewardSubDocument(

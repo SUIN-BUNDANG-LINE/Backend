@@ -11,7 +11,7 @@ data class SurveyInfoResponse(
     val status: SurveyStatus,
     val finishedAt: Date,
     val currentParticipants: Int,
-    val targetParticipants: Int?,
+    val targetParticipants: Int,
     val thumbnail: String,
     val rewards: List<RewardInfoResponse>,
 ) {
@@ -24,7 +24,7 @@ data class SurveyInfoResponse(
                 finishedAt = survey.finishedAt,
                 // TODO: 실제 현재 참여자 값 넣도록 구현하기
                 currentParticipants = 0,
-                targetParticipants = survey.targetParticipants,
+                targetParticipants = survey.targetParticipantCount,
                 thumbnail = survey.thumbnail,
                 rewards = survey.rewards.map { it.toResponse() },
             )

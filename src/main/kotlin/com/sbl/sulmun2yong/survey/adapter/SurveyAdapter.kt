@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.adapter
 
 import com.sbl.sulmun2yong.survey.domain.Reward
+import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
@@ -50,12 +51,14 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
             description = this.description,
             thumbnail = this.thumbnail,
             finishedAt = this.finishedAt,
+            // TODO: 실제 publishedAt을 넣기
+            publishedAt = this.createdAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            targetParticipants = this.targetParticipants,
+            targetParticipantCount = this.targetParticipants,
             rewards = this.rewards.map { it.toDomain() },
-            createdAt = this.createdAt,
-            updatedAt = this.updatedAt,
+            // TODO: 실제 sections를 넣기
+            sections = listOf(Section.create()),
         )
 
     private fun SurveyDocument.RewardSubDocument.toDomain() =
