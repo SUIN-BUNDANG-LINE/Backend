@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -25,8 +26,13 @@ class SurveyInfoService(private val surveyAdapter: SurveyAdapter) {
         return SurveyListResponse.of(surveys.totalPages, surveys.content)
     }
 
-    fun getSurvey(surveyId: UUID): SurveyInfoResponse {
-        val survey = surveyAdapter.findSurvey(surveyId)
+    fun getSurveyInfo(surveyId: UUID): SurveyInfoResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
         return SurveyInfoResponse.of(survey)
+    }
+
+    fun getSurveyProgressInfo(surveyId: UUID): SurveyProgressInfoResponse? {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        return SurveyProgressInfoResponse.of(survey)
     }
 }

@@ -2,7 +2,6 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
-import java.time.Instant
 import java.util.Date
 import java.util.UUID
 
@@ -31,7 +30,7 @@ data class Survey(
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
-        require(isFinishedAtBeforeDayLimit()) { throw InvalidSurveyException() }
+//        require(isFinishedAtBeforeDayLimit()) { throw InvalidSurveyException() }
         require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
     }
 
@@ -59,7 +58,10 @@ data class Survey(
 
     private val finishDayLimit = 90
 
-    private fun isFinishedAtBeforeDayLimit() = finishedAt.before(Date(Date.from(Instant.now()).time + finishDayLimit * 24 * 60 * 60 * 1000))
+//    private fun isFinishedAtBeforeDayLimit(): Boolean {
+//        val finishLimitDate = Date.from(Instant.now().plus(finishDayLimit.toLong(), ChronoUnit.DAYS))
+//        return finishedAt.before(finishLimitDate)
+//    }
 
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
