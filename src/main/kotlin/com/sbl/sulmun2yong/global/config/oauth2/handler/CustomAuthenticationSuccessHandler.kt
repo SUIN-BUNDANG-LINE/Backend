@@ -17,6 +17,6 @@ class CustomAuthenticationSuccessHandler(
         response.status = HttpStatus.OK.value()
 
         // 리디렉트
-        response.sendRedirect("$baseUrl/loqin/authorization")
+        response.sendRedirect("$baseUrl/")
     }
 }

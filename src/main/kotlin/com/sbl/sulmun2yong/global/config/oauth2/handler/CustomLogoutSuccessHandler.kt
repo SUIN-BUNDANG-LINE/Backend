@@ -29,6 +29,6 @@ class CustomLogoutSuccessHandler(
         response.status = HttpStatus.OK.value()
 
         // 리디렉트
-        response.sendRedirect("$baseUrl/logout/authorizaiton")
+        response.sendRedirect("$baseUrl/")
     }
 }
