@@ -1,8 +1,11 @@
 package com.sbl.sulmun2yong.global.config
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
+import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomAuthenticationSuccessHandler
+import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomLogoutSuccessHandler
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStrategy
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomInvalidSessionStrategy
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
@@ -14,7 +17,10 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.HttpStatusEntryPoint
 
 @Configuration
-class SecurityConfig {
+class SecurityConfig(
+    @Value("\${frontend.base-url}")
+    private val baseUrl: String,
+) {
     @Bean
     fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
 
@@ -31,11 +37,12 @@ class SecurityConfig {
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
+                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(baseUrl)
             }
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(sessionRegistry())
+                logoutSuccessHandler = CustomLogoutSuccessHandler(baseUrl, sessionRegistry())
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))

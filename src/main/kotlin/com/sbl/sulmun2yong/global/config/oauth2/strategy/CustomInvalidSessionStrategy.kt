@@ -11,6 +11,10 @@ class CustomInvalidSessionStrategy : InvalidSessionStrategy {
         request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        ResetSession.reset(request, response, HttpStatus.UNAUTHORIZED)
+        // 세션 초기화
+        ResetSession.reset(request, response)
+
+        // 상태 코드 설정
+        response.status = HttpStatus.UNAUTHORIZED.value()
     }
 }
