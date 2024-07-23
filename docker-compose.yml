@@ -30,7 +30,7 @@ services:
         ports:
             - "27017:27017"
         volumes:
-            - sulmun2yong-test-mongodb:/data/db
+                - sulmun2yong-test-mongodb:/data/db
 
 volumes:
     sulmun2yong-test-db:
