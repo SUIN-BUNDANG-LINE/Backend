@@ -15,6 +15,7 @@ class SurveyResponseService(
     val participantAdapter: ParticipantAdapter,
     val responseAdapter: ResponseAdapter,
 ) {
+    // TODO: 트랜잭션 처리 추가하기
     fun responseToSurvey(
         surveyId: UUID,
         surveyResponseRequest: SurveyResponseRequest,
