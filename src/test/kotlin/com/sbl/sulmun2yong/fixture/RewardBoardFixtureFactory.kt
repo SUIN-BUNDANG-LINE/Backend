@@ -16,7 +16,7 @@ object RewardBoardFixtureFactory {
     fun create() =
         DrawingBoard.create(
             id = UUID.randomUUID(),
-            size = SURVEY_PARTICIPANT_COUNT,
+            boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = rewards,
         )
 }
