@@ -5,8 +5,8 @@ import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
 import java.util.UUID
 
 class DrawingBoard(
-    private val id: UUID,
-    private val size: Int,
+    val id: UUID,
+    val size: Int,
     private val tickets: Array<Ticket>,
 ) {
     private val isFinished = false

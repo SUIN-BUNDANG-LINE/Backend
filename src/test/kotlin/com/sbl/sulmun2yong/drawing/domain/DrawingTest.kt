@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 class DrawingTest {
-//    @Test
+    //    @Test
 //    fun `추첨을 시작한다`() {
 //        // given
 //        val selectedNumber = 1
@@ -10,7 +10,7 @@ class DrawingTest {
 //
 //        // then
 //    }
-
+//
 //    @Test
 //    fun `이미 선택한 티켓을 선택한다`() {
 //        // given
@@ -26,7 +26,7 @@ class DrawingTest {
 //
 //        // then
 //    }
-
+//
 //    @Test
 //    fun `마감된 추첨 보드에서 추첨을 시도한다`() {
 //        // given
