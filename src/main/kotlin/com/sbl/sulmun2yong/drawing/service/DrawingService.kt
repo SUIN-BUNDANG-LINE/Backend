@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.drawing
+package com.sbl.sulmun2yong.drawing.service
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
 import java.util.UUID

@@ -12,10 +12,10 @@ class BoardMakingTest {
     @Test
     fun `추첨 보드를 만든다`() {
         // given
-        val id = UUID.randomUUID()
+        val surveyId = UUID.randomUUID()
 
         // when
-        val rewardBoard = createDrawingBoard(id)
+        val rewardBoard = createDrawingBoard(surveyId)
 
         // then
         with(rewardBoard) {
