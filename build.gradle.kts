@@ -87,20 +87,6 @@ tasks.jacocoTestReport {
     }
 }
 
-sonarqube {
-    properties {
-        property(
-            "sonar.coverage.jacoco.xmlReportPaths",
-            project.layout.buildDirectory
-                .file("reports/jacoco/test/jacocoTestReport.xml")
-                .get()
-                .asFile.absolutePath,
-        )
-        property("sonar.projectKey", "SUIN-BUNDANG-LINE_Backend_AZDrXmI4FBe8ovYIAI-X")
-        property("sonar.projectName", "Backend")
-    }
-}
-
 jib {
     from {
         image = "openjdk:17-slim"
