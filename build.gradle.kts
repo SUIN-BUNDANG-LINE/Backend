@@ -11,6 +11,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.24"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     id("com.google.cloud.tools.jib") version "3.4.0"
+    id("org.sonarqube") version "4.4.1.3373"
     jacoco
 }
 
@@ -83,6 +84,12 @@ tasks.jacocoTestReport {
         html.required.set(false)
         xml.required.set(true)
         csv.required.set(false)
+    }
+}
+
+sonarqube {
+    properties {
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml")
     }
 }
 

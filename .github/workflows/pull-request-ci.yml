@@ -32,3 +32,12 @@ jobs:
 
             - name: ktlint 검사 실행
               run: ./gradlew ktlintCheck
+
+            - name: SonarQube 프로젝트키 삽입
+              run: echo "sonar.projectKey=${{ secrets.SONARQUBE_PROJECT_KEY }}" >> sonar-project.properties
+
+            - name: SonarQube 분석 실행 후 PR Commant 작성
+              uses: sonarsource/sonarqube-scan-action@master
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+                  SONAR_HOST_URL: ${{ secrets.SONARQUBE_EC2_HOST }}
