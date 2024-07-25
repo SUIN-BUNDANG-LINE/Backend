@@ -15,8 +15,8 @@ class ResponseAdapter(private val responseRepository: ResponseRepository) {
         responseRepository.saveAll(surveyResponse.toDocuments(participantId))
     }
 
-    private fun SurveyResponse.toDocuments(participantId: UUID): List<ResponseDocument> {
-        return this.flatMap { sectionResponse ->
+    private fun SurveyResponse.toDocuments(participantId: UUID): List<ResponseDocument> =
+        this.flatMap { sectionResponse ->
             sectionResponse.flatMap { questionResponse ->
                 questionResponse.map {
                     ResponseDocument(
@@ -28,5 +28,4 @@ class ResponseAdapter(private val responseRepository: ResponseRepository) {
                 }
             }
         }
-    }
 }

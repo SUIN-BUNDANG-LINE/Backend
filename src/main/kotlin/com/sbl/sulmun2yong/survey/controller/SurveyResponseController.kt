@@ -19,7 +19,8 @@ class SurveyResponseController(private val surveyResponseService: SurveyResponse
     override fun responseToSurvey(
         @PathVariable("survey-id") surveyId: UUID,
         @RequestBody surveyResponseRequest: SurveyResponseRequest,
-    ): ResponseEntity<SurveyParticipantResponse> {
-        return ResponseEntity.ok(surveyResponseService.responseToSurvey(surveyId, surveyResponseRequest))
-    }
+    ): ResponseEntity<SurveyParticipantResponse> =
+        ResponseEntity.ok(
+            surveyResponseService.responseToSurvey(surveyId, surveyResponseRequest),
+        )
 }

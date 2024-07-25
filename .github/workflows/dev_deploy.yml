@@ -37,9 +37,6 @@ jobs:
                   echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> gradle.properties
                   echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}" >> gradle.properties
 
-            - name: ktlint 포매팅 진행
-              run: ./gradlew ktlintFormat
-
             - name: Gradle로 빌드
               run: ./gradlew clean build
 

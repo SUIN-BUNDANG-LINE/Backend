@@ -23,23 +23,18 @@ class SurveyInfoController(private val surveyInfoService: SurveyInfoService) : S
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "RECENT") sortType: SurveySortType,
         @RequestParam(defaultValue = "false") isAsc: Boolean,
-    ): ResponseEntity<SurveyListResponse> {
-        return ResponseEntity.ok(
+    ): ResponseEntity<SurveyListResponse> =
+        ResponseEntity.ok(
             surveyInfoService.getSurveysWithPagination(size, page, sortType, isAsc),
         )
-    }
 
     @GetMapping("/info/{survey-id}")
     override fun getSurveyInfo(
         @PathVariable("survey-id") surveyId: UUID,
-    ): ResponseEntity<SurveyInfoResponse> {
-        return ResponseEntity.ok(surveyInfoService.getSurveyInfo(surveyId))
-    }
+    ): ResponseEntity<SurveyInfoResponse> = ResponseEntity.ok(surveyInfoService.getSurveyInfo(surveyId))
 
     @GetMapping("/progress/{survey-id}")
     override fun getSurveyProgressInfo(
         @PathVariable("survey-id") surveyId: UUID,
-    ): ResponseEntity<SurveyProgressInfoResponse> {
-        return ResponseEntity.ok(surveyInfoService.getSurveyProgressInfo(surveyId))
-    }
+    ): ResponseEntity<SurveyProgressInfoResponse> = ResponseEntity.ok(surveyInfoService.getSurveyProgressInfo(surveyId))
 }
