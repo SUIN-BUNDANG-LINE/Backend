@@ -13,8 +13,8 @@ data class SurveyListResponse(
         fun of(
             pageCount: Int,
             surveys: List<Survey>,
-        ): SurveyListResponse {
-            return SurveyListResponse(
+        ): SurveyListResponse =
+            SurveyListResponse(
                 pageCount = pageCount,
                 surveys =
                     surveys.map {
@@ -30,7 +30,6 @@ data class SurveyListResponse(
                         )
                     },
             )
-        }
     }
 
     data class SurveyInfoResponse(
@@ -50,12 +49,11 @@ data class SurveyListResponse(
     )
 }
 
-private fun List<Reward>.toRewardInfoResponses(): List<SurveyListResponse.RewardInfoResponse> {
-    return this.groupBy { it.category }
+private fun List<Reward>.toRewardInfoResponses(): List<SurveyListResponse.RewardInfoResponse> =
+    this.groupBy { it.category }
         .map { (category, rewardsInCategory) ->
             SurveyListResponse.RewardInfoResponse(
                 category = category,
                 items = rewardsInCategory.map { it.name },
             )
         }
-}
