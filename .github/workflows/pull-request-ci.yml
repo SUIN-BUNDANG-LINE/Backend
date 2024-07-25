@@ -36,7 +36,7 @@ jobs:
             - name: SonarQube BaseURL 삽입
               run: |
                 echo "sonar.coverage.jacoco.xmlReportPaths=$(pwd)/build/reports/jacoco/test/jacocoTestReport.xml" >> sonar-project.properties
-                echo "sonar.projectKey=${{SONARQUBE_PROJECT_KEY}}" >> sonar-project.properties
+                echo "sonar.projectKey=${{secrets.SONARQUBE_PROJECT_KEY}}" >> sonar-project.properties
                 echo "sonar.core.serverBaseURL=${{ secrets.SONARQUBE_EC2_HOST }}" >> sonar-project.properties
 
             - name: SonarQube 분석 실행 후 PR Commant 작성
