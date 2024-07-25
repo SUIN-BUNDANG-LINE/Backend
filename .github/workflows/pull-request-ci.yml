@@ -1,4 +1,4 @@
-name: PR 제출 시 ktlint 검사 실행
+name: PR 제출 시 코드 검사 및 SonarQube 분석 실행
 
 on:
     pull_request:
@@ -7,7 +7,7 @@ on:
             - develop
 
 jobs:
-    ktlint:
+    build:
         runs-on: ubuntu-latest
 
         steps:
