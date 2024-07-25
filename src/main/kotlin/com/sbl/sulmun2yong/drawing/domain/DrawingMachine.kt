@@ -7,6 +7,7 @@ import com.sbl.sulmun2yong.drawing.domain.state.State
 import com.sbl.sulmun2yong.drawing.domain.state.WinnerState
 
 class DrawingMachine(
+    private val drawingBoard: DrawingBoard,
     val selectedNumber: Int,
 ) {
     private val noQuarterState: State = NoQuarterState(this)

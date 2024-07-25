@@ -2,8 +2,8 @@ package com.sbl.sulmun2yong.drawing.service
 
 import java.util.UUID
 
-class DrawingBoardMakingService {
+class DrawingBoardService {
     fun makeDrawingBoardWithSurveyId(surveyId: UUID) {
-        println("Board is made.")
+        // TODO SBL-50 브랜치에서 구현
     }
 }

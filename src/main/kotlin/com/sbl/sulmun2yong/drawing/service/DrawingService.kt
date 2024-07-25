@@ -1,12 +1,13 @@
 package com.sbl.sulmun2yong.drawing.service
 
+import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
 import java.util.UUID
 
 class DrawingService {
     fun checkHasQuarter(
-        participantId: UUID,
         surveyId: UUID,
+        participantId: UUID,
     ): Boolean {
         if (participantId.toString() == "00363c6a-db22-4df3-b75a-2dd347c8089f") {
             return true
@@ -14,7 +15,10 @@ class DrawingService {
         return false
     }
 
-    fun draw(selectedNumber: Int) {
-        DrawingMachine(selectedNumber)
+    fun draw(
+        drawingBoard: DrawingBoard,
+        selectedNumber: Int,
+    ) {
+        DrawingMachine(drawingBoard, selectedNumber)
     }
 }
