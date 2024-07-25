@@ -22,6 +22,9 @@ enum class ErrorCode(
     INVALID_CHOICE(HttpStatus.BAD_REQUEST, "SV0010", "유효하지 않은 선택지입니다."),
     INVALID_REWARD(HttpStatus.BAD_REQUEST, "SV0011", "유효하지 않은 리워드 정보 입니다."),
 
+    // RewardDrawing (RD)
+    INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "RD0001", "유효하지 않은 추첨 보드입니다."),
+
     // OAuth2 (OA)
     PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "OA0001", "지원하지 않는 소셜 로그인입니다."),
     NAVER_ATTRIBUTE_CASTING_FAILED(HttpStatus.BAD_REQUEST, "OA0002", "네이버 Attribute가 null이거나 Map이 아닙니다"),
