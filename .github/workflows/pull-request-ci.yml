@@ -37,15 +37,6 @@ jobs:
             - name: Gradle 빌드
               run: ./gradlew build
 
-            - name: 경로 확인
-              run: ls -a
-
-            - name: 경로 확인
-              run: ls ./build/reports
-
-            - name: 빌드 출력 확인
-              run: cat ./build/reports/jacoco/test/jacocoTestReport.xml
-
             - name: ktlint 검사 실행
               run: ./gradlew ktlintCheck
 
