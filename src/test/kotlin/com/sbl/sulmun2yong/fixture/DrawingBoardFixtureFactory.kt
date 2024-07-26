@@ -6,12 +6,15 @@ import java.util.UUID
 
 object DrawingBoardFixtureFactory {
     const val SURVEY_PARTICIPANT_COUNT = 200
+
     private val rewards =
         arrayOf(
             Reward(UUID.randomUUID(), "아메리카노", "커피", 3),
             Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
-            Reward(UUID.randomUUID(), "햄버거", "음식", 170),
+            Reward(UUID.randomUUID(), "햄버거", "음식", 2),
         )
+
+    val totalRewardCount = rewards.sumOf { it.count }
 
     fun createDrawingBoard(id: UUID) =
         DrawingBoard.create(

@@ -9,17 +9,21 @@ class HasQuarterState(
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
-    override fun getResult(): Boolean {
+    override fun selectPaper() {
         val selectedPaper = drawingMachine.getSelectedPaper()
 
-        if (selectedPaper is WinningTicket) {
-            drawingMachine.state = drawingMachine.winnerState
-            return true
-        } else {
-            drawingMachine.looserState
-            return false
+        if (selectedPaper.isSelected) {
+            drawingMachine.state = drawingMachine.noQuarterState
+            throw InvalidDrawingException()
         }
+
+        drawingMachine.setIsSelectedTrue()
+
+        drawingMachine.state =
+            if (selectedPaper is WinningTicket) drawingMachine.winnerState else drawingMachine.looserState
     }
+
+    override fun getResult() = throw InvalidDrawingException()
 
     override fun getRewardName() = throw InvalidDrawingException()
 }

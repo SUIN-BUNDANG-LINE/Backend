@@ -27,7 +27,14 @@ class DrawingMachine(
         state.insertQuarter()
     }
 
-    fun getResult(): Boolean = state.getResult()
+    fun openPaper(): Boolean {
+        state.selectPaper()
+        return state.getResult()
+    }
 
     fun getRewardName(): String = state.getRewardName()
+
+    fun setIsSelectedTrue() {
+        drawingBoard.tickets[selectedNumber].isSelected = true
+    }
 }

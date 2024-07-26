@@ -17,7 +17,7 @@ class TicketFactory {
                 }
             }
 
-            repeat(200 - tickets.size) {
+            repeat(maxTicketCount - tickets.size) {
                 tickets.add(LosingTicket())
             }
 

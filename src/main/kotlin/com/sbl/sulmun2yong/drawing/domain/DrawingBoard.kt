@@ -26,5 +26,19 @@ class DrawingBoard(
         }
     }
 
-    override fun toString(): String = "DrawingBoard(id=$id, selectedTicketCount=$selectedTicketCount, tickets=${tickets.contentToString()})"
+    override fun toString(): String {
+        val maxLength = tickets.maxOfOrNull { it.toString().length } ?: 0
+
+        val builder = StringBuilder()
+
+        tickets.forEachIndexed { index, ticket ->
+            val paddedTicket = ticket.toString().padEnd(maxLength + 1, '\u3000')
+            builder.append(paddedTicket)
+            if ((index + 1) % 10 == 0) {
+                builder.append("\n")
+            }
+        }
+
+        return builder.toString()
+    }
 }

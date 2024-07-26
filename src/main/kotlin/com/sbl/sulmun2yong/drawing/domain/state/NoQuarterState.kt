@@ -10,6 +10,8 @@ class NoQuarterState(
         drawingMachine.state = drawingMachine.hasQuarterState
     }
 
+    override fun selectPaper() = throw InvalidDrawingException()
+
     override fun getResult() = throw InvalidDrawingException()
 
     override fun getRewardName(): String = throw InvalidDrawingException()

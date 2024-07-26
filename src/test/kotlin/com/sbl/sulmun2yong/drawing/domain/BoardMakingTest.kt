@@ -25,6 +25,21 @@ class BoardMakingTest {
     }
 
     @Test
+    fun `드로잉 보드를 출력한다`() {
+        val drawingBoard =
+            DrawingBoard.create(
+                UUID.randomUUID(),
+                200,
+                arrayOf(
+                    Reward(UUID.randomUUID(), "닌텐도 스위치", "커피", 3),
+                    Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
+                    Reward(UUID.randomUUID(), "햄버거", "음식", 2),
+                ),
+            )
+        println(drawingBoard)
+    }
+
+    @Test
     fun `추첨보드를 만들 때 목표 설문조사자 수 이상으로 리워드를 넣으면 에러가 발생한다`() {
         // given
         val surveyParticipantCount = 200

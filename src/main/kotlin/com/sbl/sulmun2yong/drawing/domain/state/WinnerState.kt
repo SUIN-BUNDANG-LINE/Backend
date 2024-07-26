@@ -9,6 +9,8 @@ class WinnerState(
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
+    override fun selectPaper() = throw InvalidDrawingException()
+
     override fun getResult() = throw InvalidDrawingException()
 
     override fun getRewardName(): String {

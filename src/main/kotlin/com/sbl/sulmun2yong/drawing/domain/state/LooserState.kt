@@ -8,6 +8,8 @@ class LooserState(
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
+    override fun selectPaper() = throw InvalidDrawingException()
+
     override fun getResult(): Boolean {
         drawingMachine.state =
             if (drawingMachine.getSelectedTicketCount() > 1) {
