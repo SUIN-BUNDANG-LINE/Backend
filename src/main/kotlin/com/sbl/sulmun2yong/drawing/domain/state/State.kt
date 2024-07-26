@@ -5,6 +5,8 @@ interface State {
 
     fun selectPaper()
 
+    fun openPaper()
+
     fun getResult(): Boolean
 
     fun getRewardName(): String

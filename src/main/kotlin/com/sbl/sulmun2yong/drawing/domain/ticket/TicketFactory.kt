@@ -10,7 +10,7 @@ class TicketFactory {
             maxTicketCount: Int,
         ): Array<Ticket> {
             val tickets = mutableListOf<Ticket>()
-            rewards.forEach { reward ->
+            rewards.map { reward ->
                 repeat(reward.count) {
                     tickets.add(WinningTicket(rewardName = reward.name))
                     require(tickets.size <= maxTicketCount) { throw InvalidDrawingBoardException() }

@@ -11,10 +11,19 @@ class WinnerState(
 
     override fun selectPaper() = throw InvalidDrawingException()
 
-    override fun getResult() = throw InvalidDrawingException()
+    override fun openPaper() = throw InvalidDrawingException()
+
+    override fun getResult(): Boolean = true
 
     override fun getRewardName(): String {
-        val selectedTicket = drawingMachine.getSelectedPaper()
+        drawingMachine.state =
+            if (drawingMachine.getRemainingTicketCount() == 0) {
+                drawingMachine.outOfPaperState
+            } else {
+                drawingMachine.noQuarterState
+            }
+
+        val selectedTicket = drawingMachine.getSelectedTicket()
         if (selectedTicket is WinningTicket) {
             return selectedTicket.rewardName
         } else {

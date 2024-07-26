@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain.state
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
-import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 
 class HasQuarterState(
@@ -10,18 +9,18 @@ class HasQuarterState(
     override fun insertQuarter() = throw InvalidDrawingException()
 
     override fun selectPaper() {
-        val selectedPaper = drawingMachine.getSelectedPaper()
-
-        if (selectedPaper.isSelected) {
+        val selectedTicket = drawingMachine.getSelectedTicket()
+        if (selectedTicket.isSelected) {
             drawingMachine.state = drawingMachine.noQuarterState
             throw InvalidDrawingException()
         }
 
         drawingMachine.setIsSelectedTrue()
 
-        drawingMachine.state =
-            if (selectedPaper is WinningTicket) drawingMachine.winnerState else drawingMachine.looserState
+        drawingMachine.state = drawingMachine.openPaperState
     }
+
+    override fun openPaper() = throw InvalidDrawingException()
 
     override fun getResult() = throw InvalidDrawingException()
 

@@ -21,7 +21,9 @@ class DrawingService {
     ) {
         val drawingMachine = DrawingMachine(drawingBoard, selectedNumber)
         drawingMachine.insertQuarter()
-        drawingMachine.getResult()
-        drawingMachine.getRewardName()
+        drawingMachine.selectPaper()
+        if (drawingMachine.openPaperAndCheckIsWon()) {
+            drawingMachine.getRewardName()
+        }
     }
 }

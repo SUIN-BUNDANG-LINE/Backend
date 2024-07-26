@@ -7,6 +7,8 @@ class OutOfPaperState : State {
 
     override fun selectPaper() = throw InvalidDrawingException()
 
+    override fun openPaper() = throw InvalidDrawingException()
+
     override fun getResult() = throw InvalidDrawingException()
 
     override fun getRewardName() = throw InvalidDrawingException()
