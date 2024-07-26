@@ -39,9 +39,9 @@ jobs:
 
             - name: sonar-project.properties 파일 내용 확인
               run: |
-                  grep "sonar.coverage.jacoco.xmlReportPaths" $(pwd)/sonar-project.properties
                   grep "sonar.projectKey" $(pwd)/sonar-project.properties
                   grep "sonar.core.serverBaseURL" $(pwd)/sonar-project.properties
+                  grep "sonar.coverage.jacoco.xmlReportPaths" $(pwd)/sonar-project.properties
 
             - name: ktlint 검사 실행
               run: ./gradlew ktlintCheck
