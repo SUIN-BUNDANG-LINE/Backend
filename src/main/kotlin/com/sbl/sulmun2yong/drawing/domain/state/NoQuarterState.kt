@@ -1,19 +1,16 @@
 package com.sbl.sulmun2yong.drawing.domain.state
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
+import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 
 class NoQuarterState(
     private val drawingMachine: DrawingMachine,
 ) : State {
     override fun insertQuarter() {
-        TODO("Not yet implemented")
+        drawingMachine.state = drawingMachine.hasQuarterState
     }
 
-    override fun openPaper() {
-        TODO("Not yet implemented")
-    }
+    override fun getResult() = throw InvalidDrawingException()
 
-    override fun getResult() {
-        TODO("Not yet implemented")
-    }
+    override fun getRewardName(): String = throw InvalidDrawingException()
 }

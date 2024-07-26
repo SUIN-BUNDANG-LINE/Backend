@@ -19,6 +19,9 @@ class DrawingService {
         drawingBoard: DrawingBoard,
         selectedNumber: Int,
     ) {
-        DrawingMachine(drawingBoard, selectedNumber)
+        val drawingMachine = DrawingMachine(drawingBoard, selectedNumber)
+        drawingMachine.insertQuarter()
+        drawingMachine.getResult()
+        drawingMachine.getRewardName()
     }
 }

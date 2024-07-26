@@ -6,8 +6,8 @@ import java.util.UUID
 
 class DrawingBoard(
     val id: UUID,
-    val size: Int,
-    private val tickets: Array<Ticket>,
+    val selectedTicketCount: Int,
+    val tickets: Array<Ticket>,
 ) {
     private val isFinished = false
 
@@ -22,7 +22,9 @@ class DrawingBoard(
                     rewards = rewards,
                     maxTicketCount = boardSize,
                 )
-            return DrawingBoard(id, boardSize, tickets)
+            return DrawingBoard(id, 0, tickets)
         }
     }
+
+    override fun toString(): String = "DrawingBoard(id=$id, selectedTicketCount=$selectedTicketCount, tickets=${tickets.contentToString()})"
 }

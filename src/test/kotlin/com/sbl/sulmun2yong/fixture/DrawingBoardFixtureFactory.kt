@@ -10,7 +10,7 @@ object DrawingBoardFixtureFactory {
         arrayOf(
             Reward(UUID.randomUUID(), "아메리카노", "커피", 3),
             Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
-            Reward(UUID.randomUUID(), "햄버거", "음식", 4),
+            Reward(UUID.randomUUID(), "햄버거", "음식", 170),
         )
 
     fun createDrawingBoard(id: UUID) =

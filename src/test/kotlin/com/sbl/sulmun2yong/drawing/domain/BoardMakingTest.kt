@@ -20,7 +20,7 @@ class BoardMakingTest {
         // then
         with(rewardBoard) {
             assertEquals(id, this.id)
-            assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, this.size)
+            assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, this.tickets.size)
         }
     }
 
