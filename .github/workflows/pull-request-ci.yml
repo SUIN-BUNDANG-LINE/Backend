@@ -20,12 +20,9 @@ jobs:
                   distribution: 'temurin'
                   java-version: '17'
 
-            - name: 경로 확인
-              run: ls -a
-
             - name: SonarQube BaseURL 삽입
               run: |
-                  echo "sonar.host.url=${{ secrets.SONARQUBE_EC2_HOST }}" >> $(pwd)/sonar-project.properties
+                  echo "sonar.host.url=${{ secrets.SONARQUBE_EC2_HOST }}" >> ${pwd}/sonar-project.properties
 
             - name: Gradle 패키지 캐싱
               uses: actions/cache@v2
@@ -37,14 +34,17 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-gradle-
 
-            - name: sonar-project.properties 파일 내용 확인
-              run: |
-                  grep "sonar.projectKey" $(pwd)/sonar-project.properties
-                  grep "sonar.host.url" $(pwd)/sonar-project.properties
-                  grep "sonar.junit.reportPaths" $(pwd)/sonar-project.properties
+            - name: Gradle 빌드
+              run: ./gradlew build
+
+            - name: 경로 확인
+              run: ls -a
+
+            - name: 경로 확인
+              run: ls ./build/reports
 
             - name: 빌드 출력 확인
-              run: cat $(pwd)/build/reports/jacoco/test/jacocoTestReport.xml
+              run: cat ./build/reports/jacoco/test/jacocoTestReport.xml
 
             - name: ktlint 검사 실행
               run: ./gradlew ktlintCheck
