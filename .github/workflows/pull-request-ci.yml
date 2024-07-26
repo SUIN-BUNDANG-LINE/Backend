@@ -22,7 +22,7 @@ jobs:
 
             - name: SonarQube BaseURL 삽입
               run: |
-                  echo "sonar.core.serverBaseURL=${{ secrets.SONARQUBE_EC2_HOST }}" >> sonar-project.properties
+                  echo "sonar.host.url=${{ secrets.SONARQUBE_EC2_HOST }}" >> sonar-project.properties
 
             - name: Gradle 패키지 캐싱
               uses: actions/cache@v2
