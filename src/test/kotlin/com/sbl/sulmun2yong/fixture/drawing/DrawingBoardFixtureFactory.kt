@@ -2,11 +2,12 @@ package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.Reward
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
 import java.util.UUID
 
 object DrawingBoardFixtureFactory {
     const val SURVEY_PARTICIPANT_COUNT = 200
-    const val EMPTY_SURVEY_PARTICIPANT_COUNT = 0
+    private const val EMPTY_SURVEY_PARTICIPANT_COUNT = 0
 
     private val rewards =
         arrayOf(
@@ -29,5 +30,16 @@ object DrawingBoardFixtureFactory {
             id = UUID.randomUUID(),
             boardSize = EMPTY_SURVEY_PARTICIPANT_COUNT,
             rewards = emptyArray(),
+        )
+
+    fun createAllSelectedRewardDrawingBoard() =
+        DrawingBoard(
+            id = UUID.randomUUID(),
+            selectedTicketCount = SURVEY_PARTICIPANT_COUNT,
+            tickets =
+                TicketFactory.createTickets(
+                    rewards = emptyArray(),
+                    maxTicketCount = SURVEY_PARTICIPANT_COUNT,
+                ),
         )
 }

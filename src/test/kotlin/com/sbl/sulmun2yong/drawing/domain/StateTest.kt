@@ -8,6 +8,16 @@ import org.junit.jupiter.api.assertThrows
 
 class StateTest {
     @Test
+    fun `드로잉 보드의 티켓이 전부 뽑혔을 때 insertQuarter 를 실행하면 오류가 발생한다`() {
+        // given
+        val allSelectedDrawingBoard = DrawingBoardFixtureFactory.createAllSelectedRewardDrawingBoard()
+        val drawingMachine = DrawingMachine(allSelectedDrawingBoard, 3)
+
+        // when
+        assertThrows<InvalidDrawingException> { drawingMachine.insertQuarter() }
+    }
+
+    @Test
     fun `noQuarterState 에서 insertQuarter() 제외 메소드를 호출 하면 오류가 발생한다`() {
         // given
         val rewardBoard = DrawingBoardFixtureFactory.createDrawingBoard()
