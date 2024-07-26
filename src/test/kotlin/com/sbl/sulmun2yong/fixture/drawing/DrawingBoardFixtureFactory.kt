@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.fixture
+package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.Reward
@@ -6,6 +6,7 @@ import java.util.UUID
 
 object DrawingBoardFixtureFactory {
     const val SURVEY_PARTICIPANT_COUNT = 200
+    const val EMPTY_SURVEY_PARTICIPANT_COUNT = 0
 
     private val rewards =
         arrayOf(
@@ -16,10 +17,17 @@ object DrawingBoardFixtureFactory {
 
     val totalRewardCount = rewards.sumOf { it.count }
 
-    fun createDrawingBoard(id: UUID) =
+    fun createDrawingBoard() =
         DrawingBoard.create(
-            id = id,
+            id = UUID.randomUUID(),
             boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = rewards,
+        )
+
+    fun createEmptyDrawingBoard() =
+        DrawingBoard.create(
+            id = UUID.randomUUID(),
+            boardSize = EMPTY_SURVEY_PARTICIPANT_COUNT,
+            rewards = emptyArray(),
         )
 }

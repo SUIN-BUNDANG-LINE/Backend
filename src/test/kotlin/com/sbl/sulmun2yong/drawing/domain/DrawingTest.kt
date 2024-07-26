@@ -2,19 +2,18 @@ package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
-import com.sbl.sulmun2yong.fixture.DrawingBoardFixtureFactory
+import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.util.UUID
 import kotlin.math.absoluteValue
-import kotlin.test.assertEquals
 
 class DrawingTest {
     @Test
     fun `당첨 종이를 뽑이면 리워드 이름이 출력된다`() {
         // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard(UUID.randomUUID())
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
         val testRewardName = "테스트 아이스 아메리카노"
         drawingBoard.tickets[3] = WinningTicket(testRewardName)
 
@@ -24,7 +23,7 @@ class DrawingTest {
         drawingMachine.selectPaper()
         drawingMachine.openPaperAndCheckIsWon()
 
-        //
+        // then
         assertEquals("테스트 아이스 아메리카노", drawingMachine.getRewardName())
     }
 
@@ -38,7 +37,7 @@ class DrawingTest {
         val winCount =
             (1..loopCount)
                 .map {
-                    val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard(UUID.randomUUID())
+                    val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
                     val drawingMachine = DrawingMachine(drawingBoard, selectedNumber)
 
                     drawingMachine.insertQuarter()
@@ -61,7 +60,7 @@ class DrawingTest {
     @Test
     fun `이미 뽑힌 곳을 뽑으면 오류가 발생한다`() {
         // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard(UUID.randomUUID())
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
         drawingBoard.tickets[3].isSelected = true
 
         // when, then
