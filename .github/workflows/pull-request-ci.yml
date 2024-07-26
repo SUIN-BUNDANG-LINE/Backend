@@ -39,6 +39,12 @@ jobs:
                 echo "sonar.projectKey=${{secrets.SONARQUBE_PROJECT_KEY}}" >> sonar-project.properties
                 echo "sonar.core.serverBaseURL=${{ secrets.SONARQUBE_EC2_HOST }}" >> sonar-project.properties
 
+            - name: sonar-project.properties 파일 내용 확인
+              run: |
+                  grep "sonar.coverage.jacoco.xmlReportPaths" sonar-project.properties
+                  grep "sonar.projectKey" sonar-project.properties
+                  grep "sonar.core.serverBaseURL" sonar-project.properties
+
             - name: SonarQube 분석 실행 후 PR Commant 작성
               uses: sonarsource/sonarqube-scan-action@master
               env:
