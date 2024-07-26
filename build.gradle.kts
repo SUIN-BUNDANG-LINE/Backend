@@ -11,6 +11,8 @@ plugins {
     kotlin("plugin.spring") version "1.9.24"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     id("com.google.cloud.tools.jib") version "3.4.0"
+    id("org.sonarqube") version "4.4.1.3373"
+    jacoco
 }
 
 group = "com.sbl"
@@ -68,6 +70,23 @@ kotlin {
     }
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        html.required.set(false)
+        xml.required.set(true)
+        csv.required.set(false)
+    }
+}
+
 jib {
     from {
         image = "openjdk:17-slim"
@@ -87,8 +106,4 @@ jib {
     container {
         jvmFlags = listOf("-Xms128m", "-Xmx128m")
     }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
 }
