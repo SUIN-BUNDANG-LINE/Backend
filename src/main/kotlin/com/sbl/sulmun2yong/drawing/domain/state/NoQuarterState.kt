@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.drawing.domain.state
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
+import com.sbl.sulmun2yong.drawing.exception.OutOfPaperException
 
 class NoQuarterState(
     private val drawingMachine: DrawingMachine,
@@ -9,7 +10,7 @@ class NoQuarterState(
     override fun insertQuarter() {
         if (drawingMachine.getRemainingTicketCount() == 0) {
             drawingMachine.state = drawingMachine.outOfPaperState
-            throw InvalidDrawingException()
+            throw OutOfPaperException()
         }
         drawingMachine.state = drawingMachine.hasQuarterState
     }

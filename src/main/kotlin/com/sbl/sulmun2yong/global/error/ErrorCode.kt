@@ -25,6 +25,7 @@ enum class ErrorCode(
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),
     INVALID_DRAWING(HttpStatus.BAD_REQUEST, "DR0002", "유효하지 않은 추첨입니다."),
+    OUT_OF_PAPER(HttpStatus.BAD_REQUEST, "DR0003", "모든 티켓이 추첨이 완료된 추첨 보드입니다."),
 
     // OAuth2 (OA)
     PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "OA0001", "지원하지 않는 소셜 로그인입니다."),

@@ -3,12 +3,14 @@ package com.sbl.sulmun2yong.drawing.domain
 import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
+import com.sbl.sulmun2yong.drawing.exception.OutOfPaperException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.math.absoluteValue
+import kotlin.test.assertFalse
 
 class DrawingTest {
     @Test
@@ -17,24 +19,37 @@ class DrawingTest {
     }
 
     @Test
-    fun `뽑기를 하면 DrawingBoard 에 그 결과가 반영된다`() {
+    fun `드로잉 보드의 티켓이 전부 뽑혔을 때 insertQuarter 를 실행하면 오류가 발생한다`() {
         // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
-        val testRewardName = "테스트 아이스 아메리카노"
-        drawingBoard.tickets[3] = WinningTicket(testRewardName)
+        val allSelectedDrawingBoard = DrawingBoardFixtureFactory.createAllSelectedRewardDrawingBoard()
+        val drawingMachine = DrawingMachine(allSelectedDrawingBoard, 3)
 
         // when
-        val drawingMachine = DrawingMachine(drawingBoard, 3)
-        drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.openPaperAndCheckIsWon()
-
-        // then
-        assertEquals("테스트 아이스 아메리카노", drawingMachine.getRewardName())
+        assertThrows<OutOfPaperException> { drawingMachine.insertQuarter() }
     }
 
     @Test
-    fun `당첨 종이를 뽑이면 리워드 이름이 출력된다`() {
+    fun `뽑기를 하면 DrawingBoard 에 그 결과가 반영된다`() {
+        // given
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
+        val drawingBoardForDrawing = DrawingBoardFixtureFactory.createDrawingBoard()
+
+        // when
+        val drawingMachine = DrawingMachine(drawingBoardForDrawing, 3)
+        drawingMachine.insertQuarter()
+        drawingMachine.selectPaper()
+        if (drawingMachine.openPaperAndCheckIsWon()) {
+            drawingMachine.getRewardName()
+        }
+
+        // then
+        assertEquals(drawingBoard.selectedTicketCount + 1, drawingBoardForDrawing.selectedTicketCount)
+        assertFalse { drawingBoard.tickets[3].isSelected }
+        assertTrue { drawingBoardForDrawing.tickets[3].isSelected }
+    }
+
+    @Test
+    fun `당첨 종이를 뽑고 getRewardName 을 호출하면 리워드 이름이 출력된다`() {
         // given
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
         val testRewardName = "테스트 아이스 아메리카노"

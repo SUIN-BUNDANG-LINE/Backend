@@ -10,7 +10,6 @@ import java.util.UUID
 object DrawingBoardFixtureFactory {
     const val SURVEY_PARTICIPANT_COUNT = 200
     private const val EMPTY_SURVEY_PARTICIPANT_COUNT = 0
-
     private val rewards =
         arrayOf(
             Reward(UUID.randomUUID(), "아메리카노", "커피", 3),
@@ -20,13 +19,18 @@ object DrawingBoardFixtureFactory {
 
     val totalRewardCount = rewards.sumOf { it.count }
 
-    fun createDrawingBoard() =
-        DrawingBoard.create(
+    // 적당히 리워드가 있는 보드
+    fun createDrawingBoard(): DrawingBoard {
+        val rewards = copyRewards()
+
+        return DrawingBoard.create(
             id = UUID.randomUUID(),
             boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = rewards,
         )
+    }
 
+    // 리워드가 없는 보드
     fun createEmptyDrawingBoard() =
         DrawingBoard.create(
             id = UUID.randomUUID(),
@@ -34,6 +38,7 @@ object DrawingBoardFixtureFactory {
             rewards = emptyArray(),
         )
 
+    // 이미 모든 티켓이 선택된 보드
     fun createAllSelectedRewardDrawingBoard() =
         DrawingBoard(
             id = UUID.randomUUID(),
@@ -45,7 +50,10 @@ object DrawingBoardFixtureFactory {
                 ),
         )
 
+    // 3번에 리워드가 있는 보드
     fun createRewardAtIndex3DrawingBoard(): DrawingBoard {
+        val rewards = copyRewards()
+
         val drawingBoard =
             DrawingBoard.create(
                 id = UUID.randomUUID(),
@@ -58,7 +66,10 @@ object DrawingBoardFixtureFactory {
         return drawingBoard
     }
 
+    // 3번에 리워드가 있는 보드 + 티켓이 하나 남은 보드
     fun createRewardAtIndex3DrawingBoardRemainOne(): DrawingBoard {
+        val rewards = copyRewards()
+
         val drawingBoard =
             DrawingBoard.create(
                 id = UUID.randomUUID(),
@@ -72,7 +83,10 @@ object DrawingBoardFixtureFactory {
         return drawingBoard
     }
 
+    // 3번에 리워드가 없는 보드 + 티켓이 하나 남은 보드
     fun createNoRewardAtIndex3DrawingBoardRemainOne(): DrawingBoard {
+        val rewards = copyRewards()
+
         val drawingBoard =
             DrawingBoard.create(
                 id = UUID.randomUUID(),
@@ -85,4 +99,6 @@ object DrawingBoardFixtureFactory {
 
         return drawingBoard
     }
+
+    private fun copyRewards(): Array<Reward> = Array(rewards.size) { index -> rewards[index].copy() }
 }
