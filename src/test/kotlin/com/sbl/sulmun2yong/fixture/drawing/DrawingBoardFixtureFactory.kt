@@ -2,8 +2,8 @@ package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.Reward
+import com.sbl.sulmun2yong.drawing.domain.TicketFactory
 import com.sbl.sulmun2yong.drawing.domain.ticket.NonWinningTicket
-import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import java.util.UUID
 

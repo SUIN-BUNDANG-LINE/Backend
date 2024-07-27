@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.drawing.domain
 
-import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 import com.sbl.sulmun2yong.drawing.exception.OutOfPaperException

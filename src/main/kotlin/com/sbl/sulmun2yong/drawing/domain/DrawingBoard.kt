@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
-import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
 import java.util.UUID
 
 class DrawingBoard(
