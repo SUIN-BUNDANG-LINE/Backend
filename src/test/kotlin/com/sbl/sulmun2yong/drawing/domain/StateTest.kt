@@ -22,8 +22,8 @@ class StateTest {
         // then
         assertDoesNotThrow { noQuarterState.insertQuarter() }
         assertThrows<InvalidDrawingException> { noQuarterState.getResult() }
-        assertThrows<InvalidDrawingException> { noQuarterState.openPaper() }
-        assertThrows<InvalidDrawingException> { noQuarterState.selectPaper() }
+        assertThrows<InvalidDrawingException> { noQuarterState.openTicket() }
+        assertThrows<InvalidDrawingException> { noQuarterState.selectTicket() }
         assertThrows<InvalidDrawingException> { noQuarterState.getRewardName() }
     }
 
@@ -39,8 +39,8 @@ class StateTest {
 
         // then
         assertThrows<InvalidDrawingException> { hasQuarterState.insertQuarter() }
-        assertDoesNotThrow { hasQuarterState.selectPaper() }
-        assertThrows<InvalidDrawingException> { hasQuarterState.openPaper() }
+        assertDoesNotThrow { hasQuarterState.selectTicket() }
+        assertThrows<InvalidDrawingException> { hasQuarterState.openTicket() }
         assertThrows<InvalidDrawingException> { hasQuarterState.getResult() }
         assertThrows<InvalidDrawingException> { hasQuarterState.getRewardName() }
     }
@@ -57,26 +57,26 @@ class StateTest {
         drawingMachine.insertQuarter()
 
         // then
-        assertThrows<AlreadySelectedTicketException> { hasQuarterState.selectPaper() }
+        assertThrows<AlreadySelectedTicketException> { hasQuarterState.selectTicket() }
     }
 
     @Test
-    fun `OpenPaperState 에서 insertQuarter() 제외 메소드를 호출 하면 오류가 발생한다`() {
+    fun `OpenTicketState 에서 insertQuarter() 제외 메소드를 호출 하면 오류가 발생한다`() {
         // given
         val rewardBoard = DrawingBoardFixtureFactory.createDrawingBoard()
         val drawingMachine = DrawingMachine(rewardBoard, 3)
-        val openPaperState = drawingMachine.openPaperState
+        val openTicketState = drawingMachine.openTicketState
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
+        drawingMachine.selectTicket()
 
         // then
-        assertThrows<InvalidDrawingException> { openPaperState.insertQuarter() }
-        assertThrows<InvalidDrawingException> { openPaperState.selectPaper() }
-        assertDoesNotThrow { openPaperState.openPaper() }
-        assertThrows<InvalidDrawingException> { openPaperState.getResult() }
-        assertThrows<InvalidDrawingException> { openPaperState.getRewardName() }
+        assertThrows<InvalidDrawingException> { openTicketState.insertQuarter() }
+        assertThrows<InvalidDrawingException> { openTicketState.selectTicket() }
+        assertDoesNotThrow { openTicketState.openTicket() }
+        assertThrows<InvalidDrawingException> { openTicketState.getResult() }
+        assertThrows<InvalidDrawingException> { openTicketState.getRewardName() }
     }
 
     @Test
@@ -88,13 +88,13 @@ class StateTest {
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.state.openPaper()
+        drawingMachine.selectTicket()
+        drawingMachine.state.openTicket()
 
         // then
         assertThrows<InvalidDrawingException> { winnerState.insertQuarter() }
-        assertThrows<InvalidDrawingException> { winnerState.selectPaper() }
-        assertThrows<InvalidDrawingException> { winnerState.openPaper() }
+        assertThrows<InvalidDrawingException> { winnerState.selectTicket() }
+        assertThrows<InvalidDrawingException> { winnerState.openTicket() }
         assertDoesNotThrow { winnerState.getResult() }
         assertDoesNotThrow { winnerState.getRewardName() }
     }
@@ -108,8 +108,8 @@ class StateTest {
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.openPaperAndCheckIsWon()
+        drawingMachine.selectTicket()
+        drawingMachine.openTicketAndCheckIsWon()
         rewardBoard.tickets[3] = NonWinningTicket()
 
         // then
@@ -125,40 +125,40 @@ class StateTest {
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.state.openPaper()
+        drawingMachine.selectTicket()
+        drawingMachine.state.openTicket()
 
         // then
         assertThrows<InvalidDrawingException> { nonWinnerState.insertQuarter() }
-        assertThrows<InvalidDrawingException> { nonWinnerState.selectPaper() }
-        assertThrows<InvalidDrawingException> { nonWinnerState.openPaper() }
+        assertThrows<InvalidDrawingException> { nonWinnerState.selectTicket() }
+        assertThrows<InvalidDrawingException> { nonWinnerState.openTicket() }
         assertDoesNotThrow { nonWinnerState.getResult() }
         assertThrows<InvalidDrawingException> { nonWinnerState.getRewardName() }
     }
 
     @Test
-    fun `OutOfPaperState 에서 어떤 메소드를 호출하든 오류가 발생한다`() {
+    fun `OutOfTicketState 에서 어떤 메소드를 호출하든 오류가 발생한다`() {
         // given
         val rewardBoard = DrawingBoardFixtureFactory.createRewardAtIndex3DrawingBoardRemainOne()
         val drawingMachine = DrawingMachine(rewardBoard, 3)
-        val outOfPaperState = drawingMachine.outOfPaperState
+        val outOfTicketState = drawingMachine.outOfTicketState
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.openPaperAndCheckIsWon()
+        drawingMachine.selectTicket()
+        drawingMachine.openTicketAndCheckIsWon()
         drawingMachine.getRewardName()
 
         // then
-        assertThrows<InvalidDrawingException> { outOfPaperState.insertQuarter() }
-        assertThrows<InvalidDrawingException> { outOfPaperState.selectPaper() }
-        assertThrows<InvalidDrawingException> { outOfPaperState.openPaper() }
-        assertThrows<InvalidDrawingException> { outOfPaperState.getResult() }
-        assertThrows<InvalidDrawingException> { outOfPaperState.getRewardName() }
+        assertThrows<InvalidDrawingException> { outOfTicketState.insertQuarter() }
+        assertThrows<InvalidDrawingException> { outOfTicketState.selectTicket() }
+        assertThrows<InvalidDrawingException> { outOfTicketState.openTicket() }
+        assertThrows<InvalidDrawingException> { outOfTicketState.getResult() }
+        assertThrows<InvalidDrawingException> { outOfTicketState.getRewardName() }
     }
 
     @Test
-    fun `리워드가 하나 남았을 때는 WinnerState 이후 OutOfPaperState가 된다`() {
+    fun `리워드가 하나 남았을 때는 WinnerState 이후 OutOfTicketState가 된다`() {
         // given
         val rewardBoard = DrawingBoardFixtureFactory.createRewardAtIndex3DrawingBoardRemainOne()
         val drawingMachine = DrawingMachine(rewardBoard, 3)
@@ -166,16 +166,16 @@ class StateTest {
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.openPaperAndCheckIsWon()
+        drawingMachine.selectTicket()
+        drawingMachine.openTicketAndCheckIsWon()
         drawingMachine.getRewardName()
 
         // then
-        assertEquals(drawingMachine.outOfPaperState, drawingMachine.state)
+        assertEquals(drawingMachine.outOfTicketState, drawingMachine.state)
     }
 
     @Test
-    fun `리워드가 하나 남았을 때는 nonWinnerState 이후 OutOfPaperState가 된다`() {
+    fun `리워드가 하나 남았을 때는 nonWinnerState 이후 OutOfTicketState가 된다`() {
         // given
         val rewardBoard = DrawingBoardFixtureFactory.createNoRewardAtIndex3DrawingBoardRemainOne()
         val drawingMachine = DrawingMachine(rewardBoard, 3)
@@ -183,10 +183,10 @@ class StateTest {
 
         // when
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.openPaperAndCheckIsWon()
+        drawingMachine.selectTicket()
+        drawingMachine.openTicketAndCheckIsWon()
 
         // then
-        assertEquals(drawingMachine.outOfPaperState, drawingMachine.state)
+        assertEquals(drawingMachine.outOfTicketState, drawingMachine.state)
     }
 }

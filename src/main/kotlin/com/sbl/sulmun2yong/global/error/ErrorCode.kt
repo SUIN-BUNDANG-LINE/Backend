@@ -25,7 +25,7 @@ enum class ErrorCode(
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),
     INVALID_DRAWING(HttpStatus.BAD_REQUEST, "DR0002", "유효하지 않은 추첨입니다."),
-    OUT_OF_PAPER(HttpStatus.BAD_REQUEST, "DR0003", "모든 티켓이 추첨이 완료된 추첨 보드입니다."),
+    OUT_OF_TICKET(HttpStatus.BAD_REQUEST, "DR0003", "모든 티켓이 추첨이 완료된 추첨 보드입니다."),
     ALREADY_SELECTED_TICKET(HttpStatus.BAD_REQUEST, "DR0004", "이미 선택된 티켓입니다."),
 
     // OAuth2 (OA)

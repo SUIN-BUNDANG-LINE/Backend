@@ -3,9 +3,9 @@ package com.sbl.sulmun2yong.drawing.domain.state
 interface State {
     fun insertQuarter()
 
-    fun selectPaper()
+    fun selectTicket()
 
-    fun openPaper()
+    fun openTicket()
 
     fun getResult(): Boolean
 

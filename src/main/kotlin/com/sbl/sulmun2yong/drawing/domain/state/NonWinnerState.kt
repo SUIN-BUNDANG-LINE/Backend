@@ -8,14 +8,14 @@ class NonWinnerState(
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
-    override fun selectPaper() = throw InvalidDrawingException()
+    override fun selectTicket() = throw InvalidDrawingException()
 
-    override fun openPaper() = throw InvalidDrawingException()
+    override fun openTicket() = throw InvalidDrawingException()
 
     override fun getResult(): Boolean {
         drawingMachine.state =
             if (drawingMachine.getRemainingTicketCount() == 0) {
-                drawingMachine.outOfPaperState
+                drawingMachine.outOfTicketState
             } else {
                 drawingMachine.noQuarterState
             }

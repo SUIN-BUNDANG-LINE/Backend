@@ -3,8 +3,8 @@ package com.sbl.sulmun2yong.drawing.domain
 import com.sbl.sulmun2yong.drawing.domain.state.HasQuarterState
 import com.sbl.sulmun2yong.drawing.domain.state.NoQuarterState
 import com.sbl.sulmun2yong.drawing.domain.state.NonWinnerState
-import com.sbl.sulmun2yong.drawing.domain.state.OpenPaperState
-import com.sbl.sulmun2yong.drawing.domain.state.OutOfPaperState
+import com.sbl.sulmun2yong.drawing.domain.state.OpenTicketState
+import com.sbl.sulmun2yong.drawing.domain.state.OutOfTicketState
 import com.sbl.sulmun2yong.drawing.domain.state.State
 import com.sbl.sulmun2yong.drawing.domain.state.WinnerState
 
@@ -14,10 +14,10 @@ class DrawingMachine(
 ) {
     val noQuarterState: State = NoQuarterState(this)
     val hasQuarterState: State = HasQuarterState(this)
-    val openPaperState: State = OpenPaperState(this)
+    val openTicketState: State = OpenTicketState(this)
     val nonWinnerState: State = NonWinnerState(this)
     val winnerState: State = WinnerState(this)
-    val outOfPaperState: State = OutOfPaperState()
+    val outOfTicketState: State = OutOfTicketState()
 
     var state = noQuarterState
 
@@ -25,13 +25,13 @@ class DrawingMachine(
         state.insertQuarter()
     }
 
-    fun selectPaper() {
-        state.selectPaper()
+    fun selectTicket() {
+        state.selectTicket()
         updateDrawingBoard()
     }
 
-    fun openPaperAndCheckIsWon(): Boolean {
-        state.openPaper()
+    fun openTicketAndCheckIsWon(): Boolean {
+        state.openTicket()
         return state.getResult()
     }
 

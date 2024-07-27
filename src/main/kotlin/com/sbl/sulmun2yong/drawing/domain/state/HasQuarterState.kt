@@ -9,17 +9,17 @@ class HasQuarterState(
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
-    override fun selectPaper() {
+    override fun selectTicket() {
         val selectedTicket = drawingMachine.getSelectedTicket()
         if (selectedTicket.isSelected) {
             drawingMachine.state = drawingMachine.noQuarterState
             throw AlreadySelectedTicketException()
         }
 
-        drawingMachine.state = drawingMachine.openPaperState
+        drawingMachine.state = drawingMachine.openTicketState
     }
 
-    override fun openPaper() = throw InvalidDrawingException()
+    override fun openTicket() = throw InvalidDrawingException()
 
     override fun getResult() = throw InvalidDrawingException()
 

@@ -9,16 +9,16 @@ class WinnerState(
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
-    override fun selectPaper() = throw InvalidDrawingException()
+    override fun selectTicket() = throw InvalidDrawingException()
 
-    override fun openPaper() = throw InvalidDrawingException()
+    override fun openTicket() = throw InvalidDrawingException()
 
     override fun getResult(): Boolean = true
 
     override fun getRewardName(): String {
         drawingMachine.state =
             if (drawingMachine.getRemainingTicketCount() == 0) {
-                drawingMachine.outOfPaperState
+                drawingMachine.outOfTicketState
             } else {
                 drawingMachine.noQuarterState
             }

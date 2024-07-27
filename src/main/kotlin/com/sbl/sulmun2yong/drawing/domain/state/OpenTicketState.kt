@@ -3,14 +3,14 @@ package com.sbl.sulmun2yong.drawing.domain.state
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 
-class OpenPaperState(
+class OpenTicketState(
     private val drawingMachine: DrawingMachine,
 ) : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
-    override fun selectPaper() = throw InvalidDrawingException()
+    override fun selectTicket() = throw InvalidDrawingException()
 
-    override fun openPaper() {
+    override fun openTicket() {
         val selectedTicket = drawingMachine.getSelectedTicket()
         if (selectedTicket.isWinning) {
             drawingMachine.state = drawingMachine.winnerState

@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
-import com.sbl.sulmun2yong.drawing.exception.OutOfPaperException
+import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -24,7 +24,7 @@ class DrawingTest {
         val drawingMachine = DrawingMachine(allSelectedDrawingBoard, 3)
 
         // when, then
-        assertThrows<OutOfPaperException> { drawingMachine.insertQuarter() }
+        assertThrows<OutOfTicketException> { drawingMachine.insertQuarter() }
     }
 
     @Test
@@ -36,8 +36,8 @@ class DrawingTest {
         // when
         val drawingMachine = DrawingMachine(drawingBoardForDrawing, 3)
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        if (drawingMachine.openPaperAndCheckIsWon()) {
+        drawingMachine.selectTicket()
+        if (drawingMachine.openTicketAndCheckIsWon()) {
             drawingMachine.getRewardName()
         }
 
@@ -57,8 +57,8 @@ class DrawingTest {
         // when
         val drawingMachine = DrawingMachine(drawingBoard, 3)
         drawingMachine.insertQuarter()
-        drawingMachine.selectPaper()
-        drawingMachine.openPaperAndCheckIsWon()
+        drawingMachine.selectTicket()
+        drawingMachine.openTicketAndCheckIsWon()
 
         // then
         assertEquals("테스트 아이스 아메리카노", drawingMachine.getRewardName())
@@ -74,8 +74,8 @@ class DrawingTest {
         assertThrows<AlreadySelectedTicketException> {
             val drawingMachine = DrawingMachine(drawingBoard, 3)
             drawingMachine.insertQuarter()
-            drawingMachine.selectPaper()
-            drawingMachine.openPaperAndCheckIsWon()
+            drawingMachine.selectTicket()
+            drawingMachine.openTicketAndCheckIsWon()
         }
     }
 
@@ -93,8 +93,8 @@ class DrawingTest {
                     val drawingMachine = DrawingMachine(drawingBoard, selectedNumber)
 
                     drawingMachine.insertQuarter()
-                    drawingMachine.selectPaper()
-                    if (drawingMachine.openPaperAndCheckIsWon()) 1 else 0
+                    drawingMachine.selectTicket()
+                    if (drawingMachine.openTicketAndCheckIsWon()) 1 else 0
                 }.sum()
 
         val expectedProbability =

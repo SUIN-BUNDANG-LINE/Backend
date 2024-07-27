@@ -2,12 +2,12 @@ package com.sbl.sulmun2yong.drawing.domain.state
 
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 
-class OutOfPaperState : State {
+class OutOfTicketState : State {
     override fun insertQuarter() = throw InvalidDrawingException()
 
-    override fun selectPaper() = throw InvalidDrawingException()
+    override fun selectTicket() = throw InvalidDrawingException()
 
-    override fun openPaper() = throw InvalidDrawingException()
+    override fun openTicket() = throw InvalidDrawingException()
 
     override fun getResult() = throw InvalidDrawingException()
 
