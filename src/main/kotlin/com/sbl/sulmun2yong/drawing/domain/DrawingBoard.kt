@@ -5,12 +5,14 @@ import java.util.UUID
 
 class DrawingBoard(
     val id: UUID,
+    val surveyId: UUID,
     var selectedTicketCount: Int,
     val tickets: Array<Ticket>,
 ) {
     companion object {
         fun create(
             id: UUID,
+            surveyId: UUID,
             boardSize: Int,
             rewards: Array<Reward>,
         ): DrawingBoard {
@@ -19,7 +21,7 @@ class DrawingBoard(
                     rewards = rewards,
                     maxTicketCount = boardSize,
                 )
-            return DrawingBoard(id, 0, tickets)
+            return DrawingBoard(id, surveyId, 0, tickets)
         }
     }
 

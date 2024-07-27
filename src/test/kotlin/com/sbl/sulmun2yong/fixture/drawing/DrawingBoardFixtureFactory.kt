@@ -25,6 +25,7 @@ object DrawingBoardFixtureFactory {
 
         return DrawingBoard.create(
             id = UUID.randomUUID(),
+            surveyId = UUID.randomUUID(),
             boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = rewards,
         )
@@ -34,6 +35,7 @@ object DrawingBoardFixtureFactory {
     fun createEmptyDrawingBoard() =
         DrawingBoard.create(
             id = UUID.randomUUID(),
+            surveyId = UUID.randomUUID(),
             boardSize = EMPTY_SURVEY_PARTICIPANT_COUNT,
             rewards = emptyArray(),
         )
@@ -42,6 +44,7 @@ object DrawingBoardFixtureFactory {
     fun createAllSelectedRewardDrawingBoard() =
         DrawingBoard(
             id = UUID.randomUUID(),
+            surveyId = UUID.randomUUID(),
             selectedTicketCount = SURVEY_PARTICIPANT_COUNT,
             tickets =
                 TicketFactory.createTickets(
@@ -57,6 +60,7 @@ object DrawingBoardFixtureFactory {
         val drawingBoard =
             DrawingBoard.create(
                 id = UUID.randomUUID(),
+                surveyId = UUID.randomUUID(),
                 boardSize = SURVEY_PARTICIPANT_COUNT,
                 rewards = rewards,
             )
@@ -73,6 +77,7 @@ object DrawingBoardFixtureFactory {
         val drawingBoard =
             DrawingBoard.create(
                 id = UUID.randomUUID(),
+                surveyId = UUID.randomUUID(),
                 boardSize = SURVEY_PARTICIPANT_COUNT,
                 rewards = rewards,
             )
@@ -90,6 +95,7 @@ object DrawingBoardFixtureFactory {
         val drawingBoard =
             DrawingBoard.create(
                 id = UUID.randomUUID(),
+                surveyId = UUID.randomUUID(),
                 boardSize = SURVEY_PARTICIPANT_COUNT,
                 rewards = rewards,
             )

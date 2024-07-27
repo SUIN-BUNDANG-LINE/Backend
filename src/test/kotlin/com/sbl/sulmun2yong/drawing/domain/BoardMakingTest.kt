@@ -14,13 +14,15 @@ class BoardMakingTest {
     fun `드로잉 보드를 출력한다`() {
         val drawingBoard =
             DrawingBoard.create(
-                UUID.randomUUID(),
-                200,
-                arrayOf(
-                    Reward(UUID.randomUUID(), "닌텐도 스위치", "커피", 3),
-                    Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
-                    Reward(UUID.randomUUID(), "햄버거", "음식", 2),
-                ),
+                id = UUID.randomUUID(),
+                surveyId = UUID.randomUUID(),
+                boardSize = 200,
+                rewards =
+                    arrayOf(
+                        Reward(UUID.randomUUID(), "닌텐도 스위치", "커피", 3),
+                        Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
+                        Reward(UUID.randomUUID(), "햄버거", "음식", 2),
+                    ),
             )
         println(drawingBoard)
     }
@@ -66,6 +68,7 @@ class BoardMakingTest {
         assertThrows<InvalidDrawingBoardException> {
             DrawingBoard.create(
                 id = UUID.randomUUID(),
+                surveyId = UUID.randomUUID(),
                 boardSize = surveyParticipantCount,
                 rewards = tooManyReward,
             )
