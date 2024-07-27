@@ -34,7 +34,6 @@ data class Survey(
     }
 
     fun validateResponse(surveyResponse: SurveyResponse) {
-        require(surveyResponse.surveyId == id) { throw InvalidSurveyResponseException() }
         var currentSectionId: UUID? = sections.first().id
         for (sectionResponse in surveyResponse) {
             require(currentSectionId == sectionResponse.sectionId) { throw InvalidSurveyResponseException() }

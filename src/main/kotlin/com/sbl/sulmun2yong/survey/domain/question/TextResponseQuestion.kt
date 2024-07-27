@@ -12,6 +12,5 @@ data class TextResponseQuestion(
     override val choices = null
     override val isAllowOther = false
 
-    override fun validateQuestionResponse(questionResponse: QuestionResponse) =
-        questionResponse.size == 1 && !questionResponse.first().isOther
+    override fun isValidResponse(questionResponse: QuestionResponse) = questionResponse.size == 1 && !questionResponse.first().isOther
 }

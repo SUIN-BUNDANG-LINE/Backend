@@ -11,12 +11,7 @@ interface Question {
     val choices: Choices?
     val isAllowOther: Boolean
 
-    fun isValidResponse(questionResponse: QuestionResponse): Boolean {
-        if (id != questionResponse.questionId) return false
-        return validateQuestionResponse(questionResponse)
-    }
-
-    fun validateQuestionResponse(questionResponse: QuestionResponse): Boolean
+    fun isValidResponse(questionResponse: QuestionResponse): Boolean
 
     fun canBeKeyQuestion() = questionType == QuestionType.SINGLE_CHOICE && isRequired
 }
