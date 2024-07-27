@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain.ticket
 
-class LosingTicket : Ticket {
+class NonWinningTicket : Ticket {
     override var isSelected: Boolean = false
     override val isWinning: Boolean = false
 

@@ -18,7 +18,7 @@ class TicketFactory {
             }
 
             repeat(maxTicketCount - tickets.size) {
-                tickets.add(LosingTicket())
+                tickets.add(NonWinningTicket())
             }
 
             tickets.shuffle()

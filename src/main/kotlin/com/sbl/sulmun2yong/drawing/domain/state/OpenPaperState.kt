@@ -15,7 +15,7 @@ class OpenPaperState(
         if (selectedTicket.isWinning) {
             drawingMachine.state = drawingMachine.winnerState
         } else {
-            drawingMachine.state = drawingMachine.looserState
+            drawingMachine.state = drawingMachine.nonWinnerState
         }
     }
 

@@ -6,11 +6,9 @@ import java.util.UUID
 
 class DrawingBoard(
     val id: UUID,
-    val selectedTicketCount: Int,
+    var selectedTicketCount: Int,
     val tickets: Array<Ticket>,
 ) {
-    private val isFinished = false
-
     companion object {
         fun create(
             id: UUID,

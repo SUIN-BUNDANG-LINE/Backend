@@ -2,7 +2,9 @@ package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.Reward
+import com.sbl.sulmun2yong.drawing.domain.ticket.NonWinningTicket
 import com.sbl.sulmun2yong.drawing.domain.ticket.TicketFactory
+import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import java.util.UUID
 
 object DrawingBoardFixtureFactory {
@@ -42,4 +44,45 @@ object DrawingBoardFixtureFactory {
                     maxTicketCount = SURVEY_PARTICIPANT_COUNT,
                 ),
         )
+
+    fun createRewardAtIndex3DrawingBoard(): DrawingBoard {
+        val drawingBoard =
+            DrawingBoard.create(
+                id = UUID.randomUUID(),
+                boardSize = SURVEY_PARTICIPANT_COUNT,
+                rewards = rewards,
+            )
+
+        drawingBoard.tickets[3] = WinningTicket("테스트 아이스 아메리카노")
+
+        return drawingBoard
+    }
+
+    fun createRewardAtIndex3DrawingBoardRemainOne(): DrawingBoard {
+        val drawingBoard =
+            DrawingBoard.create(
+                id = UUID.randomUUID(),
+                boardSize = SURVEY_PARTICIPANT_COUNT,
+                rewards = rewards,
+            )
+
+        drawingBoard.selectedTicketCount = SURVEY_PARTICIPANT_COUNT - 1
+        drawingBoard.tickets[3] = WinningTicket("테스트 아이스 아메리카노")
+
+        return drawingBoard
+    }
+
+    fun createNoRewardAtIndex3DrawingBoardRemainOne(): DrawingBoard {
+        val drawingBoard =
+            DrawingBoard.create(
+                id = UUID.randomUUID(),
+                boardSize = SURVEY_PARTICIPANT_COUNT,
+                rewards = rewards,
+            )
+
+        drawingBoard.selectedTicketCount = SURVEY_PARTICIPANT_COUNT - 1
+        drawingBoard.tickets[3] = NonWinningTicket()
+
+        return drawingBoard
+    }
 }

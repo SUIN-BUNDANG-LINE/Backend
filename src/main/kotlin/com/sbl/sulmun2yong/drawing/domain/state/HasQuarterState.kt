@@ -15,8 +15,6 @@ class HasQuarterState(
             throw InvalidDrawingException()
         }
 
-        drawingMachine.setIsSelectedTrue()
-
         drawingMachine.state = drawingMachine.openPaperState
     }
 
