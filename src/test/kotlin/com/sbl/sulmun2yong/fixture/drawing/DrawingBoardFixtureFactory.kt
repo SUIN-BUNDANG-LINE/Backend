@@ -31,12 +31,21 @@ object DrawingBoardFixtureFactory {
         )
     }
 
-    // 리워드가 없는 보드
+    // 사이즈가 0인 보드
     fun createEmptyDrawingBoard() =
         DrawingBoard.create(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             boardSize = EMPTY_SURVEY_PARTICIPANT_COUNT,
+            rewards = emptyArray(),
+        )
+
+    // 리워드가 없는 보드
+    fun createNoRewardDrawingBoard() =
+        DrawingBoard.create(
+            id = UUID.randomUUID(),
+            surveyId = UUID.randomUUID(),
+            boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = emptyArray(),
         )
 

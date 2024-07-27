@@ -12,28 +12,15 @@ import kotlin.test.assertEquals
 class BoardMakingTest {
     @Test
     fun `드로잉 보드를 출력한다`() {
-        val drawingBoard =
-            DrawingBoard.create(
-                id = UUID.randomUUID(),
-                surveyId = UUID.randomUUID(),
-                boardSize = 200,
-                rewards =
-                    arrayOf(
-                        Reward(UUID.randomUUID(), "닌텐도 스위치", "커피", 3),
-                        Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
-                        Reward(UUID.randomUUID(), "햄버거", "음식", 2),
-                    ),
-            )
+        val drawingBoard = createDrawingBoard()
         println(drawingBoard)
     }
 
     @Test
-    fun `리워드가 없는 보드를 출력한다`() {
+    fun `사이즈가 0인 보드를 출력한다`() {
         // given
         val emptyRewardBoard = createEmptyDrawingBoard()
-        // when
 
-        // then
         println(emptyRewardBoard)
     }
 
@@ -42,9 +29,7 @@ class BoardMakingTest {
         // given
         val rewardBoard = createDrawingBoard()
 
-        // when
-
-        // then
+        // when, then
         with(rewardBoard) {
             assertEquals(id, this.id)
             assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, this.tickets.size)
