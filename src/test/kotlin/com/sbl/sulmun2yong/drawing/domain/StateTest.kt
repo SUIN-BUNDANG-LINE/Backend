@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.NonWinningTicket
+import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -56,7 +57,7 @@ class StateTest {
         drawingMachine.insertQuarter()
 
         // then
-        assertThrows<InvalidDrawingException> { hasQuarterState.selectPaper() }
+        assertThrows<AlreadySelectedTicketException> { hasQuarterState.selectPaper() }
     }
 
     @Test
@@ -136,7 +137,7 @@ class StateTest {
     }
 
     @Test
-    fun `OutOfPaperState 에서 어떰 메소드를 호출하든 오류가 발생한다`() {
+    fun `OutOfPaperState 에서 어떤 메소드를 호출하든 오류가 발생한다`() {
         // given
         val rewardBoard = DrawingBoardFixtureFactory.createRewardAtIndex3DrawingBoardRemainOne()
         val drawingMachine = DrawingMachine(rewardBoard, 3)

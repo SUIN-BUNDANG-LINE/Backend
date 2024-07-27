@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
-import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
+import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.OutOfPaperException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -101,7 +101,7 @@ class DrawingTest {
         drawingBoard.tickets[3].isSelected = true
 
         // when, then
-        assertThrows<InvalidDrawingException> {
+        assertThrows<AlreadySelectedTicketException> {
             val drawingMachine = DrawingMachine(drawingBoard, 3)
             drawingMachine.insertQuarter()
             drawingMachine.selectPaper()

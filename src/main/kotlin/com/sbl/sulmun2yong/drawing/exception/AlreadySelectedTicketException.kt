@@ -3,4 +3,4 @@ package com.sbl.sulmun2yong.drawing.exception
 import com.sbl.sulmun2yong.global.error.BusinessException
 import com.sbl.sulmun2yong.global.error.ErrorCode
 
-class OutOfPaperException : BusinessException(ErrorCode.OUT_OF_PAPER)
+class AlreadySelectedTicketException : BusinessException(ErrorCode.ALREADY_SELECTED_TICKET)
