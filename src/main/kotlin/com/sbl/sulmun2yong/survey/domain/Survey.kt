@@ -30,7 +30,6 @@ data class Survey(
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
-//        require(isFinishedAtBeforeDayLimit()) { throw InvalidSurveyException() }
         require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
     }
 
@@ -55,13 +54,6 @@ data class Survey(
     private fun isSurveyStatusValid() = publishedAt != null || status == SurveyStatus.NOT_STARTED
 
     private fun isFinishedAtAfterPublishedAt() = publishedAt == null || finishedAt.after(publishedAt)
-
-    private val finishDayLimit = 90
-
-//    private fun isFinishedAtBeforeDayLimit(): Boolean {
-//        val finishLimitDate = Date.from(Instant.now().plus(finishDayLimit.toLong(), ChronoUnit.DAYS))
-//        return finishedAt.before(finishLimitDate)
-//    }
 
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
