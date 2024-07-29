@@ -14,7 +14,7 @@ class DrawingBoardServiceTest {
     @Test
     fun makeDrawingBoard() {
         // given
-        val surveyId = UUID.randomUUID()
+        val surveyId = UUID.fromString("00363c6a-db22-4df3-b75a-2dd347c8089f")
         val boardSize = 200
         val surveyRewards =
             listOf(
@@ -22,13 +22,13 @@ class DrawingBoardServiceTest {
                     id = UUID.randomUUID(),
                     name = "테스트 아이스 아메리카노",
                     category = "음료",
-                    count = 10,
+                    count = 100,
                 ),
                 Reward(
                     id = UUID.randomUUID(),
                     name = "테스트 아이스 라떼",
                     category = "음료",
-                    count = 10,
+                    count = 100,
                 ),
             )
 

@@ -70,7 +70,7 @@ object DrawingBoardFixtureFactory {
                 rewards = rewards,
             )
 
-        drawingBoard.tickets[3] = WinningTicket("테스트 아이스 아메리카노")
+        drawingBoard.tickets[3] = WinningTicket.create("테스트 아이스 아메리카노")
 
         return drawingBoard
     }
@@ -87,7 +87,7 @@ object DrawingBoardFixtureFactory {
             )
 
         drawingBoard.selectedTicketCount = SURVEY_PARTICIPANT_COUNT - 1
-        drawingBoard.tickets[3] = WinningTicket("테스트 아이스 아메리카노")
+        drawingBoard.tickets[3] = WinningTicket.create("테스트 아이스 아메리카노")
 
         return drawingBoard
     }
@@ -104,7 +104,7 @@ object DrawingBoardFixtureFactory {
             )
 
         drawingBoard.selectedTicketCount = SURVEY_PARTICIPANT_COUNT - 1
-        drawingBoard.tickets[3] = NonWinningTicket()
+        drawingBoard.tickets[3] = NonWinningTicket.create()
 
         return drawingBoard
     }

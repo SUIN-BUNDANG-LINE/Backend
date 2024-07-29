@@ -10,10 +10,13 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import java.util.Date
 import java.util.UUID
 
 @Component
-class SurveyAdapter(private val surveyRepository: SurveyRepository) {
+class SurveyAdapter(
+    private val surveyRepository: SurveyRepository,
+) {
     fun findSurveysWithPagination(
         size: Int,
         page: Int,
@@ -40,4 +43,11 @@ class SurveyAdapter(private val surveyRepository: SurveyRepository) {
             }
         }
     }
+
+    fun getSurveyFinishedAt(surveyId: UUID): Date =
+        surveyRepository
+            .findById(surveyId)
+            .orElseThrow {
+                SurveyNotFoundException()
+            }.finishedAt
 }

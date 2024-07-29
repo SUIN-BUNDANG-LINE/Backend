@@ -14,13 +14,13 @@ class TicketFactory {
             val tickets = mutableListOf<Ticket>()
             rewards.map { reward ->
                 repeat(reward.count) {
-                    tickets.add(WinningTicket(rewardName = reward.name))
+                    tickets.add(WinningTicket.create(rewardName = reward.name))
                     require(tickets.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
                 }
             }
 
             repeat(maxTicketCount - tickets.size) {
-                tickets.add(NonWinningTicket())
+                tickets.add(NonWinningTicket.create())
             }
 
             tickets.shuffle()

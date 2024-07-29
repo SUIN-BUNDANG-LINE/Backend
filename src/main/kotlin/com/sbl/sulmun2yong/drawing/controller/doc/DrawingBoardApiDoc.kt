@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
-@Tag(name = "DrawingInfo", description = "추첨 정보 가져오기 관련 API")
+@Tag(name = "DrawingBoard", description = "추첨 관련 API")
 interface DrawingBoardApiDoc {
-    @Operation(summary = "추첨 보드 조회")
+    @Operation(summary = "추첨 보드 정보 조회")
     @GetMapping("/api/v1/drawing-board/info")
     fun getDrawingBoard(
         @RequestParam surveyId: UUID,
