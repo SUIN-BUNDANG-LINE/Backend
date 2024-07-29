@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
+import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createDrawingBoard
@@ -44,9 +45,9 @@ class BoardMakingTest {
         // when
         val tooManyReward =
             arrayOf(
-                Reward(UUID.randomUUID(), "아메리카노", "커피", 100),
-                Reward(UUID.randomUUID(), "카페라떼", "커피", 100),
-                Reward(UUID.randomUUID(), "햄버거", "음식", 100),
+                Reward("아메리카노", "커피", 100),
+                Reward("카페라떼", "커피", 100),
+                Reward("햄버거", "음식", 100),
             )
 
         // then
@@ -61,7 +62,8 @@ class BoardMakingTest {
 
     private fun printDrawingBoard(drawingBoard: DrawingBoard): String {
         val tickets = drawingBoard.tickets
-        val maxLength = tickets.maxOfOrNull { it.toString().length } ?: 0
+        val maxLength =
+            tickets.maxOfOrNull { (if (it is WinningTicket) it.rewardName else "꽝").length } ?: 0
 
         val builder = StringBuilder()
 

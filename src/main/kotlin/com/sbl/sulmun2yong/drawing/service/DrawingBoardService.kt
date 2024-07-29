@@ -93,7 +93,6 @@ class DrawingBoardService(
             surveyRewards
                 .map {
                     Reward(
-                        id = it.id,
                         name = it.name,
                         category = it.category,
                         count = it.count,

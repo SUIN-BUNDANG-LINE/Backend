@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain.ticket
 
-class NonWinningTicket(
+data class NonWinningTicket(
     override var isSelected: Boolean,
 ) : Ticket {
     companion object {
@@ -9,6 +9,4 @@ class NonWinningTicket(
                 isSelected = false,
             )
     }
-
-    override fun toString(): String = "꽝"
 }
