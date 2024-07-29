@@ -21,7 +21,7 @@ interface DrawingBoardApiDoc {
     ): ResponseEntity<DrawingBoardResponse>
 
     @Operation(summary = "추점 시작")
-    @PostMapping("/api/v1/drawing-board/do-drawing")
+    @PostMapping("/api/v1/drawing-board/drawing")
     fun doDrawing(
         @RequestBody request: DrawingRequest,
     ): ResponseEntity<DrawingResultResponse>

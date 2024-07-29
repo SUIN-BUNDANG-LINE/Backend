@@ -27,7 +27,7 @@ class DrawingBoardController(
         return ResponseEntity.ok(drawingResultResponse)
     }
 
-    @PostMapping("/do-drawing")
+    @PostMapping("/drawing")
     override fun doDrawing(
         @RequestBody request: DrawingRequest,
     ): ResponseEntity<DrawingResultResponse> {
