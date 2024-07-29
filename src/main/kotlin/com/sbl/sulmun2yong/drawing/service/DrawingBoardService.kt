@@ -1,13 +1,17 @@
 package com.sbl.sulmun2yong.drawing.service
 
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
+import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
 import com.sbl.sulmun2yong.drawing.domain.Reward
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.dto.response.NonWinnerDrawingResultResponse
 import com.sbl.sulmun2yong.drawing.dto.response.WinnerDrawingResultResponse
+import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
+import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import org.springframework.stereotype.Service
@@ -20,9 +24,10 @@ import com.sbl.sulmun2yong.survey.domain.Reward as SurveyReward
 // TODO : mongoDB 트랜잭션 테스트 필요
 @Transactional
 class DrawingBoardService(
-    private val drawingBoardAdapter: DrawingBoardAdapter,
-    private val participantAdapter: ParticipantAdapter,
     private val surveyAdapter: SurveyAdapter,
+    private val participantAdapter: ParticipantAdapter,
+    private val drawingBoardAdapter: DrawingBoardAdapter,
+    private val drawingHistoryAdapter: DrawingHistoryAdapter,
 ) {
     fun getDrawingBoard(surveyId: UUID): DrawingBoardResponse {
         val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
@@ -34,12 +39,18 @@ class DrawingBoardService(
         selectedNumber: Int,
     ): DrawingResultResponse {
         // 유효성 검증
-        val participant = participantAdapter.getParticipantById(participantId)
-
+        // 참가했는가
+        val participant = participantAdapter.getParticipant(participantId)
+        // 추첨 기록이 있는가
+        val drawingHistory = drawingHistoryAdapter.findByParticipantId(participantId)
+        if (drawingHistory != null) {
+            throw AlreadyParticipatedDrawingException()
+        }
+        // 설문이 종료되었는가
         val surveyId = participant.surveyId
         val surveyFinishedAt = surveyAdapter.getSurveyFinishedAt(surveyId)
         if (Date().after(surveyFinishedAt)) {
-            throw TODO()
+            throw InvalidDrawingException()
         }
 
         // 추첨 보드 가져오기
@@ -49,6 +60,7 @@ class DrawingBoardService(
         val drawingMachine = DrawingMachine(drawingBoard, selectedNumber)
         drawingMachine.insertQuarter()
         drawingMachine.selectTicket()
+
         val drawingResultResponse =
             if (drawingMachine.openTicketAndCheckIsWon()) {
                 WinnerDrawingResultResponse.create(drawingMachine.getRewardName())
@@ -58,6 +70,15 @@ class DrawingBoardService(
 
         // 보드 업데이트
         drawingBoardAdapter.save(drawingBoard)
+        // 추첨 기록 저장
+        drawingHistoryAdapter.save(
+            DrawingHistory.create(
+                participantId = participantId,
+                drawingBoardId = drawingBoard.id,
+                selectedTicketIndex = selectedNumber,
+                ticket = drawingBoard.tickets[selectedNumber],
+            ),
+        )
 
         return drawingResultResponse
     }

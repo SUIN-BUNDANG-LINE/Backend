@@ -14,7 +14,7 @@ class ParticipantAdapter(
         participantRepository.save(ParticipantDocument.of(participant))
     }
 
-    fun getParticipantById(id: UUID): Participant =
+    fun getParticipant(id: UUID): Participant =
         participantRepository
             .findById(id)
             .orElseThrow { IllegalArgumentException("추첨 안한 사용자임") }
