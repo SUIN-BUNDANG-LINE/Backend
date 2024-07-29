@@ -24,7 +24,6 @@ object DrawingBoardFixtureFactory {
         val rewards = copyRewards()
 
         return DrawingBoard.create(
-            id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = rewards,
@@ -34,7 +33,6 @@ object DrawingBoardFixtureFactory {
     // 사이즈가 0인 보드
     fun createEmptyDrawingBoard() =
         DrawingBoard.create(
-            id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             boardSize = EMPTY_SURVEY_PARTICIPANT_COUNT,
             rewards = emptyArray(),
@@ -43,7 +41,6 @@ object DrawingBoardFixtureFactory {
     // 리워드가 없는 보드
     fun createNoRewardDrawingBoard() =
         DrawingBoard.create(
-            id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             boardSize = SURVEY_PARTICIPANT_COUNT,
             rewards = emptyArray(),
@@ -68,7 +65,6 @@ object DrawingBoardFixtureFactory {
 
         val drawingBoard =
             DrawingBoard.create(
-                id = UUID.randomUUID(),
                 surveyId = UUID.randomUUID(),
                 boardSize = SURVEY_PARTICIPANT_COUNT,
                 rewards = rewards,
@@ -85,7 +81,6 @@ object DrawingBoardFixtureFactory {
 
         val drawingBoard =
             DrawingBoard.create(
-                id = UUID.randomUUID(),
                 surveyId = UUID.randomUUID(),
                 boardSize = SURVEY_PARTICIPANT_COUNT,
                 rewards = rewards,
@@ -103,7 +98,6 @@ object DrawingBoardFixtureFactory {
 
         val drawingBoard =
             DrawingBoard.create(
-                id = UUID.randomUUID(),
                 surveyId = UUID.randomUUID(),
                 boardSize = SURVEY_PARTICIPANT_COUNT,
                 rewards = rewards,

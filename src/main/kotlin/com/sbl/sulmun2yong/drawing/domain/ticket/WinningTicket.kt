@@ -2,9 +2,15 @@ package com.sbl.sulmun2yong.drawing.domain.ticket
 
 class WinningTicket(
     val rewardName: String,
+    override var isSelected: Boolean,
 ) : Ticket {
-    override var isSelected: Boolean = false
-    override val isWinning: Boolean = true
+    companion object {
+        fun create(rewardName: String) =
+            WinningTicket(
+                rewardName = rewardName,
+                isSelected = false,
+            )
+    }
 
     override fun toString(): String = rewardName
 }

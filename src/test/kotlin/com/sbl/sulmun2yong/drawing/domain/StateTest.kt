@@ -110,7 +110,7 @@ class StateTest {
         drawingMachine.insertQuarter()
         drawingMachine.selectTicket()
         drawingMachine.openTicketAndCheckIsWon()
-        rewardBoard.tickets[3] = NonWinningTicket()
+        rewardBoard.tickets[3] = NonWinningTicket.create()
 
         // then
         assertThrows<InvalidDrawingException> { winnerState.getRewardName() }

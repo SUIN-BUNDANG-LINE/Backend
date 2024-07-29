@@ -1,3 +1,5 @@
 package com.sbl.sulmun2yong.drawing.dto.response
 
-class DrawingResultResponse
+interface DrawingResultResponse {
+    val isWon: Boolean
+}

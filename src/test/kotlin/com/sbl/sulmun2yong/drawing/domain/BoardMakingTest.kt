@@ -13,7 +13,7 @@ class BoardMakingTest {
     @Test
     fun `드로잉 보드를 출력한다`() {
         val drawingBoard = createDrawingBoard()
-        println(drawingBoard)
+        printDrawingBoard(drawingBoard)
     }
 
     @Test
@@ -21,7 +21,7 @@ class BoardMakingTest {
         // given
         val emptyRewardBoard = createEmptyDrawingBoard()
 
-        println(emptyRewardBoard)
+        printDrawingBoard(emptyRewardBoard)
     }
 
     @Test
@@ -52,11 +52,27 @@ class BoardMakingTest {
         // then
         assertThrows<InvalidDrawingBoardException> {
             DrawingBoard.create(
-                id = UUID.randomUUID(),
                 surveyId = UUID.randomUUID(),
                 boardSize = surveyParticipantCount,
                 rewards = tooManyReward,
             )
         }
+    }
+
+    private fun printDrawingBoard(drawingBoard: DrawingBoard): String {
+        val tickets = drawingBoard.tickets
+        val maxLength = tickets.maxOfOrNull { it.toString().length } ?: 0
+
+        val builder = StringBuilder()
+
+        tickets.forEachIndexed { index, ticket ->
+            val paddedTicket = ticket.toString().padEnd(maxLength + 1, '\u3000')
+            builder.append(paddedTicket)
+            if ((index + 1) % 10 == 0) {
+                builder.append("\n")
+            }
+        }
+
+        return builder.toString()
     }
 }

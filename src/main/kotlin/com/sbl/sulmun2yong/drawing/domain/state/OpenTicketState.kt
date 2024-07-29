@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain.state
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
+import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 
 class OpenTicketState(
@@ -12,7 +13,7 @@ class OpenTicketState(
 
     override fun openTicket() {
         val selectedTicket = drawingMachine.getSelectedTicket()
-        if (selectedTicket.isWinning) {
+        if (selectedTicket is WinningTicket) {
             drawingMachine.state = drawingMachine.winnerState
         } else {
             drawingMachine.state = drawingMachine.nonWinnerState

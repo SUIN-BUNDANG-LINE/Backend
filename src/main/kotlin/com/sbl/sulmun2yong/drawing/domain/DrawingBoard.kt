@@ -11,7 +11,6 @@ class DrawingBoard(
 ) {
     companion object {
         fun create(
-            id: UUID,
             surveyId: UUID,
             boardSize: Int,
             rewards: Array<Reward>,
@@ -21,23 +20,12 @@ class DrawingBoard(
                     rewards = rewards,
                     maxTicketCount = boardSize,
                 )
-            return DrawingBoard(id, surveyId, 0, tickets)
+            return DrawingBoard(
+                id = UUID.randomUUID(),
+                surveyId = surveyId,
+                selectedTicketCount = 0,
+                tickets = tickets,
+            )
         }
-    }
-
-    override fun toString(): String {
-        val maxLength = tickets.maxOfOrNull { it.toString().length } ?: 0
-
-        val builder = StringBuilder()
-
-        tickets.forEachIndexed { index, ticket ->
-            val paddedTicket = ticket.toString().padEnd(maxLength + 1, '\u3000')
-            builder.append(paddedTicket)
-            if ((index + 1) % 10 == 0) {
-                builder.append("\n")
-            }
-        }
-
-        return builder.toString()
     }
 }

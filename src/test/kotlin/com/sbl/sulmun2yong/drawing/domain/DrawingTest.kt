@@ -52,7 +52,7 @@ class DrawingTest {
         // given
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
         val testRewardName = "테스트 아이스 아메리카노"
-        drawingBoard.tickets[3] = WinningTicket(testRewardName)
+        drawingBoard.tickets[3] = WinningTicket.create(testRewardName)
 
         // when
         val drawingMachine = DrawingMachine(drawingBoard, 3)

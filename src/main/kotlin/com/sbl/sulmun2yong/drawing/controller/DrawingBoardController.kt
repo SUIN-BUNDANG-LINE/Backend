@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.controller
+package com.sbl.sulmun2yong.drawing.controller
 
 import com.sbl.sulmun2yong.drawing.dto.request.DrawingRequest
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
@@ -23,18 +23,19 @@ class DrawingBoardController(
     override fun getDrawingBoard(
         @RequestParam surveyId: UUID,
     ): ResponseEntity<DrawingBoardResponse> {
-        drawingBoardService.getDrawingBoard(surveyId)
-        TODO()
+        val drawingResultResponse = drawingBoardService.getDrawingBoard(surveyId)
+        return ResponseEntity.ok(drawingResultResponse)
     }
 
     @PostMapping("/do-drawing")
     override fun doDrawing(
         @RequestBody request: DrawingRequest,
     ): ResponseEntity<DrawingResultResponse> {
-        drawingBoardService.doDrawing(
-            participantId = request.participantId,
-            selectedNumber = request.selectedNumber,
-        )
-        TODO()
+        val drawingResultResponse =
+            drawingBoardService.doDrawing(
+                participantId = request.participantId,
+                selectedNumber = request.selectedNumber,
+            )
+        return ResponseEntity.ok(drawingResultResponse)
     }
 }
