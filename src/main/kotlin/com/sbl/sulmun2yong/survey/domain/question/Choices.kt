@@ -3,10 +3,34 @@ package com.sbl.sulmun2yong.survey.domain.question
 import com.sbl.sulmun2yong.survey.exception.InvalidChoiceException
 
 data class Choices(
-    private val choices: List<String>,
-) : List<String> by choices {
+    val standardChoices: List<Choice.Standard>,
+    val isAllowOther: Boolean,
+) {
     init {
-        if (choices.isEmpty()) throw InvalidChoiceException()
-        if (choices.size != choices.distinct().size) throw InvalidChoiceException()
+        if (standardChoices.isEmpty()) throw InvalidChoiceException()
+        if (standardChoices.size != standardChoices.distinct().size) throw InvalidChoiceException()
+    }
+
+    companion object {
+        fun of(
+            contents: List<String>,
+            isAllowOther: Boolean,
+        ) = Choices(
+            standardChoices = contents.map { Choice.Standard(it) },
+            isAllowOther = isAllowOther,
+        )
+    }
+
+    fun isContains(responseDetail: ResponseDetail): Boolean {
+        if (responseDetail.isOther) return isAllowOther
+        return standardChoices.contains(Choice.Standard(responseDetail.content))
+    }
+
+    fun isEquals(choiceSet: Set<Choice>) =
+        choiceSet.all { isContains(it) } && choiceSet.size == standardChoices.size + (if (isAllowOther) 1 else 0)
+
+    private fun isContains(choice: Choice): Boolean {
+        if (choice is Choice.Other) return isAllowOther
+        return standardChoices.contains(choice)
     }
 }

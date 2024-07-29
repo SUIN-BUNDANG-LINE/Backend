@@ -6,17 +6,14 @@ import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createSingleChoiceQues
 import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createTextResponseQuestion
 import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createQuestionResponse
 import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createMockSetByChoiceRouting
+import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSectionRouteConfigs
 import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.DESCRIPTION
 import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.createSection
-import com.sbl.sulmun2yong.survey.domain.question.Choices
+import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
-import com.sbl.sulmun2yong.survey.domain.routing.NumericalOrderRouting
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfig
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfigs
-import com.sbl.sulmun2yong.survey.domain.routing.SetByChoiceRouting
-import com.sbl.sulmun2yong.survey.domain.routing.SetByUserRouting
+import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
@@ -30,7 +27,7 @@ class SectionTest {
     private val a = "a"
     private val b = "b"
     private val c = "c"
-    private val choicesABC = Choices(listOf(a, b, c))
+    private val contentsABC = listOf(a, b, c)
 
     private val textResponseQuestionId = UUID.randomUUID()
     private val requiredTextResponseQuestion = createTextResponseQuestion(textResponseQuestionId)
@@ -40,18 +37,18 @@ class SectionTest {
     private val requiredAllowOtherSingleChoiceQuestion =
         createSingleChoiceQuestion(
             id = singleChoiceQuestionId,
-            choices = choicesABC,
+            contents = contentsABC,
         )
     private val allowOtherSingleChoiceQuestion =
         createSingleChoiceQuestion(
             id = singleChoiceQuestionId,
-            choices = choicesABC,
+            contents = contentsABC,
             isRequired = false,
         )
     private val requiredSingleChoiceQuestion =
         createSingleChoiceQuestion(
             id = singleChoiceQuestionId,
-            choices = choicesABC,
+            contents = contentsABC,
             isAllowOther = false,
         )
 
@@ -60,7 +57,7 @@ class SectionTest {
         createMultipleChoiceQuestion(
             id = multipleChoiceQuestionId,
             isRequired = false,
-            choices = choicesABC,
+            contents = contentsABC,
         )
 
     @Test
@@ -79,7 +76,7 @@ class SectionTest {
                 assertEquals(id, this.id)
                 assertEquals("", this.title)
                 assertEquals("", this.description)
-                assertEquals(NumericalOrderRouting(null), this.routeDetails)
+                assertEquals(RouteDetails.NumericalOrderRouting, this.routeDetails)
                 assertEquals(emptyList(), this.questions)
             }
         }
@@ -89,7 +86,7 @@ class SectionTest {
     fun `번호순 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val routeDetails = NumericalOrderRouting(null)
+        val routeDetails = RouteDetails.NumericalOrderRouting
         val questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
 
         // when
@@ -147,31 +144,31 @@ class SectionTest {
             )
         }
 
-        // 선택지가 올바르지 않으면 예외를 반환한다(유효하지 않은 선택지 내용이 포함됨).
+        // 선택지가 옳바르지 않으면 예외를 반환한다(유효하지 않은 선택지 내용이 포함됨).
         assertThrows<InvalidSectionException> {
             createSection(
                 routeDetails =
                     createMockSetByChoiceRouting(
                         keyQuestionId = singleChoiceQuestionId,
-                        contentSet = setOf(a, b, c, "invalid"),
+                        choiceSet = createChoiceSet(listOf(a, b, c, "invalid")),
                     ),
                 questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
             )
         }
 
-        // 선택지가 올바르지 않으면 예외를 반환한다(선택지 일부가 누락됨).
+        // 선택지가 옳바르지 않으면 예외를 반환한다(선택지 일부가 누락됨).
         assertThrows<InvalidSectionException> {
             createSection(
                 routeDetails =
                     createMockSetByChoiceRouting(
                         keyQuestionId = singleChoiceQuestionId,
-                        contentSet = setOf(a, b),
+                        choiceSet = createChoiceSet(listOf(a, b)),
                     ),
                 questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
             )
         }
 
-        // 선택지가 올바르지 않으면 예외를 반환한다(isAllowOther가 false인데 null 선택지 포함).
+        // 선택지가 옳바르지 않으면 예외를 반환한다(isAllowOther가 false인데 null 선택지 포함).
         assertThrows<InvalidSectionException> {
             createSection(
                 routeDetails = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
@@ -184,11 +181,11 @@ class SectionTest {
     fun `유저 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val routeDetails = SetByUserRouting(null)
+        val routeDetails = RouteDetails.SetByUserRouting(NextSectionId.End)
         val questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
 
         // when
-        val section = createSection(id = id, routeDetails = routeDetails, questions = questions)
+        val section = createSection(id = id, routeDetails = routeDetails, questions = questions, sectionIds = listOf(id))
 
         // then
         with(section) {
@@ -254,7 +251,7 @@ class SectionTest {
         val questions = listOf(question1, question2)
 
         val id = UUID.randomUUID()
-        val section = createSection(id = id, routeDetails = NumericalOrderRouting(null), questions = questions)
+        val section = createSection(id = id, questions = questions)
 
         val sectionResponse =
             SectionResponse(
@@ -270,17 +267,15 @@ class SectionTest {
     }
 
     @Test
-    fun `번호순 라우팅 방식의 섹션은 nextQuestionId로 다음 섹션을 결정한다`() {
+    fun `번호순 라우팅 방식의 섹션은 현대 섹션의 다음 index 섹션으로 다음 섹션을 결정한다`() {
         // given
         val nextSectionId = UUID.randomUUID()
         val currentSectionId = UUID.randomUUID()
         val section =
-            Section(
+            createSection(
                 id = currentSectionId,
-                title = "title",
-                description = "description",
-                routeDetails = NumericalOrderRouting(nextSectionId),
                 questions = listOf(textResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+                sectionIds = listOf(currentSectionId, nextSectionId),
             )
         val sectionResponse =
             SectionResponse(
@@ -293,8 +288,8 @@ class SectionTest {
             )
 
         // when, then
-        assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
-        assertEquals(nextSectionId, section.findNextSectionId(sectionResponse))
+        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
+        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(sectionResponse))
     }
 
     @Test
@@ -307,23 +302,16 @@ class SectionTest {
 
         val id = UUID.randomUUID()
         val routeDetails =
-            SetByChoiceRouting(
+            RouteDetails.SetByChoiceRouting(
                 keyQuestionId = singleChoiceQuestionId,
-                sectionRouteConfigs =
-                    SectionRouteConfigs(
-                        listOf(
-                            SectionRouteConfig(a, sectionId1),
-                            SectionRouteConfig(b, sectionId2),
-                            SectionRouteConfig(c, sectionId3),
-                            SectionRouteConfig(null, null),
-                        ),
-                    ),
+                sectionRouteConfigs = createSectionRouteConfigs(mapOf(a to sectionId1, b to sectionId2, c to sectionId3, null to null)),
             )
         val section =
             createSection(
                 id = id,
                 routeDetails = routeDetails,
                 questions = questions,
+                sectionIds = listOf(sectionId1, sectionId2, sectionId3),
             )
 
         val sectionResponse1s =
@@ -349,8 +337,8 @@ class SectionTest {
         val nextSectionId2 = section.findNextSectionId(sectionResponse2s)
 
         // then
-        assertEquals(sectionId1, nextSectionId1)
-        assertEquals(null, nextSectionId2)
+        assertEquals(NextSectionId.Standard(sectionId1), nextSectionId1)
+        assertEquals(NextSectionId.End, nextSectionId2)
     }
 
     @Test
@@ -361,8 +349,9 @@ class SectionTest {
         val section =
             createSection(
                 id = currentSectionId,
-                routeDetails = SetByUserRouting(nextSectionId),
+                routeDetails = RouteDetails.SetByUserRouting(NextSectionId.Standard(nextSectionId)),
                 questions = listOf(textResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+                sectionIds = listOf(currentSectionId, nextSectionId),
             )
         val questionResponses =
             SectionResponse(
@@ -375,7 +364,9 @@ class SectionTest {
             )
 
         // when, then
-        assertEquals(nextSectionId, section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
-        assertEquals(nextSectionId, section.findNextSectionId(questionResponses))
+        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
+        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(questionResponses))
     }
+
+    private fun createChoiceSet(contents: List<String?>) = contents.map { Choice.from(it) }.toSet()
 }

@@ -1,7 +1,12 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
+import com.sbl.sulmun2yong.survey.domain.NextSectionId
+import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.question.Choice
+import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
+import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
 import java.util.UUID
 
@@ -15,39 +20,43 @@ data class SurveyProgressInfoResponse(
             SurveyProgressInfoResponse(
                 title = survey.title,
                 finishMessage = survey.finishMessage,
-                sections =
-                    survey.sections.map { section ->
-                        SectionInfo(
-                            sectionId = section.id,
-                            title = section.title,
-                            description = section.description,
-                            routeDetails =
-                                RouteDetailsInfo(
-                                    type = section.routeDetails.type,
-                                    nextSectionId = section.routeDetails.nextSectionId,
-                                    keyQuestionId = section.routeDetails.keyQuestionId,
-                                    sectionRouteConfigs =
-                                        section.routeDetails.sectionRouteConfigs?.map { config ->
-                                            SectionRouteConfigInfo(
-                                                content = config.content,
-                                                nextSectionId = config.nextSectionId,
-                                            )
-                                        },
-                                ),
-                            questions =
-                                section.questions.map { question ->
-                                    QuestionInfo(
-                                        questionId = question.id,
-                                        title = question.title,
-                                        description = question.description,
-                                        isRequired = question.isRequired,
-                                        type = question.questionType,
-                                        choices = question.choices,
-                                        isAllowOther = question.isAllowOther,
-                                    )
-                                },
-                        )
-                    },
+                sections = survey.sections.map { it.toDto() },
+            )
+
+        private fun Section.toDto() =
+            SectionInfo(
+                sectionId = this.id,
+                title = this.title,
+                description = this.description,
+                routeDetails = this.routeDetails.toDto(),
+                questions = this.questions.map { it.toDto() },
+            )
+
+        private fun RouteDetails.toDto() =
+            RouteDetailsInfo(
+                type = this.type,
+                nextSectionId = if (this is RouteDetails.SetByUserRouting) this.nextSectionId.value else null,
+                keyQuestionId = if (this is RouteDetails.SetByChoiceRouting) this.keyQuestionId else null,
+                sectionRouteConfigs = if (this is RouteDetails.SetByChoiceRouting) this.sectionRouteConfigs.toDto() else null,
+            )
+
+        private fun Map<Choice, NextSectionId>.toDto() =
+            this.map { (choice, nextSectionId) ->
+                SectionRouteConfigInfo(
+                    content = choice.content,
+                    nextSectionId = nextSectionId.value,
+                )
+            }
+
+        private fun Question.toDto() =
+            QuestionInfo(
+                questionId = this.id,
+                title = this.title,
+                description = this.description,
+                isRequired = this.isRequired,
+                type = this.questionType,
+                choices = this.choices?.standardChoices?.map { it.content },
+                isAllowOther = this.choices?.isAllowOther ?: false,
             )
     }
 

@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.fixture
 
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfig
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfigs
-import com.sbl.sulmun2yong.survey.domain.routing.SetByChoiceRouting
+import com.sbl.sulmun2yong.survey.domain.NextSectionId
+import com.sbl.sulmun2yong.survey.domain.question.Choice
+import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
@@ -12,22 +12,31 @@ object RoutingFixtureFactory {
     fun createSetByChoiceRouting(
         keyQuestionId: UUID = UUID.randomUUID(),
         contentIdMap: Map<String?, UUID?> = mapOf("a" to UUID.randomUUID(), "b" to UUID.randomUUID()),
-    ) = SetByChoiceRouting(keyQuestionId = keyQuestionId, sectionRouteConfigs = createSectionRouteConfigs(contentIdMap))
+    ) = RouteDetails.SetByChoiceRouting(
+        keyQuestionId = keyQuestionId,
+        sectionRouteConfigs = createSectionRouteConfigs(contentIdMap),
+    )
 
     fun createSectionRouteConfigs(contentIdMap: Map<String?, UUID?>) =
-        SectionRouteConfigs(contentIdMap.map { (content, id) -> SectionRouteConfig(content, id) })
+        contentIdMap.map { (content, id) -> Choice.from(content) to NextSectionId.from(id) }.toMap()
 
     fun createMockSetByChoiceRouting(
         keyQuestionId: UUID = UUID.randomUUID(),
-        destinationSectionIdSet: Set<UUID?> = setOf(null),
-        nextSectionId: UUID? = null,
-        contentSet: Set<String?> = setOf("a", "b", "c", null),
-    ): SetByChoiceRouting {
-        val mockSetByChoiceRouting = mock<SetByChoiceRouting>()
+        isSectionIdsValid: Boolean = true,
+        nextSectionId: NextSectionId = NextSectionId.End,
+        choiceSet: Set<Choice> =
+            setOf(
+                Choice.Standard("a"),
+                Choice.Standard("b"),
+                Choice.Standard("c"),
+                Choice.Other,
+            ),
+    ): RouteDetails.SetByChoiceRouting {
+        val mockSetByChoiceRouting = mock<RouteDetails.SetByChoiceRouting>()
         `when`(mockSetByChoiceRouting.keyQuestionId).thenReturn(keyQuestionId)
-        `when`(mockSetByChoiceRouting.getDestinationSectionIdSet()).thenReturn(destinationSectionIdSet)
+        `when`(mockSetByChoiceRouting.isSectionIdsValid(any())).thenReturn(isSectionIdsValid)
         `when`(mockSetByChoiceRouting.findNextSectionId(any())).thenReturn(nextSectionId)
-        `when`(mockSetByChoiceRouting.getContentSet()).thenReturn(contentSet)
+        `when`(mockSetByChoiceRouting.getChoiceSet()).thenReturn(choiceSet)
         return mockSetByChoiceRouting
     }
 }

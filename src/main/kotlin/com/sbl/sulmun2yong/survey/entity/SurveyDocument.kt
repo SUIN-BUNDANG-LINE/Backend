@@ -1,21 +1,19 @@
 package com.sbl.sulmun2yong.survey.entity
 
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
+import com.sbl.sulmun2yong.survey.domain.NextSectionId
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.Choices
 import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
-import com.sbl.sulmun2yong.survey.domain.routing.NumericalOrderRouting
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfig
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfigs
+import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
-import com.sbl.sulmun2yong.survey.domain.routing.SetByChoiceRouting
-import com.sbl.sulmun2yong.survey.domain.routing.SetByUserRouting
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.Date
@@ -69,8 +67,9 @@ data class SurveyDocument(
         val isAllowOther: Boolean,
     )
 
-    fun toDomain() =
-        Survey(
+    fun toDomain(): Survey {
+        val sectionIds = this.sections.map { it.sectionId }
+        return Survey(
             id = this.id,
             title = this.title,
             description = this.description,
@@ -81,8 +80,9 @@ data class SurveyDocument(
             finishMessage = this.finishMessage,
             targetParticipantCount = this.targetParticipantCount,
             rewards = this.rewards.map { it.toDomain() },
-            sections = this.sections.map { it.toDomain() },
+            sections = this.sections.map { it.toDomain(sectionIds) },
         )
+    }
 
     private fun RewardSubDocument.toDomain() =
         Reward(
@@ -92,35 +92,31 @@ data class SurveyDocument(
             count = this.count,
         )
 
-    private fun SectionSubDocument.toDomain() =
+    private fun SectionSubDocument.toDomain(sectionIds: List<UUID>) =
         Section(
             id = this.sectionId,
             title = this.title,
             description = this.description,
             routeDetails = this.getRouteDetails(),
             questions = this.questions.map { it.toDomain() },
+            sectionIds = sectionIds,
         )
 
     private fun SectionSubDocument.getRouteDetails() =
         when (this.routeType) {
-            SectionRouteType.NUMERICAL_ORDER -> NumericalOrderRouting(this.nextSectionId)
+            SectionRouteType.NUMERICAL_ORDER -> RouteDetails.NumericalOrderRouting
             SectionRouteType.SET_BY_CHOICE ->
-                SetByChoiceRouting(
-                    this.keyQuestionId!!,
-                    SectionRouteConfigs(
-                        this.sectionRouteConfigs!!.map {
-                            it.toDomain()
-                        },
-                    ),
+                RouteDetails.SetByChoiceRouting(
+                    keyQuestionId = this.keyQuestionId!!,
+                    sectionRouteConfigs = this.sectionRouteConfigs?.toDomain() ?: emptyMap(),
                 )
-            SectionRouteType.SET_BY_USER -> SetByUserRouting(this.nextSectionId)
+            SectionRouteType.SET_BY_USER -> RouteDetails.SetByUserRouting(NextSectionId.from(this.nextSectionId))
         }
 
-    private fun SectionRouteConfigSubDocument.toDomain() =
-        SectionRouteConfig(
-            content = this.choiceContent,
-            nextSectionId = this.nextSectionId,
-        )
+    private fun List<SectionRouteConfigSubDocument>.toDomain(): Map<Choice, NextSectionId> =
+        this.associate {
+            Choice.from(it.choiceContent) to NextSectionId.from(it.nextSectionId)
+        }
 
     private fun QuestionSubDocument.toDomain() =
         when (this.type) {
@@ -130,8 +126,7 @@ data class SurveyDocument(
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
-                    choices = Choices(this.choices!!),
-                    isAllowOther = this.isAllowOther,
+                    choices = Choices.of(contents = this.choices ?: listOf(), isAllowOther = isAllowOther),
                 )
             QuestionType.MULTIPLE_CHOICE ->
                 MultipleChoiceQuestion(
@@ -139,8 +134,7 @@ data class SurveyDocument(
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
-                    choices = Choices(this.choices!!),
-                    isAllowOther = this.isAllowOther,
+                    choices = Choices.of(contents = this.choices ?: listOf(), isAllowOther = isAllowOther),
                 )
             QuestionType.TEXT_RESPONSE ->
                 TextResponseQuestion(

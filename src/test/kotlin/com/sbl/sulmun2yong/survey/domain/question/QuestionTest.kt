@@ -18,6 +18,7 @@ class QuestionTest {
     private val b = "b"
     private val c = "c"
     private val d = "d"
+    private val contents = listOf(a, b, c, d)
 
     private val dummyResponses =
         listOf(
@@ -56,7 +57,7 @@ class QuestionTest {
 
     @Test
     fun `주관식 질문을 생성하면 올바르게 정보가 설정된다`() {
-        // 주관식 질문은 선택지가 없고, 기타 응답을 허용할 수 없고, 질문 유형이 TEXT_RESPONSE다.
+        // 주관식 질문은 선택지가 없고, 질문 유형이 TEXT_RESPONSE다.
         // given
         val id = UUID.randomUUID()
         val isRequired = true
@@ -71,7 +72,6 @@ class QuestionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(isRequired, this.isRequired)
             assertEquals(null, this.choices)
-            assertEquals(false, this.isAllowOther)
             assertEquals(QuestionType.TEXT_RESPONSE, this.questionType)
         }
     }
@@ -103,7 +103,6 @@ class QuestionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(true, this.isRequired)
             assertEquals(CHOICES, this.choices)
-            assertEquals(true, this.isAllowOther)
             assertEquals(QuestionType.SINGLE_CHOICE, this.questionType)
         }
     }
@@ -123,16 +122,21 @@ class QuestionTest {
     }
 
     @Test
-    fun `단일 선택 질문은 content 집합을 받아서 선택지의 content와 같은지 확인할 수 있다`() {
+    fun `단일 선택 질문은 선택지 집합을 받아서 선택지의 content와 같은지 확인할 수 있다`() {
         // given
         val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
         val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
+        val choiceA = Choice.from(a)
+        val choiceB = Choice.from(b)
+        val choiceC = Choice.from(c)
+        val choiceD = Choice.from(d)
+        val choiceOther = Choice.Other
 
         // when
-        val isAllowEqual1 = allowOtherQuestion.isEqualToChoices(setOf(a, b, c, null))
-        val isAllowEqual2 = allowOtherQuestion.isEqualToChoices(setOf(a, b, d, null))
-        val isNotAllowEqual1 = notAllowOtherQuestion.isEqualToChoices(setOf(a, b, c))
-        val isNotAllowEqual2 = notAllowOtherQuestion.isEqualToChoices(setOf(a, b, c, null))
+        val isAllowEqual1 = allowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC, choiceOther))
+        val isAllowEqual2 = allowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceD, choiceOther))
+        val isNotAllowEqual1 = notAllowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC))
+        val isNotAllowEqual2 = notAllowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC, choiceOther))
 
         // then
         assertEquals(true, isAllowEqual1)
@@ -157,7 +161,6 @@ class QuestionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(true, this.isRequired)
             assertEquals(CHOICES, this.choices)
-            assertEquals(true, this.isAllowOther)
             assertEquals(QuestionType.MULTIPLE_CHOICE, this.questionType)
         }
     }
@@ -166,9 +169,9 @@ class QuestionTest {
     fun `다중 선택 질문은 응답을 받으면 유효성을 검증할 수 있다`() {
         // 다중 선택 질문은 하나 이상의 응답을 받을 수 있고, 응답은 선택지에 있어야 하고, 기타 응답은 허용된 경우만 받을 수 있다.
         // given
-        val questionABC = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a, b, c)), isAllowOther = false)
-        val questionABCEtc = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a, b, c)))
-        val questionAEtc = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a)))
+        val questionABC = createMultipleChoiceQuestion(id = questionId, isAllowOther = false)
+        val questionABCEtc = createMultipleChoiceQuestion(id = questionId)
+        val questionAEtc = createMultipleChoiceQuestion(id = questionId, contents = listOf(a))
         val questionABCExpected = listOf(true, false, false, false, true, false, false, false, false)
         val questionABCEtcExpected = listOf(true, false, true, true, true, false, false, true, true)
         val questionAEtcExpected = listOf(true, false, true, true, false, false, false, false, false)

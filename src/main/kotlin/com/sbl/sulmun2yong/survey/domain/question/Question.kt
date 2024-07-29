@@ -9,7 +9,6 @@ interface Question {
     val description: String
     val isRequired: Boolean
     val choices: Choices?
-    val isAllowOther: Boolean
 
     fun isValidResponse(questionResponse: QuestionResponse): Boolean
 

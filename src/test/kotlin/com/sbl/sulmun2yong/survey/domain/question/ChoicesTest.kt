@@ -8,19 +8,39 @@ import kotlin.test.assertEquals
 class ChoicesTest {
     @Test
     fun `선택지 목록을 생성하면 정보가 올바르게 설정된다`() {
-        val list = listOf("1", "2", "3")
-        val choices = Choices(list)
-        assertEquals(list, choices)
+        // given
+        val contents = listOf("1", "2", "3")
+        val standardChoiceList = contents.map { Choice.Standard(it) }
+
+        // when
+        val allowOtherChoices = Choices.of(contents = contents, isAllowOther = true)
+        val notAllowOtherChoices = Choices.of(contents = contents, isAllowOther = false)
+
+        // then
+        with(allowOtherChoices) {
+            assertEquals(standardChoiceList, this.standardChoices)
+            assertEquals(true, this.isAllowOther)
+        }
+        with(notAllowOtherChoices) {
+            assertEquals(standardChoiceList, this.standardChoices)
+            assertEquals(false, this.isAllowOther)
+        }
     }
 
     @Test
     fun `선택지 목록은 비어있을 수 없다`() {
-        assertThrows<InvalidChoiceException> { Choices(listOf()) }
+        assertThrows<InvalidChoiceException> { Choices(listOf(), true) }
+        assertThrows<InvalidChoiceException> { Choices(listOf(), false) }
     }
 
     @Test
     fun `선택지 목록의 내용은 중복될 수 없다`() {
-        assertThrows<InvalidChoiceException> { Choices(listOf("1", "2", "2")) }
-        assertThrows<InvalidChoiceException> { Choices(listOf("3", "3")) }
+        // given
+        val duplicatedContents1 = listOf("1", "2", "2")
+        val duplicatedContents2 = listOf("3", "3")
+
+        // when, then
+        assertThrows<InvalidChoiceException> { Choices.of(duplicatedContents1, true) }
+        assertThrows<InvalidChoiceException> { Choices.of(duplicatedContents2, false) }
     }
 }

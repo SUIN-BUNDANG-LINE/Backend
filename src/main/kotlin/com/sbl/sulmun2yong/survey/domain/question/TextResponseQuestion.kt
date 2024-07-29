@@ -10,7 +10,6 @@ data class TextResponseQuestion(
 ) : Question {
     override val questionType: QuestionType = QuestionType.TEXT_RESPONSE
     override val choices = null
-    override val isAllowOther = false
 
     override fun isValidResponse(questionResponse: QuestionResponse) = questionResponse.size == 1 && !questionResponse.first().isOther
 }

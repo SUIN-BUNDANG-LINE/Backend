@@ -8,19 +8,8 @@ data class MultipleChoiceQuestion(
     override val description: String,
     override val isRequired: Boolean,
     override val choices: Choices,
-    override val isAllowOther: Boolean,
 ) : Question {
     override val questionType: QuestionType = QuestionType.MULTIPLE_CHOICE
 
-    override fun isValidResponse(questionResponse: QuestionResponse): Boolean {
-        for (responseDetail in questionResponse) {
-            if (responseDetail.isOther) {
-                if (isAllowOther) continue
-                return false
-            } else if (!choices.contains(responseDetail.content)) {
-                return false
-            }
-        }
-        return true
-    }
+    override fun isValidResponse(questionResponse: QuestionResponse) = questionResponse.all { choices.isContains(it) }
 }

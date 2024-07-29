@@ -18,37 +18,33 @@ data class Survey(
     val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
-    private val sectionIdSet = sections.map { it.id }.toSet()
-
     init {
         validateSurvey()
     }
 
     private fun validateSurvey() {
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
-        require(isDestinationSectionIdContainsAll()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
         require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
+        require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
     fun validateResponse(surveyResponse: SurveyResponse) {
-        var currentSectionId: UUID? = sections.first().id
+        var currentSectionId: NextSectionId = NextSectionId.from(sections.first().id)
         for (sectionResponse in surveyResponse) {
-            require(currentSectionId == sectionResponse.sectionId) { throw InvalidSurveyResponseException() }
-            val section = findSectionById(currentSectionId) ?: throw InvalidSurveyResponseException()
+            val responseSectionId = NextSectionId.Standard(sectionResponse.sectionId)
+            if (currentSectionId != responseSectionId) throw InvalidSurveyResponseException()
+            val section = findSectionById(responseSectionId.id) ?: throw InvalidSurveyResponseException()
             currentSectionId = section.findNextSectionId(sectionResponse)
         }
-        require(currentSectionId == null) { throw InvalidSurveyResponseException() }
+        require(currentSectionId.isEnd) { throw InvalidSurveyResponseException() }
     }
 
     fun getRewardCount() = rewards.sumOf { it.count }
 
-    private fun isDestinationSectionIdContainsAll() =
-        sections.all { sectionIdSet.containsAll(it.getDestinationSectionIdSet().filterNotNull()) }
-
-    private fun isSectionsUnique() = sections.size == sectionIdSet.size
+    private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 
     private fun isSurveyStatusValid() = publishedAt != null || status == SurveyStatus.NOT_STARTED
 
@@ -57,4 +53,9 @@ data class Survey(
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
     private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
+
+    private fun isSectionIdsValid(): Boolean {
+        val sectionIds = sections.map { it.id }
+        return sections.all { it.sectionIds == sectionIds }
+    }
 }

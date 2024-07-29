@@ -57,10 +57,11 @@ class SurveyTest {
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
+        val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, sectionId2, setOf(sectionId2, null))
-        val section2 = createMockSection(sectionId2, sectionId3, setOf(null))
-        val section3 = createMockSection(sectionId3, null, setOf(null))
+        val section1 = createMockSection(sectionId1, NextSectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, NextSectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, NextSectionId.End, sectionIds)
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }
@@ -90,10 +91,11 @@ class SurveyTest {
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
+        val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, sectionId2, setOf(sectionId2, sectionId3))
-        val section2 = createMockSection(sectionId2, sectionId3, setOf(null, sectionId3))
-        val section3 = createMockSection(sectionId3, null, setOf(null))
+        val section1 = createMockSection(sectionId1, NextSectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, NextSectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, NextSectionId.End, sectionIds)
 
         val id = UUID.randomUUID()
         val survey = createSurvey(id = id, sections = listOf(section1, section2, section3))
@@ -141,17 +143,18 @@ class SurveyTest {
     }
 
     @Test
-    fun `설문에 속한 각 섹션의 RouteDetails의 SectionId는 설문에 속한 섹션의 ID여야 한다`() {
+    fun `각 섹션의 sectionIds는 설문의 섹션 ID들과 같다`() {
         // given
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
         val sectionId4 = UUID.randomUUID()
+        val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, sectionId2, setOf(sectionId1, sectionId2, sectionId3))
-        val section2 = createMockSection(sectionId2, sectionId3, setOf(sectionId1))
-        val section3 = createMockSection(sectionId3, null, setOf(sectionId1, sectionId3))
-        val section4 = createMockSection(sectionId4, null, setOf(sectionId2, sectionId3))
+        val section1 = createMockSection(sectionId1, NextSectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, NextSectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, NextSectionId.End, sectionIds)
+        val section4 = createMockSection(sectionId4, NextSectionId.End, sectionIds)
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }
