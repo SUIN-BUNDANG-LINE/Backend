@@ -35,15 +35,19 @@ data class Survey(
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
+    // 설문의 응답 순서가 유효한지, 응답이 각 섹션에 유효한지 확인하는 메서드
     fun validateResponse(surveyResponse: SurveyResponse) {
-        var currentSectionId: SectionId = sections.first().id
+        // 확인할 응답의 예상 섹션 ID, 첫 응답의 섹션 ID는 첫 섹션의 ID
+        var expectedSectionId: SectionId = sections.first().id
         for (sectionResponse in surveyResponse) {
             val responseSectionId = sectionResponse.sectionId
-            require(currentSectionId == responseSectionId) { throw InvalidSurveyResponseException() }
+            require(expectedSectionId == responseSectionId) { throw InvalidSurveyResponseException() }
             val section = findSectionById(responseSectionId) ?: throw InvalidSurveyResponseException()
-            currentSectionId = section.findNextSectionId(sectionResponse)
+            // 다음 섹션 ID를 찾아서 예상 섹션 ID로 설정
+            expectedSectionId = section.findNextSectionId(sectionResponse)
         }
-        require(currentSectionId.isEnd) { throw InvalidSurveyResponseException() }
+        // 모든 응답을 확인한 뒤 예상 섹션 ID가 종료 섹션 ID인지 확인
+        require(expectedSectionId.isEnd) { throw InvalidSurveyResponseException() }
     }
 
     fun getRewardCount() = rewards.sumOf { it.count }
@@ -57,7 +61,7 @@ data class Survey(
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
     private fun isSectionIdsValid(): Boolean {
-        val sectionIds = SectionIds(sections.map { it.id } + SectionId.End)
+        val sectionIds = SectionIds.from(sections.map { it.id })
         return sections.all { it.sectionIds == sectionIds }
     }
 
