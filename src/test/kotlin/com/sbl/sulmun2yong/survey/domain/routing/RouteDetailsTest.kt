@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.survey.domain.routing
 
-import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createSectionResponse
-import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSectionRouteConfigs
-import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSetByChoiceRouting
+import com.sbl.sulmun2yong.fixture.survey.ResponseFixtureFactory.createSectionResponse
+import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createSectionRouteConfigs
+import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createSetByChoiceRouting
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException

@@ -1,12 +1,12 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.CHOICES
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.DESCRIPTION
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createMultipleChoiceQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createSingleChoiceQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createTextResponseQuestion
-import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createQuestionResponse
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.CHOICES
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.DESCRIPTION
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.TITLE
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMultipleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createSingleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createTextResponseQuestion
+import com.sbl.sulmun2yong.fixture.survey.ResponseFixtureFactory.createQuestionResponse
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals

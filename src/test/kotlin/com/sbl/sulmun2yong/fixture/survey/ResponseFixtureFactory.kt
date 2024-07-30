@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.fixture
+package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail

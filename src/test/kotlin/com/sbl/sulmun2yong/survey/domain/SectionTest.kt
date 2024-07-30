@@ -1,12 +1,12 @@
 package com.sbl.sulmun2yong.survey.domain
 
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createMockQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createMultipleChoiceQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createSingleChoiceQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createTextResponseQuestion
-import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.DESCRIPTION
-import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.createSection
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMockQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMultipleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createSingleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createTextResponseQuestion
+import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.DESCRIPTION
+import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.TITLE
+import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createSection
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
