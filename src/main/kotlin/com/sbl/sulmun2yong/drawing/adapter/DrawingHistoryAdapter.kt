@@ -20,7 +20,7 @@ class DrawingHistoryAdapter(
         phoneNumber: PhoneNumber,
     ): DrawingHistory? =
         drawingHistoryRepository
-            .findByParticipantIdOrPhoneNumber(id, phoneNumber.toString())
+            .findByParticipantIdOrPhoneNumber(id, phoneNumber.value)
             .map { it.toDomain() }
             .orElse(null)
 }

@@ -22,7 +22,7 @@ data class DrawingHistoryDocument(
             DrawingHistoryDocument(
                 id = drawingHistory.id,
                 participantId = drawingHistory.participantId,
-                phoneNumber = drawingHistory.phoneNumber.toString(),
+                phoneNumber = drawingHistory.phoneNumber.value,
                 drawingBoardId = drawingHistory.drawingBoardId,
                 selectedTicketIndex = drawingHistory.selectedTicketIndex,
                 ticket = drawingHistory.ticket,
@@ -33,7 +33,7 @@ data class DrawingHistoryDocument(
         DrawingHistory(
             id = id,
             participantId = participantId,
-            phoneNumber = PhoneNumber.create(phoneNumber),
+            phoneNumber = PhoneNumber.createWithNonNullable(phoneNumber),
             drawingBoardId = drawingBoardId,
             selectedTicketIndex = selectedTicketIndex,
             ticket = ticket,

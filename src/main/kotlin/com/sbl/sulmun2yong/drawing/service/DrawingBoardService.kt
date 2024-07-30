@@ -21,9 +21,8 @@ import java.util.Date
 import java.util.UUID
 import com.sbl.sulmun2yong.survey.domain.Reward as SurveyReward
 
-@Service
 // TODO : mongoDB 트랜잭션 테스트 필요
-@Transactional
+@Service
 class DrawingBoardService(
     private val surveyAdapter: SurveyAdapter,
     private val participantAdapter: ParticipantAdapter,
@@ -35,16 +34,19 @@ class DrawingBoardService(
         return DrawingBoardResponse.of(drawingBoard)
     }
 
+    @Transactional
     fun doDrawing(
         participantId: UUID,
         selectedNumber: Int,
-        phoneNumber: PhoneNumber,
+        phoneNumber: String,
     ): DrawingResultResponse {
+        val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
+
         // 유효성 검증
         // 참가했는가
         val participant = participantAdapter.getParticipant(participantId)
         // 추첨 기록이 있는가
-        val drawingHistory = drawingHistoryAdapter.findByParticipantIdOrPhoneNumber(participantId, phoneNumber)
+        val drawingHistory = drawingHistoryAdapter.findByParticipantIdOrPhoneNumber(participantId, phoneNumberData)
         if (drawingHistory != null) {
             throw AlreadyParticipatedDrawingException()
         }
@@ -77,7 +79,7 @@ class DrawingBoardService(
         drawingHistoryAdapter.save(
             DrawingHistory.create(
                 participantId = participantId,
-                phoneNumber = phoneNumber,
+                phoneNumber = phoneNumberData,
                 drawingBoardId = drawingBoard.id,
                 selectedTicketIndex = selectedNumber,
                 ticket = drawingBoard.tickets[selectedNumber],

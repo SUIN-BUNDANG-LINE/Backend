@@ -27,7 +27,7 @@ class UserDocument private constructor(
                 provider = user.provider,
                 providerId = user.providerId,
                 nickname = user.nickname,
-                phoneNumber = user.phoneNumber.toString(),
+                phoneNumber = user.phoneNumber?.value,
                 role = user.role,
             )
     }
@@ -38,7 +38,7 @@ class UserDocument private constructor(
             provider = provider,
             providerId = providerId,
             nickname = nickname,
-            phoneNumber = PhoneNumber.create(phoneNumber),
+            phoneNumber = PhoneNumber.createWithNullable(phoneNumber),
             role = role,
         )
 }

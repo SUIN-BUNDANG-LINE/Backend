@@ -26,7 +26,7 @@ data class User(
             providerId: String,
             phoneNumber: String?,
         ): User {
-            val phoneNumberData = PhoneNumber.create(phoneNumber)
+            val phoneNumberData = PhoneNumber.createWithNullable(phoneNumber)
             return User(
                 id = UUID.randomUUID(),
                 provider = provider,
@@ -42,7 +42,7 @@ data class User(
     }
 
     fun withUpdatePhoneNumber(phoneNumber: String?): User {
-        val phoneNumberData = PhoneNumber.create(phoneNumber)
+        val phoneNumberData = PhoneNumber.createWithNullable(phoneNumber)
         return User(
             id = this.id,
             provider = this.provider,

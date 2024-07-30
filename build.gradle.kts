@@ -31,10 +31,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    // TODO: 프론트엔드와 연동되면 삭제 예정
-    // MVC
-    implementation("org.springframework.boot:spring-boot-starter-mustache")
-
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
