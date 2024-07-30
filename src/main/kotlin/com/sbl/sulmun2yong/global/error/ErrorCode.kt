@@ -38,4 +38,7 @@ enum class ErrorCode(
     // User (US)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "US0001", "회원을 찾을 수 없습니다."),
     INVALID_USER_EXCEPTION(HttpStatus.BAD_REQUEST, "US0002", "잘못된 회원정보 입니다."),
+
+    // Data (DT)
+    INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "DT0001", "유효하지 않은 전화번호입니다."),
 }

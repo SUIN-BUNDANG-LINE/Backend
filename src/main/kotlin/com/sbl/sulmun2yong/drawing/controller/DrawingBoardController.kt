@@ -7,10 +7,10 @@ import com.sbl.sulmun2yong.drawing.service.DrawingBoardService
 import com.sbl.sulmun2yong.survey.controller.doc.DrawingBoardApiDoc
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -19,9 +19,9 @@ import java.util.UUID
 class DrawingBoardController(
     private val drawingBoardService: DrawingBoardService,
 ) : DrawingBoardApiDoc {
-    @GetMapping("/info")
+    @GetMapping("/{surveyId}")
     override fun getDrawingBoard(
-        @RequestParam surveyId: UUID,
+        @PathVariable surveyId: UUID,
     ): ResponseEntity<DrawingBoardResponse> {
         val drawingResultResponse = drawingBoardService.getDrawingBoard(surveyId)
         return ResponseEntity.ok(drawingResultResponse)
@@ -35,6 +35,7 @@ class DrawingBoardController(
             drawingBoardService.doDrawing(
                 participantId = request.participantId,
                 selectedNumber = request.selectedNumber,
+                phoneNumber = request.phoneNumber,
             )
         return ResponseEntity.ok(drawingResultResponse)
     }

@@ -12,6 +12,7 @@ import com.sbl.sulmun2yong.drawing.dto.response.NonWinnerDrawingResultResponse
 import com.sbl.sulmun2yong.drawing.dto.response.WinnerDrawingResultResponse
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
+import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import org.springframework.stereotype.Service
@@ -20,9 +21,8 @@ import java.util.Date
 import java.util.UUID
 import com.sbl.sulmun2yong.survey.domain.Reward as SurveyReward
 
-@Service
 // TODO : mongoDB 트랜잭션 테스트 필요
-@Transactional
+@Service
 class DrawingBoardService(
     private val surveyAdapter: SurveyAdapter,
     private val participantAdapter: ParticipantAdapter,
@@ -34,18 +34,23 @@ class DrawingBoardService(
         return DrawingBoardResponse.of(drawingBoard)
     }
 
+    @Transactional
     fun doDrawing(
         participantId: UUID,
         selectedNumber: Int,
+        phoneNumber: String,
     ): DrawingResultResponse {
+        val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
+
         // 유효성 검증
         // 참가했는가
         val participant = participantAdapter.getParticipant(participantId)
         // 추첨 기록이 있는가
-        val drawingHistory = drawingHistoryAdapter.findByParticipantId(participantId)
+        val drawingHistory = drawingHistoryAdapter.findByParticipantIdOrPhoneNumber(participantId, phoneNumberData)
         if (drawingHistory != null) {
             throw AlreadyParticipatedDrawingException()
         }
+
         // 설문이 종료되었는가
         val surveyId = participant.surveyId
         val survey = surveyAdapter.getSurvey(surveyId)
@@ -74,6 +79,7 @@ class DrawingBoardService(
         drawingHistoryAdapter.save(
             DrawingHistory.create(
                 participantId = participantId,
+                phoneNumber = phoneNumberData,
                 drawingBoardId = drawingBoard.id,
                 selectedTicketIndex = selectedNumber,
                 ticket = drawingBoard.tickets[selectedNumber],
