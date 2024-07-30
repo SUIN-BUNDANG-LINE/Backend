@@ -18,7 +18,7 @@ class UserProfileResponse(
                 id = user.id,
                 provider = user.provider,
                 nickname = user.nickname,
-                phoneNumber = user.phoneNumber,
+                phoneNumber = user.phoneNumber.toString(),
                 role = user.role,
             )
     }

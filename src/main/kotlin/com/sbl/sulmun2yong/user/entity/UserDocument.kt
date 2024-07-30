@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.user.entity
 
 import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
+import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.domain.UserRole
@@ -26,7 +27,7 @@ class UserDocument private constructor(
                 provider = user.provider,
                 providerId = user.providerId,
                 nickname = user.nickname,
-                phoneNumber = user.phoneNumber,
+                phoneNumber = user.phoneNumber.toString(),
                 role = user.role,
             )
     }
@@ -37,7 +38,7 @@ class UserDocument private constructor(
             provider = provider,
             providerId = providerId,
             nickname = nickname,
-            phoneNumber = phoneNumber,
+            phoneNumber = PhoneNumber.create(phoneNumber),
             role = role,
         )
 }
