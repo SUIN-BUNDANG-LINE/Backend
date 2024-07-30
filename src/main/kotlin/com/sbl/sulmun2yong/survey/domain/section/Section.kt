@@ -24,7 +24,7 @@ data class Section(
             val keyQuestion = findKeyQuestion() ?: throw InvalidSectionException()
             require(keyQuestion.isEqualToChoices(routeDetails.getChoiceSet())) { throw InvalidSectionException() }
         }
-        require(routeDetails.isSectionIdsValid(sectionIds)) { throw InvalidSectionException() }
+        require(sectionIds.isContainsAll(routeDetails.getNextSectionIds())) { throw InvalidSectionException() }
     }
 
     companion object {
@@ -50,17 +50,17 @@ data class Section(
         }
     }
 
+    private fun findKeyQuestion(): SingleChoiceQuestion? {
+        val setByChoiceRouting = routeDetails as? RouteDetails.SetByChoiceRouting ?: return null
+        val question = questions.find { it.id == setByChoiceRouting.keyQuestionId } ?: return null
+        return if (question.canBeKeyQuestion()) question as SingleChoiceQuestion else null
+    }
+
     private fun validateResponse(sectionResponse: SectionResponse) {
         questions.forEach { question ->
             val response = sectionResponse.find { it.questionId == question.id }
             if (question.isRequired && response == null) throw InvalidSectionResponseException()
             require(response == null || question.isValidResponse(response)) { throw InvalidSectionResponseException() }
         }
-    }
-
-    private fun findKeyQuestion(): SingleChoiceQuestion? {
-        val setByChoiceRouting = routeDetails as? RouteDetails.SetByChoiceRouting ?: return null
-        val question = questions.find { it.id == setByChoiceRouting.keyQuestionId } ?: return null
-        return if (question.canBeKeyQuestion()) question as SingleChoiceQuestion else null
     }
 }

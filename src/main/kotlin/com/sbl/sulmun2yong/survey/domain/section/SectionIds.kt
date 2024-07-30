@@ -23,7 +23,5 @@ data class SectionIds(
         return sectionIds[currentIndex + 1]
     }
 
-    fun isContains(sectionId: SectionId) = sectionIds.contains(sectionId)
-
-    fun isContainsAll(sectionId: SectionId) = sectionIds.contains(sectionId)
+    fun isContainsAll(sectionIds: List<SectionId>) = sectionIds.all { this.sectionIds.contains(it) }
 }

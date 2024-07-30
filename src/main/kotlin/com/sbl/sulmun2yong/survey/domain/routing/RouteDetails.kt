@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.survey.domain.routing
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
-import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
@@ -11,19 +10,19 @@ import java.util.UUID
 sealed class RouteDetails(
     val type: SectionRouteType,
 ) {
-    abstract fun isSectionIdsValid(sectionIds: SectionIds): Boolean
+    abstract fun getNextSectionIds(): List<SectionId>
 
     data class SetByUserRouting(
         val nextSectionId: SectionId,
     ) : RouteDetails(SectionRouteType.SET_BY_USER) {
-        override fun isSectionIdsValid(sectionIds: SectionIds) = sectionIds.isContains(nextSectionId)
+        override fun getNextSectionIds() = listOf(nextSectionId)
     }
 
     data class SetByChoiceRouting(
         val keyQuestionId: UUID,
         val sectionRouteConfigs: Map<Choice, SectionId>,
     ) : RouteDetails(SectionRouteType.SET_BY_CHOICE) {
-        override fun isSectionIdsValid(sectionIds: SectionIds) = sectionRouteConfigs.values.all { sectionIds.isContains(it) }
+        override fun getNextSectionIds() = sectionRouteConfigs.values.toList()
 
         fun findNextSectionId(sectionResponse: SectionResponse): SectionId {
             val keyResponseDetail = sectionResponse.findKeyResponse() ?: throw InvalidSectionResponseException()
@@ -38,6 +37,6 @@ sealed class RouteDetails(
     }
 
     data object NumericalOrderRouting : RouteDetails(SectionRouteType.NUMERICAL_ORDER) {
-        override fun isSectionIdsValid(sectionIds: SectionIds) = true
+        override fun getNextSectionIds() = emptyList<SectionId>()
     }
 }

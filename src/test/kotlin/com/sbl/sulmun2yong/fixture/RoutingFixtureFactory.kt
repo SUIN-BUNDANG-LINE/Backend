@@ -22,7 +22,6 @@ object RoutingFixtureFactory {
 
     fun createMockSetByChoiceRouting(
         keyQuestionId: UUID = UUID.randomUUID(),
-        isSectionIdsValid: Boolean = true,
         nextSectionId: SectionId = SectionId.End,
         choiceSet: Set<Choice> =
             setOf(
@@ -31,10 +30,11 @@ object RoutingFixtureFactory {
                 Choice.Standard("c"),
                 Choice.Other,
             ),
+        sectionIds: List<SectionId>,
     ): RouteDetails.SetByChoiceRouting {
         val mockSetByChoiceRouting = mock<RouteDetails.SetByChoiceRouting>()
         `when`(mockSetByChoiceRouting.keyQuestionId).thenReturn(keyQuestionId)
-        `when`(mockSetByChoiceRouting.isSectionIdsValid(any())).thenReturn(isSectionIdsValid)
+        `when`(mockSetByChoiceRouting.getNextSectionIds()).thenReturn(sectionIds)
         `when`(mockSetByChoiceRouting.findNextSectionId(any())).thenReturn(nextSectionId)
         `when`(mockSetByChoiceRouting.getChoiceSet()).thenReturn(choiceSet)
         return mockSetByChoiceRouting
