@@ -1,10 +1,8 @@
 package com.sbl.sulmun2yong.global.config
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.web.servlet.view.MustacheViewResolver
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
-import org.springframework.web.servlet.config.annotation.ViewResolverRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
@@ -19,16 +17,5 @@ class WebMvcConfig(
             .allowedMethods("GET", "POST", "PUT", "DELETE")
             .allowCredentials(true)
             .allowedHeaders("*")
-    }
-
-    // TODO: 프론트엔드와 연동되면 삭제 예정
-    override fun configureViewResolvers(registry: ViewResolverRegistry) {
-        val resolver = MustacheViewResolver()
-        resolver.setCharset("UTF-8")
-        resolver.setContentType("text/html; charset=UTF-8")
-        resolver.setPrefix("classpath:/templates/")
-        resolver.setSuffix(".html")
-
-        registry.viewResolver(resolver)
     }
 }
