@@ -1,14 +1,16 @@
 package com.sbl.sulmun2yong.global.config.oauth2
 
 import com.sbl.sulmun2yong.user.domain.UserRole
+import com.sbl.sulmun2yong.user.dto.DefaultUserProfile
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
 import java.util.UUID
 
-class CustomOAuth2User(
+data class CustomOAuth2User(
     private val id: UUID,
     private val role: UserRole,
+    private val nickname: String,
     // TODO: attributes 통일
     private val attributes: MutableMap<String, Any>,
 ) : OAuth2User {
@@ -21,15 +23,9 @@ class CustomOAuth2User(
         return mutableListOf(authorities)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-        if (other !is CustomOAuth2User) {
-            return false
-        }
-        return id == other.id
-    }
-
-    override fun hashCode(): Int = id.hashCode()
+    fun getUserDefaultProfile(): DefaultUserProfile =
+        DefaultUserProfile(
+            id = id,
+            nickname = nickname,
+        )
 }
