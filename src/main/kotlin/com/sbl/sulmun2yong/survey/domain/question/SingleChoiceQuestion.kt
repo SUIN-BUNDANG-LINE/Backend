@@ -16,5 +16,7 @@ data class SingleChoiceQuestion(
         return choices.isContains(questionResponse.first())
     }
 
+    override fun canBeKeyQuestion() = isRequired
+
     fun getChoiceSet() = choices.getChoiceSet()
 }

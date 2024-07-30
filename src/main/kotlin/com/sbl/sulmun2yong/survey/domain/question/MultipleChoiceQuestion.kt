@@ -12,4 +12,6 @@ data class MultipleChoiceQuestion(
     override val questionType: QuestionType = QuestionType.MULTIPLE_CHOICE
 
     override fun isValidResponse(questionResponse: QuestionResponse) = questionResponse.all { choices.isContains(it) }
+
+    override fun canBeKeyQuestion() = false
 }

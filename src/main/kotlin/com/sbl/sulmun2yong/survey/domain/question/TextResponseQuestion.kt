@@ -12,4 +12,6 @@ data class TextResponseQuestion(
     override val choices = null
 
     override fun isValidResponse(questionResponse: QuestionResponse) = questionResponse.size == 1 && !questionResponse.first().isOther
+
+    override fun canBeKeyQuestion() = false
 }

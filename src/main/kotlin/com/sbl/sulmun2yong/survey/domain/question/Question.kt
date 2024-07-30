@@ -12,5 +12,5 @@ interface Question {
 
     fun isValidResponse(questionResponse: QuestionResponse): Boolean
 
-    fun canBeKeyQuestion() = questionType == QuestionType.SINGLE_CHOICE && isRequired
+    fun canBeKeyQuestion(): Boolean
 }
