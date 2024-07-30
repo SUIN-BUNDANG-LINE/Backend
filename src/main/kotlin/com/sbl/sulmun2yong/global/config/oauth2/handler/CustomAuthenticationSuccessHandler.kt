@@ -22,7 +22,7 @@ class CustomAuthenticationSuccessHandler(
         val principal = authentication.principal
         val defaultUserProfile =
             if (principal is CustomOAuth2User) {
-                principal.getUserDefaultProfile()
+                principal.getDefaultUserProfile()
             } else {
                 throw IllegalArgumentException("CustomOAuth2User 타입이 아닙니다.")
             }

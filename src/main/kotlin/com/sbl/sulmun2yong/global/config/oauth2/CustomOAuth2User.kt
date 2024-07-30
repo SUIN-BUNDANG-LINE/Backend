@@ -23,7 +23,7 @@ data class CustomOAuth2User(
         return mutableListOf(authorities)
     }
 
-    fun getUserDefaultProfile(): DefaultUserProfile =
+    fun getDefaultUserProfile(): DefaultUserProfile =
         DefaultUserProfile(
             id = id,
             nickname = nickname,
