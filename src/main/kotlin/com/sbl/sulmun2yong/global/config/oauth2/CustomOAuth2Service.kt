@@ -22,6 +22,7 @@ class CustomOAuth2Service(
     private val sessionRegistry: SessionRegistry,
     private val userAdapter: UserAdapter,
 ) : DefaultOAuth2UserService() {
+    // TODO: @Transactional 추가
     override fun loadUser(oAuth2UserRequest: OAuth2UserRequest): OAuth2User {
         val oAuth2User: OAuth2User = super.loadUser(oAuth2UserRequest)
 
