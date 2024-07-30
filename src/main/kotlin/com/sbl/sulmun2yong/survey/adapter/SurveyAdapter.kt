@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class SurveyAdapter(private val surveyRepository: SurveyRepository) {
+class SurveyAdapter(
+    private val surveyRepository: SurveyRepository,
+) {
     fun findSurveysWithPagination(
         size: Int,
         page: Int,

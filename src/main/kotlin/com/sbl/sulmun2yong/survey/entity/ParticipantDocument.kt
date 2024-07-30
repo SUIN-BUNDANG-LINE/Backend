@@ -21,4 +21,11 @@ data class ParticipantDocument(
                 userId = participant.userId,
             )
     }
+
+    fun toDomain() =
+        Participant(
+            id = this.id,
+            surveyId = this.surveyId,
+            userId = this.userId,
+        )
 }

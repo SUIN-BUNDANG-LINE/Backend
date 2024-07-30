@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
+import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createDrawingBoard
@@ -13,7 +14,7 @@ class BoardMakingTest {
     @Test
     fun `드로잉 보드를 출력한다`() {
         val drawingBoard = createDrawingBoard()
-        println(drawingBoard)
+        printDrawingBoard(drawingBoard)
     }
 
     @Test
@@ -21,7 +22,7 @@ class BoardMakingTest {
         // given
         val emptyRewardBoard = createEmptyDrawingBoard()
 
-        println(emptyRewardBoard)
+        printDrawingBoard(emptyRewardBoard)
     }
 
     @Test
@@ -44,19 +45,36 @@ class BoardMakingTest {
         // when
         val tooManyReward =
             arrayOf(
-                Reward(UUID.randomUUID(), "아메리카노", "커피", 100),
-                Reward(UUID.randomUUID(), "카페라떼", "커피", 100),
-                Reward(UUID.randomUUID(), "햄버거", "음식", 100),
+                Reward("아메리카노", "커피", 100),
+                Reward("카페라떼", "커피", 100),
+                Reward("햄버거", "음식", 100),
             )
 
         // then
         assertThrows<InvalidDrawingBoardException> {
             DrawingBoard.create(
-                id = UUID.randomUUID(),
                 surveyId = UUID.randomUUID(),
                 boardSize = surveyParticipantCount,
                 rewards = tooManyReward,
             )
         }
+    }
+
+    private fun printDrawingBoard(drawingBoard: DrawingBoard): String {
+        val tickets = drawingBoard.tickets
+        val maxLength =
+            tickets.maxOfOrNull { (if (it is WinningTicket) it.rewardName else "꽝").length } ?: 0
+
+        val builder = StringBuilder()
+
+        tickets.forEachIndexed { index, ticket ->
+            val paddedTicket = ticket.toString().padEnd(maxLength + 1, '\u3000')
+            builder.append(paddedTicket)
+            if ((index + 1) % 10 == 0) {
+                builder.append("\n")
+            }
+        }
+
+        return builder.toString()
     }
 }

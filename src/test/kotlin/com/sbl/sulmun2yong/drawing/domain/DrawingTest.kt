@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.drawing.domain
 
-import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
+import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.REWARD_NAME
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -12,11 +12,6 @@ import kotlin.math.absoluteValue
 import kotlin.test.assertFalse
 
 class DrawingTest {
-    @Test
-    fun `비어 있는 티켓 팩토리를 만든다`() {
-        TicketFactory()
-    }
-
     @Test
     fun `드로잉 보드의 티켓이 전부 뽑혔을 때 insertQuarter 를 실행하면 오류가 발생한다`() {
         // given
@@ -50,9 +45,7 @@ class DrawingTest {
     @Test
     fun `당첨 종이를 뽑고 getRewardName 을 호출하면 리워드 이름이 출력된다`() {
         // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
-        val testRewardName = "테스트 아이스 아메리카노"
-        drawingBoard.tickets[3] = WinningTicket(testRewardName)
+        val drawingBoard = DrawingBoardFixtureFactory.createRewardAtIndex3DrawingBoard()
 
         // when
         val drawingMachine = DrawingMachine(drawingBoard, 3)
@@ -61,14 +54,13 @@ class DrawingTest {
         drawingMachine.openTicketAndCheckIsWon()
 
         // then
-        assertEquals("테스트 아이스 아메리카노", drawingMachine.getRewardName())
+        assertEquals(REWARD_NAME, drawingMachine.getRewardName())
     }
 
     @Test
     fun `이미 뽑힌 곳을 뽑으면 오류가 발생한다`() {
         // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
-        drawingBoard.tickets[3].isSelected = true
+        val drawingBoard = DrawingBoardFixtureFactory.createSelectedIndex3DrawingBoard()
 
         // when, then
         assertThrows<AlreadySelectedTicketException> {
