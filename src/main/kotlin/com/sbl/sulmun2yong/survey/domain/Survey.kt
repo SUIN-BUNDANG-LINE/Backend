@@ -5,7 +5,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import java.util.Date
 import java.util.UUID
 
-// TODO: 설문 일정 관련 속성들 모아서
+// TODO: 설문 일정 관련 속성들을 하나의 클래스로 묶기
 data class Survey(
     val id: UUID,
     val title: String,
@@ -33,11 +33,11 @@ data class Survey(
     }
 
     fun validateResponse(surveyResponse: SurveyResponse) {
-        var currentSectionId: NextSectionId = NextSectionId.from(sections.first().id)
+        var currentSectionId: SectionId = sections.first().id
         for (sectionResponse in surveyResponse) {
-            val responseSectionId = NextSectionId.Standard(sectionResponse.sectionId)
-            if (currentSectionId != responseSectionId) throw InvalidSurveyResponseException()
-            val section = findSectionById(responseSectionId.id) ?: throw InvalidSurveyResponseException()
+            val responseSectionId = sectionResponse.sectionId
+            require(currentSectionId == responseSectionId) { throw InvalidSurveyResponseException() }
+            val section = findSectionById(responseSectionId) ?: throw InvalidSurveyResponseException()
             currentSectionId = section.findNextSectionId(sectionResponse)
         }
         require(currentSectionId.isEnd) { throw InvalidSurveyResponseException() }
@@ -54,9 +54,9 @@ data class Survey(
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
     private fun isSectionIdsValid(): Boolean {
-        val sectionIds = sections.map { it.id }
+        val sectionIds = SectionIds(sections.map { it.id } + SectionId.End)
         return sections.all { it.sectionIds == sectionIds }
     }
 
-    private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
+    private fun findSectionById(sectionId: SectionId.Standard) = sections.find { it.id == sectionId }
 }

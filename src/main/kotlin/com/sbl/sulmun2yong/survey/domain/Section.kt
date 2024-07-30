@@ -8,12 +8,12 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
 
 data class Section(
-    val id: UUID,
+    val id: SectionId.Standard,
     val title: String,
     val description: String,
     val routeDetails: RouteDetails,
     val questions: List<Question>,
-    val sectionIds: List<UUID>,
+    val sectionIds: SectionIds,
 ) {
     init {
         validateSection()
@@ -31,22 +31,22 @@ data class Section(
         fun create(): Section {
             val id = UUID.randomUUID()
             return Section(
-                id = id,
+                id = SectionId.Standard(id),
                 title = "",
                 description = "",
                 routeDetails = RouteDetails.NumericalOrderRouting,
                 questions = emptyList(),
-                sectionIds = listOf(id),
+                sectionIds = SectionIds(listOf(SectionId.Standard(id), SectionId.End)),
             )
         }
     }
 
-    fun findNextSectionId(sectionResponse: SectionResponse): NextSectionId {
+    fun findNextSectionId(sectionResponse: SectionResponse): SectionId {
         validateResponse(sectionResponse)
         return when (routeDetails) {
             is RouteDetails.SetByUserRouting -> routeDetails.nextSectionId
             is RouteDetails.SetByChoiceRouting -> routeDetails.findNextSectionId(sectionResponse)
-            is RouteDetails.NumericalOrderRouting -> findNextSectionIdByCurrentId(sectionResponse.sectionId)
+            is RouteDetails.NumericalOrderRouting -> sectionIds.findNextSectionId(sectionResponse.sectionId)
         }
     }
 
@@ -62,11 +62,5 @@ data class Section(
         val setByChoiceRouting = routeDetails as? RouteDetails.SetByChoiceRouting ?: return null
         val question = questions.find { it.id == setByChoiceRouting.keyQuestionId } ?: return null
         return if (question.canBeKeyQuestion()) question as SingleChoiceQuestion else null
-    }
-
-    private fun findNextSectionIdByCurrentId(currentSectionId: UUID): NextSectionId {
-        val currentIndex = sectionIds.indexOfFirst { it == currentSectionId }
-        val nextSectionId = sectionIds.getOrNull(currentIndex + 1)
-        return NextSectionId.from(nextSectionId)
     }
 }

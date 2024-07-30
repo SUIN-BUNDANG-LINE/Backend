@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.NextSectionId
 import com.sbl.sulmun2yong.survey.domain.Section
+import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.Question
@@ -25,7 +25,7 @@ data class SurveyProgressInfoResponse(
 
         private fun Section.toDto() =
             SectionInfo(
-                sectionId = this.id,
+                sectionId = this.id.value,
                 title = this.title,
                 description = this.description,
                 routeDetails = this.routeDetails.toDto(),
@@ -40,7 +40,7 @@ data class SurveyProgressInfoResponse(
                 sectionRouteConfigs = if (this is RouteDetails.SetByChoiceRouting) this.sectionRouteConfigs.toDto() else null,
             )
 
-        private fun Map<Choice, NextSectionId>.toDto() =
+        private fun Map<Choice, SectionId>.toDto() =
             this.map { (choice, nextSectionId) ->
                 SectionRouteConfigInfo(
                     content = choice.content,

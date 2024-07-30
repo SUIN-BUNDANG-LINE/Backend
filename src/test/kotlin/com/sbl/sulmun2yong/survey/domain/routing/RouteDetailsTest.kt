@@ -3,7 +3,8 @@ package com.sbl.sulmun2yong.survey.domain.routing
 import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createSectionResponse
 import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSectionRouteConfigs
 import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSetByChoiceRouting
-import com.sbl.sulmun2yong.survey.domain.NextSectionId
+import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.createSectionIds
+import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
@@ -31,20 +32,18 @@ class RouteDetailsTest {
         val numericalOrder = RouteDetails.NumericalOrderRouting
 
         // when
-        val isValid1 = numericalOrder.isSectionIdsValid(listOf(UUID.randomUUID(), UUID.randomUUID()))
-        val isValid2 = numericalOrder.isSectionIdsValid(listOf(UUID.randomUUID()))
-        val isValid3 = numericalOrder.isSectionIdsValid(listOf())
+        val isValid1 = numericalOrder.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID(), UUID.randomUUID())))
+        val isValid2 = numericalOrder.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID())))
 
         // then
         assertEquals(true, isValid1)
         assertEquals(true, isValid2)
-        assertEquals(true, isValid3)
     }
 
     @Test
     fun `SetByUser를 생성하면 정보가 올바르게 설정된다`() {
         // given, when
-        val sectionId = NextSectionId.Standard(UUID.randomUUID())
+        val sectionId = SectionId.Standard(UUID.randomUUID())
         val setByUser = RouteDetails.SetByUserRouting(sectionId)
 
         // then
@@ -55,20 +54,18 @@ class RouteDetailsTest {
     @Test
     fun `SetByUser는 자신의 nextSectionId가 포함된 sectionIds를 받으면 유효하다고 판단한다`() {
         // given
-        val sectionId = NextSectionId.Standard(UUID.randomUUID())
+        val sectionId = SectionId.Standard(UUID.randomUUID())
         val setByUser = RouteDetails.SetByUserRouting(sectionId)
 
         // when
-        val isValid1 = setByUser.isSectionIdsValid(listOf(UUID.randomUUID(), UUID.randomUUID()))
-        val isValid2 = setByUser.isSectionIdsValid(listOf(UUID.randomUUID(), sectionId.id))
-        val isValid3 = setByUser.isSectionIdsValid(listOf(sectionId.id))
-        val isValid4 = setByUser.isSectionIdsValid(listOf())
+        val isValid1 = setByUser.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID(), UUID.randomUUID())))
+        val isValid2 = setByUser.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID(), sectionId.value)))
+        val isValid3 = setByUser.isSectionIdsValid(createSectionIds(listOf(sectionId.value)))
 
         // then
         assertEquals(false, isValid1)
         assertEquals(true, isValid2)
         assertEquals(true, isValid3)
-        assertEquals(false, isValid4)
     }
 
     @Test

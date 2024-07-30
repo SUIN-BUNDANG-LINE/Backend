@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.dto.request
 
+import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
@@ -37,7 +38,7 @@ data class SurveyResponseRequest(
 
         fun toDomain() =
             SectionResponse(
-                sectionId = sectionId,
+                sectionId = SectionId.Standard(sectionId),
                 questionResponses = questionResponses.map { it.toDomain() },
             )
     }

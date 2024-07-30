@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.fixture
 
+import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
@@ -17,7 +18,7 @@ object ResponseFixtureFactory {
         contents: List<String> = listOf(),
         isOtherContent: String? = null,
     ) = SectionResponse(
-        id,
+        SectionId.Standard(id),
         (DUMMY_QUESTION_RESPONSES.shuffled() + listOf(createQuestionResponse(questionId, contents, isOtherContent))).shuffled(),
     )
 

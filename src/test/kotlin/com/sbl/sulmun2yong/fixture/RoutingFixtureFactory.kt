@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.fixture
 
-import com.sbl.sulmun2yong.survey.domain.NextSectionId
+import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import org.mockito.Mockito.`when`
@@ -18,12 +18,12 @@ object RoutingFixtureFactory {
     )
 
     fun createSectionRouteConfigs(contentIdMap: Map<String?, UUID?>) =
-        contentIdMap.map { (content, id) -> Choice.from(content) to NextSectionId.from(id) }.toMap()
+        contentIdMap.map { (content, id) -> Choice.from(content) to SectionId.from(id) }.toMap()
 
     fun createMockSetByChoiceRouting(
         keyQuestionId: UUID = UUID.randomUUID(),
         isSectionIdsValid: Boolean = true,
-        nextSectionId: NextSectionId = NextSectionId.End,
+        nextSectionId: SectionId = SectionId.End,
         choiceSet: Set<Choice> =
             setOf(
                 Choice.Standard("a"),

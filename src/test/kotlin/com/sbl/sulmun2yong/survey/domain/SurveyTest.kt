@@ -59,9 +59,9 @@ class SurveyTest {
         val sectionId3 = UUID.randomUUID()
         val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, NextSectionId.Standard(sectionId2), sectionIds)
-        val section2 = createMockSection(sectionId2, NextSectionId.Standard(sectionId3), sectionIds)
-        val section3 = createMockSection(sectionId3, NextSectionId.End, sectionIds)
+        val section1 = createMockSection(sectionId1, SectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, SectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, SectionId.End, sectionIds)
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }
@@ -93,9 +93,9 @@ class SurveyTest {
         val sectionId3 = UUID.randomUUID()
         val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, NextSectionId.Standard(sectionId2), sectionIds)
-        val section2 = createMockSection(sectionId2, NextSectionId.Standard(sectionId3), sectionIds)
-        val section3 = createMockSection(sectionId3, NextSectionId.End, sectionIds)
+        val section1 = createMockSection(sectionId1, SectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, SectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, SectionId.End, sectionIds)
 
         val id = UUID.randomUUID()
         val survey = createSurvey(id = id, sections = listOf(section1, section2, section3))
@@ -104,9 +104,9 @@ class SurveyTest {
             SurveyResponse(
                 id,
                 listOf(
-                    SectionResponse(sectionId1, listOf()),
-                    SectionResponse(sectionId2, listOf()),
-                    SectionResponse(sectionId3, listOf()),
+                    SectionResponse(SectionId.Standard(sectionId1), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId2), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId3), listOf()),
                 ),
             )
 
@@ -114,9 +114,9 @@ class SurveyTest {
             SurveyResponse(
                 id,
                 listOf(
-                    SectionResponse(sectionId1, listOf()),
-                    SectionResponse(sectionId2, listOf()),
-                    SectionResponse(UUID.randomUUID(), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId1), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId2), listOf()),
+                    SectionResponse(SectionId.Standard(UUID.randomUUID()), listOf()),
                 ),
             )
 
@@ -151,10 +151,10 @@ class SurveyTest {
         val sectionId4 = UUID.randomUUID()
         val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, NextSectionId.Standard(sectionId2), sectionIds)
-        val section2 = createMockSection(sectionId2, NextSectionId.Standard(sectionId3), sectionIds)
-        val section3 = createMockSection(sectionId3, NextSectionId.End, sectionIds)
-        val section4 = createMockSection(sectionId4, NextSectionId.End, sectionIds)
+        val section1 = createMockSection(sectionId1, SectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, SectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, SectionId.End, sectionIds)
+        val section4 = createMockSection(sectionId4, SectionId.End, sectionIds)
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }

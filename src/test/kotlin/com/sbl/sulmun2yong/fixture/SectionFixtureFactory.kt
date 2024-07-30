@@ -1,7 +1,8 @@
 package com.sbl.sulmun2yong.fixture
 
-import com.sbl.sulmun2yong.survey.domain.NextSectionId
 import com.sbl.sulmun2yong.survey.domain.Section
+import com.sbl.sulmun2yong.survey.domain.SectionId
+import com.sbl.sulmun2yong.survey.domain.SectionIds
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import org.mockito.Mockito.`when`
@@ -21,23 +22,25 @@ object SectionFixtureFactory {
         questions: List<Question>,
         sectionIds: List<UUID> = listOf(id),
     ) = Section(
-        id = id,
+        id = SectionId.Standard(id),
         title = title + id,
         description = description + id,
         routeDetails = routeDetails,
         questions = questions,
-        sectionIds = sectionIds,
+        sectionIds = SectionIds.from(sectionIds.map { SectionId.Standard(it) }),
     )
 
     fun createMockSection(
         id: UUID,
-        nextSectionId: NextSectionId,
+        nextSectionId: SectionId,
         sectionIds: List<UUID>,
     ): Section {
         val section = mock<Section>()
-        `when`(section.id).thenReturn(id)
+        `when`(section.id).thenReturn(SectionId.Standard(id))
         `when`(section.findNextSectionId(any())).thenReturn(nextSectionId)
-        `when`(section.sectionIds).thenReturn(sectionIds)
+        `when`(section.sectionIds).thenReturn(SectionIds.from(sectionIds.map { SectionId.Standard(it) }))
         return section
     }
+
+    fun createSectionIds(sectionIds: List<UUID>) = SectionIds.from(sectionIds.map { SectionId.Standard(it) })
 }

@@ -1,9 +1,10 @@
 package com.sbl.sulmun2yong.survey.entity
 
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
-import com.sbl.sulmun2yong.survey.domain.NextSectionId
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Section
+import com.sbl.sulmun2yong.survey.domain.SectionId
+import com.sbl.sulmun2yong.survey.domain.SectionIds
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Choice
@@ -68,7 +69,7 @@ data class SurveyDocument(
     )
 
     fun toDomain(): Survey {
-        val sectionIds = this.sections.map { it.sectionId }
+        val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
         return Survey(
             id = this.id,
             title = this.title,
@@ -92,9 +93,9 @@ data class SurveyDocument(
             count = this.count,
         )
 
-    private fun SectionSubDocument.toDomain(sectionIds: List<UUID>) =
+    private fun SectionSubDocument.toDomain(sectionIds: SectionIds) =
         Section(
-            id = this.sectionId,
+            id = SectionId.Standard(this.sectionId),
             title = this.title,
             description = this.description,
             routeDetails = this.getRouteDetails(),
@@ -110,12 +111,12 @@ data class SurveyDocument(
                     keyQuestionId = this.keyQuestionId!!,
                     sectionRouteConfigs = this.sectionRouteConfigs?.toDomain() ?: emptyMap(),
                 )
-            SectionRouteType.SET_BY_USER -> RouteDetails.SetByUserRouting(NextSectionId.from(this.nextSectionId))
+            SectionRouteType.SET_BY_USER -> RouteDetails.SetByUserRouting(SectionId.from(this.nextSectionId))
         }
 
-    private fun List<SectionRouteConfigSubDocument>.toDomain(): Map<Choice, NextSectionId> =
+    private fun List<SectionRouteConfigSubDocument>.toDomain(): Map<Choice, SectionId> =
         this.associate {
-            Choice.from(it.choiceContent) to NextSectionId.from(it.nextSectionId)
+            Choice.from(it.choiceContent) to SectionId.from(it.nextSectionId)
         }
 
     private fun QuestionSubDocument.toDomain() =

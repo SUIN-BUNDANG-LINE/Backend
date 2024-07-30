@@ -73,7 +73,7 @@ class SectionTest {
 
             // then
             with(section) {
-                assertEquals(id, this.id)
+                assertEquals(SectionId.Standard(id), this.id)
                 assertEquals("", this.title)
                 assertEquals("", this.description)
                 assertEquals(RouteDetails.NumericalOrderRouting, this.routeDetails)
@@ -99,7 +99,7 @@ class SectionTest {
 
         // then
         with(section) {
-            assertEquals(id, this.id)
+            assertEquals(SectionId.Standard(id), this.id)
             assertEquals(TITLE + id, this.title)
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(routeDetails, this.routeDetails)
@@ -181,7 +181,7 @@ class SectionTest {
     fun `유저 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val routeDetails = RouteDetails.SetByUserRouting(NextSectionId.End)
+        val routeDetails = RouteDetails.SetByUserRouting(SectionId.End)
         val questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
 
         // when
@@ -189,7 +189,7 @@ class SectionTest {
 
         // then
         with(section) {
-            assertEquals(id, this.id)
+            assertEquals(SectionId.Standard(id), this.id)
             assertEquals(TITLE + id, this.title)
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(routeDetails, this.routeDetails)
@@ -210,7 +210,7 @@ class SectionTest {
 
         val sectionResponse1s =
             SectionResponse(
-                id,
+                SectionId.Standard(id),
                 listOf(
                     createQuestionResponse(textResponseQuestionId, listOf("a")),
                     createQuestionResponse(singleChoiceQuestionId, listOf("a")),
@@ -219,7 +219,7 @@ class SectionTest {
 
         val sectionResponse2s =
             SectionResponse(
-                id,
+                SectionId.Standard(id),
                 listOf(
                     createQuestionResponse(textResponseQuestionId, listOf("a")),
                     createQuestionResponse(multipleChoiceQuestionId, listOf("a")),
@@ -228,7 +228,7 @@ class SectionTest {
 
         val sectionResponse3s =
             SectionResponse(
-                UUID.randomUUID(),
+                SectionId.Standard(UUID.randomUUID()),
                 listOf(
                     createQuestionResponse(textResponseQuestionId, listOf("a")),
                     createQuestionResponse(multipleChoiceQuestionId, listOf("a")),
@@ -255,7 +255,7 @@ class SectionTest {
 
         val sectionResponse =
             SectionResponse(
-                id,
+                SectionId.Standard(id),
                 listOf(
                     QuestionResponse(questionId1, listOf(ResponseDetail("a"))),
                     QuestionResponse(questionId2, listOf(ResponseDetail("a"))),
@@ -279,7 +279,7 @@ class SectionTest {
             )
         val sectionResponse =
             SectionResponse(
-                currentSectionId,
+                SectionId.Standard(currentSectionId),
                 listOf(
                     QuestionResponse(textResponseQuestionId, listOf(ResponseDetail("a"))),
                     QuestionResponse(singleChoiceQuestionId, listOf(ResponseDetail("a", true))),
@@ -288,8 +288,11 @@ class SectionTest {
             )
 
         // when, then
-        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
-        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(sectionResponse))
+        assertEquals(
+            SectionId.Standard(nextSectionId),
+            section.findNextSectionId(SectionResponse(SectionId.Standard(currentSectionId), listOf())),
+        )
+        assertEquals(SectionId.Standard(nextSectionId), section.findNextSectionId(sectionResponse))
     }
 
     @Test
@@ -316,7 +319,7 @@ class SectionTest {
 
         val sectionResponse1s =
             SectionResponse(
-                id,
+                SectionId.Standard(id),
                 listOf(
                     QuestionResponse(textResponseQuestionId, listOf(ResponseDetail(a))),
                     QuestionResponse(singleChoiceQuestionId, listOf(ResponseDetail(a))),
@@ -325,7 +328,7 @@ class SectionTest {
 
         val sectionResponse2s =
             SectionResponse(
-                id,
+                SectionId.Standard(id),
                 listOf(
                     QuestionResponse(multipleChoiceQuestionId, listOf(ResponseDetail(b))),
                     QuestionResponse(singleChoiceQuestionId, listOf(ResponseDetail(a, true))),
@@ -337,8 +340,8 @@ class SectionTest {
         val nextSectionId2 = section.findNextSectionId(sectionResponse2s)
 
         // then
-        assertEquals(NextSectionId.Standard(sectionId1), nextSectionId1)
-        assertEquals(NextSectionId.End, nextSectionId2)
+        assertEquals(SectionId.Standard(sectionId1), nextSectionId1)
+        assertEquals(SectionId.End, nextSectionId2)
     }
 
     @Test
@@ -349,13 +352,13 @@ class SectionTest {
         val section =
             createSection(
                 id = currentSectionId,
-                routeDetails = RouteDetails.SetByUserRouting(NextSectionId.Standard(nextSectionId)),
+                routeDetails = RouteDetails.SetByUserRouting(SectionId.Standard(nextSectionId)),
                 questions = listOf(textResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
                 sectionIds = listOf(currentSectionId, nextSectionId),
             )
         val questionResponses =
             SectionResponse(
-                currentSectionId,
+                SectionId.Standard(currentSectionId),
                 listOf(
                     QuestionResponse(textResponseQuestionId, listOf(ResponseDetail("a"))),
                     QuestionResponse(singleChoiceQuestionId, listOf(ResponseDetail("a", true))),
@@ -364,8 +367,11 @@ class SectionTest {
             )
 
         // when, then
-        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(SectionResponse(currentSectionId, listOf())))
-        assertEquals(NextSectionId.Standard(nextSectionId), section.findNextSectionId(questionResponses))
+        assertEquals(
+            SectionId.Standard(nextSectionId),
+            section.findNextSectionId(SectionResponse(SectionId.Standard(currentSectionId), listOf())),
+        )
+        assertEquals(SectionId.Standard(nextSectionId), section.findNextSectionId(questionResponses))
     }
 
     private fun createChoiceSet(contents: List<String?>) = contents.map { Choice.from(it) }.toSet()

@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.survey.domain
 
 import java.util.UUID
 
-sealed class NextSectionId {
+sealed class SectionId {
     abstract val value: UUID?
     abstract val isEnd: Boolean
 
@@ -11,13 +11,12 @@ sealed class NextSectionId {
     }
 
     data class Standard(
-        val id: UUID,
-    ) : NextSectionId() {
-        override val value = id
+        override val value: UUID,
+    ) : SectionId() {
         override val isEnd = false
     }
 
-    data object End : NextSectionId() {
+    data object End : SectionId() {
         override val value = null
         override val isEnd = true
     }

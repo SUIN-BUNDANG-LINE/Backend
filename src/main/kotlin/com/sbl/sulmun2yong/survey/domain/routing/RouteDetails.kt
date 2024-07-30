@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain.routing
 
-import com.sbl.sulmun2yong.survey.domain.NextSectionId
+import com.sbl.sulmun2yong.survey.domain.SectionId
+import com.sbl.sulmun2yong.survey.domain.SectionIds
 import com.sbl.sulmun2yong.survey.domain.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
@@ -10,21 +11,21 @@ import java.util.UUID
 sealed class RouteDetails(
     val type: SectionRouteType,
 ) {
-    abstract fun isSectionIdsValid(sectionIds: List<UUID>): Boolean
+    abstract fun isSectionIdsValid(sectionIds: SectionIds): Boolean
 
     data class SetByUserRouting(
-        val nextSectionId: NextSectionId,
+        val nextSectionId: SectionId,
     ) : RouteDetails(SectionRouteType.SET_BY_USER) {
-        override fun isSectionIdsValid(sectionIds: List<UUID>) = if (nextSectionId.isEnd) true else sectionIds.contains(nextSectionId.value)
+        override fun isSectionIdsValid(sectionIds: SectionIds) = sectionIds.isContains(nextSectionId)
     }
 
     data class SetByChoiceRouting(
         val keyQuestionId: UUID,
-        val sectionRouteConfigs: Map<Choice, NextSectionId>,
+        val sectionRouteConfigs: Map<Choice, SectionId>,
     ) : RouteDetails(SectionRouteType.SET_BY_CHOICE) {
-        override fun isSectionIdsValid(sectionIds: List<UUID>) = sectionIds.containsAll(sectionRouteConfigs.values.mapNotNull { it.value })
+        override fun isSectionIdsValid(sectionIds: SectionIds) = sectionRouteConfigs.values.all { sectionIds.isContains(it) }
 
-        fun findNextSectionId(sectionResponse: SectionResponse): NextSectionId {
+        fun findNextSectionId(sectionResponse: SectionResponse): SectionId {
             val keyResponseDetail = sectionResponse.findKeyResponse() ?: throw InvalidSectionResponseException()
             return sectionRouteConfigs[keyResponseDetail.toChoice()] ?: throw InvalidSectionResponseException()
         }
@@ -37,6 +38,6 @@ sealed class RouteDetails(
     }
 
     data object NumericalOrderRouting : RouteDetails(SectionRouteType.NUMERICAL_ORDER) {
-        override fun isSectionIdsValid(sectionIds: List<UUID>) = true
+        override fun isSectionIdsValid(sectionIds: SectionIds) = true
     }
 }

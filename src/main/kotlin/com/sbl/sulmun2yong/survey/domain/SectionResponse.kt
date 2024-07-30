@@ -2,10 +2,9 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
-import java.util.UUID
 
 data class SectionResponse(
-    val sectionId: UUID,
+    val sectionId: SectionId.Standard,
     private val questionResponses: List<QuestionResponse>,
 ) : List<QuestionResponse> by questionResponses {
     init {
