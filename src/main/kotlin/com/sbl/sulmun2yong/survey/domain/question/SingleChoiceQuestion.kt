@@ -16,5 +16,5 @@ data class SingleChoiceQuestion(
         return choices.isContains(questionResponse.first())
     }
 
-    fun isEqualToChoices(choiceSet: Set<Choice>) = choices.isEquals(choiceSet)
+    fun getChoiceSet() = choices.getChoiceSet()
 }

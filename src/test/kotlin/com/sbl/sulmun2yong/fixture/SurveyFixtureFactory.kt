@@ -3,7 +3,10 @@ package com.sbl.sulmun2yong.fixture
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.time.Instant
 import java.util.Date
 import java.util.UUID
@@ -23,7 +26,20 @@ object SurveyFixtureFactory {
             Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
             Reward(UUID.randomUUID(), "햄버거", "음식", 4),
         )
-    val SECTIONS = listOf(Section.create())
+    val SECTIONS =
+        let {
+            val id = SectionId.Standard(UUID.randomUUID())
+            listOf(
+                Section(
+                    id = id,
+                    title = "",
+                    description = "",
+                    routeDetails = RouteDetails.NumericalOrderRouting,
+                    questions = emptyList(),
+                    sectionIds = SectionIds(listOf(id, SectionId.End)),
+                ),
+            )
+        }
     const val REWARD_COUNT = 9
 
     fun createSurvey(

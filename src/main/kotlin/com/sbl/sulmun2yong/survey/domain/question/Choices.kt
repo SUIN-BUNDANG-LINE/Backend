@@ -26,11 +26,5 @@ data class Choices(
         return standardChoices.contains(Choice.Standard(responseDetail.content))
     }
 
-    fun isEquals(choiceSet: Set<Choice>) =
-        choiceSet.all { isContains(it) } && choiceSet.size == standardChoices.size + (if (isAllowOther) 1 else 0)
-
-    private fun isContains(choice: Choice): Boolean {
-        if (choice is Choice.Other) return isAllowOther
-        return standardChoices.contains(choice)
-    }
+    fun getChoiceSet() = if (isAllowOther) setOf(standardChoices + Choice.Other) else setOf(standardChoices)
 }

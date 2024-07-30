@@ -22,7 +22,7 @@ data class Section(
     private fun validateSection() {
         if (routeDetails is RouteDetails.SetByChoiceRouting) {
             val keyQuestion = findKeyQuestion() ?: throw InvalidSectionException()
-            require(keyQuestion.isEqualToChoices(routeDetails.getChoiceSet())) { throw InvalidSectionException() }
+            require(keyQuestion.getChoiceSet() == routeDetails.getChoiceSet()) { throw InvalidSectionException() }
         }
         require(sectionIds.isContainsAll(routeDetails.getNextSectionIds())) { throw InvalidSectionException() }
     }

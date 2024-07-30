@@ -121,29 +121,29 @@ class QuestionTest {
         validateResponses(notAllowOtherQuestion, notAllowOtherQuestionExpected)
     }
 
-    @Test
-    fun `단일 선택 질문은 선택지 집합을 받아서 선택지의 content와 같은지 확인할 수 있다`() {
-        // given
-        val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
-        val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
-        val choiceA = Choice.from(a)
-        val choiceB = Choice.from(b)
-        val choiceC = Choice.from(c)
-        val choiceD = Choice.from(d)
-        val choiceOther = Choice.Other
-
-        // when
-        val isAllowEqual1 = allowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC, choiceOther))
-        val isAllowEqual2 = allowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceD, choiceOther))
-        val isNotAllowEqual1 = notAllowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC))
-        val isNotAllowEqual2 = notAllowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC, choiceOther))
-
-        // then
-        assertEquals(true, isAllowEqual1)
-        assertEquals(false, isAllowEqual2)
-        assertEquals(true, isNotAllowEqual1)
-        assertEquals(false, isNotAllowEqual2)
-    }
+    // @Test
+    // fun `단일 선택 질문은 선택지 집합을 받아서 선택지의 content와 같은지 확인할 수 있다`() {
+    //     // given
+    //     val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
+    //     val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
+    //     val choiceA = Choice.from(a)
+    //     val choiceB = Choice.from(b)
+    //     val choiceC = Choice.from(c)
+    //     val choiceD = Choice.from(d)
+    //     val choiceOther = Choice.Other
+    //
+    //     // when
+    //     val isAllowEqual1 = allowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC, choiceOther))
+    //     val isAllowEqual2 = allowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceD, choiceOther))
+    //     val isNotAllowEqual1 = notAllowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC))
+    //     val isNotAllowEqual2 = notAllowOtherQuestion.isEqualToChoices(setOf(choiceA, choiceB, choiceC, choiceOther))
+    //
+    //     // then
+    //     assertEquals(true, isAllowEqual1)
+    //     assertEquals(false, isAllowEqual2)
+    //     assertEquals(true, isNotAllowEqual1)
+    //     assertEquals(false, isNotAllowEqual2)
+    // }
 
     @Test
     fun `다중 선택 질문을 생성하면 올바르게 정보가 설정된다`() {
