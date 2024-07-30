@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import java.util.UUID
 

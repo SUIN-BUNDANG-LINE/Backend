@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.fixture
 
-import com.sbl.sulmun2yong.survey.domain.SectionId
-import com.sbl.sulmun2yong.survey.domain.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import java.util.UUID
 
 object ResponseFixtureFactory {

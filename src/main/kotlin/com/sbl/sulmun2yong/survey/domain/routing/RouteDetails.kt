@@ -1,10 +1,10 @@
 package com.sbl.sulmun2yong.survey.domain.routing
 
-import com.sbl.sulmun2yong.survey.domain.SectionId
-import com.sbl.sulmun2yong.survey.domain.SectionIds
-import com.sbl.sulmun2yong.survey.domain.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
 

@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.fixture
 
 import com.sbl.sulmun2yong.survey.domain.Reward
-import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.section.Section
 import java.time.Instant
 import java.util.Date
 import java.util.UUID

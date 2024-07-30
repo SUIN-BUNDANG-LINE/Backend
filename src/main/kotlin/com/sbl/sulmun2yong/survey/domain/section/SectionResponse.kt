@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.domain
+package com.sbl.sulmun2yong.survey.domain.section
 
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException

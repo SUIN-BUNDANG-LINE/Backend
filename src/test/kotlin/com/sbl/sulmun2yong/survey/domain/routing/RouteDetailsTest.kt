@@ -4,8 +4,8 @@ import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createSectionResponse
 import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSectionRouteConfigs
 import com.sbl.sulmun2yong.fixture.RoutingFixtureFactory.createSetByChoiceRouting
 import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.createSectionIds
-import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.question.Choice
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

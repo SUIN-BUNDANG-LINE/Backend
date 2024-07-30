@@ -2,9 +2,6 @@ package com.sbl.sulmun2yong.survey.entity
 
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import com.sbl.sulmun2yong.survey.domain.Reward
-import com.sbl.sulmun2yong.survey.domain.Section
-import com.sbl.sulmun2yong.survey.domain.SectionId
-import com.sbl.sulmun2yong.survey.domain.SectionIds
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Choice
@@ -15,6 +12,9 @@ import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
+import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.Date

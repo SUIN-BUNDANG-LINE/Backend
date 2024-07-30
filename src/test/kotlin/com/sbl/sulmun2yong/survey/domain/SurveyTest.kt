@@ -13,6 +13,8 @@ import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TARGET_PARTICIPANT_COUNT
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.THUMBNAIL
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.createSurvey
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import org.junit.jupiter.api.Test

@@ -14,6 +14,9 @@ import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test

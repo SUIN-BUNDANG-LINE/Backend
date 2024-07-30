@@ -1,13 +1,13 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Section
-import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
+import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import java.util.UUID
 
 data class SurveyProgressInfoResponse(

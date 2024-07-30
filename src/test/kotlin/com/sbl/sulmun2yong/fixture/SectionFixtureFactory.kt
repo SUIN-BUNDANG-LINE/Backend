@@ -1,10 +1,10 @@
 package com.sbl.sulmun2yong.fixture
 
-import com.sbl.sulmun2yong.survey.domain.Section
-import com.sbl.sulmun2yong.survey.domain.SectionId
-import com.sbl.sulmun2yong.survey.domain.SectionIds
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock

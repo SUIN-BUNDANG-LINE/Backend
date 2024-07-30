@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.domain
+package com.sbl.sulmun2yong.survey.domain.section
 
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionIdsException
 

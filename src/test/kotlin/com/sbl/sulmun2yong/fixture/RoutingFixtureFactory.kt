@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.fixture
 
-import com.sbl.sulmun2yong.survey.domain.SectionId
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
