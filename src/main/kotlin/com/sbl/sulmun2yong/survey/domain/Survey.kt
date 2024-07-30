@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import java.util.Date
 import java.util.UUID
 
+// TODO: 설문 일정 관련 속성들 모아서
 data class Survey(
     val id: UUID,
     val title: String,
@@ -52,10 +53,10 @@ data class Survey(
 
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
-    private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
-
     private fun isSectionIdsValid(): Boolean {
         val sectionIds = sections.map { it.id }
         return sections.all { it.sectionIds == sectionIds }
     }
+
+    private fun findSectionById(sectionId: UUID) = sections.find { it.id == sectionId }
 }
