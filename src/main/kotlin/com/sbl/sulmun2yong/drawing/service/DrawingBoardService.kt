@@ -48,8 +48,8 @@ class DrawingBoardService(
         }
         // 설문이 종료되었는가
         val surveyId = participant.surveyId
-        val surveyFinishedAt = surveyAdapter.getSurveyFinishedAt(surveyId)
-        if (Date().after(surveyFinishedAt)) {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        if (Date().after(survey.finishedAt)) {
             throw InvalidDrawingException()
         }
 

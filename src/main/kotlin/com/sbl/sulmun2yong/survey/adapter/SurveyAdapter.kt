@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
-import java.util.Date
 import java.util.UUID
 
 @Component
@@ -43,11 +42,4 @@ class SurveyAdapter(
             }
         }
     }
-
-    fun getSurveyFinishedAt(surveyId: UUID): Date =
-        surveyRepository
-            .findById(surveyId)
-            .orElseThrow {
-                SurveyNotFoundException()
-            }.finishedAt
 }
