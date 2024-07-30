@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.drawing.entity
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.UUID
 
@@ -11,7 +10,6 @@ import java.util.UUID
 data class DrawingHistoryDocument(
     @Id
     val id: UUID,
-    @Indexed
     val participantId: UUID,
     val drawingBoardId: UUID,
     val selectedTicketIndex: Int,

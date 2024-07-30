@@ -4,7 +4,6 @@ import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.UUID
 
@@ -12,7 +11,6 @@ import java.util.UUID
 data class DrawingBoardDocument(
     @Id
     val id: UUID,
-    @Indexed
     val surveyId: UUID,
     val selectedTicketCount: Int,
     val tickets: Array<Ticket>,
