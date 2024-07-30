@@ -43,7 +43,7 @@ class CustomOAuth2Service(
                 )
 
         userAdapter.save(upsertedUser)
-        return CustomOAuth2User(upsertedUser.id, upsertedUser.role, oAuth2User.attributes)
+        return CustomOAuth2User(upsertedUser.id, upsertedUser.role, upsertedUser.nickname, oAuth2User.attributes)
     }
 
     private fun getOAuth2UserInfo(

@@ -14,10 +14,15 @@ class ResetSession {
             request.session.invalidate()
 
             // 쿠키 삭제
-            val cookie = Cookie("JSESSIONID", null)
-            cookie.path = "/"
-            cookie.maxAge = 0
-            response.addCookie(cookie)
+            val expiredJsessionIdCookie = Cookie("JSESSIONID", null)
+            expiredJsessionIdCookie.path = "/"
+            expiredJsessionIdCookie.maxAge = 0
+            response.addCookie(expiredJsessionIdCookie)
+
+            val expiredUserProfileCookie = Cookie("user-profile", null)
+            expiredUserProfileCookie.path = "/"
+            expiredUserProfileCookie.maxAge = 0
+            response.addCookie(expiredUserProfileCookie)
         }
     }
 }
