@@ -1,6 +1,6 @@
-package com.sbl.sulmun2yong.survey.domain.section
+package com.sbl.sulmun2yong.survey.domain.response
 
-import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 
 data class SectionResponse(

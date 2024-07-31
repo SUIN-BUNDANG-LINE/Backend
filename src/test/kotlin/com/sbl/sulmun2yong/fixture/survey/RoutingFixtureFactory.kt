@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.fixture.survey
 
-import com.sbl.sulmun2yong.survey.domain.question.Choice
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import org.mockito.Mockito.`when`

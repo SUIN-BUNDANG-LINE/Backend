@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.domain.question
+package com.sbl.sulmun2yong.survey.domain.response
 
 import com.sbl.sulmun2yong.survey.exception.InvalidQuestionResponseException
 import java.util.UUID

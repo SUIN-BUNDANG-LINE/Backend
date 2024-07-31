@@ -1,5 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
+
 /** 단일 선택지 질문, keyQuestion이 될 수 있음 */
 interface SingleChoiceQuestion : ChoiceQuestion {
     // 단일 응답만 받을 수 있음

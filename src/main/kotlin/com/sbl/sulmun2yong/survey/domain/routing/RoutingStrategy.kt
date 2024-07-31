@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.survey.domain.routing
 
-import com.sbl.sulmun2yong.survey.domain.question.Choice
-import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
+import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
-import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
 

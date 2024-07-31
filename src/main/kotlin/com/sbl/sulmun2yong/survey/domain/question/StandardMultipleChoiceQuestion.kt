@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import java.util.UUID
 
 /** 일반 다중 선택지 질문 */

@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.domain.question
+package com.sbl.sulmun2yong.survey.domain.question.choice
 
 sealed class Choice {
     abstract val content: String?

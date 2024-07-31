@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds

@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

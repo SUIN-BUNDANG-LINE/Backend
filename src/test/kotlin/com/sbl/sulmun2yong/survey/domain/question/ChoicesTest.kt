@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createChoices
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.exception.InvalidChoiceException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

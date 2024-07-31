@@ -1,10 +1,10 @@
 package com.sbl.sulmun2yong.survey.dto.request
 
-import com.sbl.sulmun2yong.survey.domain.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
-import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
+import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
+import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
-import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import java.util.UUID
 
 data class SurveyResponseRequest(

@@ -1,5 +1,6 @@
-package com.sbl.sulmun2yong.survey.domain.question
+package com.sbl.sulmun2yong.survey.domain.question.choice
 
+import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
 import com.sbl.sulmun2yong.survey.exception.InvalidChoiceException
 
 data class Choices(

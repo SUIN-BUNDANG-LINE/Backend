@@ -1,5 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
+import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
 import com.sbl.sulmun2yong.survey.exception.InvalidQuestionResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow

@@ -7,12 +7,12 @@ import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createTextRespo
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.DESCRIPTION
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createSection
-import com.sbl.sulmun2yong.survey.domain.question.Choice
-import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
-import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
+import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
-import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

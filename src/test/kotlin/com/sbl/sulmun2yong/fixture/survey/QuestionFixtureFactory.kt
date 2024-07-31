@@ -1,11 +1,11 @@
 package com.sbl.sulmun2yong.fixture.survey
 
-import com.sbl.sulmun2yong.survey.domain.question.Choice
-import com.sbl.sulmun2yong.survey.domain.question.Choices
 import com.sbl.sulmun2yong.survey.domain.question.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.StandardTextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock

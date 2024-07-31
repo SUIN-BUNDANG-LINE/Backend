@@ -1,5 +1,8 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
+
 /** 선택지가 있는 질문 */
 interface ChoiceQuestion : Question {
     override val choices: Choices
