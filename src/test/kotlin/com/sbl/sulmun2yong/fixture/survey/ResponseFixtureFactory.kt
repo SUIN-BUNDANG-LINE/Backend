@@ -22,6 +22,12 @@ object ResponseFixtureFactory {
         (DUMMY_QUESTION_RESPONSES.shuffled() + listOf(createQuestionResponse(questionId, contents, isOtherContent))).shuffled(),
     )
 
+    /**
+     * 테스트용 QuestionResponse 생성 메서드
+     * @param id 기본값 = UUID.randomUUID()
+     * @param contents 기본값 = listOf()
+     * @param isOtherContent 기본값 = true
+     * */
     fun createQuestionResponse(
         id: UUID = UUID.randomUUID(),
         contents: List<String> = listOf(),
@@ -32,6 +38,6 @@ object ResponseFixtureFactory {
         contents: List<String>,
         isOtherContent: String? = null,
     ) = contents.map {
-        ResponseDetail(it)
+        ResponseDetail(it, false)
     } + if (isOtherContent != null) listOf(ResponseDetail(isOtherContent, true)) else listOf()
 }

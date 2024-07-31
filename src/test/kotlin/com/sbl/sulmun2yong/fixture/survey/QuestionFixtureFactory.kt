@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.fixture.survey
 
+import com.sbl.sulmun2yong.fixture.survey.SurveyConstFactory.CONTENTS
 import com.sbl.sulmun2yong.survey.domain.question.TextQuestion
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
@@ -14,7 +15,6 @@ import java.util.UUID
 object QuestionFixtureFactory {
     const val TITLE = "질문 제목"
     const val DESCRIPTION = "질문 설명"
-    private val CONTENTS = listOf("a", "b", "c")
     val CHOICES = Choices(CONTENTS.map { Choice.Standard(it) }, true)
 
     fun createTextResponseQuestion(
@@ -78,8 +78,13 @@ object QuestionFixtureFactory {
         return mockQuestion
     }
 
+    /**
+     * 테스트용 선택지 목록 생성 메서드
+     * @param contents 기본값 = listOf("1", "2", "3")
+     * @param isAllowOther 기본값 = true
+     * */
     fun createChoices(
-        contents: List<String>,
-        isAllowOther: Boolean,
+        contents: List<String> = CONTENTS,
+        isAllowOther: Boolean = true,
     ) = Choices(contents.map { Choice.Standard(it) }, isAllowOther)
 }
