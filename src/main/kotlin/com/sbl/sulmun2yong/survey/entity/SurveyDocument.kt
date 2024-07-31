@@ -9,7 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextResponseQuestion
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -138,7 +138,7 @@ data class SurveyDocument(
                     choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.TEXT_RESPONSE ->
-                StandardTextResponseQuestion(
+                StandardTextQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,

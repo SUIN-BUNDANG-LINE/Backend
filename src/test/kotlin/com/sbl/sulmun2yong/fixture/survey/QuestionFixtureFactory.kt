@@ -1,11 +1,11 @@
 package com.sbl.sulmun2yong.fixture.survey
 
-import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
+import com.sbl.sulmun2yong.survey.domain.question.TextQuestion
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextResponseQuestion
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
@@ -20,7 +20,7 @@ object QuestionFixtureFactory {
     fun createTextResponseQuestion(
         id: UUID = UUID.randomUUID(),
         isRequired: Boolean = true,
-    ) = StandardTextResponseQuestion(
+    ) = StandardTextQuestion(
         id = id,
         title = TITLE + id,
         description = DESCRIPTION + id,
@@ -69,8 +69,8 @@ object QuestionFixtureFactory {
         id: UUID = UUID.randomUUID(),
         isRequired: Boolean = true,
         isResponseValid: Boolean = true,
-    ): TextResponseQuestion {
-        val mockQuestion = mock<TextResponseQuestion>()
+    ): TextQuestion {
+        val mockQuestion = mock<TextQuestion>()
         `when`(mockQuestion.id).thenReturn(id)
         `when`(mockQuestion.isRequired).thenReturn(isRequired)
         `when`(mockQuestion.isValidResponse(any())).thenReturn(isResponseValid)
