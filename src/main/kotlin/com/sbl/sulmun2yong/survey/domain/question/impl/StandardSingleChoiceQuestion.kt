@@ -1,5 +1,7 @@
-package com.sbl.sulmun2yong.survey.domain.question
+package com.sbl.sulmun2yong.survey.domain.question.impl
 
+import com.sbl.sulmun2yong.survey.domain.question.QuestionType
+import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import java.util.UUID
 

@@ -5,11 +5,11 @@ import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
-import com.sbl.sulmun2yong.survey.domain.question.StandardMultipleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.StandardSingleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.StandardTextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section

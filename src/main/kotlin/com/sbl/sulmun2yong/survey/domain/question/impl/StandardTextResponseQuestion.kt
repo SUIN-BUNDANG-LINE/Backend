@@ -1,5 +1,7 @@
-package com.sbl.sulmun2yong.survey.domain.question
+package com.sbl.sulmun2yong.survey.domain.question.impl
 
+import com.sbl.sulmun2yong.survey.domain.question.QuestionType
+import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
 import java.util.UUID
 
 /** 일반 주관식 질문 */
