@@ -47,7 +47,7 @@ data class Survey(
             expectedSectionId = section.findNextSectionId(sectionResponse)
         }
         // 모든 응답을 확인한 뒤 예상 섹션 ID가 종료 섹션 ID인지 확인
-        require(expectedSectionId.isEnd) { throw InvalidSurveyResponseException() }
+        require(expectedSectionId is SectionId.End) { throw InvalidSurveyResponseException() }
     }
 
     fun getRewardCount() = rewards.sumOf { it.count }

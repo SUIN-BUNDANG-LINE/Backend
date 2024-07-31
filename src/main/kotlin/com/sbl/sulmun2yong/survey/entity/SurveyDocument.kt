@@ -69,7 +69,7 @@ data class SurveyDocument(
     )
 
     fun toDomain(): Survey {
-        val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
+        val sectionIds = SectionIds(this.sections.map { SectionId.Standard(it.sectionId) })
         return Survey(
             id = this.id,
             title = this.title,
@@ -127,7 +127,7 @@ data class SurveyDocument(
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
-                    choices = Choices.of(contents = this.choices ?: listOf(), isAllowOther = isAllowOther),
+                    choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.MULTIPLE_CHOICE ->
                 StandardMultipleChoiceQuestion(
@@ -135,7 +135,7 @@ data class SurveyDocument(
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
-                    choices = Choices.of(contents = this.choices ?: listOf(), isAllowOther = isAllowOther),
+                    choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.TEXT_RESPONSE ->
                 StandardTextResponseQuestion(

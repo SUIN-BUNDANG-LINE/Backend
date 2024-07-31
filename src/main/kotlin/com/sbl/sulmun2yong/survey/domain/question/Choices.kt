@@ -11,20 +11,10 @@ data class Choices(
         if (standardChoices.size != standardChoices.distinct().size) throw InvalidChoiceException()
     }
 
-    companion object {
-        fun of(
-            contents: List<String>,
-            isAllowOther: Boolean,
-        ) = Choices(
-            standardChoices = contents.map { Choice.Standard(it) },
-            isAllowOther = isAllowOther,
-        )
-    }
-
     fun isContains(responseDetail: ResponseDetail): Boolean {
         if (responseDetail.isOther) return isAllowOther
         return standardChoices.contains(Choice.Standard(responseDetail.content))
     }
 
-    fun getChoiceSet() = if (isAllowOther) setOf(standardChoices + Choice.Other) else setOf(standardChoices)
+    fun getChoiceSet() = if (isAllowOther) standardChoices.toSet() + Choice.Other else standardChoices.toSet()
 }

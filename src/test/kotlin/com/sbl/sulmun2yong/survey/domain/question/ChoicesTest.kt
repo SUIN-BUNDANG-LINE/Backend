@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createChoices
 import com.sbl.sulmun2yong.survey.exception.InvalidChoiceException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -13,8 +14,8 @@ class ChoicesTest {
         val standardChoiceList = contents.map { Choice.Standard(it) }
 
         // when
-        val allowOtherChoices = Choices.of(contents = contents, isAllowOther = true)
-        val notAllowOtherChoices = Choices.of(contents = contents, isAllowOther = false)
+        val allowOtherChoices = createChoices(contents, true)
+        val notAllowOtherChoices = createChoices(contents, false)
 
         // then
         with(allowOtherChoices) {
@@ -40,7 +41,7 @@ class ChoicesTest {
         val duplicatedContents2 = listOf("3", "3")
 
         // when, then
-        assertThrows<InvalidChoiceException> { Choices.of(duplicatedContents1, true) }
-        assertThrows<InvalidChoiceException> { Choices.of(duplicatedContents2, false) }
+        assertThrows<InvalidChoiceException> { createChoices(duplicatedContents1, true) }
+        assertThrows<InvalidChoiceException> { createChoices(duplicatedContents2, false) }
     }
 }

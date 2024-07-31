@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.fixture.survey
 
+import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.Choices
 import com.sbl.sulmun2yong.survey.domain.question.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.StandardSingleChoiceQuestion
@@ -14,7 +15,7 @@ object QuestionFixtureFactory {
     const val TITLE = "질문 제목"
     const val DESCRIPTION = "질문 설명"
     private val CONTENTS = listOf("a", "b", "c")
-    val CHOICES = Choices.of(contents = CONTENTS, isAllowOther = true)
+    val CHOICES = Choices(CONTENTS.map { Choice.Standard(it) }, true)
 
     fun createTextResponseQuestion(
         id: UUID = UUID.randomUUID(),
@@ -77,8 +78,8 @@ object QuestionFixtureFactory {
         return mockQuestion
     }
 
-    private fun createChoices(
+    fun createChoices(
         contents: List<String>,
         isAllowOther: Boolean,
-    ) = Choices.of(contents = contents, isAllowOther = isAllowOther)
+    ) = Choices(contents.map { Choice.Standard(it) }, isAllowOther)
 }
