@@ -1,8 +1,9 @@
 package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.survey.domain.question.Choices
-import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.StandardMultipleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.StandardSingleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.StandardTextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
@@ -18,7 +19,7 @@ object QuestionFixtureFactory {
     fun createTextResponseQuestion(
         id: UUID = UUID.randomUUID(),
         isRequired: Boolean = true,
-    ) = TextResponseQuestion(
+    ) = StandardTextResponseQuestion(
         id = id,
         title = TITLE + id,
         description = DESCRIPTION + id,
@@ -30,7 +31,7 @@ object QuestionFixtureFactory {
         isRequired: Boolean = true,
         isAllowOther: Boolean = true,
         contents: List<String> = CONTENTS,
-    ) = SingleChoiceQuestion(
+    ) = StandardSingleChoiceQuestion(
         id = id,
         title = TITLE + id,
         description = DESCRIPTION + id,
@@ -43,7 +44,7 @@ object QuestionFixtureFactory {
         isRequired: Boolean = true,
         isAllowOther: Boolean = true,
         contents: List<String> = CONTENTS,
-    ) = MultipleChoiceQuestion(
+    ) = StandardMultipleChoiceQuestion(
         id = id,
         title = TITLE + id,
         description = DESCRIPTION + id,
@@ -55,7 +56,7 @@ object QuestionFixtureFactory {
         id: UUID = UUID.randomUUID(),
         isRequired: Boolean = true,
         choices: Choices = createChoices(CONTENTS, true),
-    ) = MultipleChoiceQuestion(
+    ) = StandardMultipleChoiceQuestion(
         id = id,
         title = TITLE + id,
         description = DESCRIPTION + id,

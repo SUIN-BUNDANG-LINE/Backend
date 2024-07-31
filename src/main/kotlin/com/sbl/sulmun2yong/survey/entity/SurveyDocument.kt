@@ -6,10 +6,10 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.Choices
-import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
-import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
+import com.sbl.sulmun2yong.survey.domain.question.StandardMultipleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.StandardSingleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.StandardTextResponseQuestion
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
 import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -122,7 +122,7 @@ data class SurveyDocument(
     private fun QuestionSubDocument.toDomain() =
         when (this.type) {
             QuestionType.SINGLE_CHOICE ->
-                SingleChoiceQuestion(
+                StandardSingleChoiceQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,
@@ -130,7 +130,7 @@ data class SurveyDocument(
                     choices = Choices.of(contents = this.choices ?: listOf(), isAllowOther = isAllowOther),
                 )
             QuestionType.MULTIPLE_CHOICE ->
-                MultipleChoiceQuestion(
+                StandardMultipleChoiceQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,
@@ -138,7 +138,7 @@ data class SurveyDocument(
                     choices = Choices.of(contents = this.choices ?: listOf(), isAllowOther = isAllowOther),
                 )
             QuestionType.TEXT_RESPONSE ->
-                TextResponseQuestion(
+                StandardTextResponseQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,
