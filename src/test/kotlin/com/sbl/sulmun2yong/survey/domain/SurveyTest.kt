@@ -123,9 +123,21 @@ class SurveyTest {
                 ),
             )
 
+        val surveyResponse3 =
+            SurveyResponse(
+                id,
+                listOf(
+                    SectionResponse(SectionId.Standard(sectionId1), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId2), listOf()),
+                ),
+            )
+
         // when, then
         assertDoesNotThrow { survey.validateResponse(surveyResponse1) }
+        // 잘못된 섹션 ID로 응답을 보낸 경우
         assertThrows<InvalidSurveyResponseException> { survey.validateResponse(surveyResponse2) }
+        // 마지막 섹션을 응답하지 않은 경우
+        assertThrows<InvalidSurveyResponseException> { survey.validateResponse(surveyResponse3) }
     }
 
     @Test

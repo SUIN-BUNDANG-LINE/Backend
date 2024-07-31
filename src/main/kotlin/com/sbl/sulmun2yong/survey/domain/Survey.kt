@@ -23,8 +23,6 @@ data class Survey(
     val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
-    private val sectionIds = SectionIds.from(sections.map { it.id })
-
     init {
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
@@ -60,5 +58,8 @@ data class Survey(
 
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
-    private fun isSectionIdsValid() = sections.all { it.sectionIds == sectionIds }
+    private fun isSectionIdsValid(): Boolean {
+        val sectionIds = SectionIds.from(sections.map { it.id })
+        return sections.all { it.sectionIds == sectionIds }
+    }
 }
