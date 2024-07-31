@@ -4,27 +4,26 @@ import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMockQuest
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMultipleChoiceQuestion
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createSingleChoiceQuestion
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createTextResponseQuestion
+import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createMockSetByChoiceRouting
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.DESCRIPTION
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createSection
+import com.sbl.sulmun2yong.fixture.survey.SurveyConstFactory.CONTENTS
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertEquals
 
 class SectionTest {
-    private val a = "a"
-    private val b = "b"
-    private val c = "c"
-    private val contentsABC = listOf(a, b, c)
-
     private val textResponseQuestionId = UUID.randomUUID()
     private val requiredTextResponseQuestion = createTextResponseQuestion(textResponseQuestionId)
     private val textResponseQuestion = createTextResponseQuestion(id = textResponseQuestionId, isRequired = false)
@@ -33,18 +32,18 @@ class SectionTest {
     private val requiredAllowOtherSingleChoiceQuestion =
         createSingleChoiceQuestion(
             id = singleChoiceQuestionId,
-            contents = contentsABC,
+            contents = CONTENTS,
         )
     private val allowOtherSingleChoiceQuestion =
         createSingleChoiceQuestion(
             id = singleChoiceQuestionId,
-            contents = contentsABC,
+            contents = CONTENTS,
             isRequired = false,
         )
     private val requiredSingleChoiceQuestion =
         createSingleChoiceQuestion(
             id = singleChoiceQuestionId,
-            contents = contentsABC,
+            contents = CONTENTS,
             isAllowOther = false,
         )
 
@@ -53,11 +52,11 @@ class SectionTest {
         createMultipleChoiceQuestion(
             id = multipleChoiceQuestionId,
             isRequired = false,
-            contents = contentsABC,
+            contents = CONTENTS,
         )
 
     @Test
-    fun `번호순 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
+    fun `섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
         val routeDetails = RoutingStrategy.NumericalOrder
@@ -67,7 +66,7 @@ class SectionTest {
         val section =
             createSection(
                 id = id,
-                routeDetails = routeDetails,
+                routingStrategy = routeDetails,
                 questions = questions,
             )
 
@@ -81,93 +80,129 @@ class SectionTest {
         }
     }
 
-    // @Test
-    // fun `선택지 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
-    //     // keyQuestionId에 해당하는 질문이 있어야한다.
-    //     // 해당 질문의 유형이 SINGLE_CHOICE고, 필수 응답 질문이여야 한다.
-    //     // sectionRouteConfigs에 해당 질문의 선택지, 기타 응답에 대한 라우팅이 설정되어 있어야 한다.
-    //
-    //     assertDoesNotThrow {
-    //         createSection(
-    //             routeDetails = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
-    //             questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    //
-    //     // keyQuestionId에 해당하는 질문이 없으면 예외를 반환한다.
-    //     assertThrows<InvalidSectionException> {
-    //         createSection(
-    //             routeDetails = createMockSetByChoiceRouting(),
-    //             questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    //
-    //     // 유형이 SINGLE_CHOICE가 아니면 예외를 반환한다.
-    //     assertThrows<InvalidSectionException> {
-    //         createSection(
-    //             routeDetails = createMockSetByChoiceRouting(keyQuestionId = multipleChoiceQuestionId),
-    //             questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    //
-    //     // 필수 응답 질문이 아니면 예외를 반환한다.
-    //     assertThrows<InvalidSectionException> {
-    //         createSection(
-    //             routeDetails = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
-    //             questions = listOf(requiredTextResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    //
-    //     // 선택지가 옳바르지 않으면 예외를 반환한다(유효하지 않은 선택지 내용이 포함됨).
-    //     assertThrows<InvalidSectionException> {
-    //         createSection(
-    //             routeDetails =
-    //                 createMockSetByChoiceRouting(
-    //                     keyQuestionId = singleChoiceQuestionId,
-    //                     choiceSet = createChoiceSet(listOf(a, b, c, "invalid")),
-    //                 ),
-    //             questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    //
-    //     // 선택지가 옳바르지 않으면 예외를 반환한다(선택지 일부가 누락됨).
-    //     assertThrows<InvalidSectionException> {
-    //         createSection(
-    //             routeDetails =
-    //                 createMockSetByChoiceRouting(
-    //                     keyQuestionId = singleChoiceQuestionId,
-    //                     choiceSet = createChoiceSet(listOf(a, b)),
-    //                 ),
-    //             questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    //
-    //     // 선택지가 옳바르지 않으면 예외를 반환한다(isAllowOther가 false인데 null 선택지 포함).
-    //     assertThrows<InvalidSectionException> {
-    //         createSection(
-    //             routeDetails = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
-    //             questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //     }
-    // }
+    @Test
+    fun `선택지 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
+        // keyQuestionId에 해당하는 질문이 있어야한다.
+        // 해당 질문의 유형이 SINGLE_CHOICE고, 필수 응답 질문이여야 한다.
+        // sectionRouteConfigs에 해당 질문의 선택지, 기타 응답에 대한 라우팅이 설정되어 있어야 한다.
+
+        assertDoesNotThrow {
+            createSection(
+                routingStrategy = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId, sectionIds = listOf()),
+                questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+
+        // keyQuestionId에 해당하는 질문이 없으면 예외를 반환한다.
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy = createMockSetByChoiceRouting(),
+                questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+
+        // SingleChoiceQuestion이 아니면 예외를 반환한다.
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy = createMockSetByChoiceRouting(keyQuestionId = multipleChoiceQuestionId),
+                questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+
+        // 필수 응답 질문이 아니면 예외를 반환한다.
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
+                questions = listOf(requiredTextResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+
+        // 선택지가 옳바르지 않으면 예외를 반환한다(유효하지 않은 선택지 내용이 포함됨).
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy =
+                    createMockSetByChoiceRouting(
+                        keyQuestionId = singleChoiceQuestionId,
+                        choiceSet = createChoiceSet(CONTENTS + "invalid"),
+                    ),
+                questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+
+        // 선택지가 옳바르지 않으면 예외를 반환한다(선택지 일부가 누락됨).
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy =
+                    createMockSetByChoiceRouting(
+                        keyQuestionId = singleChoiceQuestionId,
+                        choiceSet = createChoiceSet(listOf(CONTENTS[0], CONTENTS[1])),
+                    ),
+                questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+
+        // 선택지가 옳바르지 않으면 예외를 반환한다(isAllowOther가 false인데 null 선택지 포함).
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
+                questions = listOf(requiredTextResponseQuestion, requiredSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+        }
+    }
 
     @Test
-    fun `유저 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
+    fun `섹션 라우팅으로 나올 수 있는 섹션들이 모두 설문 내에 존재하는 섹션이여야한다`() {
         // given
-        val id = UUID.randomUUID()
-        val routeDetails = RoutingStrategy.SetByUser(SectionId.End)
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+        val stdId1 = SectionId.Standard(id1)
+        val stdId2 = SectionId.Standard(id2)
+
+        val setByUser = RoutingStrategy.SetByUser(stdId1)
+        val setByChoice =
+            createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId, sectionIds = listOf(stdId1, stdId2, SectionId.End))
+        val numericalOrder = RoutingStrategy.NumericalOrder
         val questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
 
-        // when
-        val section = createSection(id = id, routeDetails = routeDetails, questions = questions, sectionIds = listOf(id))
+        // when, then
+        assertDoesNotThrow {
+            createSection(
+                routingStrategy = setByUser,
+                questions = questions,
+                sectionIds = listOf(id1, id2),
+            )
+        }
 
-        // then
-        with(section) {
-            assertEquals(SectionId.Standard(id), this.id)
-            assertEquals(TITLE + id, this.title)
-            assertEquals(DESCRIPTION + id, this.description)
-            assertEquals(routeDetails, this.routingStrategy)
-            assertEquals(questions, this.questions)
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy = setByUser,
+                questions = questions,
+                sectionIds = listOf(id2),
+            )
+        }
+
+        assertDoesNotThrow {
+            createSection(
+                routingStrategy = setByChoice,
+                questions = questions,
+                sectionIds = listOf(id1, id2, UUID.randomUUID()),
+            )
+        }
+
+        assertThrows<InvalidSectionException> {
+            createSection(
+                routingStrategy = setByChoice,
+                questions = questions,
+                sectionIds = listOf(id2, UUID.randomUUID()),
+            )
+        }
+
+        assertDoesNotThrow {
+            createSection(
+                routingStrategy = numericalOrder,
+                questions = questions,
+                sectionIds = listOf(id1),
+            )
         }
     }
 
@@ -326,7 +361,7 @@ class SectionTest {
         val section =
             createSection(
                 id = currentSectionId,
-                routeDetails = RoutingStrategy.SetByUser(SectionId.Standard(nextSectionId)),
+                routingStrategy = RoutingStrategy.SetByUser(SectionId.Standard(nextSectionId)),
                 questions = listOf(textResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
                 sectionIds = listOf(currentSectionId, nextSectionId),
             )

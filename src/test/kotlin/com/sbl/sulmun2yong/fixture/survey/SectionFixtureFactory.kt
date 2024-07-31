@@ -18,14 +18,14 @@ object SectionFixtureFactory {
         id: UUID = UUID.randomUUID(),
         title: String = TITLE,
         description: String = DESCRIPTION,
-        routeDetails: RoutingStrategy = RoutingStrategy.NumericalOrder,
+        routingStrategy: RoutingStrategy = RoutingStrategy.NumericalOrder,
         questions: List<Question>,
         sectionIds: List<UUID> = listOf(id),
     ) = Section(
         id = SectionId.Standard(id),
         title = title + id,
         description = description + id,
-        routingStrategy = routeDetails,
+        routingStrategy = routingStrategy,
         questions = questions,
         sectionIds = SectionIds.from(sectionIds.map { SectionId.Standard(it) }),
     )
