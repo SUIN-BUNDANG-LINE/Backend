@@ -16,6 +16,6 @@ interface Question {
     /** 질문에 유효한 응답인지 검증 */
     fun isValidResponse(questionResponse: QuestionResponse): Boolean
 
-    /** 선택지 라우팅의 keyQuestion이 될 수 있는지 판단, KeyableQuestion을 제외하고 전부 false */
-    fun canBeKeyQuestion() = false
+    /** 선택지 라우팅의 keyQuestion이 될 수 있는지 판단 */
+    fun canBeKeyQuestion(): Boolean
 }
