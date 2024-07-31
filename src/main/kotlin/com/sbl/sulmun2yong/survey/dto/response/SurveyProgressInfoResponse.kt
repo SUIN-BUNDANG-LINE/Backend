@@ -4,8 +4,8 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
-import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import java.util.UUID
@@ -28,16 +28,16 @@ data class SurveyProgressInfoResponse(
                 sectionId = this.id.value,
                 title = this.title,
                 description = this.description,
-                routeDetails = this.routeDetails.toDto(),
+                routeDetails = this.routingStrategy.toDto(),
                 questions = this.questions.map { it.toDto() },
             )
 
-        private fun RouteDetails.toDto() =
+        private fun RoutingStrategy.toDto() =
             RouteDetailsInfo(
                 type = this.type,
-                nextSectionId = if (this is RouteDetails.SetByUserRouting) this.nextSectionId.value else null,
-                keyQuestionId = if (this is RouteDetails.SetByChoiceRouting) this.keyQuestionId else null,
-                sectionRouteConfigs = if (this is RouteDetails.SetByChoiceRouting) this.sectionRouteConfigs.toDto() else null,
+                nextSectionId = if (this is RoutingStrategy.SetByUser) this.nextSectionId.value else null,
+                keyQuestionId = if (this is RoutingStrategy.SetByChoice) this.keyQuestionId else null,
+                sectionRouteConfigs = if (this is RoutingStrategy.SetByChoice) this.routingMap.toDto() else null,
             )
 
         private fun Map<Choice, SectionId>.toDto() =
@@ -69,7 +69,7 @@ data class SurveyProgressInfoResponse(
     )
 
     data class RouteDetailsInfo(
-        val type: SectionRouteType,
+        val type: RoutingType,
         val nextSectionId: UUID?,
         val keyQuestionId: UUID?,
         val sectionRouteConfigs: List<SectionRouteConfigInfo>?,

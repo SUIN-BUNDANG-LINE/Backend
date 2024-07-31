@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.survey.domain.question.Choice
-import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
@@ -12,9 +12,9 @@ object RoutingFixtureFactory {
     fun createSetByChoiceRouting(
         keyQuestionId: UUID = UUID.randomUUID(),
         contentIdMap: Map<String?, UUID?> = mapOf("a" to UUID.randomUUID(), "b" to UUID.randomUUID()),
-    ) = RouteDetails.SetByChoiceRouting(
+    ) = RoutingStrategy.SetByChoice(
         keyQuestionId = keyQuestionId,
-        sectionRouteConfigs = createSectionRouteConfigs(contentIdMap),
+        routingMap = createSectionRouteConfigs(contentIdMap),
     )
 
     fun createSectionRouteConfigs(contentIdMap: Map<String?, UUID?>) =
@@ -31,8 +31,8 @@ object RoutingFixtureFactory {
                 Choice.Other,
             ),
         sectionIds: List<SectionId>,
-    ): RouteDetails.SetByChoiceRouting {
-        val mockSetByChoiceRouting = mock<RouteDetails.SetByChoiceRouting>()
+    ): RoutingStrategy.SetByChoice {
+        val mockSetByChoiceRouting = mock<RoutingStrategy.SetByChoice>()
         `when`(mockSetByChoiceRouting.keyQuestionId).thenReturn(keyQuestionId)
         `when`(mockSetByChoiceRouting.getNextSectionIds()).thenReturn(sectionIds)
         `when`(mockSetByChoiceRouting.findNextSectionId(any())).thenReturn(nextSectionId)

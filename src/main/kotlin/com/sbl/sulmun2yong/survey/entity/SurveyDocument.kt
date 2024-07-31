@@ -10,8 +10,8 @@ import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.StandardTextResponseQuestion
-import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -46,7 +46,7 @@ data class SurveyDocument(
         val sectionId: UUID,
         val title: String,
         val description: String,
-        val routeType: SectionRouteType,
+        val routeType: RoutingType,
         val nextSectionId: UUID?,
         val keyQuestionId: UUID?,
         val sectionRouteConfigs: List<SectionRouteConfigSubDocument>?,
@@ -98,20 +98,20 @@ data class SurveyDocument(
             id = SectionId.Standard(this.sectionId),
             title = this.title,
             description = this.description,
-            routeDetails = this.getRouteDetails(),
+            routingStrategy = this.getRouteDetails(),
             questions = this.questions.map { it.toDomain() },
             sectionIds = sectionIds,
         )
 
     private fun SectionSubDocument.getRouteDetails() =
         when (this.routeType) {
-            SectionRouteType.NUMERICAL_ORDER -> RouteDetails.NumericalOrderRouting
-            SectionRouteType.SET_BY_CHOICE ->
-                RouteDetails.SetByChoiceRouting(
+            RoutingType.NUMERICAL_ORDER -> RoutingStrategy.NumericalOrder
+            RoutingType.SET_BY_CHOICE ->
+                RoutingStrategy.SetByChoice(
                     keyQuestionId = this.keyQuestionId!!,
-                    sectionRouteConfigs = this.sectionRouteConfigs?.toDomain() ?: emptyMap(),
+                    routingMap = this.sectionRouteConfigs?.toDomain() ?: emptyMap(),
                 )
-            SectionRouteType.SET_BY_USER -> RouteDetails.SetByUserRouting(SectionId.from(this.nextSectionId))
+            RoutingType.SET_BY_USER -> RoutingStrategy.SetByUser(SectionId.from(this.nextSectionId))
         }
 
     private fun List<SectionRouteConfigSubDocument>.toDomain(): Map<Choice, SectionId> =

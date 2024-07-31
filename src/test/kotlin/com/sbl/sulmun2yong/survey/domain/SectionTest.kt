@@ -10,7 +10,7 @@ import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createSection
 import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
-import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
@@ -60,7 +60,7 @@ class SectionTest {
     fun `번호순 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val routeDetails = RouteDetails.NumericalOrderRouting
+        val routeDetails = RoutingStrategy.NumericalOrder
         val questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
 
         // when
@@ -76,7 +76,7 @@ class SectionTest {
             assertEquals(SectionId.Standard(id), this.id)
             assertEquals(TITLE + id, this.title)
             assertEquals(DESCRIPTION + id, this.description)
-            assertEquals(routeDetails, this.routeDetails)
+            assertEquals(routeDetails, this.routingStrategy)
             assertEquals(questions, this.questions)
         }
     }
@@ -155,7 +155,7 @@ class SectionTest {
     fun `유저 기반 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {
         // given
         val id = UUID.randomUUID()
-        val routeDetails = RouteDetails.SetByUserRouting(SectionId.End)
+        val routeDetails = RoutingStrategy.SetByUser(SectionId.End)
         val questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
 
         // when
@@ -166,7 +166,7 @@ class SectionTest {
             assertEquals(SectionId.Standard(id), this.id)
             assertEquals(TITLE + id, this.title)
             assertEquals(DESCRIPTION + id, this.description)
-            assertEquals(routeDetails, this.routeDetails)
+            assertEquals(routeDetails, this.routingStrategy)
             assertEquals(questions, this.questions)
         }
     }
@@ -326,7 +326,7 @@ class SectionTest {
         val section =
             createSection(
                 id = currentSectionId,
-                routeDetails = RouteDetails.SetByUserRouting(SectionId.Standard(nextSectionId)),
+                routeDetails = RoutingStrategy.SetByUser(SectionId.Standard(nextSectionId)),
                 questions = listOf(textResponseQuestion, allowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
                 sectionIds = listOf(currentSectionId, nextSectionId),
             )

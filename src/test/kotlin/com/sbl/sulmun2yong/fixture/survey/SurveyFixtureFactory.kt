@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.fixture.survey
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -34,7 +34,7 @@ object SurveyFixtureFactory {
                     id = id,
                     title = "",
                     description = "",
-                    routeDetails = RouteDetails.NumericalOrderRouting,
+                    routingStrategy = RoutingStrategy.NumericalOrder,
                     questions = emptyList(),
                     sectionIds = SectionIds(listOf(id, SectionId.End)),
                 ),

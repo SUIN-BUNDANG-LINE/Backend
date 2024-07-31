@@ -11,7 +11,7 @@ import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertEquals
 
-class RouteDetailsTest {
+class RoutingStrategyTest {
     private val contentIdMap = mapOf("a" to UUID.randomUUID(), "b" to UUID.randomUUID(), null to UUID.randomUUID())
     private val keyQuestionId = UUID.randomUUID()
     private val setByChoice = createSetByChoiceRouting(keyQuestionId, contentIdMap)
@@ -19,10 +19,10 @@ class RouteDetailsTest {
     @Test
     fun `NumericalOrder를 생성하면 정보가 올바르게 설정된다`() {
         // given, when
-        val numericalOrder = RouteDetails.NumericalOrderRouting
+        val numericalOrder = RoutingStrategy.NumericalOrder
 
         // then
-        assertEquals(SectionRouteType.NUMERICAL_ORDER, numericalOrder.type)
+        assertEquals(RoutingType.NUMERICAL_ORDER, numericalOrder.type)
     }
 
     // @Test
@@ -43,10 +43,10 @@ class RouteDetailsTest {
     fun `SetByUser를 생성하면 정보가 올바르게 설정된다`() {
         // given, when
         val sectionId = SectionId.Standard(UUID.randomUUID())
-        val setByUser = RouteDetails.SetByUserRouting(sectionId)
+        val setByUser = RoutingStrategy.SetByUser(sectionId)
 
         // then
-        assertEquals(SectionRouteType.SET_BY_USER, setByUser.type)
+        assertEquals(RoutingType.SET_BY_USER, setByUser.type)
         assertEquals(sectionId, setByUser.nextSectionId)
     }
 
@@ -74,13 +74,13 @@ class RouteDetailsTest {
         val sectionRouteConfigs = createSectionRouteConfigs(contentIdMap)
 
         // when
-        val setByChoice = RouteDetails.SetByChoiceRouting(keyQuestionId, sectionRouteConfigs)
+        val setByChoice = RoutingStrategy.SetByChoice(keyQuestionId, sectionRouteConfigs)
 
         // then
         with(setByChoice) {
-            assertEquals(SectionRouteType.SET_BY_CHOICE, setByChoice.type)
+            assertEquals(RoutingType.SET_BY_CHOICE, setByChoice.type)
             assertEquals(keyQuestionId, setByChoice.keyQuestionId)
-            assertEquals(sectionRouteConfigs, this.sectionRouteConfigs)
+            assertEquals(sectionRouteConfigs, this.routingMap)
         }
     }
 

@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.survey.domain.question.Question
-import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -18,14 +18,14 @@ object SectionFixtureFactory {
         id: UUID = UUID.randomUUID(),
         title: String = TITLE,
         description: String = DESCRIPTION,
-        routeDetails: RouteDetails = RouteDetails.NumericalOrderRouting,
+        routeDetails: RoutingStrategy = RoutingStrategy.NumericalOrder,
         questions: List<Question>,
         sectionIds: List<UUID> = listOf(id),
     ) = Section(
         id = SectionId.Standard(id),
         title = title + id,
         description = description + id,
-        routeDetails = routeDetails,
+        routingStrategy = routeDetails,
         questions = questions,
         sectionIds = SectionIds.from(sectionIds.map { SectionId.Standard(it) }),
     )

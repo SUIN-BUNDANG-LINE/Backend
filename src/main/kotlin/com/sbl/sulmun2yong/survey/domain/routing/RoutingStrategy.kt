@@ -7,36 +7,36 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import java.util.UUID
 
-sealed class RouteDetails(
-    val type: SectionRouteType,
+sealed class RoutingStrategy(
+    val type: RoutingType,
 ) {
     abstract fun getNextSectionIds(): List<SectionId>
 
-    data class SetByUserRouting(
+    data class SetByUser(
         val nextSectionId: SectionId,
-    ) : RouteDetails(SectionRouteType.SET_BY_USER) {
+    ) : RoutingStrategy(RoutingType.SET_BY_USER) {
         override fun getNextSectionIds() = listOf(nextSectionId)
     }
 
-    data class SetByChoiceRouting(
+    data class SetByChoice(
         val keyQuestionId: UUID,
-        val sectionRouteConfigs: Map<Choice, SectionId>,
-    ) : RouteDetails(SectionRouteType.SET_BY_CHOICE) {
-        override fun getNextSectionIds() = sectionRouteConfigs.values.toList()
+        val routingMap: Map<Choice, SectionId>,
+    ) : RoutingStrategy(RoutingType.SET_BY_CHOICE) {
+        override fun getNextSectionIds() = routingMap.values.toList()
 
         fun findNextSectionId(sectionResponse: SectionResponse): SectionId {
             val keyResponseDetail = sectionResponse.findKeyResponse() ?: throw InvalidSectionResponseException()
-            return sectionRouteConfigs[keyResponseDetail.toChoice()] ?: throw InvalidSectionResponseException()
+            return routingMap[keyResponseDetail.toChoice()] ?: throw InvalidSectionResponseException()
         }
 
-        fun getChoiceSet() = sectionRouteConfigs.keys
+        fun getChoiceSet() = routingMap.keys
 
         private fun SectionResponse.findKeyResponse() = this.find { it.questionId == keyQuestionId && it.size == 1 }?.first()
 
         private fun ResponseDetail.toChoice() = if (isOther) Choice.Other else Choice.Standard(content)
     }
 
-    data object NumericalOrderRouting : RouteDetails(SectionRouteType.NUMERICAL_ORDER) {
+    data object NumericalOrder : RoutingStrategy(RoutingType.NUMERICAL_ORDER) {
         override fun getNextSectionIds() = emptyList<SectionId>()
     }
 }
