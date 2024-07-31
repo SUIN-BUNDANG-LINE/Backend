@@ -19,7 +19,7 @@ import java.util.UUID
 class DrawingBoardController(
     private val drawingBoardService: DrawingBoardService,
 ) : DrawingBoardApiDoc {
-    @GetMapping("/{surveyId}")
+    @GetMapping("/info/{surveyId}")
     override fun getDrawingBoard(
         @PathVariable surveyId: UUID,
     ): ResponseEntity<DrawingBoardResponse> {
