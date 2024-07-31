@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import java.util.UUID
 
 @Tag(name = "DrawingBoard", description = "추첨 관련 API")
+@RequestMapping("/api/v1/drawing-board")
 interface DrawingBoardApiDoc {
     @Operation(summary = "추첨 보드 정보 조회")
-    @GetMapping("/api/v1/drawing-board/info/{surveyId}")
+    @GetMapping("/info/{surveyId}")
     fun getDrawingBoard(
         @PathVariable surveyId: UUID,
     ): ResponseEntity<DrawingBoardResponse>
