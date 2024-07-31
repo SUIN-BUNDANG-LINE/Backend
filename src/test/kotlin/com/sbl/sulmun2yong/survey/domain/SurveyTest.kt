@@ -29,6 +29,34 @@ class SurveyTest {
     private val id = UUID.randomUUID()
 
     @Test
+    fun `설문의 응답을 생성하면 정보들이 설정된다`() {
+        // given
+        val sectionId = SectionId.Standard(UUID.randomUUID())
+        val id = UUID.randomUUID()
+        val sectionResponse1 = SectionResponse(sectionId, listOf())
+
+        // when
+        val surveyResponse = SurveyResponse(id, listOf(sectionResponse1))
+
+        // then
+        assertEquals(id, surveyResponse.surveyId)
+        assertEquals(listOf(sectionResponse1), surveyResponse)
+    }
+
+    @Test
+    fun `설문의 응답은 중복될 수 없다`() {
+        // given
+        val id = SectionId.Standard(UUID.randomUUID())
+        val sectionResponse1 = SectionResponse(id, listOf())
+        val sectionResponse2 = SectionResponse(id, listOf())
+
+        // when, then
+        assertThrows<InvalidSurveyResponseException> {
+            SurveyResponse(UUID.randomUUID(), listOf(sectionResponse1, sectionResponse2))
+        }
+    }
+
+    @Test
     fun `설문을 생성하면 설문의 정보들이 설정된다`() {
         // given, when
         val survey = createSurvey(id = id)

@@ -19,6 +19,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -56,6 +57,19 @@ class SectionTest {
             isRequired = false,
             contents = CONTENTS,
         )
+
+    @Test
+    fun `섹션의 응답은 중복될 수 없다`() {
+        // given
+        val id = UUID.randomUUID()
+        val questionResponse1 = QuestionResponse(id, listOf(ResponseDetail("a")))
+        val questionResponse2 = QuestionResponse(id, listOf(ResponseDetail("b")))
+
+        // when, then
+        assertThrows<InvalidSurveyResponseException> {
+            SectionResponse(SectionId.Standard(UUID.randomUUID()), listOf(questionResponse1, questionResponse2))
+        }
+    }
 
     @Test
     fun `섹션을 생성하면 올바르게 정보가 설정된다`() {
