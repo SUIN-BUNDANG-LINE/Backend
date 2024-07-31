@@ -22,11 +22,9 @@ data class Survey(
     val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
-    init {
-        validateSurvey()
-    }
+    private val sectionIds = SectionIds.from(sections.map { it.id })
 
-    private fun validateSurvey() {
+    init {
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
@@ -35,14 +33,15 @@ data class Survey(
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
-    // 설문의 응답 순서가 유효한지, 응답이 각 섹션에 유효한지 확인하는 메서드
+    /** 설문의 응답 순서가 유효한지, 응답이 각 섹션에 유효한지 확인하는 메서드 */
     fun validateResponse(surveyResponse: SurveyResponse) {
         // 확인할 응답의 예상 섹션 ID, 첫 응답의 섹션 ID는 첫 섹션의 ID
         var expectedSectionId: SectionId = sections.first().id
         for (sectionResponse in surveyResponse) {
             val responseSectionId = sectionResponse.sectionId
             require(expectedSectionId == responseSectionId) { throw InvalidSurveyResponseException() }
-            val section = findSectionById(responseSectionId) ?: throw InvalidSurveyResponseException()
+            // section.findNextSectionId()는 무조건 설문에 속한 섹션 ID를 반환하므로 responseSectionId에 해당하는 섹션은 무조건 존재함
+            val section = sections.first { it.id == responseSectionId }
             // 다음 섹션 ID를 찾아서 예상 섹션 ID로 설정
             expectedSectionId = section.findNextSectionId(sectionResponse)
         }
@@ -60,10 +59,5 @@ data class Survey(
 
     private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
-    private fun isSectionIdsValid(): Boolean {
-        val sectionIds = SectionIds.from(sections.map { it.id })
-        return sections.all { it.sectionIds == sectionIds }
-    }
-
-    private fun findSectionById(sectionId: SectionId.Standard) = sections.find { it.id == sectionId }
+    private fun isSectionIdsValid() = sections.all { it.sectionIds == sectionIds }
 }
