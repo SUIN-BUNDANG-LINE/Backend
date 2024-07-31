@@ -69,7 +69,7 @@ data class SurveyDocument(
     )
 
     fun toDomain(): Survey {
-        val sectionIds = SectionIds(this.sections.map { SectionId.Standard(it.sectionId) })
+        val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
         return Survey(
             id = this.id,
             title = this.title,
