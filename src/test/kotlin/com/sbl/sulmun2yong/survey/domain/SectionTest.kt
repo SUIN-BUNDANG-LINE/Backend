@@ -11,13 +11,11 @@ import com.sbl.sulmun2yong.survey.domain.question.Choice
 import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
 import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.routing.RouteDetails
-import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito.mockStatic
 import java.util.UUID
 import kotlin.test.assertEquals
 
@@ -57,28 +55,6 @@ class SectionTest {
             isRequired = false,
             contents = contentsABC,
         )
-
-    @Test
-    fun `기본 섹션을 생성할 수 있다`() {
-        // given
-        val id = UUID.randomUUID()
-
-        mockStatic(UUID::class.java).use { mockedUUID ->
-            mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(id)
-
-            // when
-            val section = Section.create()
-
-            // then
-            with(section) {
-                assertEquals(SectionId.Standard(id), this.id)
-                assertEquals("", this.title)
-                assertEquals("", this.description)
-                assertEquals(RouteDetails.NumericalOrderRouting, this.routeDetails)
-                assertEquals(emptyList(), this.questions)
-            }
-        }
-    }
 
     @Test
     fun `번호순 라우팅 방식의 섹션을 생성하면 올바르게 정보가 설정된다`() {

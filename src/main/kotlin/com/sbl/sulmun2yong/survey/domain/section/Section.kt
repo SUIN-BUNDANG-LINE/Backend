@@ -20,25 +20,15 @@ data class Section(
     }
 
     private fun validateSection() {
+        // 섹션 라우팅 방식이 선택지 기반이면 아래의 유효성 검증을 진행
         if (routeDetails is RouteDetails.SetByChoiceRouting) {
-            val keyQuestion = findKeyQuestion() ?: throw InvalidSectionException()
+            // keyQuestionId에 해당하는 질문이 섹션 내에 없으면 예외 발생
+            val keyQuestion = findKeyQuestion(routeDetails.keyQuestionId) ?: throw InvalidSectionException()
+            // 라우팅 설정의 선택지들과 keyQuestion의 선택지가 일치해야함
             require(keyQuestion.getChoiceSet() == routeDetails.getChoiceSet()) { throw InvalidSectionException() }
         }
+        // 섹션 라우팅으로 나올 수 있는 섹션들이 모두 설문 내에 존재하는 섹션이여야함
         require(sectionIds.isContainsAll(routeDetails.getNextSectionIds())) { throw InvalidSectionException() }
-    }
-
-    companion object {
-        fun create(): Section {
-            val id = UUID.randomUUID()
-            return Section(
-                id = SectionId.Standard(id),
-                title = "",
-                description = "",
-                routeDetails = RouteDetails.NumericalOrderRouting,
-                questions = emptyList(),
-                sectionIds = SectionIds(listOf(SectionId.Standard(id), SectionId.End)),
-            )
-        }
     }
 
     fun findNextSectionId(sectionResponse: SectionResponse): SectionId {
@@ -50,17 +40,16 @@ data class Section(
         }
     }
 
-    private fun findKeyQuestion(): SingleChoiceQuestion? {
-        val setByChoiceRouting = routeDetails as? RouteDetails.SetByChoiceRouting ?: return null
-        val question = questions.find { it.id == setByChoiceRouting.keyQuestionId } ?: return null
-        return if (question.canBeKeyQuestion()) question as SingleChoiceQuestion else null
-    }
+    private fun findKeyQuestion(keyQuestionId: UUID) =
+        questions.find { it.id == keyQuestionId && it.canBeKeyQuestion() } as? SingleChoiceQuestion
 
     private fun validateResponse(sectionResponse: SectionResponse) {
         questions.forEach { question ->
             val response = sectionResponse.find { it.questionId == question.id }
-            if (question.isRequired && response == null) throw InvalidSectionResponseException()
-            require(response == null || question.isValidResponse(response)) { throw InvalidSectionResponseException() }
+            // 질문에 해당하는 응답이 없는데, 필수 질문이라면 예외 발생
+            if (response == null && question.isRequired) throw InvalidSectionResponseException()
+            // 질문에 해당하는 응답이 있는데, 유효한 응답이 아니라면 예외 발생
+            if (response != null && !question.isValidResponse(response)) throw InvalidSectionResponseException()
         }
     }
 }
