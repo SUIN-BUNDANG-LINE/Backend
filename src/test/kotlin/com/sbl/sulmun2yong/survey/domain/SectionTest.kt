@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMockQuest
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMultipleChoiceQuestion
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createSingleChoiceQuestion
 import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createTextResponseQuestion
+import com.sbl.sulmun2yong.fixture.survey.ResponseFixtureFactory.createQuestionResponse
 import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createMockSetByChoiceRouting
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.DESCRIPTION
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.TITLE
@@ -15,6 +16,7 @@ import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionException
 import com.sbl.sulmun2yong.survey.exception.InvalidSectionResponseException
 import org.junit.jupiter.api.Test
@@ -77,6 +79,7 @@ class SectionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(routeDetails, this.routingStrategy)
             assertEquals(questions, this.questions)
+            assertEquals(SectionIds.from(listOf(SectionId.Standard(id))), this.sectionIds)
         }
     }
 
@@ -206,49 +209,49 @@ class SectionTest {
         }
     }
 
-    // @Test
-    // fun `섹션은 응답들을 확인하고, id가 다르거나, 필수 응답 질문에 답변을 하지 않으면 예외를 반환한다`() {
-    //     // given
-    //     val id = UUID.randomUUID()
-    //     val section =
-    //         createSection(
-    //             id = id,
-    //             routeDetails = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
-    //             questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
-    //         )
-    //
-    //     val sectionResponse1s =
-    //         SectionResponse(
-    //             SectionId.Standard(id),
-    //             listOf(
-    //                 createQuestionResponse(textResponseQuestionId, listOf("a")),
-    //                 createQuestionResponse(singleChoiceQuestionId, listOf("a")),
-    //             ),
-    //         )
-    //
-    //     val sectionResponse2s =
-    //         SectionResponse(
-    //             SectionId.Standard(id),
-    //             listOf(
-    //                 createQuestionResponse(textResponseQuestionId, listOf("a")),
-    //                 createQuestionResponse(multipleChoiceQuestionId, listOf("a")),
-    //             ),
-    //         )
-    //
-    //     val sectionResponse3s =
-    //         SectionResponse(
-    //             SectionId.Standard(UUID.randomUUID()),
-    //             listOf(
-    //                 createQuestionResponse(textResponseQuestionId, listOf("a")),
-    //                 createQuestionResponse(multipleChoiceQuestionId, listOf("a")),
-    //             ),
-    //         )
-    //
-    //     // when, then
-    //     assertDoesNotThrow { section.findNextSectionId(sectionResponse1s) }
-    //     assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse2s) }
-    //     assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse3s) }
-    // }
+    @Test
+    fun `섹션은 응답들을 확인하고, id가 다르거나, 필수 응답 질문에 답변을 하지 않으면 예외를 반환한다`() {
+        // given
+        val id = UUID.randomUUID()
+        val section =
+            createSection(
+                id = id,
+                routingStrategy = createMockSetByChoiceRouting(keyQuestionId = singleChoiceQuestionId),
+                questions = listOf(requiredTextResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion),
+            )
+
+        val sectionResponse1s =
+            SectionResponse(
+                SectionId.Standard(id),
+                listOf(
+                    createQuestionResponse(textResponseQuestionId, listOf("a")),
+                    createQuestionResponse(singleChoiceQuestionId, listOf("a")),
+                ),
+            )
+
+        val sectionResponse2s =
+            SectionResponse(
+                SectionId.Standard(id),
+                listOf(
+                    createQuestionResponse(textResponseQuestionId, listOf("a")),
+                    createQuestionResponse(multipleChoiceQuestionId, listOf("a")),
+                ),
+            )
+
+        val sectionResponse3s =
+            SectionResponse(
+                SectionId.Standard(UUID.randomUUID()),
+                listOf(
+                    createQuestionResponse(textResponseQuestionId, listOf("a")),
+                    createQuestionResponse(multipleChoiceQuestionId, listOf("a")),
+                ),
+            )
+
+        // when, then
+        assertDoesNotThrow { section.findNextSectionId(sectionResponse1s) }
+        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse2s) }
+        assertThrows<InvalidSectionResponseException> { section.findNextSectionId(sectionResponse3s) }
+    }
 
     @Test
     fun `섹션은 응답들을 확인하고, 각 질문에 유효하지 않은 답변을 하면 예외를 반환한다`() {
@@ -303,55 +306,6 @@ class SectionTest {
         )
         assertEquals(SectionId.Standard(nextSectionId), section.findNextSectionId(sectionResponse))
     }
-
-    // @Test
-    // fun `선택지 기반 라우팅 방식의 섹션은 응답에 기반하여 다음 섹션을 결정한다`() {
-    //     // give
-    //     val questions = listOf(textResponseQuestion, requiredAllowOtherSingleChoiceQuestion, allowOtherMultipleChoiceQuestion)
-    //     val sectionId1 = UUID.randomUUID()
-    //     val sectionId2 = UUID.randomUUID()
-    //     val sectionId3 = UUID.randomUUID()
-    //
-    //     val id = UUID.randomUUID()
-    //     val routeDetails =
-    //         RouteDetails.SetByChoiceRouting(
-    //             keyQuestionId = singleChoiceQuestionId,
-    //             sectionRouteConfigs = createSectionRouteConfigs(mapOf(a to sectionId1, b to sectionId2, c to sectionId3, null to null)),
-    //         )
-    //     val section =
-    //         createSection(
-    //             id = id,
-    //             routeDetails = routeDetails,
-    //             questions = questions,
-    //             sectionIds = listOf(sectionId1, sectionId2, sectionId3),
-    //         )
-    //
-    //     val sectionResponse1s =
-    //         SectionResponse(
-    //             SectionId.Standard(id),
-    //             listOf(
-    //                 QuestionResponse(textResponseQuestionId, listOf(ResponseDetail(a))),
-    //                 QuestionResponse(singleChoiceQuestionId, listOf(ResponseDetail(a))),
-    //             ),
-    //         )
-    //
-    //     val sectionResponse2s =
-    //         SectionResponse(
-    //             SectionId.Standard(id),
-    //             listOf(
-    //                 QuestionResponse(multipleChoiceQuestionId, listOf(ResponseDetail(b))),
-    //                 QuestionResponse(singleChoiceQuestionId, listOf(ResponseDetail(a, true))),
-    //             ),
-    //         )
-    //
-    //     // when
-    //     val nextSectionId1 = section.findNextSectionId(sectionResponse1s)
-    //     val nextSectionId2 = section.findNextSectionId(sectionResponse2s)
-    //
-    //     // then
-    //     assertEquals(SectionId.Standard(sectionId1), nextSectionId1)
-    //     assertEquals(SectionId.End, nextSectionId2)
-    // }
 
     @Test
     fun `유저 기반 라우팅 방식의 섹션은 nextQuestionId로 다음 섹션을 결정한다`() {
