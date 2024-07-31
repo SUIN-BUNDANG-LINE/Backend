@@ -14,10 +14,12 @@ data class Choices(
         if (standardChoices.size != standardChoices.distinct().size) throw InvalidChoiceException()
     }
 
+    /** 응답이 선택지에 포함되는지 확인 */
     fun isContains(responseDetail: ResponseDetail): Boolean {
         if (responseDetail.isOther) return isAllowOther
         return standardChoices.contains(Choice.Standard(responseDetail.content))
     }
 
+    /** 선택지 기반 라우팅의 선택지와 같은지 비교하기 위해 선택지 집합을 얻는다. */
     fun getChoiceSet() = if (isAllowOther) standardChoices.toSet() + Choice.Other else standardChoices.toSet()
 }
