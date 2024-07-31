@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain.routing
 
 import com.sbl.sulmun2yong.fixture.survey.ResponseFixtureFactory.createSectionResponse
-import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createSectionRouteConfigs
+import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createContentIdMap
 import com.sbl.sulmun2yong.fixture.survey.RoutingFixtureFactory.createSetByChoiceRouting
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -12,9 +12,12 @@ import java.util.UUID
 import kotlin.test.assertEquals
 
 class RoutingStrategyTest {
-    private val contentIdMap = mapOf("a" to UUID.randomUUID(), "b" to UUID.randomUUID(), null to UUID.randomUUID())
+    private val id1 = UUID.randomUUID()
+    private val id2 = UUID.randomUUID()
+    private val id3 = UUID.randomUUID()
+    private val stringUUIDMap = mapOf("a" to id1, "b" to id2, null to id3)
     private val keyQuestionId = UUID.randomUUID()
-    private val setByChoice = createSetByChoiceRouting(keyQuestionId, contentIdMap)
+    private val setByChoice = createSetByChoiceRouting(keyQuestionId, stringUUIDMap)
 
     @Test
     fun `NumericalOrder를 생성하면 정보가 올바르게 설정된다`() {
@@ -23,21 +26,8 @@ class RoutingStrategyTest {
 
         // then
         assertEquals(RoutingType.NUMERICAL_ORDER, numericalOrder.type)
+        assertEquals(emptyList(), numericalOrder.getNextSectionIds())
     }
-
-    // @Test
-    // fun `NumericalOrder는 어떤 sectionIds를 받아도 유효하다고 판단한다`() {
-    //     // given
-    //     val numericalOrder = RouteDetails.NumericalOrderRouting
-    //
-    //     // when
-    //     val isValid1 = numericalOrder.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID(), UUID.randomUUID())))
-    //     val isValid2 = numericalOrder.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID())))
-    //
-    //     // then
-    //     assertEquals(true, isValid1)
-    //     assertEquals(true, isValid2)
-    // }
 
     @Test
     fun `SetByUser를 생성하면 정보가 올바르게 설정된다`() {
@@ -48,45 +38,26 @@ class RoutingStrategyTest {
         // then
         assertEquals(RoutingType.SET_BY_USER, setByUser.type)
         assertEquals(sectionId, setByUser.nextSectionId)
+        assertEquals(listOf(sectionId), setByUser.getNextSectionIds())
     }
-
-    // @Test
-    // fun `SetByUser는 자신의 nextSectionId가 포함된 sectionIds를 받으면 유효하다고 판단한다`() {
-    //     // given
-    //     val sectionId = SectionId.Standard(UUID.randomUUID())
-    //     val setByUser = RouteDetails.SetByUserRouting(sectionId)
-    //
-    //     // when
-    //     val isValid1 = setByUser.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID(), UUID.randomUUID())))
-    //     val isValid2 = setByUser.isSectionIdsValid(createSectionIds(listOf(UUID.randomUUID(), sectionId.value)))
-    //     val isValid3 = setByUser.isSectionIdsValid(createSectionIds(listOf(sectionId.value)))
-    //
-    //     // then
-    //     assertEquals(false, isValid1)
-    //     assertEquals(true, isValid2)
-    //     assertEquals(true, isValid3)
-    // }
 
     @Test
     fun `SetByChoice를 생성하면 정보들이 올바르게 설정된다`() {
         // given
         val keyQuestionId = UUID.randomUUID()
-        val sectionRouteConfigs = createSectionRouteConfigs(contentIdMap)
+        val contentIdMap = createContentIdMap(stringUUIDMap)
 
         // when
-        val setByChoice = RoutingStrategy.SetByChoice(keyQuestionId, sectionRouteConfigs)
+        val setByChoice = RoutingStrategy.SetByChoice(keyQuestionId, contentIdMap)
 
         // then
         with(setByChoice) {
             assertEquals(RoutingType.SET_BY_CHOICE, setByChoice.type)
             assertEquals(keyQuestionId, setByChoice.keyQuestionId)
-            assertEquals(sectionRouteConfigs, this.routingMap)
+            assertEquals(contentIdMap, this.routingMap)
+            assertEquals(listOf("a", "b", null).map { Choice.from(it) }.toSet(), this.getChoiceSet())
+            assertEquals(listOf(id1, id2, id3).map { SectionId.from(it) }, this.getNextSectionIds())
         }
-    }
-
-    @Test
-    fun `SetByChoice는 라우팅의 대상이 되는 선택지들의 집합을 가져올 수 있다`() {
-        assertEquals(setOf(Choice.from("a"), Choice.from("b"), Choice.Other), setByChoice.getChoiceSet())
     }
 
     @Test
@@ -102,9 +73,9 @@ class RoutingStrategyTest {
         val nextSectionId3 = setByChoice.findNextSectionId(sectionResponse3)
 
         // then
-        assertEquals(contentIdMap["a"], nextSectionId1.value)
-        assertEquals(contentIdMap["b"], nextSectionId2.value)
-        assertEquals(contentIdMap[null], nextSectionId3.value)
+        assertEquals(stringUUIDMap["a"], nextSectionId1.value)
+        assertEquals(stringUUIDMap["b"], nextSectionId2.value)
+        assertEquals(stringUUIDMap[null], nextSectionId3.value)
     }
 
     @Test
@@ -112,7 +83,7 @@ class RoutingStrategyTest {
         // SetByChoice가 다음 섹션 ID를 찾기 위해 받는 SectionResponse는 다음 조건을 만족해야한다.
         // 1. keyQuestionId에 해당하는 응답을 포함해야한다.
         // 2. keyQuestionId에 해당하는 응답은 1개여야한다.
-        // 3. 응답에 해당하는 sectionRouteConfigs가 있어야한다.
+        // 3. 응답에 해당하는 선택지가 있어야한다.
         // given
         val sectionResponse1 = createSectionResponse(contents = listOf("a"))
         val sectionResponse2A = createSectionResponse(questionId = keyQuestionId, contents = listOf("b"), isOtherContent = "c")
@@ -126,7 +97,7 @@ class RoutingStrategyTest {
         assertThrows<InvalidSectionResponseException> {
             createSetByChoiceRouting(
                 keyQuestionId,
-                contentIdMap,
+                stringUUIDMap,
             ).findNextSectionId(sectionResponse3)
         }
     }

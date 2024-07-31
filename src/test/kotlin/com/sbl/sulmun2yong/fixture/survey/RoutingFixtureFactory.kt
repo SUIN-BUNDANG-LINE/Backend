@@ -14,10 +14,10 @@ object RoutingFixtureFactory {
         contentIdMap: Map<String?, UUID?> = mapOf("a" to UUID.randomUUID(), "b" to UUID.randomUUID()),
     ) = RoutingStrategy.SetByChoice(
         keyQuestionId = keyQuestionId,
-        routingMap = createSectionRouteConfigs(contentIdMap),
+        routingMap = createContentIdMap(contentIdMap),
     )
 
-    fun createSectionRouteConfigs(contentIdMap: Map<String?, UUID?>) =
+    fun createContentIdMap(contentIdMap: Map<String?, UUID?>) =
         contentIdMap.map { (content, id) -> Choice.from(content) to SectionId.from(id) }.toMap()
 
     fun createMockSetByChoiceRouting(
