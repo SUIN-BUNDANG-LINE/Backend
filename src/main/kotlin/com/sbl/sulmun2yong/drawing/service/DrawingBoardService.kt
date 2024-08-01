@@ -4,13 +4,15 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
-import com.sbl.sulmun2yong.drawing.domain.DrawingMachine
 import com.sbl.sulmun2yong.drawing.domain.Reward
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.NonWinnerDrawingResult
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.WinnerDrawingResult
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.dto.response.NonWinnerDrawingResultResponse
 import com.sbl.sulmun2yong.drawing.dto.response.WinnerDrawingResultResponse
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
+import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
@@ -40,41 +42,31 @@ class DrawingBoardService(
         selectedNumber: Int,
         phoneNumber: String,
     ): DrawingResultResponse {
-        val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
-
         // 유효성 검증
         // 참가했는가
         val participant = participantAdapter.getParticipant(participantId)
         // 추첨 기록이 있는가
+        val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
         val drawingHistory = drawingHistoryAdapter.findByParticipantIdOrPhoneNumber(participantId, phoneNumberData)
         if (drawingHistory != null) {
             throw AlreadyParticipatedDrawingException()
         }
-
         // 설문이 종료되었는가
         val surveyId = participant.surveyId
         val survey = surveyAdapter.getSurvey(surveyId)
         if (Date().after(survey.finishedAt)) {
-            throw InvalidDrawingException()
+            throw FinishedDrawingException()
         }
 
+        // 뽑기
         // 추첨 보드 가져오기
         val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
-
         // 뽑기
-        val drawingMachine = DrawingMachine(drawingBoard, selectedNumber)
-        drawingMachine.insertQuarter()
-        drawingMachine.selectTicket()
+        val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
 
-        val drawingResultResponse =
-            if (drawingMachine.openTicketAndCheckIsWon()) {
-                WinnerDrawingResultResponse.create(drawingMachine.getRewardName())
-            } else {
-                NonWinnerDrawingResultResponse.create()
-            }
-
+        // 후속 처리
         // 보드 업데이트
-        drawingBoardAdapter.save(drawingBoard)
+        drawingBoardAdapter.save(drawingResult.changedDrawingBoard)
         // 추첨 기록 저장
         drawingHistoryAdapter.save(
             DrawingHistory.create(
@@ -86,6 +78,13 @@ class DrawingBoardService(
             ),
         )
 
+        // dto 반환
+        val drawingResultResponse =
+            when (drawingResult) {
+                is WinnerDrawingResult -> WinnerDrawingResultResponse(drawingResult.rewardName)
+                is NonWinnerDrawingResult -> NonWinnerDrawingResultResponse()
+                else -> throw InvalidDrawingException()
+            }
         return drawingResultResponse
     }
 
@@ -103,7 +102,7 @@ class DrawingBoardService(
                         category = it.category,
                         count = it.count,
                     )
-                }.toTypedArray()
+                }
 
         val drawingBoard =
             DrawingBoard.create(

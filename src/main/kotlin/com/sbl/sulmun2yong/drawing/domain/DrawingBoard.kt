@@ -1,22 +1,79 @@
 package com.sbl.sulmun2yong.drawing.domain
 
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.NonWinnerDrawingResult
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.WinnerDrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.NonWinningTicket
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
+import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
+import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import java.util.UUID
 
 class DrawingBoard(
     val id: UUID,
     val surveyId: UUID,
-    var selectedTicketCount: Int,
-    val tickets: Array<Ticket>,
+    val selectedTicketCount: Int,
+    val tickets: List<Ticket>,
 ) {
+    fun getDrawingResult(selectedIndex: Int): DrawingResult {
+        validateTicketIsRemaining()
+
+        val selectedTicket = this.tickets[selectedIndex]
+        validateTicketIsSelected(selectedTicket)
+
+        val changedDrawingBoard = getChangedDrawingBoard(selectedIndex)
+        return when (selectedTicket) {
+            is WinningTicket ->
+                WinnerDrawingResult(
+                    changedDrawingBoard = changedDrawingBoard,
+                    isWinner = true,
+                    rewardName = selectedTicket.rewardName,
+                )
+            is NonWinningTicket ->
+                NonWinnerDrawingResult(
+                    changedDrawingBoard = changedDrawingBoard,
+                    isWinner = false,
+                )
+            else -> throw InvalidDrawingBoardException()
+        }
+    }
+
+    private fun validateTicketIsRemaining() {
+        val remainingTicketCount = this.tickets.size - this.selectedTicketCount
+        if (remainingTicketCount == 0) {
+            throw OutOfTicketException()
+        }
+    }
+
+    private fun validateTicketIsSelected(selectedTicket: Ticket) {
+        if (selectedTicket.isSelected) {
+            throw AlreadySelectedTicketException()
+        }
+    }
+
+    private fun getChangedDrawingBoard(selectedIndex: Int): DrawingBoard =
+        DrawingBoard(
+            id = this.id,
+            surveyId = this.surveyId,
+            selectedTicketCount = this.selectedTicketCount + 1,
+            tickets =
+                this.tickets.mapIndexed { index, ticket ->
+                    if (index == selectedIndex) {
+                        ticket.isSelected = true
+                        ticket
+                    } else {
+                        ticket
+                    }
+                },
+        )
+
     companion object {
         fun create(
             surveyId: UUID,
             boardSize: Int,
-            rewards: Array<Reward>,
+            rewards: List<Reward>,
         ): DrawingBoard {
             val tickets =
                 createTickets(
@@ -32,9 +89,9 @@ class DrawingBoard(
         }
 
         private fun createTickets(
-            rewards: Array<Reward>,
+            rewards: List<Reward>,
             maxTicketCount: Int,
-        ): Array<Ticket> {
+        ): List<Ticket> {
             val tickets = mutableListOf<Ticket>()
             rewards.map { reward ->
                 repeat(reward.count) {
@@ -51,9 +108,9 @@ class DrawingBoard(
             repeat(maxTicketCount - tickets.size) {
                 tickets.add(NonWinningTicket.create())
             }
-
             tickets.shuffle()
-            return tickets.toTypedArray()
+
+            return tickets
         }
     }
 }

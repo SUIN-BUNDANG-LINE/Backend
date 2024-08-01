@@ -29,7 +29,7 @@ enum class ErrorCode(
     OUT_OF_TICKET(HttpStatus.BAD_REQUEST, "DR0003", "모든 티켓이 추첨이 완료된 추첨 보드입니다."),
     ALREADY_SELECTED_TICKET(HttpStatus.BAD_REQUEST, "DR0004", "이미 선택된 티켓입니다."),
     ALREADY_PARTICIPATED_DRAWING(HttpStatus.BAD_REQUEST, "DR0005", "이미 참여한 추첨입니다."),
-    FINISHED_DRAWING(HttpStatus.BAD_REQUEST, "DR0005", "이미 끝난 추첨입니다."),
+    FINISHED_DRAWING(HttpStatus.BAD_REQUEST, "DR0005", "이미 마감된 추첨입니다."),
 
     // OAuth2 (OA)
     PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "OA0001", "지원하지 않는 소셜 로그인입니다."),
