@@ -2,13 +2,13 @@ package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
-import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createDrawingBoard
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createEmptyDrawingBoard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class BoardMakingTest {
     @Test
@@ -28,13 +28,27 @@ class BoardMakingTest {
     @Test
     fun `추첨 보드를 만든다`() {
         // given
-        val rewardBoard = createDrawingBoard()
+        val surveyId = UUID.randomUUID()
+        val boardSize = 200
+        val rewards =
+            listOf(
+                Reward("아메리카노", "커피", 3),
+                Reward("카페라떼", "커피", 2),
+                Reward("햄버거", "음식", 2),
+            )
+
+        val drawingBoard =
+            DrawingBoard.create(
+                surveyId = surveyId,
+                boardSize = boardSize,
+                rewards = rewards,
+            )
 
         // when, then
-        with(rewardBoard) {
-            assertEquals(id, this.id)
-            assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, this.tickets.size)
-        }
+        assertTrue { drawingBoard.id is UUID }
+        assertEquals(0, drawingBoard.selectedTicketCount)
+        assertEquals(surveyId, drawingBoard.surveyId)
+        assertEquals(boardSize, drawingBoard.tickets.size)
     }
 
     @Test
