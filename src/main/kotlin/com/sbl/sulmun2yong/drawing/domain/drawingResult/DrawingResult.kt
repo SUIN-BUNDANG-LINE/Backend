@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.drawing.domain.drawingResult
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 
-sealed class DrawingResult  {
+sealed class DrawingResult {
     abstract val changedDrawingBoard: DrawingBoard
 
     class Winner(
