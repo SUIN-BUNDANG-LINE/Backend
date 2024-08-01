@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
+import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
@@ -13,7 +14,7 @@ import kotlin.test.assertFalse
 
 class DrawingTest {
     @Test
-    fun `뽑기를 하면 DrawingBoard 에 그 결과가 반영된다`() {
+    fun `꽝 티켓을을 뽑으면 DrawingResultNonWinner 도메인이 만들어지고  DrawingBoard 에 그 결과가 반영된다`() {
         // given
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
 
@@ -21,9 +22,39 @@ class DrawingTest {
         val drawingResult = drawingBoard.getDrawingResult(3)
         val changedDrawingBoard = drawingResult.changedDrawingBoard
         // then
+        assertTrue { drawingResult is DrawingResult.NonWinner }
         assertEquals(drawingBoard.selectedTicketCount + 1, changedDrawingBoard.selectedTicketCount)
         assertFalse { drawingBoard.tickets[3].isSelected }
         assertTrue { changedDrawingBoard.tickets[3].isSelected }
+    }
+
+    @Test
+    fun `당첨 티켓을 뽑으면 DrawingResultWinner 도메인이 만들어지고 rewardName 을 가져올 수 있다 그리고 DrawingBoard 에 그 결과가 반영된다`() {
+        // given
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardExistsIndex3()
+
+        // when
+        val drawingResult = drawingBoard.getDrawingResult(3)
+        val changedDrawingBoard = drawingResult.changedDrawingBoard
+        // then
+        assertTrue { drawingResult is DrawingResult.Winner }
+        assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, (drawingResult as DrawingResult.Winner).rewardName)
+        assertEquals(drawingBoard.selectedTicketCount + 1, changedDrawingBoard.selectedTicketCount)
+        assertFalse { drawingBoard.tickets[3].isSelected }
+        assertTrue { changedDrawingBoard.tickets[3].isSelected }
+    }
+
+    @Test
+    fun `당첨 티켓에는 리워드 이름과 리워드 카테고리 정보가 있다`() {
+        // given
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardExistsIndex3()
+
+        // when
+        val winningTicket = drawingBoard.tickets[3] as Ticket.Winning
+
+        // then
+        assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, winningTicket.rewardName)
+        assertEquals(DrawingBoardFixtureFactory.REWARD_CATEGORY, winningTicket.rewardCategory)
     }
 
     @Test
