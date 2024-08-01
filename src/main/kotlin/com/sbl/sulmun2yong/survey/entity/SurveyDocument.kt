@@ -103,6 +103,7 @@ data class SurveyDocument(
             sectionIds = sectionIds,
         )
 
+    // TODO: 직접 RouteStrategy 클래스를 넣도록 수정
     private fun SectionSubDocument.getRouteDetails() =
         when (this.routeType) {
             RoutingType.NUMERICAL_ORDER -> RoutingStrategy.NumericalOrder
@@ -127,6 +128,7 @@ data class SurveyDocument(
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
+                    // TODO: Document를 Domain클래스로 변환 중에 생긴 에러는 여기서 직접 반환하도록 수정
                     choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.MULTIPLE_CHOICE ->
