@@ -102,7 +102,7 @@ jib {
             let {
                 // main 브랜치 배포 = prod, develop 브랜치 배포 = dev
                 val tagName = project.findProperty("DEPLOY_TYPE") as String?
-                setOf(tagName + getCurrentDateTime(), if (tagName == "prod") "latest" else "devLatest")
+                setOf(tagName + getCurrentDateTime(), if (tagName == "prod") "prodLatest" else "devLatest")
             }
     }
     container {
