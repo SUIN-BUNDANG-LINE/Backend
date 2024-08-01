@@ -2,9 +2,7 @@ package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.Reward
-import com.sbl.sulmun2yong.drawing.domain.ticket.NonWinningTicket
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
-import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import java.util.UUID
 
@@ -61,7 +59,7 @@ object DrawingBoardFixtureFactory {
         rewards.map { reward ->
             repeat(reward.count) {
                 tickets.add(
-                    WinningTicket(
+                    Ticket.WinningTicket(
                         rewardName = reward.name,
                         rewardCategory = reward.category,
                         isSelected = true,
@@ -72,7 +70,7 @@ object DrawingBoardFixtureFactory {
         }
 
         repeat(maxTicketCount - tickets.size) {
-            tickets.add(NonWinningTicket(isSelected = true))
+            tickets.add(Ticket.NonWinningTicket(isSelected = true))
         }
         tickets.shuffle()
 

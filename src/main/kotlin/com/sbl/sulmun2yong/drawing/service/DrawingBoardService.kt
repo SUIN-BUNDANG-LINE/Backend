@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.Date
 import java.util.UUID
-import com.sbl.sulmun2yong.survey.domain.Reward as SurveyReward
 
 // TODO : mongoDB 트랜잭션 테스트 필요
 @Service
@@ -91,7 +90,7 @@ class DrawingBoardService(
     fun makeDrawingBoard(
         surveyId: UUID,
         boardSize: Int,
-        surveyRewards: List<SurveyReward>,
+        surveyRewards: List<Reward>,
     ) {
         // TODO: 적절한 다른 패키지간 도메인 변환 로직 도입
         val rewards =

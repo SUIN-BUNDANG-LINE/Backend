@@ -3,9 +3,7 @@ package com.sbl.sulmun2yong.drawing.domain
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.NonWinnerDrawingResult
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.WinnerDrawingResult
-import com.sbl.sulmun2yong.drawing.domain.ticket.NonWinningTicket
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
-import com.sbl.sulmun2yong.drawing.domain.ticket.WinningTicket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
@@ -25,18 +23,18 @@ class DrawingBoard(
 
         val changedDrawingBoard = getChangedDrawingBoard(selectedIndex)
         return when (selectedTicket) {
-            is WinningTicket ->
+            is Ticket.WinningTicket ->
                 WinnerDrawingResult(
                     changedDrawingBoard = changedDrawingBoard,
                     isWinner = true,
                     rewardName = selectedTicket.rewardName,
                 )
-            is NonWinningTicket ->
+
+            is Ticket.NonWinningTicket ->
                 NonWinnerDrawingResult(
                     changedDrawingBoard = changedDrawingBoard,
                     isWinner = false,
                 )
-            else -> throw InvalidDrawingBoardException()
         }
     }
 
@@ -66,16 +64,10 @@ class DrawingBoard(
         this.tickets.forEachIndexed { index, ticket ->
             copiedTickets.add(
                 if (index == selectedIndex) {
-                    if (ticket is WinningTicket) {
-                        WinningTicket(
-                            rewardName = ticket.rewardName,
-                            rewardCategory = ticket.rewardCategory,
-                            isSelected = true,
-                        )
-                    } else {
-                        NonWinningTicket(
-                            isSelected = true,
-                        )
+                    when (ticket) {
+                        is Ticket.WinningTicket -> ticket.copy(isSelected = true)
+                        is Ticket.NonWinningTicket,
+                        -> ticket.copy(isSelected = true)
                     }
                 } else {
                     ticket
@@ -113,7 +105,7 @@ class DrawingBoard(
             rewards.map { reward ->
                 repeat(reward.count) {
                     tickets.add(
-                        WinningTicket.create(
+                        Ticket.WinningTicket.create(
                             rewardName = reward.name,
                             rewardCategory = reward.category,
                         ),
@@ -123,11 +115,11 @@ class DrawingBoard(
             }
 
             repeat(maxTicketCount - tickets.size) {
-                tickets.add(NonWinningTicket.create())
+                tickets.add(Ticket.NonWinningTicket.create())
             }
             tickets.shuffle()
 
-            return tickets
+            return tickets.toList()
         }
     }
 }
