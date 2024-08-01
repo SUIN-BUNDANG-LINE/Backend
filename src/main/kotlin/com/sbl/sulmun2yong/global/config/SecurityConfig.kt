@@ -20,6 +20,8 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint
 class SecurityConfig(
     @Value("\${frontend.base-url}")
     private val baseUrl: String,
+    @Value("\${swagger.oauth2}")
+    private val isSwaggerNeedOAuth2: Boolean?,
 ) {
     @Bean
     fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
@@ -45,6 +47,10 @@ class SecurityConfig(
                 logoutSuccessHandler = CustomLogoutSuccessHandler(baseUrl, sessionRegistry())
             }
             authorizeHttpRequests {
+                if (isSwaggerNeedOAuth2 != null && isSwaggerNeedOAuth2) {
+                    authorize("/swagger-ui/**", hasRole("ADMIN"))
+                    authorize("/v3/api-docs/**", hasRole("ADMIN"))
+                }
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
                 authorize("/api/v1/user/**", authenticated)
                 authorize("/**", permitAll)
