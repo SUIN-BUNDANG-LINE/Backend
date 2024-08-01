@@ -44,7 +44,7 @@ class BoardMakingTest {
 
         // when
         val tooManyReward =
-            arrayOf(
+            listOf(
                 Reward("아메리카노", "커피", 100),
                 Reward("카페라떼", "커피", 100),
                 Reward("햄버거", "음식", 100),

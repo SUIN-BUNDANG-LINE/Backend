@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain.ticket
 
 data class NonWinningTicket(
-    override var isSelected: Boolean,
+    override val isSelected: Boolean,
 ) : Ticket {
     companion object {
         fun create() =

@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.drawing.domain.ticket
 data class WinningTicket(
     val rewardName: String,
     val rewardCategory: String,
-    override var isSelected: Boolean,
+    override val isSelected: Boolean,
 ) : Ticket {
     companion object {
         fun create(

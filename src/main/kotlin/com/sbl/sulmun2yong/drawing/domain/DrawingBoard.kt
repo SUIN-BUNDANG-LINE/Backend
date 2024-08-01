@@ -58,16 +58,33 @@ class DrawingBoard(
             id = this.id,
             surveyId = this.surveyId,
             selectedTicketCount = this.selectedTicketCount + 1,
-            tickets =
-                this.tickets.mapIndexed { index, ticket ->
-                    if (index == selectedIndex) {
-                        ticket.isSelected = true
-                        ticket
-                    } else {
-                        ticket
-                    }
-                },
+            tickets = deeCopyTicketsWithChangeSelectedTrue(selectedIndex),
         )
+
+    private fun deeCopyTicketsWithChangeSelectedTrue(selectedIndex: Int): List<Ticket> {
+        val copiedTickets = mutableListOf<Ticket>()
+        this.tickets.forEachIndexed { index, ticket ->
+            copiedTickets.add(
+                if (index == selectedIndex) {
+                    if (ticket is WinningTicket) {
+                        WinningTicket(
+                            rewardName = ticket.rewardName,
+                            rewardCategory = ticket.rewardCategory,
+                            isSelected = true,
+                        )
+                    } else {
+                        NonWinningTicket(
+                            isSelected = true,
+                        )
+                    }
+                } else {
+                    ticket
+                },
+            )
+        }
+
+        return copiedTickets.toList()
+    }
 
     companion object {
         fun create(
