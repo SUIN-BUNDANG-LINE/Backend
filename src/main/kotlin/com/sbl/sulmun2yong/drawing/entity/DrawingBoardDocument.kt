@@ -12,14 +12,12 @@ data class DrawingBoardDocument(
     @Id
     val id: UUID,
     val surveyId: UUID,
-    val selectedTicketCount: Int,
-    val tickets: Array<Ticket>,
+    val tickets: List<Ticket>,
 ) : BaseTimeDocument() {
     fun toDomain() =
         DrawingBoard(
             id = this.id,
             surveyId = this.surveyId,
-            selectedTicketCount = this.selectedTicketCount,
             tickets = this.tickets,
         )
 
@@ -30,31 +28,8 @@ data class DrawingBoardDocument(
             return DrawingBoardDocument(
                 id = drawingBoard.id,
                 surveyId = drawingBoard.surveyId,
-                selectedTicketCount = drawingBoard.selectedTicketCount,
                 tickets = tickets,
             )
         }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as DrawingBoardDocument
-
-        if (id != other.id) return false
-        if (surveyId != other.surveyId) return false
-        if (selectedTicketCount != other.selectedTicketCount) return false
-        if (!tickets.contentEquals(other.tickets)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + surveyId.hashCode()
-        result = 31 * result + selectedTicketCount
-        result = 31 * result + tickets.contentHashCode()
-        return result
     }
 }
