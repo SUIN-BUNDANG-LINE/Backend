@@ -101,7 +101,7 @@ jib {
             // 프로덕션 배포면 latest와 prodYYMMDDhhmm 태그를 붙히고, 개발 배포면 devLatest와 devYYMMDDhhmm 태그를 붙인다.
             let {
                 // main 브랜치 배포 = prod, develop 브랜치 배포 = dev
-                val tagName = project.findProperty("DEPLOY_TYPE") as String
+                val tagName = project.findProperty("DEPLOY_TYPE") as String?
                 setOf(tagName + getCurrentDateTime(), if (tagName == "prod") "latest" else "devLatest")
             }
     }
