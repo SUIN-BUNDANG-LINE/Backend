@@ -45,3 +45,6 @@ jobs:
               env:
                   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
                   SONAR_HOST_URL: ${{ secrets.SONARQUBE_EC2_HOST }}
+              with:
+                  args: >
+                      -Dsonar.branch.name=${{ github.head_ref }}
