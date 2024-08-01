@@ -12,7 +12,8 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-            OAUTH2_YML_CONTENT: ${{ secrets.OAUTH2_YML_CONTENT }}
+            OAUTH2_YML_CONTENT: ${{ secrets.DEVELOP_OAUTH2_YML_CONTENT }}
+            DEPLOY_TYPE: dev
 
         steps:
             - name: 코드 체크아웃
@@ -36,6 +37,7 @@ jobs:
                   echo "DOCKER_ID=${{ secrets.DOCKER_USERNAME }}" >> gradle.properties
                   echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> gradle.properties
                   echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}" >> gradle.properties
+                  echo "DEPLOY_TYPE=${DEPLOY_TYPE}" >> gradle.properties
 
             - name: Gradle로 빌드
               run: ./gradlew clean build
@@ -47,27 +49,33 @@ jobs:
               run: ./gradlew jib -Ddocker.id="${{ secrets.DOCKER_USERNAME }}" -Ddocker.password="${{ secrets.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}"
 
     deploy:
-        name: 배포 작업
+        name: 개발 서버 배포 작업
         needs: build
         runs-on: ubuntu-latest
 
         env:
             CONTAINER_NAME: sulmun2yong-develop-server
+            EC2_HOST: ${{ secrets.DEVELOP_EC2_HOST }}
+            EC2_USER: ${{ secrets.EC2_USER }}
+            EC2_KEY: ${{ secrets.DEVELOP_EC2_KEY }}
+            DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:devLatest
+            MONGODB_URL: ${{ secrets.DEVELOP_MONGODB_URL }}
+            MONGODB_DATABASE: ${{ secrets.DEVELOP_MONGODB_DATABASE }}
 
         steps:
             - name: EC2에 배포
               uses: appleboy/ssh-action@v0.1.7
               with:
-                  host: ${{ secrets.DEVELOP_EC2_HOST }}
-                  username: ${{ secrets.EC2_USER }}
-                  key: ${{ secrets.DEVELOP_EC2_KEY }}
+                  host: ${{ env.EC2_HOST }}
+                  username: ${{ env.EC2_USER }}
+                  key: ${{ env.EC2_KEY }}
                   script: |
                       echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-                      docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
+                      docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker stop ${{ env.CONTAINER_NAME }} || true
                       docker rm ${{ env.CONTAINER_NAME }} || true
                       docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
-                        -e SPRING_DATA_MONGODB_URI=${{ secrets.DEVELOP_MONGODB_URL }} \
-                        -e SPRING_DATA_MONGODB_DATABASE=${{ secrets.DEVELOP_MONGODB_DATABASE }} \
-                        ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:latest
+                        -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
+                        -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
+                        ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker image prune -af
