@@ -5,15 +5,11 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.Reward
-import com.sbl.sulmun2yong.drawing.domain.drawingResult.NonWinnerDrawingResult
-import com.sbl.sulmun2yong.drawing.domain.drawingResult.WinnerDrawingResult
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
-import com.sbl.sulmun2yong.drawing.dto.response.NonWinnerDrawingResultResponse
-import com.sbl.sulmun2yong.drawing.dto.response.WinnerDrawingResultResponse
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
-import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
@@ -80,9 +76,8 @@ class DrawingBoardService(
         // dto 반환
         val drawingResultResponse =
             when (drawingResult) {
-                is WinnerDrawingResult -> WinnerDrawingResultResponse(drawingResult.rewardName)
-                is NonWinnerDrawingResult -> NonWinnerDrawingResultResponse()
-                else -> throw InvalidDrawingException()
+                is DrawingResult.Winner -> DrawingResultResponse.Winner(drawingResult.rewardName)
+                is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
             }
         return drawingResultResponse
     }

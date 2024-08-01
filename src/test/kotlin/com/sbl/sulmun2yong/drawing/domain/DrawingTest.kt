@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
+import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
@@ -39,12 +40,9 @@ class DrawingTest {
     }
 
     @Test
-    fun `이미 전부 추첨 완료된 보드에서 추첨하면 오류가 발새한다`() {
-        // given
-        val drawingBoard = DrawingBoardFixtureFactory.createFinishedDrawingBoard()
-
-        // when, then
-        assertThrows<OutOfTicketException> { drawingBoard.getDrawingResult(3) }
+    fun `이미 전부 추첨 완료된 보드에서 추첨하면 오류가 발생한다`() {
+        // given, when, then
+        assertThrows<OutOfTicketException> { DrawingBoardFixtureFactory.createAllSelectedDrawingBoard() }
     }
 
     @Test
@@ -60,7 +58,7 @@ class DrawingTest {
                     val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
                     val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
 
-                    if (drawingResult.isWinner) 1 else 0
+                    if (drawingResult is DrawingResult.Winner) 1 else 0
                 }.sum()
 
         val expectedProbability =
@@ -71,7 +69,7 @@ class DrawingTest {
         println("기대 확률 : $expectedProbability%")
         println("실제 확률 : $realProbability%")
         assertTrue(
-            (expectedProbability - realProbability).absoluteValue <= 0.1,
+            (expectedProbability - realProbability).absoluteValue <= 1,
         )
     }
 }

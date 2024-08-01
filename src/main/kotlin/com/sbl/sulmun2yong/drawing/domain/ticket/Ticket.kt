@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.drawing.domain.ticket
 sealed class Ticket {
     abstract val isSelected: Boolean
 
-    data class WinningTicket(
+    data class Winning(
         val rewardName: String,
         val rewardCategory: String,
         override val isSelected: Boolean,
@@ -13,7 +13,7 @@ sealed class Ticket {
                 rewardName: String,
                 rewardCategory: String,
             ): Ticket =
-                WinningTicket(
+                Winning(
                     rewardName = rewardName,
                     rewardCategory = rewardCategory,
                     isSelected = false,
@@ -21,12 +21,12 @@ sealed class Ticket {
         }
     }
 
-    data class NonWinningTicket(
+    data class NonWinning(
         override val isSelected: Boolean,
     ) : Ticket() {
         companion object {
             fun create(): Ticket =
-                NonWinningTicket(
+                NonWinning(
                     isSelected = false,
                 )
         }

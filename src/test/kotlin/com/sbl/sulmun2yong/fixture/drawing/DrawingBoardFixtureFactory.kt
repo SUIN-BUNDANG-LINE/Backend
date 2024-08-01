@@ -31,13 +31,12 @@ object DrawingBoardFixtureFactory {
     }
 
     // 모두 추첨 완료된 보드
-    fun createFinishedDrawingBoard(): DrawingBoard {
+    fun createAllSelectedDrawingBoard(): DrawingBoard {
         val rewards = rewards
 
         return DrawingBoard(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
-            selectedTicketCount = SURVEY_PARTICIPANT_COUNT,
             tickets = createAllSelectedTickets(rewards, SURVEY_PARTICIPANT_COUNT),
         )
     }
@@ -59,7 +58,7 @@ object DrawingBoardFixtureFactory {
         rewards.map { reward ->
             repeat(reward.count) {
                 tickets.add(
-                    Ticket.WinningTicket(
+                    Ticket.Winning(
                         rewardName = reward.name,
                         rewardCategory = reward.category,
                         isSelected = true,
@@ -70,7 +69,7 @@ object DrawingBoardFixtureFactory {
         }
 
         repeat(maxTicketCount - tickets.size) {
-            tickets.add(Ticket.NonWinningTicket(isSelected = true))
+            tickets.add(Ticket.NonWinning(isSelected = true))
         }
         tickets.shuffle()
 

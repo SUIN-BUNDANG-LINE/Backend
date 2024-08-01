@@ -1,8 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
-import com.sbl.sulmun2yong.drawing.domain.drawingResult.NonWinnerDrawingResult
-import com.sbl.sulmun2yong.drawing.domain.drawingResult.WinnerDrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
@@ -12,36 +10,35 @@ import java.util.UUID
 class DrawingBoard(
     val id: UUID,
     val surveyId: UUID,
-    val selectedTicketCount: Int,
     val tickets: List<Ticket>,
 ) {
-    fun getDrawingResult(selectedIndex: Int): DrawingResult {
-        validateTicketIsRemaining()
+    val selectedTicketCount: Int
 
+    init {
+        selectedTicketCount = calcSelectedTicketCount()
+        val remainingTicketCount = this.tickets.size - selectedTicketCount
+
+        if (remainingTicketCount <= 0) {
+            throw OutOfTicketException()
+        }
+    }
+
+    fun getDrawingResult(selectedIndex: Int): DrawingResult {
         val selectedTicket = this.tickets[selectedIndex]
         validateTicketIsSelected(selectedTicket)
 
         val changedDrawingBoard = getChangedDrawingBoard(selectedIndex)
         return when (selectedTicket) {
-            is Ticket.WinningTicket ->
-                WinnerDrawingResult(
+            is Ticket.Winning ->
+                DrawingResult.Winner(
                     changedDrawingBoard = changedDrawingBoard,
-                    isWinner = true,
                     rewardName = selectedTicket.rewardName,
                 )
 
-            is Ticket.NonWinningTicket ->
-                NonWinnerDrawingResult(
+            is Ticket.NonWinning ->
+                DrawingResult.NonWinner(
                     changedDrawingBoard = changedDrawingBoard,
-                    isWinner = false,
                 )
-        }
-    }
-
-    private fun validateTicketIsRemaining() {
-        val remainingTicketCount = this.tickets.size - this.selectedTicketCount
-        if (remainingTicketCount == 0) {
-            throw OutOfTicketException()
         }
     }
 
@@ -55,18 +52,17 @@ class DrawingBoard(
         DrawingBoard(
             id = this.id,
             surveyId = this.surveyId,
-            selectedTicketCount = this.selectedTicketCount + 1,
-            tickets = deeCopyTicketsWithChangeSelectedTrue(selectedIndex),
+            tickets = deepCopyTicketsWithChangeSelectedTrue(selectedIndex),
         )
 
-    private fun deeCopyTicketsWithChangeSelectedTrue(selectedIndex: Int): List<Ticket> {
+    private fun deepCopyTicketsWithChangeSelectedTrue(selectedIndex: Int): List<Ticket> {
         val copiedTickets = mutableListOf<Ticket>()
         this.tickets.forEachIndexed { index, ticket ->
             copiedTickets.add(
                 if (index == selectedIndex) {
                     when (ticket) {
-                        is Ticket.WinningTicket -> ticket.copy(isSelected = true)
-                        is Ticket.NonWinningTicket,
+                        is Ticket.Winning -> ticket.copy(isSelected = true)
+                        is Ticket.NonWinning,
                         -> ticket.copy(isSelected = true)
                     }
                 } else {
@@ -77,6 +73,8 @@ class DrawingBoard(
 
         return copiedTickets.toList()
     }
+
+    private fun calcSelectedTicketCount(): Int = this.tickets.count { it.isSelected }
 
     companion object {
         fun create(
@@ -92,7 +90,6 @@ class DrawingBoard(
             return DrawingBoard(
                 id = UUID.randomUUID(),
                 surveyId = surveyId,
-                selectedTicketCount = 0,
                 tickets = tickets,
             )
         }
@@ -105,7 +102,7 @@ class DrawingBoard(
             rewards.map { reward ->
                 repeat(reward.count) {
                     tickets.add(
-                        Ticket.WinningTicket.create(
+                        Ticket.Winning.create(
                             rewardName = reward.name,
                             rewardCategory = reward.category,
                         ),
@@ -115,7 +112,7 @@ class DrawingBoard(
             }
 
             repeat(maxTicketCount - tickets.size) {
-                tickets.add(Ticket.NonWinningTicket.create())
+                tickets.add(Ticket.NonWinning.create())
             }
             tickets.shuffle()
 

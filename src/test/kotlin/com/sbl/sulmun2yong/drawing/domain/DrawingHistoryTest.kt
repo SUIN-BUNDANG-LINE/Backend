@@ -15,7 +15,7 @@ class DrawingHistoryTest {
         val drawingBoardId = UUID.randomUUID()
         val selectedTicketIndex = 0
         val ticket =
-            com.sbl.sulmun2yong.drawing.domain.ticket.Ticket.WinningTicket(
+            com.sbl.sulmun2yong.drawing.domain.ticket.Ticket.Winning(
                 "테스트 아메리카노",
                 "테스트",
                 false,

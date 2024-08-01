@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.drawing.domain
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createDrawingBoard
-import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createEmptyDrawingBoard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
@@ -15,14 +14,6 @@ class BoardMakingTest {
     fun `드로잉 보드를 출력한다`() {
         val drawingBoard = createDrawingBoard()
         printDrawingBoard(drawingBoard)
-    }
-
-    @Test
-    fun `사이즈가 0인 보드를 출력한다`() {
-        // given
-        val emptyRewardBoard = createEmptyDrawingBoard()
-
-        printDrawingBoard(emptyRewardBoard)
     }
 
     @Test
@@ -77,7 +68,7 @@ class BoardMakingTest {
     private fun printDrawingBoard(drawingBoard: DrawingBoard): String {
         val tickets = drawingBoard.tickets
         val maxLength =
-            tickets.maxOfOrNull { (if (it is Ticket.WinningTicket) it.rewardName else "꽝").length } ?: 0
+            tickets.maxOfOrNull { (if (it is Ticket.Winning) it.rewardName else "꽝").length } ?: 0
 
         val builder = StringBuilder()
 
