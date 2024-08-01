@@ -1,8 +1,9 @@
-package com.sbl.sulmun2yong.fixture
+package com.sbl.sulmun2yong.fixture.survey
 
-import com.sbl.sulmun2yong.survey.domain.SectionResponse
-import com.sbl.sulmun2yong.survey.domain.question.QuestionResponse
-import com.sbl.sulmun2yong.survey.domain.question.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
+import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
+import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import java.util.UUID
 
 object ResponseFixtureFactory {
@@ -17,10 +18,16 @@ object ResponseFixtureFactory {
         contents: List<String> = listOf(),
         isOtherContent: String? = null,
     ) = SectionResponse(
-        id,
+        SectionId.Standard(id),
         (DUMMY_QUESTION_RESPONSES.shuffled() + listOf(createQuestionResponse(questionId, contents, isOtherContent))).shuffled(),
     )
 
+    /**
+     * 테스트용 QuestionResponse 생성 메서드
+     * @param id 기본값 = UUID.randomUUID()
+     * @param contents 기본값 = listOf()
+     * @param isOtherContent 기본값 = true
+     * */
     fun createQuestionResponse(
         id: UUID = UUID.randomUUID(),
         contents: List<String> = listOf(),
@@ -31,6 +38,6 @@ object ResponseFixtureFactory {
         contents: List<String>,
         isOtherContent: String? = null,
     ) = contents.map {
-        ResponseDetail(it)
+        ResponseDetail(it, false)
     } + if (isOtherContent != null) listOf(ResponseDetail(isOtherContent, true)) else listOf()
 }

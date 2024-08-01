@@ -1,12 +1,13 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.CHOICES
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.DESCRIPTION
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createMultipleChoiceQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createSingleChoiceQuestion
-import com.sbl.sulmun2yong.fixture.QuestionFixtureFactory.createTextResponseQuestion
-import com.sbl.sulmun2yong.fixture.ResponseFixtureFactory.createQuestionResponse
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.CHOICES
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.DESCRIPTION
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createMultipleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createSingleChoiceQuestion
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory.createTextResponseQuestion
+import com.sbl.sulmun2yong.fixture.survey.ResponseFixtureFactory.createQuestionResponse
+import com.sbl.sulmun2yong.fixture.survey.SurveyConstFactory.TITLE
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -30,7 +31,6 @@ class QuestionTest {
             createQuestionResponse(id = questionId, contents = listOf(d), isOtherContent = a),
             createQuestionResponse(id = questionId, contents = listOf(a, b), isOtherContent = a),
             createQuestionResponse(id = questionId, contents = listOf(a, b), isOtherContent = d),
-            createQuestionResponse(id = UUID.randomUUID(), contents = listOf(a)),
         )
 
     private fun validateResponses(
@@ -57,7 +57,7 @@ class QuestionTest {
 
     @Test
     fun `주관식 질문을 생성하면 올바르게 정보가 설정된다`() {
-        // 주관식 질문은 선택지가 없고, 기타 응답을 허용할 수 없고, 질문 유형이 TEXT_RESPONSE다.
+        // 주관식 질문은 선택지가 없고, 질문 유형이 TEXT_RESPONSE다.
         // given
         val id = UUID.randomUUID()
         val isRequired = true
@@ -72,7 +72,6 @@ class QuestionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(isRequired, this.isRequired)
             assertEquals(null, this.choices)
-            assertEquals(false, this.isAllowOther)
             assertEquals(QuestionType.TEXT_RESPONSE, this.questionType)
         }
     }
@@ -84,7 +83,7 @@ class QuestionTest {
         val question = createTextResponseQuestion(id = questionId)
 
         // when, then
-        val expected = listOf(true, true, false, false, false, false, false, false, false, false)
+        val expected = listOf(true, true, false, false, false, false, false, false, false)
         validateResponses(question, expected)
     }
 
@@ -104,7 +103,6 @@ class QuestionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(true, this.isRequired)
             assertEquals(CHOICES, this.choices)
-            assertEquals(true, this.isAllowOther)
             assertEquals(QuestionType.SINGLE_CHOICE, this.questionType)
         }
     }
@@ -115,8 +113,8 @@ class QuestionTest {
         // given
         val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
         val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
-        val allowOtherQuestionExpected = listOf(true, false, true, true, false, false, false, false, false, false)
-        val notAllowOtherQuestionExpected = listOf(true, false, false, false, false, false, false, false, false, false)
+        val allowOtherQuestionExpected = listOf(true, false, true, true, false, false, false, false, false)
+        val notAllowOtherQuestionExpected = listOf(true, false, false, false, false, false, false, false, false)
 
         // when, then
         validateResponses(allowOtherQuestion, allowOtherQuestionExpected)
@@ -124,22 +122,18 @@ class QuestionTest {
     }
 
     @Test
-    fun `단일 선택 질문은 content 집합을 받아서 선택지의 content와 같은지 확인할 수 있다`() {
+    fun `단일 선택 질문은 선택지 집합을 얻을 수 있다`() {
         // given
         val allowOtherQuestion = createSingleChoiceQuestion(id = questionId)
         val notAllowOtherQuestion = createSingleChoiceQuestion(id = questionId, isAllowOther = false)
+        val choiceA = Choice.from(a)
+        val choiceB = Choice.from(b)
+        val choiceC = Choice.from(c)
+        val choiceOther = Choice.Other
 
-        // when
-        val isAllowEqual1 = allowOtherQuestion.isEqualToChoices(setOf(a, b, c, null))
-        val isAllowEqual2 = allowOtherQuestion.isEqualToChoices(setOf(a, b, d, null))
-        val isNotAllowEqual1 = notAllowOtherQuestion.isEqualToChoices(setOf(a, b, c))
-        val isNotAllowEqual2 = notAllowOtherQuestion.isEqualToChoices(setOf(a, b, c, null))
-
-        // then
-        assertEquals(true, isAllowEqual1)
-        assertEquals(false, isAllowEqual2)
-        assertEquals(true, isNotAllowEqual1)
-        assertEquals(false, isNotAllowEqual2)
+        // when, then
+        assertEquals(setOf(choiceA, choiceB, choiceC, choiceOther), allowOtherQuestion.getChoiceSet())
+        assertEquals(setOf(choiceA, choiceB, choiceC), notAllowOtherQuestion.getChoiceSet())
     }
 
     @Test
@@ -158,7 +152,6 @@ class QuestionTest {
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(true, this.isRequired)
             assertEquals(CHOICES, this.choices)
-            assertEquals(true, this.isAllowOther)
             assertEquals(QuestionType.MULTIPLE_CHOICE, this.questionType)
         }
     }
@@ -167,12 +160,12 @@ class QuestionTest {
     fun `다중 선택 질문은 응답을 받으면 유효성을 검증할 수 있다`() {
         // 다중 선택 질문은 하나 이상의 응답을 받을 수 있고, 응답은 선택지에 있어야 하고, 기타 응답은 허용된 경우만 받을 수 있다.
         // given
-        val questionABC = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a, b, c)), isAllowOther = false)
-        val questionABCEtc = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a, b, c)))
-        val questionAEtc = createMultipleChoiceQuestion(id = questionId, choices = Choices(listOf(a)))
-        val questionABCExpected = listOf(true, false, false, false, true, false, false, false, false, false)
-        val questionABCEtcExpected = listOf(true, false, true, true, true, false, false, true, true, false)
-        val questionAEtcExpected = listOf(true, false, true, true, false, false, false, false, false, false)
+        val questionABC = createMultipleChoiceQuestion(id = questionId, isAllowOther = false)
+        val questionABCEtc = createMultipleChoiceQuestion(id = questionId)
+        val questionAEtc = createMultipleChoiceQuestion(id = questionId, contents = listOf(a))
+        val questionABCExpected = listOf(true, false, false, false, true, false, false, false, false)
+        val questionABCEtcExpected = listOf(true, false, true, true, true, false, false, true, true)
+        val questionAEtcExpected = listOf(true, false, true, true, false, false, false, false, false)
 
         // when, then
         validateResponses(questionABC, questionABCExpected)

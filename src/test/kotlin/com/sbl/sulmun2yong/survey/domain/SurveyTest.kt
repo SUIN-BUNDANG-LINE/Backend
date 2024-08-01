@@ -1,18 +1,21 @@
 package com.sbl.sulmun2yong.survey.domain
 
-import com.sbl.sulmun2yong.fixture.SectionFixtureFactory.createMockSection
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.DESCRIPTION
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.FINISHED_AT
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.FINISH_MESSAGE
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.PUBLISHED_AT
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.REWARDS
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.REWARD_COUNT
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.SECTIONS
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.SURVEY_STATUS
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TARGET_PARTICIPANT_COUNT
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.THUMBNAIL
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.SurveyFixtureFactory.createSurvey
+import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createMockSection
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.DESCRIPTION
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.FINISHED_AT
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.FINISH_MESSAGE
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.PUBLISHED_AT
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.REWARDS
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.REWARD_COUNT
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SECTIONS
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SURVEY_STATUS
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TARGET_PARTICIPANT_COUNT
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.THUMBNAIL
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TITLE
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
+import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
+import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import org.junit.jupiter.api.Test
@@ -24,6 +27,34 @@ import kotlin.test.assertEquals
 
 class SurveyTest {
     private val id = UUID.randomUUID()
+
+    @Test
+    fun `설문의 응답을 생성하면 정보들이 설정된다`() {
+        // given
+        val sectionId = SectionId.Standard(UUID.randomUUID())
+        val id = UUID.randomUUID()
+        val sectionResponse1 = SectionResponse(sectionId, listOf())
+
+        // when
+        val surveyResponse = SurveyResponse(id, listOf(sectionResponse1))
+
+        // then
+        assertEquals(id, surveyResponse.surveyId)
+        assertEquals(listOf(sectionResponse1), surveyResponse)
+    }
+
+    @Test
+    fun `설문의 응답은 중복될 수 없다`() {
+        // given
+        val id = SectionId.Standard(UUID.randomUUID())
+        val sectionResponse1 = SectionResponse(id, listOf())
+        val sectionResponse2 = SectionResponse(id, listOf())
+
+        // when, then
+        assertThrows<InvalidSurveyResponseException> {
+            SurveyResponse(UUID.randomUUID(), listOf(sectionResponse1, sectionResponse2))
+        }
+    }
 
     @Test
     fun `설문을 생성하면 설문의 정보들이 설정된다`() {
@@ -57,10 +88,11 @@ class SurveyTest {
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
+        val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, sectionId2, setOf(sectionId2, null))
-        val section2 = createMockSection(sectionId2, sectionId3, setOf(null))
-        val section3 = createMockSection(sectionId3, null, setOf(null))
+        val section1 = createMockSection(sectionId1, SectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, SectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, SectionId.End, sectionIds)
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }
@@ -76,15 +108,6 @@ class SurveyTest {
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAt) }
     }
 
-//    @Test
-//    fun `설문의 마감일이 현재 날짜로부터 90일 이후면 예외가 발생한다`() {
-//        // given
-//        val finishedAt = Date.from(Instant.now().plus(100, ChronoUnit.DAYS))
-//
-//        // when, then
-//        assertThrows<InvalidSurveyException> { createSurvey(finishedAt = finishedAt) }
-//    }
-
     @Test
     fun `설문의 시작일은 설문이 시작 전일 때만 null이다`() {
         assertDoesNotThrow { createSurvey(publishedAt = null, status = SurveyStatus.NOT_STARTED) }
@@ -99,10 +122,11 @@ class SurveyTest {
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
+        val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, sectionId2, setOf(sectionId2, sectionId3))
-        val section2 = createMockSection(sectionId2, sectionId3, setOf(null, sectionId3))
-        val section3 = createMockSection(sectionId3, null, setOf(null))
+        val section1 = createMockSection(sectionId1, SectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, SectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, SectionId.End, sectionIds)
 
         val id = UUID.randomUUID()
         val survey = createSurvey(id = id, sections = listOf(section1, section2, section3))
@@ -111,9 +135,9 @@ class SurveyTest {
             SurveyResponse(
                 id,
                 listOf(
-                    SectionResponse(sectionId1, listOf()),
-                    SectionResponse(sectionId2, listOf()),
-                    SectionResponse(sectionId3, listOf()),
+                    SectionResponse(SectionId.Standard(sectionId1), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId2), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId3), listOf()),
                 ),
             )
 
@@ -121,15 +145,27 @@ class SurveyTest {
             SurveyResponse(
                 id,
                 listOf(
-                    SectionResponse(sectionId1, listOf()),
-                    SectionResponse(sectionId2, listOf()),
-                    SectionResponse(UUID.randomUUID(), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId1), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId2), listOf()),
+                    SectionResponse(SectionId.Standard(UUID.randomUUID()), listOf()),
+                ),
+            )
+
+        val surveyResponse3 =
+            SurveyResponse(
+                id,
+                listOf(
+                    SectionResponse(SectionId.Standard(sectionId1), listOf()),
+                    SectionResponse(SectionId.Standard(sectionId2), listOf()),
                 ),
             )
 
         // when, then
         assertDoesNotThrow { survey.validateResponse(surveyResponse1) }
+        // 잘못된 섹션 ID로 응답을 보낸 경우
         assertThrows<InvalidSurveyResponseException> { survey.validateResponse(surveyResponse2) }
+        // 마지막 섹션을 응답하지 않은 경우
+        assertThrows<InvalidSurveyResponseException> { survey.validateResponse(surveyResponse3) }
     }
 
     @Test
@@ -150,17 +186,18 @@ class SurveyTest {
     }
 
     @Test
-    fun `설문에 속한 각 섹션의 RouteDetails의 SectionId는 설문에 속한 섹션의 ID여야 한다`() {
+    fun `각 섹션의 sectionIds는 설문의 섹션 ID들과 같다`() {
         // given
         val sectionId1 = UUID.randomUUID()
         val sectionId2 = UUID.randomUUID()
         val sectionId3 = UUID.randomUUID()
         val sectionId4 = UUID.randomUUID()
+        val sectionIds = listOf(sectionId1, sectionId2, sectionId3)
 
-        val section1 = createMockSection(sectionId1, sectionId2, setOf(sectionId1, sectionId2, sectionId3))
-        val section2 = createMockSection(sectionId2, sectionId3, setOf(sectionId1))
-        val section3 = createMockSection(sectionId3, null, setOf(sectionId1, sectionId3))
-        val section4 = createMockSection(sectionId4, null, setOf(sectionId2, sectionId3))
+        val section1 = createMockSection(sectionId1, SectionId.Standard(sectionId2), sectionIds)
+        val section2 = createMockSection(sectionId2, SectionId.Standard(sectionId3), sectionIds)
+        val section3 = createMockSection(sectionId3, SectionId.End, sectionIds)
+        val section4 = createMockSection(sectionId4, SectionId.End, sectionIds)
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }

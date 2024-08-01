@@ -2,20 +2,19 @@ package com.sbl.sulmun2yong.survey.entity
 
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import com.sbl.sulmun2yong.survey.domain.Reward
-import com.sbl.sulmun2yong.survey.domain.Section
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.domain.question.Choices
-import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
-import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
-import com.sbl.sulmun2yong.survey.domain.question.TextResponseQuestion
-import com.sbl.sulmun2yong.survey.domain.routing.NumericalOrderRouting
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfig
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteConfigs
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
-import com.sbl.sulmun2yong.survey.domain.routing.SetByChoiceRouting
-import com.sbl.sulmun2yong.survey.domain.routing.SetByUserRouting
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
+import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
+import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.Date
@@ -47,7 +46,7 @@ data class SurveyDocument(
         val sectionId: UUID,
         val title: String,
         val description: String,
-        val routeType: SectionRouteType,
+        val routeType: RoutingType,
         val nextSectionId: UUID?,
         val keyQuestionId: UUID?,
         val sectionRouteConfigs: List<SectionRouteConfigSubDocument>?,
@@ -69,8 +68,9 @@ data class SurveyDocument(
         val isAllowOther: Boolean,
     )
 
-    fun toDomain() =
-        Survey(
+    fun toDomain(): Survey {
+        val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
+        return Survey(
             id = this.id,
             title = this.title,
             description = this.description,
@@ -81,8 +81,9 @@ data class SurveyDocument(
             finishMessage = this.finishMessage,
             targetParticipantCount = this.targetParticipantCount,
             rewards = this.rewards.map { it.toDomain() },
-            sections = this.sections.map { it.toDomain() },
+            sections = this.sections.map { it.toDomain(sectionIds) },
         )
+    }
 
     private fun RewardSubDocument.toDomain() =
         Reward(
@@ -92,58 +93,54 @@ data class SurveyDocument(
             count = this.count,
         )
 
-    private fun SectionSubDocument.toDomain() =
+    private fun SectionSubDocument.toDomain(sectionIds: SectionIds) =
         Section(
-            id = this.sectionId,
+            id = SectionId.Standard(this.sectionId),
             title = this.title,
             description = this.description,
-            routeDetails = this.getRouteDetails(),
+            routingStrategy = this.getRouteDetails(),
             questions = this.questions.map { it.toDomain() },
+            sectionIds = sectionIds,
         )
 
+    // TODO: 직접 RouteStrategy 클래스를 넣도록 수정
     private fun SectionSubDocument.getRouteDetails() =
         when (this.routeType) {
-            SectionRouteType.NUMERICAL_ORDER -> NumericalOrderRouting(this.nextSectionId)
-            SectionRouteType.SET_BY_CHOICE ->
-                SetByChoiceRouting(
-                    this.keyQuestionId!!,
-                    SectionRouteConfigs(
-                        this.sectionRouteConfigs!!.map {
-                            it.toDomain()
-                        },
-                    ),
+            RoutingType.NUMERICAL_ORDER -> RoutingStrategy.NumericalOrder
+            RoutingType.SET_BY_CHOICE ->
+                RoutingStrategy.SetByChoice(
+                    keyQuestionId = this.keyQuestionId!!,
+                    routingMap = this.sectionRouteConfigs?.toDomain() ?: emptyMap(),
                 )
-            SectionRouteType.SET_BY_USER -> SetByUserRouting(this.nextSectionId)
+            RoutingType.SET_BY_USER -> RoutingStrategy.SetByUser(SectionId.from(this.nextSectionId))
         }
 
-    private fun SectionRouteConfigSubDocument.toDomain() =
-        SectionRouteConfig(
-            content = this.choiceContent,
-            nextSectionId = this.nextSectionId,
-        )
+    private fun List<SectionRouteConfigSubDocument>.toDomain(): Map<Choice, SectionId> =
+        this.associate {
+            Choice.from(it.choiceContent) to SectionId.from(it.nextSectionId)
+        }
 
     private fun QuestionSubDocument.toDomain() =
         when (this.type) {
             QuestionType.SINGLE_CHOICE ->
-                SingleChoiceQuestion(
+                StandardSingleChoiceQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
-                    choices = Choices(this.choices!!),
-                    isAllowOther = this.isAllowOther,
+                    // TODO: Document를 Domain클래스로 변환 중에 생긴 에러는 여기서 직접 반환하도록 수정
+                    choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.MULTIPLE_CHOICE ->
-                MultipleChoiceQuestion(
+                StandardMultipleChoiceQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,
                     isRequired = this.isRequired,
-                    choices = Choices(this.choices!!),
-                    isAllowOther = this.isAllowOther,
+                    choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.TEXT_RESPONSE ->
-                TextResponseQuestion(
+                StandardTextQuestion(
                     id = this.questionId,
                     title = this.title,
                     description = this.description,

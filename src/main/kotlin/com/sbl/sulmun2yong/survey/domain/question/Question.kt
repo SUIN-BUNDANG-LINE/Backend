@@ -1,7 +1,10 @@
 package com.sbl.sulmun2yong.survey.domain.question
 
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
+import com.sbl.sulmun2yong.survey.domain.response.QuestionResponse
 import java.util.UUID
 
+/** 설문의 질문 */
 interface Question {
     val id: UUID
     val questionType: QuestionType
@@ -9,14 +12,10 @@ interface Question {
     val description: String
     val isRequired: Boolean
     val choices: Choices?
-    val isAllowOther: Boolean
 
-    fun isValidResponse(questionResponse: QuestionResponse): Boolean {
-        if (id != questionResponse.questionId) return false
-        return validateQuestionResponse(questionResponse)
-    }
+    /** 질문에 유효한 응답인지 검증 */
+    fun isValidResponse(questionResponse: QuestionResponse): Boolean
 
-    fun validateQuestionResponse(questionResponse: QuestionResponse): Boolean
-
-    fun canBeKeyQuestion() = questionType == QuestionType.SINGLE_CHOICE && isRequired
+    /** 선택지 라우팅의 keyQuestion이 될 수 있는지 판단 */
+    fun canBeKeyQuestion(): Boolean
 }

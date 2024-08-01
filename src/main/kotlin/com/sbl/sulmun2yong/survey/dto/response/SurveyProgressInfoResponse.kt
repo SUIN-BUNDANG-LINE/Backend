@@ -1,8 +1,13 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
-import com.sbl.sulmun2yong.survey.domain.routing.SectionRouteType
+import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
+import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import java.util.UUID
 
 data class SurveyProgressInfoResponse(
@@ -15,39 +20,43 @@ data class SurveyProgressInfoResponse(
             SurveyProgressInfoResponse(
                 title = survey.title,
                 finishMessage = survey.finishMessage,
-                sections =
-                    survey.sections.map { section ->
-                        SectionInfo(
-                            sectionId = section.id,
-                            title = section.title,
-                            description = section.description,
-                            routeDetails =
-                                RouteDetailsInfo(
-                                    type = section.routeDetails.type,
-                                    nextSectionId = section.routeDetails.nextSectionId,
-                                    keyQuestionId = section.routeDetails.keyQuestionId,
-                                    sectionRouteConfigs =
-                                        section.routeDetails.sectionRouteConfigs?.map { config ->
-                                            SectionRouteConfigInfo(
-                                                content = config.content,
-                                                nextSectionId = config.nextSectionId,
-                                            )
-                                        },
-                                ),
-                            questions =
-                                section.questions.map { question ->
-                                    QuestionInfo(
-                                        questionId = question.id,
-                                        title = question.title,
-                                        description = question.description,
-                                        isRequired = question.isRequired,
-                                        type = question.questionType,
-                                        choices = question.choices,
-                                        isAllowOther = question.isAllowOther,
-                                    )
-                                },
-                        )
-                    },
+                sections = survey.sections.map { it.toDto() },
+            )
+
+        private fun Section.toDto() =
+            SectionInfo(
+                sectionId = this.id.value,
+                title = this.title,
+                description = this.description,
+                routeDetails = this.routingStrategy.toDto(),
+                questions = this.questions.map { it.toDto() },
+            )
+
+        private fun RoutingStrategy.toDto() =
+            RouteDetailsInfo(
+                type = this.type,
+                nextSectionId = if (this is RoutingStrategy.SetByUser) this.nextSectionId.value else null,
+                keyQuestionId = if (this is RoutingStrategy.SetByChoice) this.keyQuestionId else null,
+                sectionRouteConfigs = if (this is RoutingStrategy.SetByChoice) this.routingMap.toDto() else null,
+            )
+
+        private fun Map<Choice, SectionId>.toDto() =
+            this.map { (choice, nextSectionId) ->
+                SectionRouteConfigInfo(
+                    content = choice.content,
+                    nextSectionId = nextSectionId.value,
+                )
+            }
+
+        private fun Question.toDto() =
+            QuestionInfo(
+                questionId = this.id,
+                title = this.title,
+                description = this.description,
+                isRequired = this.isRequired,
+                type = this.questionType,
+                choices = this.choices?.standardChoices?.map { it.content },
+                isAllowOther = this.choices?.isAllowOther ?: false,
             )
     }
 
@@ -60,7 +69,7 @@ data class SurveyProgressInfoResponse(
     )
 
     data class RouteDetailsInfo(
-        val type: SectionRouteType,
+        val type: RoutingType,
         val nextSectionId: UUID?,
         val keyQuestionId: UUID?,
         val sectionRouteConfigs: List<SectionRouteConfigInfo>?,
