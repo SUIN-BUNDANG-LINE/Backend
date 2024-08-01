@@ -1,0 +1,50 @@
+name: PR 제출 시 코드 검사 및 SonarQube 분석 실행
+
+on:
+    pull_request:
+        branches:
+            - main
+            - develop
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 코드 체크아웃
+              uses: actions/checkout@v2
+
+            - name: JDK 17 설정
+              uses: actions/setup-java@v2
+              with:
+                  distribution: 'temurin'
+                  java-version: '17'
+
+            - name: SonarQube BaseURL 삽입
+              run: |
+                  echo "sonar.host.url=${{ secrets.SONARQUBE_EC2_HOST }}" >> $(pwd)/sonar-project.properties
+
+            - name: Gradle 패키지 캐싱
+              uses: actions/cache@v2
+              with:
+                  path: |
+                      ~/.gradle/caches
+                      ~/.gradle/wrapper
+                  key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+                  restore-keys: |
+                      ${{ runner.os }}-gradle-
+
+            - name: Gradle 빌드
+              run: ./gradlew build
+
+            - name: ktlint 검사 실행
+              run: ./gradlew ktlintCheck
+
+            - name: SonarQube 분석 실행 후 PR Commant 작성
+              uses: sonarsource/sonarqube-scan-action@master
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+                  SONAR_HOST_URL: ${{ secrets.SONARQUBE_EC2_HOST }}
+              with:
+                  args: >
+                      -Dsonar.branch.name=${{ github.head_ref }}
