@@ -26,3 +26,6 @@ springdoc:
 
 frontend:
     base-url: http://localhost:3000
+
+backend:
+    base-url: http://localhost:8080
