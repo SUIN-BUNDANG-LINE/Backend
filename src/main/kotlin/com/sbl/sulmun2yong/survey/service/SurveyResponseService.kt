@@ -4,8 +4,10 @@ import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Participant
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
+import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -21,6 +23,9 @@ class SurveyResponseService(
         surveyResponseRequest: SurveyResponseRequest,
     ): SurveyParticipantResponse {
         val survey = surveyAdapter.getSurvey(surveyId)
+        if (survey.status == SurveyStatus.CLOSED) {
+            throw SurveyClosedException()
+        }
         val surveyResponse = surveyResponseRequest.toDomain(surveyId)
         survey.validateResponse(surveyResponse)
         // TODO: 참가자 객체의 UserId에 실제 유저 값 넣기
