@@ -3,6 +3,7 @@ package com.sbl.sulmun2yong.survey.adapter
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
+import com.sbl.sulmun2yong.survey.entity.SurveyDocument
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.data.domain.Page
@@ -41,5 +42,9 @@ class SurveyAdapter(
                 Sort.by("createdAt").descending()
             }
         }
+    }
+
+    fun save(survey: Survey) {
+        surveyRepository.save(SurveyDocument.from(survey))
     }
 }

@@ -13,9 +13,9 @@ import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.Date
 import java.util.UUID
 
 // TODO : mongoDB 트랜잭션 테스트 필요
@@ -40,16 +40,17 @@ class DrawingBoardService(
         // 유효성 검증
         // 참가했는가
         val participant = participantAdapter.getParticipant(participantId)
+        val surveyId = participant.surveyId
+
         // 추첨 기록이 있는가
         val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
-        val drawingHistory = drawingHistoryAdapter.findByParticipantIdOrPhoneNumber(participantId, phoneNumberData)
+        val drawingHistory = drawingHistoryAdapter.findBySurveyIdAndParticipantIdOrPhoneNumber(surveyId, participantId, phoneNumberData)
         if (drawingHistory != null) {
             throw AlreadyParticipatedDrawingException()
         }
         // 설문이 종료되었는가
-        val surveyId = participant.surveyId
         val survey = surveyAdapter.getSurvey(surveyId)
-        if (Date().after(survey.finishedAt)) {
+        if (survey.status == SurveyStatus.CLOSED) {
             throw FinishedDrawingException()
         }
 
@@ -61,17 +62,22 @@ class DrawingBoardService(
 
         // 후속 처리
         // 보드 업데이트
+        val changedDrawingBoard = drawingResult.changedDrawingBoard
         drawingBoardAdapter.save(drawingResult.changedDrawingBoard)
         // 추첨 기록 저장
         drawingHistoryAdapter.save(
             DrawingHistory.create(
                 participantId = participantId,
                 phoneNumber = phoneNumberData,
-                drawingBoardId = drawingBoard.id,
+                surveyId = surveyId,
                 selectedTicketIndex = selectedNumber,
-                ticket = drawingBoard.tickets[selectedNumber],
+                ticket = changedDrawingBoard.tickets[selectedNumber],
             ),
         )
+        // 추첨 결과 남은 티켓이 0이됨
+        if (changedDrawingBoard.tickets.size - changedDrawingBoard.selectedTicketCount <= 0) {
+            surveyAdapter.save(survey.finish())
+        }
 
         // dto 반환
         val drawingResultResponse =
