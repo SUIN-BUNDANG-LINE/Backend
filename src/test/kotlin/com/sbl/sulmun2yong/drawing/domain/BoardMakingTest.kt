@@ -40,6 +40,7 @@ class BoardMakingTest {
         assertEquals(0, drawingBoard.selectedTicketCount)
         assertEquals(surveyId, drawingBoard.surveyId)
         assertEquals(boardSize, drawingBoard.tickets.size)
+        assertEquals(boardSize, drawingBoard.remainingTicketCount)
     }
 
     @Test

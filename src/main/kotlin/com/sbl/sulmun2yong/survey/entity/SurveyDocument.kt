@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
@@ -35,6 +36,82 @@ data class SurveyDocument(
     val rewards: List<RewardSubDocument>,
     val sections: List<SectionSubDocument>,
 ) : BaseTimeDocument() {
+    companion object {
+        fun from(survey: Survey) =
+            SurveyDocument(
+                id = survey.id,
+                title = survey.title,
+                description = survey.description,
+                thumbnail = survey.thumbnail,
+                publishedAt = survey.publishedAt,
+                finishedAt = survey.finishedAt,
+                status = survey.status,
+                finishMessage = survey.finishMessage,
+                targetParticipantCount = survey.targetParticipantCount,
+                rewards = survey.rewards.map { it.toDocument() },
+                sections = survey.sections.map { it.toDocument() },
+            )
+
+        private fun Reward.toDocument() =
+            RewardSubDocument(
+                rewardId = this.id,
+                name = this.name,
+                category = this.category,
+                count = this.count,
+            )
+
+        private fun Section.toDocument() =
+            SectionSubDocument(
+                sectionId = this.id.value,
+                title = this.title,
+                description = this.description,
+                routeType = this.routingStrategy.type,
+                nextSectionId =
+                    when (this.routingStrategy) {
+                        is RoutingStrategy.SetByUser -> this.routingStrategy.nextSectionId.value
+                        else -> null
+                    },
+                keyQuestionId =
+                    when (this.routingStrategy) {
+                        is RoutingStrategy.SetByChoice -> this.routingStrategy.keyQuestionId
+                        else -> null
+                    },
+                sectionRouteConfigs =
+                    when (this.routingStrategy) {
+                        is RoutingStrategy.SetByChoice ->
+                            this.routingStrategy.routingMap.map { (choice, sectionId) ->
+                                SectionRouteConfigSubDocument(
+                                    choiceContent = choice.content,
+                                    nextSectionId = sectionId.value,
+                                )
+                            }
+                        else -> null
+                    },
+                questions = this.questions.map { it.toDocument() },
+            )
+
+        private fun Question.toDocument() =
+            QuestionSubDocument(
+                questionId = this.id,
+                title = this.title,
+                description = this.description,
+                isRequired = this.isRequired,
+                type = this.questionType,
+                choices =
+                    when (this) {
+                        is StandardSingleChoiceQuestion -> this.choices.standardChoices.map { it.content }
+                        is StandardMultipleChoiceQuestion -> this.choices.standardChoices.map { it.content }
+                        else -> null
+                    },
+                isAllowOther =
+                    when (this) {
+                        is StandardSingleChoiceQuestion -> this.choices.isAllowOther
+                        is StandardMultipleChoiceQuestion -> this.choices.isAllowOther
+                        else -> false
+                    },
+            )
+    }
+
     data class RewardSubDocument(
         val rewardId: UUID,
         val name: String,
