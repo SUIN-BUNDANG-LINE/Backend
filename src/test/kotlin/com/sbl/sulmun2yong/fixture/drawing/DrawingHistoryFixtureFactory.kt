@@ -13,7 +13,7 @@ object DrawingHistoryFixtureFactory {
         com.sbl.sulmun2yong.drawing.domain.ticket.Ticket.Winning(
             "테스트 아메리카노",
             "테스트",
-            false,
+            true,
         )
 
     fun createdDrawingHistory(): DrawingHistory =
