@@ -76,6 +76,9 @@ jobs:
                       docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker stop ${{ env.CONTAINER_NAME }} || true
                       docker rm ${{ env.CONTAINER_NAME }} || true
+                      while docker ps -a | grep -q ${{ env.CONTAINER_NAME }}; do
+                        sleep 1
+                      done
                       docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
                         -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
                         -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
