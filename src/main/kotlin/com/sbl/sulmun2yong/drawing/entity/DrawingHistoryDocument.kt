@@ -13,7 +13,7 @@ data class DrawingHistoryDocument(
     val id: UUID,
     val participantId: UUID,
     val phoneNumber: String,
-    val drawingBoardId: UUID,
+    val surveyId: UUID,
     val selectedTicketIndex: Int,
     val ticket: Ticket,
 ) {
@@ -23,7 +23,7 @@ data class DrawingHistoryDocument(
                 id = drawingHistory.id,
                 participantId = drawingHistory.participantId,
                 phoneNumber = drawingHistory.phoneNumber.value,
-                drawingBoardId = drawingHistory.drawingBoardId,
+                surveyId = drawingHistory.surveyId,
                 selectedTicketIndex = drawingHistory.selectedTicketIndex,
                 ticket = drawingHistory.ticket,
             )
@@ -34,7 +34,7 @@ data class DrawingHistoryDocument(
             id = id,
             participantId = participantId,
             phoneNumber = PhoneNumber.createWithNonNullable(phoneNumber),
-            drawingBoardId = drawingBoardId,
+            surveyId = surveyId,
             selectedTicketIndex = selectedTicketIndex,
             ticket = ticket,
         )

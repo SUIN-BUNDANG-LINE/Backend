@@ -4,7 +4,6 @@ import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
-import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import java.util.UUID
 
 class DrawingBoard(
@@ -13,17 +12,16 @@ class DrawingBoard(
     val tickets: List<Ticket>,
 ) {
     val selectedTicketCount: Int
+    val remainingTicketCount: Int
 
     init {
         selectedTicketCount = calcSelectedTicketCount()
-        val remainingTicketCount = this.tickets.size - selectedTicketCount
-
-        if (remainingTicketCount <= 0) {
-            throw OutOfTicketException()
-        }
+        remainingTicketCount = this.tickets.size - selectedTicketCount
     }
 
     fun getDrawingResult(selectedIndex: Int): DrawingResult {
+        validateOutOfTicket()
+
         val selectedTicket = this.tickets[selectedIndex]
         validateTicketIsSelected(selectedTicket)
 
@@ -39,6 +37,12 @@ class DrawingBoard(
                 DrawingResult.NonWinner(
                     changedDrawingBoard = changedDrawingBoard,
                 )
+        }
+    }
+
+    private fun validateOutOfTicket() {
+        if (remainingTicketCount <= 0) {
+            throw AlreadySelectedTicketException()
         }
     }
 

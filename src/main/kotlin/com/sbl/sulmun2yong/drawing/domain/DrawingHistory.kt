@@ -8,7 +8,7 @@ class DrawingHistory(
     val id: UUID,
     val participantId: UUID,
     val phoneNumber: PhoneNumber,
-    val drawingBoardId: UUID,
+    val surveyId: UUID,
     val selectedTicketIndex: Int,
     val ticket: Ticket,
 ) {
@@ -16,7 +16,7 @@ class DrawingHistory(
         fun create(
             participantId: UUID,
             phoneNumber: PhoneNumber,
-            drawingBoardId: UUID,
+            surveyId: UUID,
             selectedTicketIndex: Int,
             ticket: Ticket,
         ): DrawingHistory =
@@ -24,7 +24,7 @@ class DrawingHistory(
                 UUID.randomUUID(),
                 participantId,
                 phoneNumber,
-                drawingBoardId,
+                surveyId,
                 selectedTicketIndex,
                 ticket,
             )

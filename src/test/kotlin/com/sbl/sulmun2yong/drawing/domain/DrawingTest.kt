@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.drawing.domain
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
-import com.sbl.sulmun2yong.drawing.exception.OutOfTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -72,8 +71,11 @@ class DrawingTest {
 
     @Test
     fun `이미 전부 추첨 완료된 보드에서 추첨하면 오류가 발생한다`() {
-        // given, when, then
-        assertThrows<OutOfTicketException> { DrawingBoardFixtureFactory.createAllSelectedDrawingBoard() }
+        // given
+        val drawingBoard = DrawingBoardFixtureFactory.createAllSelectedDrawingBoard()
+
+        // when, then
+        assertThrows<AlreadySelectedTicketException> { drawingBoard.getDrawingResult(3) }
     }
 
     @Test

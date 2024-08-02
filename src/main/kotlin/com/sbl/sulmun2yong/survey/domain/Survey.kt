@@ -48,6 +48,8 @@ data class Survey(
         require(expectedSectionId is SectionId.End) { throw InvalidSurveyResponseException() }
     }
 
+    fun finish() = copy(status = SurveyStatus.CLOSED)
+
     fun getRewardCount() = rewards.sumOf { it.count }
 
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
