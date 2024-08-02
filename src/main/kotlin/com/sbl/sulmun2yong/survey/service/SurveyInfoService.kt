@@ -33,9 +33,7 @@ class SurveyInfoService(
     fun getSurveyInfo(surveyId: UUID): SurveyInfoResponse {
         val survey = surveyAdapter.getSurvey(surveyId)
         val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
-        // TODO: 현재 참여자 수 계산하는 메서드를 DrawingBoard에 추가하기
-        val currentParticipants = drawingBoard.tickets.size - drawingBoard.selectedTicketCount
-        return SurveyInfoResponse.of(survey, currentParticipants)
+        return SurveyInfoResponse.of(survey, drawingBoard.selectedTicketCount)
     }
 
     fun getSurveyProgressInfo(surveyId: UUID): SurveyProgressInfoResponse? {
