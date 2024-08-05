@@ -24,6 +24,13 @@ springdoc:
     display-request-duration: true
     operations-sorter: alpha
 
+management:
+    endpoints:
+        web:
+            base-path: /management
+            path-mapping:
+                health: health
+
 frontend:
     base-url: http://localhost:3000
 
