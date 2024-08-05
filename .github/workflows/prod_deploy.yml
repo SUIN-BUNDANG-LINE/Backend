@@ -35,7 +35,7 @@ jobs:
 
             - name: Set up newrelic.yml
               run: |
-                  echo "${NEW_RELIC_YML}" > newrelic.yml
+                  echo "${NEW_RELIC_YML}" > newrelic/newrelic.yml
 
             - name: 환경 변수 설정
               run: |

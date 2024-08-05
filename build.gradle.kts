@@ -111,13 +111,14 @@ jib {
     container {
         jvmFlags = listOf("-Xms128m", "-Xmx128m")
         val newRelicConfig = project.file("newrelic.yml")
+        val newRelicJar = project.file("newrelic.jar")
         if (newRelicConfig.exists()) {
             jvmFlags =
                 listOf(
                     "-Xms128m",
                     "-Xmx128m",
                     "-Dnewrelic.config.file=${newRelicConfig.absolutePath}",
-                    "-javaagent:${configurations.runtimeClasspath.get().find { it.name.contains("newrelic-agent") }}",
+                    "-javaagent:${newRelicJar.absolutePath}",
                 )
         }
     }
