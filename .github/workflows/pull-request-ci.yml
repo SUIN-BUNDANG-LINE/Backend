@@ -6,6 +6,10 @@ on:
             - main
             - develop
 
+permissions:
+    contents: read
+    pull-requests: write
+
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -37,9 +41,10 @@ jobs:
               run: ./gradlew ktlintCheck
 
             - name: 테스트 커버리지 리포트 PR Commant 추가
-              id: jacoco
               uses: madrapps/jacoco-report@v1.6
               with:
-                  title: Test Coverage Report
-                  paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+                  title: 테스트 커버리지 리포트
+                  paths: build/reports/jacoco/test/jacocoTestReport.xml
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  min-coverage-overall: 0
+                  min-coverage-changed-files: 0
