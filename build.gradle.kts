@@ -11,7 +11,6 @@ plugins {
     kotlin("plugin.spring") version "1.9.24"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     id("com.google.cloud.tools.jib") version "3.4.0"
-    id("org.sonarqube") version "4.4.1.3373"
     jacoco
 }
 
@@ -59,6 +58,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // New Relic
+    implementation("com.newrelic.agent.java:newrelic-agent:8.13.0")
 }
 
 kotlin {
@@ -108,5 +110,15 @@ jib {
     }
     container {
         jvmFlags = listOf("-Xms128m", "-Xmx128m")
+        val newRelicConfig = project.file("newrelic.yml")
+        if (newRelicConfig.exists()) {
+            jvmFlags =
+                listOf(
+                    "-Xms128m",
+                    "-Xmx128m",
+                    "-Dnewrelic.config.file=${newRelicConfig.absolutePath}",
+                    "-javaagent:${configurations.runtimeClasspath.get().find { it.name.contains("newrelic-agent") }}",
+                )
+        }
     }
 }
