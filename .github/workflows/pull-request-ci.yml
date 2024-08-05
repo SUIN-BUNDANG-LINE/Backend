@@ -1,10 +1,14 @@
-name: PR 제출 시 코드 검사 및 SonarQube 분석 실행
+name: PR 제출 시 코드 검사 및 코드 커버리지 리포트 작성
 
 on:
     pull_request:
         branches:
             - main
             - develop
+
+permissions:
+    contents: read
+    pull-requests: write
 
 jobs:
     build:
@@ -19,10 +23,6 @@ jobs:
               with:
                   distribution: 'temurin'
                   java-version: '17'
-
-            - name: SonarQube BaseURL 삽입
-              run: |
-                  echo "sonar.host.url=${{ secrets.SONARQUBE_EC2_HOST }}" >> $(pwd)/sonar-project.properties
 
             - name: Gradle 패키지 캐싱
               uses: actions/cache@v2
@@ -40,11 +40,11 @@ jobs:
             - name: ktlint 검사 실행
               run: ./gradlew ktlintCheck
 
-            - name: SonarQube 분석 실행 후 PR Commant 작성
-              uses: sonarsource/sonarqube-scan-action@master
-              env:
-                  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-                  SONAR_HOST_URL: ${{ secrets.SONARQUBE_EC2_HOST }}
+            - name: 테스트 커버리지 리포트 PR Commant 추가
+              uses: madrapps/jacoco-report@v1.6
               with:
-                  args: >
-                      -Dsonar.branch.name=${{ github.head_ref }}
+                  title: 테스트 커버리지 리포트
+                  paths: build/reports/jacoco/test/jacocoTestReport.xml
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  min-coverage-overall: 0
+                  min-coverage-changed-files: 0
