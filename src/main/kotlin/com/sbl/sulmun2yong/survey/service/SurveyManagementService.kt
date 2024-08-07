@@ -3,6 +3,7 @@ package com.sbl.sulmun2yong.survey.service
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
+import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -33,7 +34,7 @@ class SurveyManagementService(
         makerId: UUID,
     ): SurveySaveResponse? {
         val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.id) })
-        val rewards = surveySaveRequest.rewards.map { it.toSurveyDomain() }
+        val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
         val survey =
             with(surveySaveRequest) {
                 Survey(
@@ -55,11 +56,9 @@ class SurveyManagementService(
 
         val drawingBoard =
             DrawingBoard.create(
-                survey.id,
-                surveySaveRequest.targetParticipantCount,
-                surveySaveRequest.rewards.map {
-                    it.toDrawingDomain()
-                },
+                surveyId = survey.id,
+                boardSize = surveySaveRequest.targetParticipantCount,
+                rewards = rewards,
             )
         drawingBoardAdapter.save(drawingBoard)
 

@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.survey.dto.request
 
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
@@ -34,13 +33,7 @@ data class SurveySaveRequest(
         val name: String,
         val category: String,
         val count: Int,
-    ) {
-        fun toSurveyDomain() = Reward(name = name, category = category, count = count)
-
-        fun toDrawingDomain() =
-            com.sbl.sulmun2yong.drawing.domain
-                .Reward(name = name, category = category, count = count)
-    }
+    )
 
     data class SectionCreateRequest(
         val id: UUID,
