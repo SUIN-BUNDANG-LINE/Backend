@@ -24,7 +24,6 @@ class SurveyManagementController(
         @LoginUser id: UUID,
     ) = ResponseEntity.ok(surveyManagementService.createSurvey(makerId = id))
 
-    // TODO: 수정할 수 있는 설문의 정보에 제한이 필요
     @PutMapping("/{surveyId}")
     override fun saveSurvey(
         @PathVariable("surveyId") surveyId: UUID,

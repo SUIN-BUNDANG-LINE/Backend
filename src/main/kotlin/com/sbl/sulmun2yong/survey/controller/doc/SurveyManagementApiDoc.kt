@@ -23,7 +23,6 @@ interface SurveyManagementApiDoc {
         @LoginUser id: UUID,
     ): ResponseEntity<SurveyCreateResponse>
 
-    // TODO: 추후 수정이 필요
     @Operation(summary = "설문 저장 API")
     @PutMapping("/save/{surveyId}")
     fun saveSurvey(
