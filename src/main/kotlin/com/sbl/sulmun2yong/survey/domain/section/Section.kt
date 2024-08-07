@@ -54,4 +54,21 @@ data class Section(
             if (response != null && !question.isValidResponse(response)) throw InvalidSectionResponseException()
         }
     }
+
+    companion object {
+        private const val DEFAULT_TITLE = "제목 없는 섹션"
+        private const val DEFAULT_DESCRIPTION = ""
+
+        fun create(): Section {
+            val id = SectionId.Standard(UUID.randomUUID())
+            return Section(
+                id = id,
+                title = DEFAULT_TITLE,
+                description = DEFAULT_DESCRIPTION,
+                routingStrategy = RoutingStrategy.NumericalOrder,
+                questions = emptyList(),
+                sectionIds = SectionIds.from(listOf(id)),
+            )
+        }
+    }
 }

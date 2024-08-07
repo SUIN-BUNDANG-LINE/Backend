@@ -20,7 +20,7 @@ data class SurveyListResponse(
                     surveys.map {
                         SurveyInfoResponse(
                             surveyId = it.id,
-                            thumbnail = it.thumbnail,
+                            thumbnail = it.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
                             title = it.title,
                             description = it.description,
                             targetParticipants = it.targetParticipantCount,
@@ -50,7 +50,8 @@ data class SurveyListResponse(
 }
 
 private fun List<Reward>.toRewardInfoResponses(): List<SurveyListResponse.RewardInfoResponse> =
-    this.groupBy { it.category }
+    this
+        .groupBy { it.category }
         .map { (category, rewardsInCategory) ->
             SurveyListResponse.RewardInfoResponse(
                 category = category,

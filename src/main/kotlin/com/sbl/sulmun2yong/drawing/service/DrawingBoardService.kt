@@ -18,7 +18,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
-// TODO : mongoDB 트랜잭션 테스트 필요
+// TODO: mongoDB 트랜잭션 테스트 필요
+// TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
 @Service
 class DrawingBoardService(
     private val surveyAdapter: SurveyAdapter,

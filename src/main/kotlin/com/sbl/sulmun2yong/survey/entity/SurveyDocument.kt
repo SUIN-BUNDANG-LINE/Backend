@@ -27,12 +27,13 @@ data class SurveyDocument(
     val id: UUID,
     val title: String,
     val description: String,
-    val thumbnail: String,
+    val thumbnail: String?,
     val publishedAt: Date?,
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
     val targetParticipantCount: Int,
+    val makerId: UUID,
     val rewards: List<RewardSubDocument>,
     val sections: List<SectionSubDocument>,
 ) : BaseTimeDocument() {
@@ -48,6 +49,7 @@ data class SurveyDocument(
                 status = survey.status,
                 finishMessage = survey.finishMessage,
                 targetParticipantCount = survey.targetParticipantCount,
+                makerId = survey.makerId,
                 rewards = survey.rewards.map { it.toDocument() },
                 sections = survey.sections.map { it.toDocument() },
             )
@@ -157,6 +159,7 @@ data class SurveyDocument(
             status = this.status,
             finishMessage = this.finishMessage,
             targetParticipantCount = this.targetParticipantCount,
+            makerId = this.makerId,
             rewards = this.rewards.map { it.toDomain() },
             sections = this.sections.map { it.toDomain(sectionIds) },
         )

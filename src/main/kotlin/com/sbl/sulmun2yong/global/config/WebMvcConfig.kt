@@ -1,7 +1,9 @@
 package com.sbl.sulmun2yong.global.config
 
+import com.sbl.sulmun2yong.global.resolver.LoginUserArgumentResolver
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
@@ -9,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class WebMvcConfig(
     @Value("\${frontend.base-url}")
     private val baseUrl: String,
+    private val loginUserArgumentResolver: LoginUserArgumentResolver,
 ) : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry
@@ -17,5 +20,9 @@ class WebMvcConfig(
             .allowedMethods("GET", "POST", "PUT", "DELETE")
             .allowCredentials(true)
             .allowedHeaders("*")
+    }
+
+    override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
+        resolvers.add(loginUserArgumentResolver)
     }
 }

@@ -1,25 +1,42 @@
 package com.sbl.sulmun2yong.survey.service
 
-import com.sbl.sulmun2yong.drawing.service.DrawingBoardService
+import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
+import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import com.sbl.sulmun2yong.survey.dto.SurveyCreateRequest
-import com.sbl.sulmun2yong.survey.dto.SurveyCreateResponse
+import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
+import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveySaveResponse
 import org.springframework.stereotype.Service
+import java.util.UUID
 
+// TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
 @Service
 class SurveyManagementService(
     private val surveyAdapter: SurveyAdapter,
-    private val drawingBoardService: DrawingBoardService,
+    private val drawingBoardAdapter: DrawingBoardAdapter,
 ) {
-    fun createSurvey(surveyCreateRequest: SurveyCreateRequest): SurveyCreateResponse? {
-        val sectionIds = SectionIds.from(surveyCreateRequest.sections.map { SectionId.Standard(it.id) })
+    fun createSurvey(makerId: UUID): SurveyCreateResponse {
+        val survey = Survey.create(makerId)
+        surveyAdapter.save(survey)
+        return SurveyCreateResponse(surveyId = survey.id)
+    }
+
+    // TODO: 수정할 수 있는 설문의 정보에 제한이 필요
+    // TODO: 추첨 보드 생성 로직을 startSurvey로 옮기기
+    // TODO: Reward 객체를 SurveyDomain의 것으로 통일하기
+    fun saveSurvey(
+        surveySaveRequest: SurveySaveRequest,
+        makerId: UUID,
+    ): SurveySaveResponse? {
+        val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.id) })
+        val rewards = surveySaveRequest.rewards.map { it.toSurveyDomain() }
         val survey =
-            with(surveyCreateRequest) {
+            with(surveySaveRequest) {
                 Survey(
-                    id = surveyCreateRequest.id,
+                    id = surveySaveRequest.id,
                     title = this.title,
                     description = this.description,
                     thumbnail = this.thumbnail,
@@ -27,17 +44,24 @@ class SurveyManagementService(
                     finishedAt = this.finishedAt,
                     status = this.status,
                     finishMessage = this.finishMessage,
-                    targetParticipantCount = surveyCreateRequest.targetParticipantCount,
-                    rewards = surveyCreateRequest.rewards.map { it.toSurveyDomain() },
+                    targetParticipantCount = surveySaveRequest.targetParticipantCount,
+                    makerId = makerId,
+                    rewards = rewards,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
             }
-        drawingBoardService.makeDrawingBoard(
-            surveyId = surveyCreateRequest.id,
-            boardSize = surveyCreateRequest.targetParticipantCount,
-            surveyRewards = surveyCreateRequest.rewards.map { it.toRewardDomain() },
-        )
         surveyAdapter.save(survey)
-        return SurveyCreateResponse(surveyId = survey.id)
+
+        val drawingBoard =
+            DrawingBoard.create(
+                survey.id,
+                surveySaveRequest.targetParticipantCount,
+                surveySaveRequest.rewards.map {
+                    it.toDrawingDomain()
+                },
+            )
+        drawingBoardAdapter.save(drawingBoard)
+
+        return SurveySaveResponse(surveyId = survey.id)
     }
 }
