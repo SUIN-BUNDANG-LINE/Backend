@@ -39,30 +39,39 @@ data class SurveySaveRequest(
         val title: String,
         val description: String,
         val questions: List<QuestionCreateRequest>,
-        val routingType: RoutingType,
-        val nextSectionId: UUID?,
-        val keyQuestionId: UUID?,
-        val routingConfigs: List<RoutingConfigCreateRequest>?,
+        val routeDetails: RouteDetailsCreateRequest,
     ) {
         fun toDomain(sectionIds: SectionIds) =
             Section(
                 id = SectionId.Standard(id),
                 title = title,
                 description = description,
-                routingStrategy =
-                    when (routingType) {
-                        RoutingType.NUMERICAL_ORDER -> RoutingStrategy.NumericalOrder
-                        RoutingType.SET_BY_USER -> RoutingStrategy.SetByUser(SectionId.from(nextSectionId))
-                        RoutingType.SET_BY_CHOICE ->
-                            RoutingStrategy.SetByChoice(
-                                keyQuestionId = keyQuestionId!!,
-                                routingMap = routingConfigs!!.map { Choice.from(it.content) to SectionId.from(it.nextSectionId) }.toMap(),
-                            )
-                    },
+                routingStrategy = getRoutingStrategy(),
                 questions = questions.map { it.toDomain() },
                 sectionIds = sectionIds,
             )
+
+        private fun getRoutingStrategy() =
+            when (routeDetails.type) {
+                RoutingType.NUMERICAL_ORDER -> RoutingStrategy.NumericalOrder
+                RoutingType.SET_BY_USER -> RoutingStrategy.SetByUser(SectionId.from(routeDetails.nextSectionId))
+                RoutingType.SET_BY_CHOICE ->
+                    RoutingStrategy.SetByChoice(
+                        keyQuestionId = routeDetails.keyQuestionId!!,
+                        routingMap =
+                            routeDetails.sectionRouteConfigs!!.associate {
+                                Choice.from(it.content) to SectionId.from(it.nextSectionId)
+                            },
+                    )
+            }
     }
+
+    data class RouteDetailsCreateRequest(
+        val type: RoutingType,
+        val nextSectionId: UUID?,
+        val keyQuestionId: UUID?,
+        val sectionRouteConfigs: List<RoutingConfigCreateRequest>?,
+    )
 
     data class RoutingConfigCreateRequest(
         val content: String?,
