@@ -61,8 +61,9 @@ class SurveyTest {
     @Test
     fun `설문을 생성하면 설문의 정보들이 설정된다`() {
         // given, when
-        val survey = createSurvey(id = id)
-        val defaultSurvey = Survey.create()
+        val makerId: UUID = UUID.randomUUID()
+        val survey = createSurvey(id = id, makerId = makerId)
+        val defaultSurvey = Survey.create(makerId)
 
         // then
         with(survey) {
@@ -75,6 +76,7 @@ class SurveyTest {
             assertEquals(SURVEY_STATUS, this.status)
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
             assertEquals(TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
+            assertEquals(makerId, this.makerId)
             assertEquals(REWARDS, this.rewards)
             assertEquals(SECTIONS, this.sections)
         }
@@ -99,6 +101,7 @@ class SurveyTest {
             assertEquals(SurveyStatus.NOT_STARTED, this.status)
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
             assertEquals(Survey.DEFAULT_TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
+            assertEquals(makerId, this.makerId)
             assertEquals(emptyList(), this.rewards)
             assertEquals(listOf(this.sections.first()), this.sections)
         }
