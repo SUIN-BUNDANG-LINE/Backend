@@ -259,7 +259,6 @@ class SurveyTest {
         val newThumbnail = "new thumbnail"
         val newFinishMessage = "new finish message"
         val newTargetParticipantCount = 10
-        val makerId = UUID.randomUUID()
         val newRewards = listOf(Reward("new reward", "new category", 1))
         val sectionId = SectionId.Standard(UUID.randomUUID())
         val newSections =
@@ -273,7 +272,7 @@ class SurveyTest {
                     sectionIds = SectionIds(listOf(sectionId, SectionId.End)),
                 ),
             )
-        val survey = createSurvey(makerId = makerId, status = SurveyStatus.NOT_STARTED)
+        val survey = createSurvey(status = SurveyStatus.NOT_STARTED)
 
         // when
         val newSurvey =
@@ -284,7 +283,6 @@ class SurveyTest {
                 finishedAt = survey.finishedAt,
                 finishMessage = newFinishMessage,
                 targetParticipantCount = newTargetParticipantCount,
-                makerId = makerId,
                 rewards = newRewards,
                 sections =
                     listOf(
@@ -307,19 +305,16 @@ class SurveyTest {
             assertEquals(survey.finishedAt, this.finishedAt)
             assertEquals(newFinishMessage, this.finishMessage)
             assertEquals(newTargetParticipantCount, this.targetParticipantCount)
-            assertEquals(makerId, this.makerId)
             assertEquals(newRewards, this.rewards)
             assertEquals(newSections, this.sections)
         }
     }
 
     @Test
-    fun `설문이 진행 중이거나 종료된 상태거나 현재 유저의 ID와 makerId가 다르면 내용를 업데이트할 수 있다`() {
+    fun `설문이 진행 중이거나 종료된 상태면 내용를 업데이트할 수 없다`() {
         // given
-        val makerId = UUID.randomUUID()
-        val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS, makerId = makerId)
-        val survey2 = createSurvey(status = SurveyStatus.CLOSED, makerId = makerId)
-        val survey3 = createSurvey(status = SurveyStatus.NOT_STARTED)
+        val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS)
+        val survey2 = createSurvey(status = SurveyStatus.CLOSED)
 
         // when, then
         // 설문이 진행 중인 경우 예외 발생
@@ -331,7 +326,6 @@ class SurveyTest {
                 finishedAt = survey1.finishedAt,
                 finishMessage = survey1.finishMessage,
                 targetParticipantCount = survey1.targetParticipantCount,
-                makerId = makerId,
                 rewards = survey1.rewards,
                 sections = survey1.sections,
             )
@@ -345,23 +339,8 @@ class SurveyTest {
                 finishedAt = survey2.finishedAt,
                 finishMessage = survey2.finishMessage,
                 targetParticipantCount = survey2.targetParticipantCount,
-                makerId = makerId,
                 rewards = survey2.rewards,
                 sections = survey2.sections,
-            )
-        }
-        // makerId가 다른 경우 예외 발생
-        assertThrows<InvalidUpdateSurveyException> {
-            survey3.updateContent(
-                title = survey3.title,
-                description = survey3.description,
-                thumbnail = survey3.thumbnail,
-                finishedAt = survey3.finishedAt,
-                finishMessage = survey3.finishMessage,
-                targetParticipantCount = survey3.targetParticipantCount,
-                makerId = UUID.randomUUID(),
-                rewards = survey3.rewards,
-                sections = survey3.sections,
             )
         }
     }

@@ -97,11 +97,10 @@ data class Survey(
         finishedAt: Date,
         finishMessage: String,
         targetParticipantCount: Int,
-        makerId: UUID,
         rewards: List<Reward>,
         sections: List<Section>,
     ): Survey {
-        if (canNotUpdate(makerId)) throw InvalidUpdateSurveyException()
+        if (canNotUpdate()) throw InvalidUpdateSurveyException()
         return copy(
             title = title,
             description = description,
@@ -115,7 +114,7 @@ data class Survey(
     }
 
     /** 설문의 정보를 업데이트할 수 있는 상태인지 확인하는 메서드 */
-    private fun canNotUpdate(makerId: UUID) = makerId != this.makerId || status == SurveyStatus.IN_PROGRESS || status == SurveyStatus.CLOSED
+    private fun canNotUpdate() = status == SurveyStatus.IN_PROGRESS || status == SurveyStatus.CLOSED
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 

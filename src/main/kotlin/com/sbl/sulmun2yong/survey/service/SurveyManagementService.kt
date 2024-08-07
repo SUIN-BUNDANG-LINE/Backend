@@ -9,6 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
+import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -30,6 +31,8 @@ class SurveyManagementService(
         makerId: UUID,
     ) {
         val survey = surveyAdapter.getSurvey(surveyId)
+        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
+        if (survey.makerId != makerId) throw InvalidUpdateSurveyException()
         val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
         val newSurvey =
             with(surveySaveRequest) {
@@ -41,7 +44,6 @@ class SurveyManagementService(
                     finishedAt = this.finishedAt,
                     finishMessage = this.finishMessage,
                     targetParticipantCount = this.targetParticipantCount,
-                    makerId = makerId,
                     rewards = rewards,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
@@ -58,5 +60,13 @@ class SurveyManagementService(
         // drawingBoardAdapter.save(drawingBoard)
     }
 
-    fun getSurveyMakeInfo(surveyId: UUID) = SurveyMakeInfoResponse.of(surveyAdapter.getSurvey(surveyId))
+    fun getSurveyMakeInfo(
+        surveyId: UUID,
+        makerId: UUID,
+    ): SurveyMakeInfoResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
+        if (survey.makerId != makerId) throw InvalidUpdateSurveyException()
+        return SurveyMakeInfoResponse.of(survey)
+    }
 }
