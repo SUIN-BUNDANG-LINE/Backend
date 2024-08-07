@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.survey.controller.doc.SurveyManagementApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.service.SurveyManagementService
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -35,4 +36,9 @@ class SurveyManagementController(
             makerId = id,
         ),
     )
+
+    @GetMapping("/{surveyId}")
+    override fun getSurveyMakeInfo(
+        @PathVariable("surveyId") surveyId: UUID,
+    ) = ResponseEntity.ok(surveyManagementService.getSurveyMakeInfo(surveyId))
 }

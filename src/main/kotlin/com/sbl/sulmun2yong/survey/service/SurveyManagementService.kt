@@ -8,6 +8,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveySaveResponse
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -64,4 +65,6 @@ class SurveyManagementService(
 
         return SurveySaveResponse(surveyId = survey.id)
     }
+
+    fun getSurveyMakeInfo(surveyId: UUID) = SurveyMakeInfoResponse.of(surveyAdapter.getSurvey(surveyId))
 }
