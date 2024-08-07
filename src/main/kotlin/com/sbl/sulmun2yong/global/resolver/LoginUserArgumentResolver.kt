@@ -17,7 +17,6 @@ import java.util.UUID
 class LoginUserArgumentResolver : HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter): Boolean {
         val hasLoginUserAnnotation = parameter.getParameterAnnotation(LoginUser::class.java) != null
-        println(parameter.parameterType)
         val isUUID = UUID::class.java.isAssignableFrom(parameter.parameterType)
         return hasLoginUserAnnotation && isUUID
     }

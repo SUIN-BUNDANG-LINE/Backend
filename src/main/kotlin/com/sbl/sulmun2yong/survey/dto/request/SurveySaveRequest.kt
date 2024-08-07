@@ -20,8 +20,9 @@ data class SurveySaveRequest(
     val id: UUID,
     val title: String,
     val description: String,
-    val thumbnail: String,
-    val publishedAt: Date,
+    // TODO: 섬네일의 URL이 우리 서비스의 S3 URL인지 확인하기
+    val thumbnail: String?,
+    val publishedAt: Date?,
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
