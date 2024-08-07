@@ -22,6 +22,7 @@ data class Survey(
     val status: SurveyStatus,
     val finishMessage: String,
     val targetParticipantCount: Int,
+    val makerId: UUID,
     val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
@@ -42,7 +43,7 @@ data class Survey(
         const val DEFAULT_FINISH_MESSAGE = "설문에 참여해주셔서 감사합니다."
         const val DEFAULT_TARGET_PARTICIPANT_COUNT = 100
 
-        fun create() =
+        fun create(makerId: UUID) =
             Survey(
                 id = UUID.randomUUID(),
                 title = DEFAULT_TITLE,
@@ -53,6 +54,7 @@ data class Survey(
                 status = SurveyStatus.NOT_STARTED,
                 finishMessage = DEFAULT_FINISH_MESSAGE,
                 targetParticipantCount = DEFAULT_TARGET_PARTICIPANT_COUNT,
+                makerId = makerId,
                 rewards = emptyList(),
                 sections = listOf(Section.create()),
             )
