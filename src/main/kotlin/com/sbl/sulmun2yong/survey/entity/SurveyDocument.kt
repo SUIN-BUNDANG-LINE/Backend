@@ -27,7 +27,7 @@ data class SurveyDocument(
     val id: UUID,
     val title: String,
     val description: String,
-    val thumbnail: String,
+    val thumbnail: String?,
     val publishedAt: Date?,
     val finishedAt: Date,
     val status: SurveyStatus,
