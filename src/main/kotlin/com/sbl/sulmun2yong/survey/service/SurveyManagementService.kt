@@ -6,9 +6,9 @@ import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import com.sbl.sulmun2yong.survey.dto.SurveyCreateResponse
-import com.sbl.sulmun2yong.survey.dto.SurveySaveRequest
-import com.sbl.sulmun2yong.survey.dto.SurveySaveResponse
+import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
+import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveySaveResponse
 import org.springframework.stereotype.Service
 import java.util.UUID
 

@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.dto
+package com.sbl.sulmun2yong.survey.dto.request
 
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus

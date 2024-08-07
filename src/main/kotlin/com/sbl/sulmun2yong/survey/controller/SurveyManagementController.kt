@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.survey.controller
 
 import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyManagementApiDoc
-import com.sbl.sulmun2yong.survey.dto.SurveySaveRequest
+import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.service.SurveyManagementService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable

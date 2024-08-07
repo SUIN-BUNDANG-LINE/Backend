@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.dto
+package com.sbl.sulmun2yong.survey.dto.response
 
 import java.util.UUID
 
