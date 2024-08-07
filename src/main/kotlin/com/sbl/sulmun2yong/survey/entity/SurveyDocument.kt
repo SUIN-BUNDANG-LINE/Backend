@@ -56,7 +56,6 @@ data class SurveyDocument(
 
         private fun Reward.toDocument() =
             RewardSubDocument(
-                rewardId = this.id,
                 name = this.name,
                 category = this.category,
                 count = this.count,
@@ -115,7 +114,6 @@ data class SurveyDocument(
     }
 
     data class RewardSubDocument(
-        val rewardId: UUID,
         val name: String,
         val category: String,
         val count: Int,
@@ -167,7 +165,6 @@ data class SurveyDocument(
 
     private fun RewardSubDocument.toDomain() =
         Reward(
-            id = this.rewardId,
             name = this.name,
             category = this.category,
             count = this.count,
