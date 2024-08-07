@@ -6,6 +6,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
+import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
@@ -87,6 +88,34 @@ data class Survey(
         // 모든 응답을 확인한 뒤 예상 섹션 ID가 종료 섹션 ID인지 확인
         require(expectedSectionId is SectionId.End) { throw InvalidSurveyResponseException() }
     }
+
+    /** 받은 값으로 수정한 설문을 반환하는 메서드 */
+    fun updateContent(
+        title: String,
+        description: String,
+        thumbnail: String?,
+        finishedAt: Date,
+        finishMessage: String,
+        targetParticipantCount: Int,
+        makerId: UUID,
+        rewards: List<Reward>,
+        sections: List<Section>,
+    ): Survey {
+        if (canNotUpdate(makerId)) throw InvalidUpdateSurveyException()
+        return copy(
+            title = title,
+            description = description,
+            thumbnail = thumbnail,
+            finishedAt = finishedAt,
+            finishMessage = finishMessage,
+            targetParticipantCount = targetParticipantCount,
+            rewards = rewards,
+            sections = sections,
+        )
+    }
+
+    /** 설문의 정보를 업데이트할 수 있는 상태인지 확인하는 메서드 */
+    private fun canNotUpdate(makerId: UUID) = makerId != this.makerId || status == SurveyStatus.IN_PROGRESS || status == SurveyStatus.CLOSED
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 
