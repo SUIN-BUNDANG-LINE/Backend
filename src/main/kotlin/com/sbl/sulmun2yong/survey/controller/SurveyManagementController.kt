@@ -18,7 +18,7 @@ import java.util.UUID
 class SurveyManagementController(
     private val surveyManagementService: SurveyManagementService,
 ) : SurveyManagementApiDoc {
-    @PostMapping
+    @PostMapping("/create")
     override fun createSurvey(
         @LoginUser id: UUID,
     ) = ResponseEntity.ok(surveyManagementService.createSurvey(makerId = id))
