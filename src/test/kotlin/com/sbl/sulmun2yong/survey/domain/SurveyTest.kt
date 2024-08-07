@@ -21,6 +21,8 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -60,6 +62,7 @@ class SurveyTest {
     fun `설문을 생성하면 설문의 정보들이 설정된다`() {
         // given, when
         val survey = createSurvey(id = id)
+        val defaultSurvey = Survey.create()
 
         // then
         with(survey) {
@@ -74,6 +77,30 @@ class SurveyTest {
             assertEquals(TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
             assertEquals(REWARDS, this.rewards)
             assertEquals(SECTIONS, this.sections)
+        }
+
+        val finishDate =
+            Date.from(
+                LocalDateTime
+                    .now()
+                    .plusDays(Survey.DEFAULT_SURVEY_DURATION)
+                    .withSecond(0)
+                    .withNano(0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant(),
+            )
+
+        with(defaultSurvey) {
+            assertEquals(Survey.DEFAULT_TITLE, this.title)
+            assertEquals(Survey.DEFAULT_DESCRIPTION, this.description)
+            assertEquals(null, this.thumbnail)
+            assertEquals(finishDate, this.finishedAt)
+            assertEquals(null, this.publishedAt)
+            assertEquals(SurveyStatus.NOT_STARTED, this.status)
+            assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
+            assertEquals(Survey.DEFAULT_TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
+            assertEquals(emptyList(), this.rewards)
+            assertEquals(listOf(this.sections.first()), this.sections)
         }
     }
 
@@ -203,5 +230,17 @@ class SurveyTest {
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }
 
         assertThrows<InvalidSurveyException> { createSurvey(sections = listOf(section1, section2, section4)) }
+    }
+
+    @Test
+    fun `설문은 종료 상태로 변경할 수 있다`() {
+        // given
+        val survey = createSurvey()
+
+        // when
+        val finishedSurvey = survey.finish()
+
+        // then
+        assertEquals(SurveyStatus.CLOSED, finishedSurvey.status)
     }
 }
