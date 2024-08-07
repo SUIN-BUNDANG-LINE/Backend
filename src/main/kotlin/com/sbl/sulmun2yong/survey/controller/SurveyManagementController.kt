@@ -34,6 +34,7 @@ class SurveyManagementController(
         surveyManagementService.saveSurvey(
             surveySaveRequest = surveySaveRequest,
             makerId = id,
+            surveyId = surveyId,
         ),
     )
 

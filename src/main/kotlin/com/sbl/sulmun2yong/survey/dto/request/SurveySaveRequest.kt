@@ -16,7 +16,6 @@ import java.util.Date
 import java.util.UUID
 
 data class SurveySaveRequest(
-    val id: UUID,
     val title: String,
     val description: String,
     // TODO: 섬네일의 URL이 우리 서비스의 S3 URL인지 확인하기
