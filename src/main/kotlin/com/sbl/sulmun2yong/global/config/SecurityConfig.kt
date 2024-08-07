@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.http.HttpStatus
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
@@ -23,9 +22,10 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
+import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.HttpStatusEntryPoint
 import org.springframework.web.filter.ForwardedHeaderFilter
+import org.springframework.security.web.access.AccessDeniedHandler
 
 @Configuration
 class SecurityConfig(
@@ -35,6 +35,8 @@ class SecurityConfig(
     private val username: String?,
     @Value("\${swagger.password}")
     private val password: String?,
+    private val entryPoint: AuthenticationEntryPoint,
+    private val deniedHandler: AccessDeniedHandler,
 ) {
     @Bean
     fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
@@ -103,7 +105,8 @@ class SecurityConfig(
                 authorize("/**", permitAll)
             }
             exceptionHandling {
-                authenticationEntryPoint = HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+                authenticationEntryPoint = entryPoint
+                accessDeniedHandler = deniedHandler
             }
             sessionManagement {
                 invalidSessionStrategy = CustomInvalidSessionStrategy()
