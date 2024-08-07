@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.survey.dto
+package com.sbl.sulmun2yong.survey.dto.request
 
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
@@ -16,12 +16,13 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.util.Date
 import java.util.UUID
 
-data class SurveyCreateRequest(
+data class SurveySaveRequest(
     val id: UUID,
     val title: String,
     val description: String,
-    val thumbnail: String,
-    val publishedAt: Date,
+    // TODO: 섬네일의 URL이 우리 서비스의 S3 URL인지 확인하기
+    val thumbnail: String?,
+    val publishedAt: Date?,
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
@@ -36,7 +37,7 @@ data class SurveyCreateRequest(
     ) {
         fun toSurveyDomain() = Reward(id = UUID.randomUUID(), name = name, category = category, count = count)
 
-        fun toRewardDomain() =
+        fun toDrawingDomain() =
             com.sbl.sulmun2yong.drawing.domain
                 .Reward(name = name, category = category, count = count)
     }

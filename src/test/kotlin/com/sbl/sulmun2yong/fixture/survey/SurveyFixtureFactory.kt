@@ -52,6 +52,7 @@ object SurveyFixtureFactory {
         status: SurveyStatus = SURVEY_STATUS,
         finishMessage: String = FINISH_MESSAGE,
         targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
+        makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
         sections: List<Section> = SECTIONS,
     ) = Survey(
@@ -64,6 +65,7 @@ object SurveyFixtureFactory {
         status = status,
         finishMessage = finishMessage + id,
         targetParticipantCount = targetParticipantCount,
+        makerId = makerId,
         rewards = rewards,
         sections = sections,
     )

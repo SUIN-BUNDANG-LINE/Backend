@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import java.util.Date
 
+// TODO: 설문 제작자 정보도 추가하기
 data class SurveyInfoResponse(
     val title: String,
     val description: String,
@@ -26,7 +27,7 @@ data class SurveyInfoResponse(
             finishedAt = survey.finishedAt,
             currentParticipants = currentParticipants,
             targetParticipants = survey.targetParticipantCount,
-            thumbnail = survey.thumbnail,
+            thumbnail = survey.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
             rewards = survey.rewards.map { it.toResponse() },
         )
     }
