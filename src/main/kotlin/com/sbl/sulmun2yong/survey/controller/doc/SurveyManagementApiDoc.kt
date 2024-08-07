@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.controller.doc
 
+import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.dto.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.SurveySaveResponse
@@ -16,13 +17,16 @@ import java.util.UUID
 interface SurveyManagementApiDoc {
     @Operation(summary = "설문 생성 API")
     @PostMapping("/create")
-    fun createSurvey(): ResponseEntity<SurveyCreateResponse>
+    fun createSurvey(
+        @LoginUser id: UUID,
+    ): ResponseEntity<SurveyCreateResponse>
 
     // TODO: 추후 수정이 필요
     @Operation(summary = "설문 저장 API")
     @PutMapping("/save/{surveyId}")
     fun saveSurvey(
         @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
         @RequestBody surveySaveRequest: SurveySaveRequest,
     ): ResponseEntity<SurveySaveResponse>
 }

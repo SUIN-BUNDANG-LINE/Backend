@@ -35,10 +35,6 @@ data class SurveySaveRequest(
         val count: Int,
     ) {
         fun toSurveyDomain() = Reward(id = UUID.randomUUID(), name = name, category = category, count = count)
-
-        fun toRewardDomain() =
-            com.sbl.sulmun2yong.drawing.domain
-                .Reward(name = name, category = category, count = count)
     }
 
     data class SectionCreateRequest(
