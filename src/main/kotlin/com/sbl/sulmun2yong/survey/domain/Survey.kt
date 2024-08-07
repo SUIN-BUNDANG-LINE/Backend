@@ -100,7 +100,14 @@ data class Survey(
         rewards: List<Reward>,
         sections: List<Section>,
     ): Survey {
-        if (canNotUpdate()) throw InvalidUpdateSurveyException()
+        // 설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야한다.
+        require(
+            status == SurveyStatus.NOT_STARTED ||
+                status == SurveyStatus.IN_MODIFICATION &&
+                isRewardInfoEquals(targetParticipantCount, rewards),
+        ) {
+            throw InvalidUpdateSurveyException()
+        }
         return copy(
             title = title,
             description = description,
@@ -113,8 +120,11 @@ data class Survey(
         )
     }
 
-    /** 설문의 정보를 업데이트할 수 있는 상태인지 확인하는 메서드 */
-    private fun canNotUpdate() = status == SurveyStatus.IN_PROGRESS || status == SurveyStatus.CLOSED
+    /** 리워드 관련 정보가 같은지 확인하는 메서드 */
+    private fun isRewardInfoEquals(
+        targetParticipantCount: Int,
+        rewards: List<Reward>,
+    ) = targetParticipantCount == this.targetParticipantCount && rewards == this.rewards
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 

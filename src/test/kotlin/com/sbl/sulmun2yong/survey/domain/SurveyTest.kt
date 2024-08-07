@@ -311,10 +311,11 @@ class SurveyTest {
     }
 
     @Test
-    fun `설문이 진행 중이거나 종료된 상태면 내용를 업데이트할 수 없다`() {
+    fun `설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야 설문 정보 갱신이 가능하다`() {
         // given
         val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS)
         val survey2 = createSurvey(status = SurveyStatus.CLOSED)
+        val survey3 = createSurvey(status = SurveyStatus.IN_MODIFICATION)
 
         // when, then
         // 설문이 진행 중인 경우 예외 발생
@@ -340,6 +341,43 @@ class SurveyTest {
                 finishMessage = survey2.finishMessage,
                 targetParticipantCount = survey2.targetParticipantCount,
                 rewards = survey2.rewards,
+                sections = survey2.sections,
+            )
+        }
+        // 설문이 수정 중일 때 리워드 관련 정보가 변경된 경우 예외 발생
+        assertThrows<InvalidUpdateSurveyException> {
+            survey3.updateContent(
+                title = survey2.title,
+                description = survey2.description,
+                thumbnail = survey2.thumbnail,
+                finishedAt = survey2.finishedAt,
+                finishMessage = survey2.finishMessage,
+                targetParticipantCount = survey2.targetParticipantCount,
+                rewards = listOf(),
+                sections = survey2.sections,
+            )
+        }
+        assertThrows<InvalidUpdateSurveyException> {
+            survey3.updateContent(
+                title = survey2.title,
+                description = survey2.description,
+                thumbnail = survey2.thumbnail,
+                finishedAt = survey2.finishedAt,
+                finishMessage = survey2.finishMessage,
+                targetParticipantCount = 1000,
+                rewards = survey2.rewards,
+                sections = survey2.sections,
+            )
+        }
+        assertThrows<InvalidUpdateSurveyException> {
+            survey3.updateContent(
+                title = survey2.title,
+                description = survey2.description,
+                thumbnail = survey2.thumbnail,
+                finishedAt = survey2.finishedAt,
+                finishMessage = survey2.finishMessage,
+                targetParticipantCount = 1000,
+                rewards = listOf(),
                 sections = survey2.sections,
             )
         }
