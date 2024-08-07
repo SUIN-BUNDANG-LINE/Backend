@@ -9,6 +9,7 @@ import com.sbl.sulmun2yong.survey.dto.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.SurveySaveResponse
 import org.springframework.stereotype.Service
 
+// TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
 @Service
 class SurveyManagementService(
     private val surveyAdapter: SurveyAdapter,
