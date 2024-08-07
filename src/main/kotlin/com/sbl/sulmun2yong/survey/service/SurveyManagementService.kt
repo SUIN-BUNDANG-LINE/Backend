@@ -1,5 +1,7 @@
 package com.sbl.sulmun2yong.survey.service
 
+import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
+import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -14,6 +16,7 @@ import java.util.UUID
 @Service
 class SurveyManagementService(
     private val surveyAdapter: SurveyAdapter,
+    private val drawingBoardAdapter: DrawingBoardAdapter,
 ) {
     fun createSurvey(makerId: UUID): SurveyCreateResponse {
         val survey = Survey.create(makerId)
@@ -21,6 +24,9 @@ class SurveyManagementService(
         return SurveyCreateResponse(surveyId = survey.id)
     }
 
+    // TODO: 수정할 수 있는 설문의 정보에 제한이 필요
+    // TODO: 추첨 보드 생성 로직을 startSurvey로 옮기기
+    // TODO: Reward 객체를 SurveyDomain의 것으로 통일하기
     fun saveSurvey(
         surveySaveRequest: SurveySaveRequest,
         makerId: UUID,
@@ -45,6 +51,16 @@ class SurveyManagementService(
                 )
             }
         surveyAdapter.save(survey)
+
+        val drawingBoard =
+            DrawingBoard.create(
+                survey.id,
+                surveySaveRequest.targetParticipantCount,
+                surveySaveRequest.rewards.map {
+                    it.toDrawingDomain()
+                },
+            )
+        drawingBoardAdapter.save(drawingBoard)
 
         return SurveySaveResponse(surveyId = survey.id)
     }
