@@ -9,7 +9,6 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
-import com.sbl.sulmun2yong.survey.dto.response.SurveySaveResponse
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -29,7 +28,7 @@ class SurveyManagementService(
         surveyId: UUID,
         surveySaveRequest: SurveySaveRequest,
         makerId: UUID,
-    ): SurveySaveResponse? {
+    ) {
         val survey = surveyAdapter.getSurvey(surveyId)
         val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
         val newSurvey =
@@ -57,8 +56,6 @@ class SurveyManagementService(
         //         rewards = rewards,
         //     )
         // drawingBoardAdapter.save(drawingBoard)
-
-        return SurveySaveResponse(surveyId = survey.id)
     }
 
     fun getSurveyMakeInfo(surveyId: UUID) = SurveyMakeInfoResponse.of(surveyAdapter.getSurvey(surveyId))
