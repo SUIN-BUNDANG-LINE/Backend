@@ -14,6 +14,7 @@ data class User(
     var phoneNumber: PhoneNumber?,
     val role: UserRole,
 ) {
+    // TODO: UserRole이 AUTHENTICATED_USER일 경우 phoneNumber는 null이 아닌지 검사
     init {
         if (nickname.length !in 2..10) {
             throw InvalidUserException()
