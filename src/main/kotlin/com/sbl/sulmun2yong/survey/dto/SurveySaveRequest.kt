@@ -16,7 +16,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.util.Date
 import java.util.UUID
 
-data class SurveyCreateRequest(
+data class SurveySaveRequest(
     val id: UUID,
     val title: String,
     val description: String,
