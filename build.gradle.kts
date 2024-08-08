@@ -118,16 +118,16 @@ jib {
                     "-Xms128m",
                     "-Xmx128m",
                     "-Dnewrelic.config.file=/app/config/newrelic.yml",
-                    "-javaagent:/app/libs/newrelic.jar"
+                    "-javaagent:/app/libs/newrelic.jar",
                 )
             extraDirectories {
                 paths {
                     path {
-                        from = newRelicConfig.toPath()
+                        setFrom(newRelicConfig.toPath())
                         into = "/app/config"
                     }
                     path {
-                        from = newRelicJar.toPath()
+                        setFrom(newRelicJar.toPath())
                         into = "/app/libs"
                     }
                 }
