@@ -7,8 +7,10 @@ import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStr
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomInvalidSessionStrategy
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.Customizer
@@ -23,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.HttpStatusEntryPoint
+import org.springframework.web.filter.ForwardedHeaderFilter
 
 @Configuration
 class SecurityConfig(
@@ -114,5 +117,15 @@ class SecurityConfig(
             }
         }
         return http.build()
+    }
+
+    @Bean
+    fun forwardedHeaderFilter(): FilterRegistrationBean<ForwardedHeaderFilter> {
+        val filterRegistrationBean = FilterRegistrationBean<ForwardedHeaderFilter>()
+
+        filterRegistrationBean.filter = ForwardedHeaderFilter()
+        filterRegistrationBean.order = Ordered.HIGHEST_PRECEDENCE
+
+        return filterRegistrationBean
     }
 }
