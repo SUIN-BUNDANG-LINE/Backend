@@ -15,9 +15,13 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
+import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
+import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
+import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -245,5 +249,138 @@ class SurveyTest {
 
         // then
         assertEquals(SurveyStatus.CLOSED, finishedSurvey.status)
+    }
+
+    @Test
+    fun `설문의 내용를 업데이트할 수 있다`() {
+        // given
+        val newTitle = "new title"
+        val newDescription = "new description"
+        val newThumbnail = "new thumbnail"
+        val newFinishMessage = "new finish message"
+        val newTargetParticipantCount = 10
+        val newRewards = listOf(Reward("new reward", "new category", 1))
+        val sectionId = SectionId.Standard(UUID.randomUUID())
+        val newSections =
+            listOf(
+                Section(
+                    id = sectionId,
+                    title = "",
+                    description = "",
+                    routingStrategy = RoutingStrategy.NumericalOrder,
+                    questions = emptyList(),
+                    sectionIds = SectionIds(listOf(sectionId, SectionId.End)),
+                ),
+            )
+        val survey = createSurvey(status = SurveyStatus.NOT_STARTED)
+
+        // when
+        val newSurvey =
+            survey.updateContent(
+                title = newTitle,
+                description = newDescription,
+                thumbnail = newThumbnail,
+                finishedAt = survey.finishedAt,
+                finishMessage = newFinishMessage,
+                targetParticipantCount = newTargetParticipantCount,
+                rewards = newRewards,
+                sections =
+                    listOf(
+                        Section(
+                            id = sectionId,
+                            title = "",
+                            description = "",
+                            routingStrategy = RoutingStrategy.NumericalOrder,
+                            questions = emptyList(),
+                            sectionIds = SectionIds.from(listOf(sectionId)),
+                        ),
+                    ),
+            )
+
+        // then
+        with(newSurvey) {
+            assertEquals(newTitle, this.title)
+            assertEquals(newDescription, this.description)
+            assertEquals(newThumbnail, this.thumbnail)
+            assertEquals(survey.finishedAt, this.finishedAt)
+            assertEquals(newFinishMessage, this.finishMessage)
+            assertEquals(newTargetParticipantCount, this.targetParticipantCount)
+            assertEquals(newRewards, this.rewards)
+            assertEquals(newSections, this.sections)
+        }
+    }
+
+    @Test
+    fun `설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야 설문 정보 갱신이 가능하다`() {
+        // given
+        val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS)
+        val survey2 = createSurvey(status = SurveyStatus.CLOSED)
+        val survey3 = createSurvey(status = SurveyStatus.IN_MODIFICATION)
+
+        // when, then
+        // 설문이 진행 중인 경우 예외 발생
+        assertThrows<InvalidUpdateSurveyException> {
+            survey1.updateContent(
+                title = survey1.title,
+                description = survey1.description,
+                thumbnail = survey1.thumbnail,
+                finishedAt = survey1.finishedAt,
+                finishMessage = survey1.finishMessage,
+                targetParticipantCount = survey1.targetParticipantCount,
+                rewards = survey1.rewards,
+                sections = survey1.sections,
+            )
+        }
+        // 설문이 마감된 경우 예외 발생
+        assertThrows<InvalidUpdateSurveyException> {
+            survey2.updateContent(
+                title = survey2.title,
+                description = survey2.description,
+                thumbnail = survey2.thumbnail,
+                finishedAt = survey2.finishedAt,
+                finishMessage = survey2.finishMessage,
+                targetParticipantCount = survey2.targetParticipantCount,
+                rewards = survey2.rewards,
+                sections = survey2.sections,
+            )
+        }
+        // 설문이 수정 중일 때 리워드 관련 정보가 변경되지 않은 경우 정상적으로 진행
+        assertDoesNotThrow {
+            survey3.updateContent(
+                title = survey3.title,
+                description = survey3.description,
+                thumbnail = survey3.thumbnail,
+                finishedAt = survey3.finishedAt,
+                finishMessage = survey3.finishMessage,
+                targetParticipantCount = survey3.targetParticipantCount,
+                rewards = survey3.rewards,
+                sections = survey3.sections,
+            )
+        }
+        // 설문이 수정 중일 때 리워드 관련 정보가 변경된 경우 예외 발생
+        assertThrows<InvalidUpdateSurveyException> {
+            survey3.updateContent(
+                title = survey3.title,
+                description = survey3.description,
+                thumbnail = survey3.thumbnail,
+                finishedAt = survey3.finishedAt,
+                finishMessage = survey3.finishMessage,
+                targetParticipantCount = survey3.targetParticipantCount,
+                rewards = listOf(),
+                sections = survey3.sections,
+            )
+        }
+        assertThrows<InvalidUpdateSurveyException> {
+            survey3.updateContent(
+                title = survey3.title,
+                description = survey3.description,
+                thumbnail = survey3.thumbnail,
+                finishedAt = survey3.finishedAt,
+                finishMessage = survey3.finishMessage,
+                targetParticipantCount = 1000,
+                rewards = survey3.rewards,
+                sections = survey3.sections,
+            )
+        }
     }
 }

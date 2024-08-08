@@ -6,6 +6,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
+import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
@@ -87,6 +88,43 @@ data class Survey(
         // 모든 응답을 확인한 뒤 예상 섹션 ID가 종료 섹션 ID인지 확인
         require(expectedSectionId is SectionId.End) { throw InvalidSurveyResponseException() }
     }
+
+    /** 받은 값으로 수정한 설문을 반환하는 메서드 */
+    fun updateContent(
+        title: String,
+        description: String,
+        thumbnail: String?,
+        finishedAt: Date,
+        finishMessage: String,
+        targetParticipantCount: Int,
+        rewards: List<Reward>,
+        sections: List<Section>,
+    ): Survey {
+        // 설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야한다.
+        require(
+            status == SurveyStatus.NOT_STARTED ||
+                status == SurveyStatus.IN_MODIFICATION &&
+                isRewardInfoEquals(targetParticipantCount, rewards),
+        ) {
+            throw InvalidUpdateSurveyException()
+        }
+        return copy(
+            title = title,
+            description = description,
+            thumbnail = thumbnail,
+            finishedAt = finishedAt,
+            finishMessage = finishMessage,
+            targetParticipantCount = targetParticipantCount,
+            rewards = rewards,
+            sections = sections,
+        )
+    }
+
+    /** 리워드 관련 정보가 같은지 확인하는 메서드 */
+    private fun isRewardInfoEquals(
+        targetParticipantCount: Int,
+        rewards: List<Reward>,
+    ) = targetParticipantCount == this.targetParticipantCount && rewards == this.rewards
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 

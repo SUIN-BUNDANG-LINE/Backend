@@ -11,6 +11,7 @@ enum class ErrorCode(
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "GL0001", "서버 오류가 발생했습니다."),
     INPUT_INVALID_VALUE(HttpStatus.BAD_REQUEST, "GL0002", "잘못된 입력입니다."),
     LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "GL0003", "로그인이 필요합니다."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "GL0004", "접근 권한이 없습니다."),
 
     // Survey (SV)
     SURVEY_NOT_FOUND(HttpStatus.NOT_FOUND, "SV0002", "설문을 찾을 수 없습니다."),
@@ -24,6 +25,8 @@ enum class ErrorCode(
     INVALID_PARTICIPANT(HttpStatus.BAD_REQUEST, "SV0012", "유효하지 않은 참여자입니다."),
     INVALID_SECTION_IDS(HttpStatus.BAD_REQUEST, "SV0013", "유효하지 않은 섹션 ID입니다."),
     SURVEY_CLOSED(HttpStatus.BAD_REQUEST, "SV0014", "이미 마감된 설문입니다."),
+    INVALID_UPDATE_SURVEY(HttpStatus.BAD_REQUEST, "SV0015", "설문 정보 갱신에 실패했습니다."),
+    INVALID_SURVEY_ACCESS(HttpStatus.FORBIDDEN, "SV0016", "설문 접근 권한이 없습니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),

@@ -4,7 +4,6 @@ import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
-import com.sbl.sulmun2yong.survey.dto.response.SurveySaveResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
@@ -23,18 +22,18 @@ interface SurveyManagementApiDoc {
         @LoginUser id: UUID,
     ): ResponseEntity<SurveyCreateResponse>
 
-    // TODO: 추후 수정이 필요
     @Operation(summary = "설문 저장 API")
     @PutMapping("/save/{surveyId}")
     fun saveSurvey(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
         @RequestBody surveySaveRequest: SurveySaveRequest,
-    ): ResponseEntity<SurveySaveResponse>
+    ): ResponseEntity<Unit>
 
     @Operation(summary = "설문 제작 정보 API")
     @GetMapping("/{surveyId}")
     fun getSurveyMakeInfo(
         @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
     ): ResponseEntity<SurveyMakeInfoResponse>
 }

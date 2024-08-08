@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.survey.service
 
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
@@ -10,7 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
-import com.sbl.sulmun2yong.survey.dto.response.SurveySaveResponse
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -26,44 +25,48 @@ class SurveyManagementService(
         return SurveyCreateResponse(surveyId = survey.id)
     }
 
-    // TODO: 수정할 수 있는 설문의 정보에 제한이 필요
-    // TODO: 추첨 보드 생성 로직을 startSurvey로 옮기기
     fun saveSurvey(
         surveyId: UUID,
         surveySaveRequest: SurveySaveRequest,
         makerId: UUID,
-    ): SurveySaveResponse? {
-        val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.id) })
+    ) {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
+        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
-        val survey =
+        val newSurvey =
             with(surveySaveRequest) {
-                Survey(
-                    id = surveyId,
+                val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.id) })
+                survey.updateContent(
                     title = this.title,
                     description = this.description,
                     thumbnail = this.thumbnail,
-                    publishedAt = this.publishedAt,
                     finishedAt = this.finishedAt,
-                    status = this.status,
                     finishMessage = this.finishMessage,
-                    targetParticipantCount = surveySaveRequest.targetParticipantCount,
-                    makerId = makerId,
+                    targetParticipantCount = this.targetParticipantCount,
                     rewards = rewards,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
             }
-        surveyAdapter.save(survey)
+        surveyAdapter.save(newSurvey)
 
-        val drawingBoard =
-            DrawingBoard.create(
-                surveyId = survey.id,
-                boardSize = surveySaveRequest.targetParticipantCount,
-                rewards = rewards,
-            )
-        drawingBoardAdapter.save(drawingBoard)
-
-        return SurveySaveResponse(surveyId = survey.id)
+        // TODO: 추첨 보드 생성 로직을 startSurvey로 옮기기
+        // val drawingBoard =
+        //     DrawingBoard.create(
+        //         surveyId = survey.id,
+        //         boardSize = surveySaveRequest.targetParticipantCount,
+        //         rewards = rewards,
+        //     )
+        // drawingBoardAdapter.save(drawingBoard)
     }
 
-    fun getSurveyMakeInfo(surveyId: UUID) = SurveyMakeInfoResponse.of(surveyAdapter.getSurvey(surveyId))
+    fun getSurveyMakeInfo(
+        surveyId: UUID,
+        makerId: UUID,
+    ): SurveyMakeInfoResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
+        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        return SurveyMakeInfoResponse.of(survey)
+    }
 }
