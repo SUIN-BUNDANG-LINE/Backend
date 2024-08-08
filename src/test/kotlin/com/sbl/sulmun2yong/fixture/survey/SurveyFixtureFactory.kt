@@ -22,9 +22,9 @@ object SurveyFixtureFactory {
     const val TARGET_PARTICIPANT_COUNT = 100
     val REWARDS =
         listOf(
-            Reward(UUID.randomUUID(), "아메리카노", "커피", 3),
-            Reward(UUID.randomUUID(), "카페라떼", "커피", 2),
-            Reward(UUID.randomUUID(), "햄버거", "음식", 4),
+            Reward("아메리카노", "커피", 3),
+            Reward("카페라떼", "커피", 2),
+            Reward("햄버거", "음식", 4),
         )
     val SECTIONS =
         let {
