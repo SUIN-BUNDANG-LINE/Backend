@@ -4,7 +4,6 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
-import com.sbl.sulmun2yong.drawing.domain.Reward
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
@@ -13,6 +12,7 @@ import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
+import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

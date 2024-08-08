@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
-import com.sbl.sulmun2yong.drawing.domain.Reward
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
+import com.sbl.sulmun2yong.survey.domain.Reward
 import java.util.UUID
 
 object DrawingBoardFixtureFactory {
