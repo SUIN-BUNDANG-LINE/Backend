@@ -113,6 +113,8 @@ jib {
         val newRelicConfig = project.file("newrelic/newrelic.yml")
         val newRelicJar = project.file("newrelic/newrelic.jar")
         if (newRelicConfig.exists() && newRelicJar.exists()) {
+            println(newRelicConfig.toPath())
+            println(newRelicJar.toPath())
             jvmFlags =
                 listOf(
                     "-Xms128m",
