@@ -110,16 +110,28 @@ jib {
     }
     container {
         jvmFlags = listOf("-Xms128m", "-Xmx128m")
-        val newRelicConfig = project.file("newrelic.yml")
-        val newRelicJar = project.file("newrelic.jar")
-        if (newRelicConfig.exists()) {
+        val newRelicConfig = project.file("newrelic/newrelic.yml")
+        val newRelicJar = project.file("newrelic/newrelic.jar")
+        if (newRelicConfig.exists() && newRelicJar.exists()) {
             jvmFlags =
                 listOf(
                     "-Xms128m",
                     "-Xmx128m",
-                    "-Dnewrelic.config.file=${newRelicConfig.absolutePath}",
-                    "-javaagent:${newRelicJar.absolutePath}",
+                    "-Dnewrelic.config.file=/app/config/newrelic.yml",
+                    "-javaagent:/app/libs/newrelic.jar"
                 )
+            extraDirectories {
+                paths {
+                    path {
+                        from = newRelicConfig.toPath()
+                        into = "/app/config"
+                    }
+                    path {
+                        from = newRelicJar.toPath()
+                        into = "/app/libs"
+                    }
+                }
+            }
         }
     }
 }
