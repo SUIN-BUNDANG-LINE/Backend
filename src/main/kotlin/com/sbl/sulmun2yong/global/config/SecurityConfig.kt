@@ -24,8 +24,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.web.filter.ForwardedHeaderFilter
 import org.springframework.security.web.access.AccessDeniedHandler
+import org.springframework.web.filter.ForwardedHeaderFilter
 
 @Configuration
 class SecurityConfig(
