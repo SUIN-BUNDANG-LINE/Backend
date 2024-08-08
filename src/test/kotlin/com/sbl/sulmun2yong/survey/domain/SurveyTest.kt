@@ -344,41 +344,42 @@ class SurveyTest {
                 sections = survey2.sections,
             )
         }
+        // 설문이 수정 중일 때 리워드 관련 정보가 변경되지 않은 경우 정상적으로 진행
+        assertDoesNotThrow {
+            survey3.updateContent(
+                title = survey3.title,
+                description = survey3.description,
+                thumbnail = survey3.thumbnail,
+                finishedAt = survey3.finishedAt,
+                finishMessage = survey3.finishMessage,
+                targetParticipantCount = survey3.targetParticipantCount,
+                rewards = survey3.rewards,
+                sections = survey3.sections,
+            )
+        }
         // 설문이 수정 중일 때 리워드 관련 정보가 변경된 경우 예외 발생
         assertThrows<InvalidUpdateSurveyException> {
             survey3.updateContent(
-                title = survey2.title,
-                description = survey2.description,
-                thumbnail = survey2.thumbnail,
-                finishedAt = survey2.finishedAt,
-                finishMessage = survey2.finishMessage,
-                targetParticipantCount = survey2.targetParticipantCount,
+                title = survey3.title,
+                description = survey3.description,
+                thumbnail = survey3.thumbnail,
+                finishedAt = survey3.finishedAt,
+                finishMessage = survey3.finishMessage,
+                targetParticipantCount = survey3.targetParticipantCount,
                 rewards = listOf(),
-                sections = survey2.sections,
+                sections = survey3.sections,
             )
         }
         assertThrows<InvalidUpdateSurveyException> {
             survey3.updateContent(
-                title = survey2.title,
-                description = survey2.description,
-                thumbnail = survey2.thumbnail,
-                finishedAt = survey2.finishedAt,
-                finishMessage = survey2.finishMessage,
+                title = survey3.title,
+                description = survey3.description,
+                thumbnail = survey3.thumbnail,
+                finishedAt = survey3.finishedAt,
+                finishMessage = survey3.finishMessage,
                 targetParticipantCount = 1000,
-                rewards = survey2.rewards,
-                sections = survey2.sections,
-            )
-        }
-        assertThrows<InvalidUpdateSurveyException> {
-            survey3.updateContent(
-                title = survey2.title,
-                description = survey2.description,
-                thumbnail = survey2.thumbnail,
-                finishedAt = survey2.finishedAt,
-                finishMessage = survey2.finishMessage,
-                targetParticipantCount = 1000,
-                rewards = listOf(),
-                sections = survey2.sections,
+                rewards = survey3.rewards,
+                sections = survey3.sections,
             )
         }
     }
