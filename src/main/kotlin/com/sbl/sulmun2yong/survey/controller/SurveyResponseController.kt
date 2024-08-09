@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.survey.controller.doc.SurveyResponseApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import com.sbl.sulmun2yong.survey.service.SurveyResponseService
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -21,7 +22,7 @@ class SurveyResponseController(
     @PostMapping("/{survey-id}")
     override fun responseToSurvey(
         @PathVariable("survey-id") surveyId: UUID,
-        @RequestBody surveyResponseRequest: SurveyResponseRequest,
+        @Valid @RequestBody surveyResponseRequest: SurveyResponseRequest,
         @IsAdmin isAdmin: Boolean,
     ): ResponseEntity<SurveyParticipantResponse> =
         ResponseEntity.ok(
