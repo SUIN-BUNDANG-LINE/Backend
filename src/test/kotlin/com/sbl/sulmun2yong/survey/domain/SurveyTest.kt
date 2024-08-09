@@ -33,6 +33,7 @@ import kotlin.test.assertEquals
 
 class SurveyTest {
     private val id = UUID.randomUUID()
+    private val visitorId = "abcedfg"
 
     @Test
     fun `설문의 응답을 생성하면 정보들이 설정된다`() {
@@ -42,7 +43,7 @@ class SurveyTest {
         val sectionResponse1 = SectionResponse(sectionId, listOf())
 
         // when
-        val surveyResponse = SurveyResponse(id, listOf(sectionResponse1))
+        val surveyResponse = SurveyResponse(id, visitorId, listOf(sectionResponse1))
 
         // then
         assertEquals(id, surveyResponse.surveyId)
@@ -58,7 +59,7 @@ class SurveyTest {
 
         // when, then
         assertThrows<InvalidSurveyResponseException> {
-            SurveyResponse(UUID.randomUUID(), listOf(sectionResponse1, sectionResponse2))
+            SurveyResponse(UUID.randomUUID(), visitorId, listOf(sectionResponse1, sectionResponse2))
         }
     }
 
@@ -168,6 +169,7 @@ class SurveyTest {
         val surveyResponse1 =
             SurveyResponse(
                 id,
+                visitorId,
                 listOf(
                     SectionResponse(SectionId.Standard(sectionId1), listOf()),
                     SectionResponse(SectionId.Standard(sectionId2), listOf()),
@@ -178,6 +180,7 @@ class SurveyTest {
         val surveyResponse2 =
             SurveyResponse(
                 id,
+                visitorId,
                 listOf(
                     SectionResponse(SectionId.Standard(sectionId1), listOf()),
                     SectionResponse(SectionId.Standard(sectionId2), listOf()),
@@ -188,6 +191,7 @@ class SurveyTest {
         val surveyResponse3 =
             SurveyResponse(
                 id,
+                visitorId,
                 listOf(
                     SectionResponse(SectionId.Standard(sectionId1), listOf()),
                     SectionResponse(SectionId.Standard(sectionId2), listOf()),
