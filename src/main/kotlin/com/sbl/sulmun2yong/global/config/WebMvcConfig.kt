@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.global.config
 
+import com.sbl.sulmun2yong.global.resolver.IsAdminArgumentResolver
 import com.sbl.sulmun2yong.global.resolver.LoginUserArgumentResolver
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
@@ -12,6 +13,7 @@ class WebMvcConfig(
     @Value("\${frontend.base-url}")
     private val baseUrl: String,
     private val loginUserArgumentResolver: LoginUserArgumentResolver,
+    private val isAdminArgumentResolver: IsAdminArgumentResolver,
 ) : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry
@@ -24,5 +26,6 @@ class WebMvcConfig(
 
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
         resolvers.add(loginUserArgumentResolver)
+        resolvers.add(isAdminArgumentResolver)
     }
 }

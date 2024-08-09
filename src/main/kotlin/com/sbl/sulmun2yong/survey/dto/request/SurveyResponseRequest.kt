@@ -5,21 +5,28 @@ import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
 import java.util.UUID
 
 data class SurveyResponseRequest(
+    @field:Valid
     val sectionResponses: List<SectionResponseRequest>,
+    @field:Size(max = 100, message = "visitorId는 최대 100자까지 입력 가능합니다.")
     val visitorId: String,
 ) {
     data class SectionResponseRequest(
         val sectionId: UUID,
-        val questionResponses: List<QuestionResponseRequest>,
+        @field:Valid
+        val questionResponses: List<@Valid QuestionResponseRequest>,
     ) {
         data class QuestionResponseRequest(
             val questionId: UUID,
-            val responses: List<ResponseDetailRequest>,
+            @field:Valid
+            val responses: List<@Valid ResponseDetailRequest>,
         ) {
             data class ResponseDetailRequest(
+                @field:Size(max = 1000, message = "내용은 최대 1000자까지 입력 가능합니다.")
                 val content: String,
                 val isOther: Boolean,
             ) {

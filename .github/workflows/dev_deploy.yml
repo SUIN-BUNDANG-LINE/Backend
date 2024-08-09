@@ -62,6 +62,7 @@ jobs:
             MONGODB_URL: ${{ secrets.DEVELOP_MONGODB_URL }}
             MONGODB_DATABASE: ${{ secrets.DEVELOP_MONGODB_DATABASE }}
             FRONTEND_BASE_URL: http://localhost:3000
+            BACKEND_BASE_URL: http://dev.api.sulmoon.io
 
         steps:
             - name: EC2에 배포
@@ -83,5 +84,6 @@ jobs:
                         -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
                         -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
                         -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} \
+                        -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} \
                         ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker image prune -af
