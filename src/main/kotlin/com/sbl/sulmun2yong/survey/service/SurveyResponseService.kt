@@ -24,12 +24,14 @@ class SurveyResponseService(
     fun responseToSurvey(
         surveyId: UUID,
         surveyResponseRequest: SurveyResponseRequest,
+        isAdmin: Boolean,
     ): SurveyParticipantResponse {
         val visitorId = surveyResponseRequest.visitorId
-
-        // 이미 참여한 설문인지 검증
-        validateIsAlreadyParticipated(surveyId, visitorId)
-        fingerprintApi.validateVisitorId(visitorId)
+        // 이미 참여한 설문인지 검증(Admin인 경우 스킵)
+        if (!isAdmin) {
+            validateIsAlreadyParticipated(surveyId, visitorId)
+            fingerprintApi.validateVisitorId(visitorId)
+        }
 
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status == SurveyStatus.CLOSED) {
