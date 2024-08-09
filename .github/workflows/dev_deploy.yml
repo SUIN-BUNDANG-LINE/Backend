@@ -12,7 +12,7 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-            OAUTH2_YML_CONTENT: ${{ secrets.DEVELOP_OAUTH2_YML_CONTENT }}
+            SECRET_YML_CONTENT: ${{ secrets.SECRET_YML_CONTENT }}
             DEPLOY_TYPE: dev
 
         steps:
@@ -28,9 +28,9 @@ jobs:
             - name: Gradle 설정
               uses: gradle/gradle-build-action@v2
 
-            - name: Set up application-oauth2.yml
+            - name: Set up application-secret.yml
               run: |
-                echo "${OAUTH2_YML_CONTENT}" > src/main/resources/application-oauth2.yml
+                echo "${SECRET_YML_CONTENT}" > src/main/resources/application-secret.yml
 
             - name: 환경 변수 설정
               run: |

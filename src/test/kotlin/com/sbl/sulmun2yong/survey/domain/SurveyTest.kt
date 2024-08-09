@@ -33,6 +33,7 @@ import kotlin.test.assertEquals
 
 class SurveyTest {
     private val id = UUID.randomUUID()
+    private val visitorId = "abcedfg"
 
     @Test
     fun `설문의 응답을 생성하면 정보들이 설정된다`() {

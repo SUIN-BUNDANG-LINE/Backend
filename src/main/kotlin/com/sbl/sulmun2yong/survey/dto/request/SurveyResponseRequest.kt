@@ -9,6 +9,7 @@ import java.util.UUID
 
 data class SurveyResponseRequest(
     val sectionResponses: List<SectionResponseRequest>,
+    val visitorId: String,
 ) {
     data class SectionResponseRequest(
         val sectionId: UUID,
@@ -43,5 +44,12 @@ data class SurveyResponseRequest(
             )
     }
 
-    fun toDomain(surveyId: UUID) = SurveyResponse(surveyId = surveyId, sectionResponses = sectionResponses.map { it.toDomain() })
+    fun toDomain(surveyId: UUID) =
+        SurveyResponse(
+            surveyId = surveyId,
+            sectionResponses =
+                sectionResponses.map {
+                    it.toDomain()
+                },
+        )
 }

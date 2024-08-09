@@ -23,6 +23,9 @@ java {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://jitpack.io")
+    }
 }
 
 dependencies {
@@ -30,6 +33,9 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // fingerprint
+    implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v6.0.0")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
