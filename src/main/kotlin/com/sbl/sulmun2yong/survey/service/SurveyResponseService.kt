@@ -28,8 +28,8 @@ class SurveyResponseService(
         val visitorId = surveyResponseRequest.visitorId
 
         // 이미 참여한 설문인지 검증
-        fingerprintApi.validateVisitorId(visitorId)
         validateIsAlreadyParticipated(surveyId, visitorId)
+        fingerprintApi.validateVisitorId(visitorId)
 
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status == SurveyStatus.CLOSED) {
