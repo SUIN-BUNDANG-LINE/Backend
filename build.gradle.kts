@@ -23,6 +23,9 @@ java {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://jitpack.io")
+    }
 }
 
 dependencies {
@@ -32,6 +35,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.seleniumhq.selenium:selenium-java:4.23.0")
     implementation("io.github.bonigarcia:webdrivermanager:5.9.1")
+
+    // fingerprint
+    implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v1.0.0")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
