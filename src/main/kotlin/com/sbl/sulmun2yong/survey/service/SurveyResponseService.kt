@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.survey.service
 
-import com.sbl.sulmun2yong.global.Fingerprint.FingerprintApi
+import com.sbl.sulmun2yong.global.fingerprint.FingerprintApi
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter

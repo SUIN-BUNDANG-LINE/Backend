@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.global.Fingerprint
+package com.sbl.sulmun2yong.global.fingerprint
 
 import com.fingerprint.api.FingerprintApi
 import com.fingerprint.model.EventResponse
