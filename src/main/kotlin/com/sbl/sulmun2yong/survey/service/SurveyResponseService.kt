@@ -44,7 +44,7 @@ class SurveyResponseService(
         return SurveyParticipantResponse(participant.id)
     }
 
-    fun validateIsAlreadyParticipated(
+    private fun validateIsAlreadyParticipated(
         surveyId: UUID,
         visitorId: String,
     ) {
