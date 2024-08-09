@@ -24,6 +24,7 @@ class ParticipantTest {
             with(participant) {
                 assertEquals(participantId, this.id)
                 assertEquals(surveyId, this.surveyId)
+                assertEquals(visitorId, this.visitorId)
                 assertEquals(userId, this.userId)
             }
         }

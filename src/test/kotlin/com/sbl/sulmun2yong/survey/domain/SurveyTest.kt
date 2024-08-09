@@ -47,6 +47,7 @@ class SurveyTest {
 
         // then
         assertEquals(id, surveyResponse.surveyId)
+        assertEquals(visitorId, surveyResponse.visitorId)
         assertEquals(listOf(sectionResponse1), surveyResponse)
     }
 
