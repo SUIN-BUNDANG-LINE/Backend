@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.global.fingerprint
 
 import com.fingerprint.api.FingerprintApi
-import com.fingerprint.model.EventResponse
 import com.fingerprint.model.Response
 import com.fingerprint.model.ResponseVisits
 import com.fingerprint.sdk.ApiClient
@@ -34,8 +33,8 @@ class FingerprintApi(
         return response.visits
     }
 
-    fun getEvent(requestId: String) {
-        val response: EventResponse = api.getEvent(requestId)
-        println(response.products.toString())
-    }
+//    fun getEvent(requestId: String) {
+//        val response: EventResponse = api.getEvent(requestId)
+//        println(response.products.toString())
+//    }
 }
