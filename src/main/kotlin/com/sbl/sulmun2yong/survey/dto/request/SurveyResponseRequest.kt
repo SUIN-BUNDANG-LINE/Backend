@@ -44,5 +44,13 @@ data class SurveyResponseRequest(
             )
     }
 
-    fun toDomain(surveyId: UUID) = SurveyResponse(surveyId = surveyId, sectionResponses = sectionResponses.map { it.toDomain() })
+    fun toDomain(surveyId: UUID) =
+        SurveyResponse(
+            surveyId = surveyId,
+            visitorId = visitorId,
+            sectionResponses =
+                sectionResponses.map {
+                    it.toDomain()
+                },
+        )
 }

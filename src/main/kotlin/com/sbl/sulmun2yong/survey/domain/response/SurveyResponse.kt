@@ -5,6 +5,7 @@ import java.util.UUID
 
 data class SurveyResponse(
     val surveyId: UUID,
+    val visitorId: String,
     private val sectionResponses: List<SectionResponse>,
 ) : List<SectionResponse> by sectionResponses {
     init {

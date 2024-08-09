@@ -27,6 +27,7 @@ enum class ErrorCode(
     SURVEY_CLOSED(HttpStatus.BAD_REQUEST, "SV0014", "이미 마감된 설문입니다."),
     INVALID_UPDATE_SURVEY(HttpStatus.BAD_REQUEST, "SV0015", "설문 정보 갱신에 실패했습니다."),
     INVALID_SURVEY_ACCESS(HttpStatus.FORBIDDEN, "SV0016", "설문 접근 권한이 없습니다."),
+    ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "SV0017", "이미 참여한 설문입니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),
