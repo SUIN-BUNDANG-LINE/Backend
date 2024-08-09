@@ -43,11 +43,10 @@ class SurveyTest {
         val sectionResponse1 = SectionResponse(sectionId, listOf())
 
         // when
-        val surveyResponse = SurveyResponse(id, visitorId, listOf(sectionResponse1))
+        val surveyResponse = SurveyResponse(id, listOf(sectionResponse1))
 
         // then
         assertEquals(id, surveyResponse.surveyId)
-        assertEquals(visitorId, surveyResponse.visitorId)
         assertEquals(listOf(sectionResponse1), surveyResponse)
     }
 
@@ -60,7 +59,7 @@ class SurveyTest {
 
         // when, then
         assertThrows<InvalidSurveyResponseException> {
-            SurveyResponse(UUID.randomUUID(), visitorId, listOf(sectionResponse1, sectionResponse2))
+            SurveyResponse(UUID.randomUUID(), listOf(sectionResponse1, sectionResponse2))
         }
     }
 
@@ -170,7 +169,6 @@ class SurveyTest {
         val surveyResponse1 =
             SurveyResponse(
                 id,
-                visitorId,
                 listOf(
                     SectionResponse(SectionId.Standard(sectionId1), listOf()),
                     SectionResponse(SectionId.Standard(sectionId2), listOf()),
@@ -181,7 +179,6 @@ class SurveyTest {
         val surveyResponse2 =
             SurveyResponse(
                 id,
-                visitorId,
                 listOf(
                     SectionResponse(SectionId.Standard(sectionId1), listOf()),
                     SectionResponse(SectionId.Standard(sectionId2), listOf()),
@@ -192,7 +189,6 @@ class SurveyTest {
         val surveyResponse3 =
             SurveyResponse(
                 id,
-                visitorId,
                 listOf(
                     SectionResponse(SectionId.Standard(sectionId1), listOf()),
                     SectionResponse(SectionId.Standard(sectionId2), listOf()),
