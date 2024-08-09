@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.service
 
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
+import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
@@ -51,13 +52,6 @@ class SurveyManagementService(
         surveyAdapter.save(newSurvey)
 
         // TODO: 추첨 보드 생성 로직을 startSurvey로 옮기기
-        // val drawingBoard =
-        //     DrawingBoard.create(
-        //         surveyId = survey.id,
-        //         boardSize = surveySaveRequest.targetParticipantCount,
-        //         rewards = rewards,
-        //     )
-        // drawingBoardAdapter.save(drawingBoard)
     }
 
     fun getSurveyMakeInfo(
@@ -68,5 +62,23 @@ class SurveyManagementService(
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         return SurveyMakeInfoResponse.of(survey)
+    }
+
+    // TODO: 트랜잭션 적용 필요
+    fun startSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
+        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        surveyAdapter.save(survey.start())
+        val drawingBoard =
+            DrawingBoard.create(
+                surveyId = survey.id,
+                boardSize = survey.targetParticipantCount,
+                rewards = survey.rewards,
+            )
+        drawingBoardAdapter.save(drawingBoard)
     }
 }

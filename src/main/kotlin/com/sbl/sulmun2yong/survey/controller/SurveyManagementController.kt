@@ -1,11 +1,13 @@
 package com.sbl.sulmun2yong.survey.controller
 
+import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyManagementApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.service.SurveyManagementService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -18,6 +20,7 @@ import java.util.UUID
 @RequestMapping("/api/v1/surveys/workbench")
 class SurveyManagementController(
     private val surveyManagementService: SurveyManagementService,
+    private val drawingBoardAdapter: DrawingBoardAdapter,
 ) : SurveyManagementApiDoc {
     @PostMapping("/create")
     override fun createSurvey(
@@ -42,4 +45,10 @@ class SurveyManagementController(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
     ) = ResponseEntity.ok(surveyManagementService.getSurveyMakeInfo(surveyId = surveyId, makerId = id))
+
+    @PatchMapping("/start/{surveyId}")
+    override fun startSurvey(
+        @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
+    ) = ResponseEntity.ok(surveyManagementService.startSurvey(surveyId = surveyId, makerId = id))
 }
