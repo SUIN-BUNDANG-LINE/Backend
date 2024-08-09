@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class FingerprintApi(
-    @Value("\${fingerprint.secretKey}")
+    @Value("\${fingerprint.secret-key}")
     private val secretKey: String,
 ) {
     private val client: ApiClient =
