@@ -61,7 +61,6 @@ jobs:
             DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:devLatest
             MONGODB_URL: ${{ secrets.DEVELOP_MONGODB_URL }}
             MONGODB_DATABASE: ${{ secrets.DEVELOP_MONGODB_DATABASE }}
-            FINGERPRINT_SECRET_KEY: ${{ secrets.FINGERPRINT_SECRET_KEY }}
             FRONTEND_BASE_URL: http://localhost:3000
 
         steps:
@@ -84,6 +83,5 @@ jobs:
                         -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
                         -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
                         -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} \
-                        -e FINGERPRINT_SECRET-KEY=${{ env.FINGERPRINT_SECRET_KEY }} \
                         ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker image prune -af
