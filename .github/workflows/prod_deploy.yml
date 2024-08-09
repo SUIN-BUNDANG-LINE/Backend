@@ -12,7 +12,7 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-            OAUTH2_YML_CONTENT: ${{ secrets.PRODUCTION_OAUTH2_YML_CONTENT }}
+            SECRET_YML_CONTENT: ${{ secrets.SECRET_YML_CONTENT }}
             NEW_RELIC_YML: ${{ secrets.NEW_RELIC_YML }}
             DEPLOY_TYPE: prod
 
@@ -29,9 +29,9 @@ jobs:
             - name: Gradle 설정
               uses: gradle/gradle-build-action@v2
 
-            - name: Set up application-oauth2.yml
+            - name: Set up application-secret.yml
               run: |
-                  echo "${OAUTH2_YML_CONTENT}" > src/main/resources/application-oauth2.yml
+                  echo "${SECRET_YML_CONTENT}" > src/main/resources/application-secret.yml
 
             - name: Set up newrelic.yml
               run: |
