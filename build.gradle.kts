@@ -37,7 +37,7 @@ dependencies {
     implementation("io.github.bonigarcia:webdrivermanager:5.9.1")
 
     // fingerprint
-    implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v1.0.0")
+    implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v6.0.0")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")

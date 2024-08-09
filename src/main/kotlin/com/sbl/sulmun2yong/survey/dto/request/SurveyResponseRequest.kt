@@ -9,6 +9,7 @@ import java.util.UUID
 
 data class SurveyResponseRequest(
     val sectionResponses: List<SectionResponseRequest>,
+    val visitorId: String,
 ) {
     data class SectionResponseRequest(
         val sectionId: UUID,
