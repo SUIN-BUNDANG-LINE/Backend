@@ -1,20 +1,27 @@
 name: Docker Hub Push & 프로덕션 서버 EC2 배포
 
 on:
-    push:
-        branches:
-            - main
-    workflow_dispatch: # 수동 실행 이벤트 추가
+    workflow_dispatch:
+        inputs:
+            version:
+                description: 'Version number(ex: 1.1.0)'
+                required: true
 
 jobs:
     build:
+        if: github.ref == 'refs/heads/main'  # main 브랜치에서만 실행
         name: 빌드 작업
         runs-on: ubuntu-latest
 
         env:
             SECRET_YML_CONTENT: ${{ secrets.SECRET_YML_CONTENT }}
             NEW_RELIC_YML: ${{ secrets.NEW_RELIC_YML }}
-            DEPLOY_TYPE: prod
+            JVM_XMS: ${{ secrets.PRODUCTION_MIN_MEMORY }}
+            JVM_XMX: ${{ secrets.PRODUCTION_MAX_MEMORY }}
+            DOCKER_ID: ${{ secrets.DOCKER_USERNAME }}
+            DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+            DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}
+            VERSION: ${{ github.event.inputs.version }}
 
         steps:
             - name: 코드 체크아웃
@@ -39,21 +46,24 @@ jobs:
 
             - name: 환경 변수 설정
               run: |
-                  echo "DOCKER_ID=${{ secrets.DOCKER_USERNAME }}" >> gradle.properties
-                  echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> gradle.properties
-                  echo "DOCKER_IMAGE_NAME=${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}" >> gradle.properties
-                  echo "DEPLOY_TYPE=${DEPLOY_TYPE}" >> gradle.properties
+                  echo "DOCKER_ID=${DOCKER_ID}" >> gradle.properties
+                  echo "DOCKER_PASSWORD=${DOCKER_PASSWORD}" >> gradle.properties
+                  echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> gradle.properties
+                  echo "JVM_XMS=${JVM_XMS}" >> gradle.properties
+                  echo "JVM_XMX=${JVM_XMX}" >> gradle.properties
+                  echo "VERSION=${VERSION}" >> gradle.properties
 
             - name: Gradle로 빌드
               run: ./gradlew clean build
 
             - name: Docker Hub에 로그인
-              run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+              run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_ID}" --password-stdin
 
             - name: Jib로 Docker 이미지 빌드 및 푸시
-              run: ./gradlew jib -Ddocker.id="${{ secrets.DOCKER_USERNAME }}" -Ddocker.password="${{ secrets.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}"
+              run: ./gradlew jib -Ddocker.id="${DOCKER_ID}" -Ddocker.password="${DOCKER_PASSWORD}" -Ddocker.image.name="${DOCKER_IMAGE_NAME}"
 
     deploy:
+        if: github.ref == 'refs/heads/main'  # main 브랜치에서만 실행
         name: 프로덕션 서버 배포 작업
         needs: build
         runs-on: ubuntu-latest
@@ -63,7 +73,9 @@ jobs:
             EC2_HOST: ${{ secrets.PRODUCTION_EC2_HOST }}
             EC2_USER: ${{ secrets.EC2_USER }}
             EC2_KEY: ${{ secrets.PRODUCTION_EC2_KEY }}
-            DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:prodLatest
+            DOCKER_ID: ${{ secrets.DOCKER_USERNAME }}
+            DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+            DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:${{ github.event.inputs.version }}
             MONGODB_URL: ${{ secrets.PRODUCTION_MONGODB_URL }}
             MONGODB_DATABASE: ${{ secrets.PRODUCTION_MONGODB_DATABASE }}
             FRONTEND_BASE_URL: https://sulmoon.io
@@ -77,17 +89,14 @@ jobs:
                   username: ${{ env.EC2_USER }}
                   key: ${{ env.EC2_KEY }}
                   script: |
-                      echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-                      docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
+                      echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
+                      docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker stop ${{ env.CONTAINER_NAME }} || true
                       docker rm ${{ env.CONTAINER_NAME }} || true
-                      while docker ps -a | grep -q ${{ env.CONTAINER_NAME }}; do
-                        sleep 1
-                      done
                       docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
                         -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
                         -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
                         -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} \
                         -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} \
-                        ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
+                        ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}
                       docker image prune -af
