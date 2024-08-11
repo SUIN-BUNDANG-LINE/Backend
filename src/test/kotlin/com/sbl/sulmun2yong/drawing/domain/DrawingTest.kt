@@ -15,7 +15,7 @@ class DrawingTest {
     @Test
     fun `꽝 티켓을을 뽑으면 DrawingResultNonWinner 도메인이 만들어지고  DrawingBoard 에 그 결과가 반영된다`() {
         // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardNotExistsIndex3()
 
         // when
         val drawingResult = drawingBoard.getDrawingResult(3)
