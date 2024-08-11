@@ -43,7 +43,7 @@ jobs:
 
             - name: 환경 변수 설정
               run: |
-                  echo "DOCKER_ID=${{ env.DOCKER_ID }}"" >> gradle.properties
+                  echo "DOCKER_ID=${{ env.DOCKER_ID }}" >> gradle.properties
                   echo "DOCKER_PASSWORD=${{ env.DOCKER_PASSWORD }}"" >> gradle.properties
                   echo "DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}" >> gradle.properties
                   echo "JVM_XMS=${{ env.JVM_XMS }}" >> gradle.properties
