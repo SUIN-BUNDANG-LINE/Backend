@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 
 class CustomAuthenticationSuccessHandler(
-    private val baseUrl: String,
+    private val frontEndBaseUrl: String,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
@@ -33,6 +33,6 @@ class CustomAuthenticationSuccessHandler(
         response.addCookie(cookie)
 
         // 리디렉트
-        response.sendRedirect("$baseUrl/")
+        response.sendRedirect("$frontEndBaseUrl/")
     }
 }

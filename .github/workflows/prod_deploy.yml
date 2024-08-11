@@ -25,10 +25,10 @@ jobs:
 
         steps:
             - name: 코드 체크아웃
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: JDK 17 설정
-              uses: actions/setup-java@v2
+              uses: actions/setup-java@v4
               with:
                   distribution: 'temurin'
                   java-version: '17'
@@ -36,13 +36,13 @@ jobs:
             - name: Gradle 설정
               uses: gradle/gradle-build-action@v2
 
-            - name: Set up application-secret.yml
+            - name: application-secret.yml 등록
               run: |
-                  echo "${SECRET_YML_CONTENT}" > src/main/resources/application-secret.yml
+                  echo ${{ env.SECRET_YML_CONTENT }}  > src/main/resources/application-secret.yml
 
             - name: Set up newrelic.yml
               run: |
-                  echo "${NEW_RELIC_YML}" > newrelic/newrelic.yml
+                  echo "${{ env.NEW_RELIC_YML }}" > newrelic/newrelic.yml
 
             - name: 환경 변수 설정
               run: |
@@ -69,34 +69,44 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
+            # AWS 관련
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            EC2_INSTANCE_ID: ${{ secrets.PRODUCTION_EC2_INSTANCE_ID }}
+            AWS_REGION: ap-northeast-2
+            # Docker 관련
             CONTAINER_NAME: sulmun2yong-production-server
-            EC2_HOST: ${{ secrets.PRODUCTION_EC2_HOST }}
-            EC2_USER: ${{ secrets.EC2_USER }}
-            EC2_KEY: ${{ secrets.PRODUCTION_EC2_KEY }}
             DOCKER_ID: ${{ secrets.DOCKER_USERNAME }}
             DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
             DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:${{ github.event.inputs.version }}
             MONGODB_URL: ${{ secrets.PRODUCTION_MONGODB_URL }}
             MONGODB_DATABASE: ${{ secrets.PRODUCTION_MONGODB_DATABASE }}
+            # Spring Boot 관련
             FRONTEND_BASE_URL: https://sulmoon.io
             BACKEND_BASE_URL: https://api.sulmoon.io
 
         steps:
-            - name: EC2에 배포
-              uses: appleboy/ssh-action@v0.1.7
+            - name: Install AWS CLI
+              run: |
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+                sudo ./aws/install
+
+            - name: AWS 로그인
+              uses: aws-actions/configure-aws-credentials@v4
               with:
-                  host: ${{ env.EC2_HOST }}
-                  username: ${{ env.EC2_USER }}
-                  key: ${{ env.EC2_KEY }}
-                  script: |
-                      echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
-                      docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}
-                      docker stop ${{ env.CONTAINER_NAME }} || true
-                      docker rm ${{ env.CONTAINER_NAME }} || true
-                      docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
-                        -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
-                        -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
-                        -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} \
-                        -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} \
-                        ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}
-                      docker image prune -af
+                aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
+
+            - name: SSM으로 EC2에 배포
+              run: |
+                aws --no-cli-pager  ssm send-command \
+                --document-name "AWS-RunShellScript" \
+                --targets "Key=instanceIds, Values=${{ env.EC2_INSTANCE_ID}}" \
+                --parameters '{"commands" : ["echo \"${{ secrets.DOCKER_PASSWORD }}\" | docker login -u \"${{ secrets.DOCKER_USERNAME }}\" --password-stdin", 
+                "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}", 
+                "docker stop ${{ env.CONTAINER_NAME }} || true", 
+                "docker rm ${{ env.CONTAINER_NAME }} || true", 
+                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE_URL=${{ env.FRONTEND_BASE_URL }} ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}", 
+                "docker image prune -af"]}'

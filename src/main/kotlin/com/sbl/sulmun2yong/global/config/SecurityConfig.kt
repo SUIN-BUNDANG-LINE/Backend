@@ -30,7 +30,7 @@ import org.springframework.web.filter.ForwardedHeaderFilter
 @Configuration
 class SecurityConfig(
     @Value("\${frontend.base-url}")
-    private val baseUrl: String,
+    private val frontEndBaseUrl: String,
     @Value("\${swagger.username}")
     private val username: String?,
     @Value("\${swagger.password}")
@@ -90,18 +90,17 @@ class SecurityConfig(
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(baseUrl)
+                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(frontEndBaseUrl)
             }
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(baseUrl, sessionRegistry())
+                logoutSuccessHandler = CustomLogoutSuccessHandler(frontEndBaseUrl, sessionRegistry())
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
                 authorize("/api/v1/user/**", authenticated)
                 // TODO: 추후에 AUTHENTICATED_USER 로 수정
-                authorize("/api/v1/surveys/workbench/**", hasRole("ADMIN"))
                 authorize("/**", permitAll)
             }
             exceptionHandling {
