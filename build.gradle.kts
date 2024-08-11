@@ -33,8 +33,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.seleniumhq.selenium:selenium-java:4.23.0")
-    implementation("io.github.bonigarcia:webdrivermanager:5.9.1")
 
     // fingerprint
     implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v6.0.0")
