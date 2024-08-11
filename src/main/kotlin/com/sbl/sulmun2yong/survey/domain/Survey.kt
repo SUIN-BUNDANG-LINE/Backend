@@ -35,6 +35,8 @@ data class Survey(
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
         require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
+        // TODO: 추후에 리워드가 없는 설문도 생성할 수 있도록 수정하기
+        require(rewards.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
@@ -58,7 +60,7 @@ data class Survey(
                 finishMessage = DEFAULT_FINISH_MESSAGE,
                 targetParticipantCount = DEFAULT_TARGET_PARTICIPANT_COUNT,
                 makerId = makerId,
-                rewards = emptyList(),
+                rewards = listOf(Reward.create()),
                 sections = listOf(Section.create()),
             )
 

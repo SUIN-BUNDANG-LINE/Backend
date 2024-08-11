@@ -109,7 +109,7 @@ class SurveyTest {
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
             assertEquals(Survey.DEFAULT_TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
             assertEquals(makerId, this.makerId)
-            assertEquals(emptyList(), this.rewards)
+            assertEquals(listOf(Reward.create()), this.rewards)
             assertEquals(listOf(this.sections.first()), this.sections)
         }
     }
@@ -151,6 +151,12 @@ class SurveyTest {
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.IN_PROGRESS) }
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.IN_MODIFICATION) }
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.CLOSED) }
+    }
+
+    // TODO: 추후에 리워드가 없는 설문도 생성할 수 있도록 수정하기
+    @Test
+    fun `설문에는 최소 한 개의 리워드가 있어야한다`() {
+        assertThrows<InvalidSurveyException> { createSurvey(rewards = emptyList()) }
     }
 
     @Test
