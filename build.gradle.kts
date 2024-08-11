@@ -107,25 +107,43 @@ jib {
             password = project.findProperty("DOCKER_PASSWORD") as String?
         }
         tags =
-            // 프로덕션 배포면 latest와 prodYYMMDDhhmm 태그를 붙히고, 개발 배포면 devLatest와 devYYMMDDhhmm 태그를 붙인다.
+            // 운영 배포면 현재 버전에 대한 태그를 붙힌다., 개발 배포면 devLatest와 YYMMDDhhmm 태그를 붙인다.
             let {
-                // main 브랜치 배포 = prod, develop 브랜치 배포 = dev
-                val tagName = project.findProperty("DEPLOY_TYPE") as String?
-                setOf(tagName + getCurrentDateTime(), if (tagName == "prod") "prodLatest" else "devLatest")
+                val versionName = project.findProperty("VERSION") as String?
+                if (versionName != null) {
+                    setOf(versionName)
+                } else {
+                    setOf(getCurrentDateTime(), "devLatest")
+                }
             }
     }
     container {
-        jvmFlags = listOf("-Xms128m", "-Xmx128m")
-        val newRelicConfig = project.file("newrelic.yml")
-        val newRelicJar = project.file("newrelic.jar")
-        if (newRelicConfig.exists()) {
+        // JVM 메모리 설정
+        jvmFlags =
+            listOf(
+                "-Xms${project.findProperty("JVM_XMS")}",
+                "-Xmx${project.findProperty("JVM_XMX")}",
+            )
+        // New Relic 설정
+        val newRelicConfig = project.file("newrelic/newrelic.yml")
+        val newRelicJar = project.file("newrelic/newrelic.jar")
+        if (newRelicConfig.exists() && newRelicJar.exists()) {
             jvmFlags =
                 listOf(
-                    "-Xms128m",
-                    "-Xmx128m",
-                    "-Dnewrelic.config.file=${newRelicConfig.absolutePath}",
-                    "-javaagent:${newRelicJar.absolutePath}",
+                    "-Xms${project.findProperty("JVM_XMS")}",
+                    "-Xmx${project.findProperty("JVM_XMX")}",
+                    "-Dnewrelic.config.file=/app/config/newrelic.yml",
+                    "-javaagent:/app/config/newrelic.jar",
                 )
+        }
+    }
+    // New Relic 설정
+    extraDirectories {
+        paths {
+            path {
+                setFrom(file("newrelic").toPath())
+                into = "/app/config"
+            }
         }
     }
 }
