@@ -50,8 +50,6 @@ class SurveyManagementService(
                 )
             }
         surveyAdapter.save(newSurvey)
-
-        // TODO: 추첨 보드 생성 로직을 startSurvey로 옮기기
     }
 
     fun getSurveyMakeInfo(

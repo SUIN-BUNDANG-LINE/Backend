@@ -72,7 +72,7 @@ object DrawingBoardFixtureFactory {
             rewards = emptyList(),
         )
 
-    // 3번에 꽝 티켓이 없는 티켓 리스트 만들기
+    // 3번에 꽝 티켓이 있는 티켓 리스트 만들기
     private fun createTicketsRewardNotExistsIndex3(
         rewards: List<Reward>,
         maxTicketCount: Int,
