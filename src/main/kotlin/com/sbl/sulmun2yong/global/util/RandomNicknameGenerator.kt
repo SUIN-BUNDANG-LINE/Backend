@@ -74,7 +74,7 @@ class RandomNicknameGenerator {
         val animalNames =
             listOf(
                 "고양이",
-                "개",
+                "강아지",
                 "코끼리",
                 "기린",
                 "사자",
@@ -92,7 +92,6 @@ class RandomNicknameGenerator {
                 "소",
                 "양",
                 "염소",
-                "돼지",
                 "닭",
                 "오리",
                 "거위",
@@ -100,13 +99,11 @@ class RandomNicknameGenerator {
                 "앵무새",
                 "독수리",
                 "매",
-                "매",
                 "올빼미",
                 "참새",
                 "비둘기",
                 "까마귀",
                 "까치",
-                "황새",
                 "두루미",
                 "황새",
                 "치타",
@@ -123,6 +120,15 @@ class RandomNicknameGenerator {
                 "거북이",
                 "펭귄",
                 "돌고래",
+                "용",
+                "표범",
+                "고래",
+                "부엉이",
+                "타조",
+                "코뿔소",
+                "물개",
+                "고슴도치",
+                "카멜레온",
             )
     }
 }
