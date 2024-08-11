@@ -118,17 +118,32 @@ jib {
             }
     }
     container {
-        jvmFlags = listOf("-Xms128m", "-Xmx128m")
-        val newRelicConfig = project.file("newrelic.yml")
-        val newRelicJar = project.file("newrelic.jar")
-        if (newRelicConfig.exists()) {
+        // JVM 메모리 설정
+        jvmFlags =
+            listOf(
+                "-Xms${project.findProperty("JVM_XMS")}",
+                "-Xmx${project.findProperty("JVM_XMX")}",
+            )
+        // New Relic 설정
+        val newRelicConfig = project.file("newrelic/newrelic.yml")
+        val newRelicJar = project.file("newrelic/newrelic.jar")
+        if (newRelicConfig.exists() && newRelicJar.exists()) {
             jvmFlags =
                 listOf(
-                    "-Xms128m",
-                    "-Xmx128m",
-                    "-Dnewrelic.config.file=${newRelicConfig.absolutePath}",
-                    "-javaagent:${newRelicJar.absolutePath}",
+                    "-Xms${project.findProperty("JVM_XMS")}",
+                    "-Xmx${project.findProperty("JVM_XMX")}",
+                    "-Dnewrelic.config.file=/app/config/newrelic.yml",
+                    "-javaagent:/app/config/newrelic.jar",
                 )
+        }
+    }
+    // New Relic 설정
+    extraDirectories {
+        paths {
+            path {
+                setFrom(file("newrelic").toPath())
+                into = "/app/config"
+            }
         }
     }
 }
