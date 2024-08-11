@@ -1,11 +1,13 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -33,6 +35,8 @@ data class Survey(
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
         require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
+        // TODO: 추후에 리워드가 없는 설문도 생성할 수 있도록 수정하기
+        require(rewards.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
@@ -56,7 +60,7 @@ data class Survey(
                 finishMessage = DEFAULT_FINISH_MESSAGE,
                 targetParticipantCount = DEFAULT_TARGET_PARTICIPANT_COUNT,
                 makerId = makerId,
-                rewards = emptyList(),
+                rewards = listOf(Reward.create()),
                 sections = listOf(Section.create()),
             )
 
@@ -127,6 +131,11 @@ data class Survey(
     ) = targetParticipantCount == this.targetParticipantCount && rewards == this.rewards
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
+
+    fun start(): Survey {
+        require(status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyStartException() }
+        return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
+    }
 
     fun getRewardCount() = rewards.sumOf { it.count }
 

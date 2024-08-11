@@ -13,6 +13,7 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TARGET_PARTICIPAN
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.THUMBNAIL
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TITLE
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
+import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
@@ -21,6 +22,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -107,7 +109,7 @@ class SurveyTest {
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
             assertEquals(Survey.DEFAULT_TARGET_PARTICIPANT_COUNT, this.targetParticipantCount)
             assertEquals(makerId, this.makerId)
-            assertEquals(emptyList(), this.rewards)
+            assertEquals(listOf(Reward.create()), this.rewards)
             assertEquals(listOf(this.sections.first()), this.sections)
         }
     }
@@ -149,6 +151,12 @@ class SurveyTest {
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.IN_PROGRESS) }
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.IN_MODIFICATION) }
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = null, status = SurveyStatus.CLOSED) }
+    }
+
+    // TODO: 추후에 리워드가 없는 설문도 생성할 수 있도록 수정하기
+    @Test
+    fun `설문에는 최소 한 개의 리워드가 있어야한다`() {
+        assertThrows<InvalidSurveyException> { createSurvey(rewards = emptyList()) }
     }
 
     @Test
@@ -383,5 +391,46 @@ class SurveyTest {
                 sections = survey3.sections,
             )
         }
+    }
+
+    @Test
+    fun `설문을 시작하면, 설문의 시작일과 상태가 업데이트된다`() {
+        // given
+        val survey = createSurvey(finishedAt = DateUtil.getDateAfterDay(), publishedAt = null, status = SurveyStatus.NOT_STARTED)
+
+        // when
+        val startedSurvey = survey.start()
+
+        // then
+        assertEquals(DateUtil.getCurrentDate(), startedSurvey.publishedAt)
+        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey.status)
+    }
+
+    @Test
+    fun `설문이 시작 전 상태가 아니면 시작할 수 없다`() {
+        // given
+        val survey1 =
+            createSurvey(
+                finishedAt = DateUtil.getDateAfterDay(),
+                publishedAt = DateUtil.getCurrentDate(),
+                status = SurveyStatus.IN_PROGRESS,
+            )
+        val survey2 =
+            createSurvey(
+                finishedAt = DateUtil.getDateAfterDay(),
+                publishedAt = DateUtil.getCurrentDate(),
+                status = SurveyStatus.IN_MODIFICATION,
+            )
+        val survey3 =
+            createSurvey(
+                finishedAt = DateUtil.getDateAfterDay(),
+                publishedAt = DateUtil.getCurrentDate(),
+                status = SurveyStatus.CLOSED,
+            )
+
+        // when, then
+        assertThrows<InvalidSurveyStartException> { survey1.start() }
+        assertThrows<InvalidSurveyStartException> { survey2.start() }
+        assertThrows<InvalidSurveyStartException> { survey3.start() }
     }
 }

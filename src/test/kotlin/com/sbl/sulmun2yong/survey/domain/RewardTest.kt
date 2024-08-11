@@ -15,11 +15,19 @@ class RewardTest {
 
         // when
         val reward = Reward(name = name, category = category, count = count)
+        val defaultReward = Reward.create()
 
         // then
-        assertEquals(name, reward.name)
-        assertEquals(category, reward.category)
-        assertEquals(count, reward.count)
+        with(reward) {
+            assertEquals(name, this.name)
+            assertEquals(category, this.category)
+            assertEquals(count, this.count)
+        }
+        with(defaultReward) {
+            assertEquals(Reward.DEFAULT_REWARD_NAME, this.name)
+            assertEquals(Reward.DEFAULT_REWARD_CATEGORY, this.category)
+            assertEquals(Reward.DEFAULT_REWARD_COUNT, this.count)
+        }
     }
 
     @Test
