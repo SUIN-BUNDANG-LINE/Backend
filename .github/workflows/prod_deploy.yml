@@ -108,5 +108,5 @@ jobs:
                 "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}", 
                 "docker stop ${{ env.CONTAINER_NAME }} || true", 
                 "docker rm ${{ env.CONTAINER_NAME }} || true", 
-                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE_URL=${{ env.FRONTEND_BASE_URL }} ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}", 
+                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}", 
                 "docker image prune -af"]}'
