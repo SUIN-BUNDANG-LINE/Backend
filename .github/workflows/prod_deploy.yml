@@ -54,7 +54,7 @@ jobs:
                   echo "VERSION=${{ env.VERSION }}" >> gradle.properties
 
             - name: Gradle로 빌드
-              run: ./gradlew clean build
+              run: ./gradlew clean build --refresh-dependencies
 
             - name: Docker Hub에 로그인
               run: echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
