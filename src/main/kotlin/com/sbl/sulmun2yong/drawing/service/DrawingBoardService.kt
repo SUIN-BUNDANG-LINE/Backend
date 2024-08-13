@@ -9,6 +9,7 @@ import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
+import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardAccessException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
@@ -28,6 +29,11 @@ class DrawingBoardService(
     private val drawingHistoryAdapter: DrawingHistoryAdapter,
 ) {
     fun getDrawingBoard(surveyId: UUID): DrawingBoardResponse {
+        val surveyStatus = surveyAdapter.getSurvey(surveyId).status
+        // 설문이 시작되지 않았거나, 종료된 경우 접근 불가
+        if (surveyStatus == SurveyStatus.NOT_STARTED || surveyStatus == SurveyStatus.CLOSED) {
+            throw InvalidDrawingBoardAccessException()
+        }
         val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
         return DrawingBoardResponse.of(drawingBoard)
     }
