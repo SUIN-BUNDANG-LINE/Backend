@@ -38,6 +38,7 @@ enum class ErrorCode(
     ALREADY_PARTICIPATED_DRAWING(HttpStatus.BAD_REQUEST, "DR0005", "이미 참여한 추첨입니다."),
     FINISHED_DRAWING(HttpStatus.BAD_REQUEST, "DR0005", "이미 마감된 추첨입니다."),
     INVALID_DRAWING_HISTORY(HttpStatus.BAD_REQUEST, "DR0006", "유효하지 않은 추첨 기록입니다."),
+    INVALID_DRAWING_BOARD_ACCESS(HttpStatus.BAD_REQUEST, "DR0007", "이미 종료되었거나, 접근할 수 없는 설문입니다."),
 
     // OAuth2 (OA)
     PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "OA0001", "지원하지 않는 소셜 로그인입니다."),
