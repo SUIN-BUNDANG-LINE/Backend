@@ -34,7 +34,7 @@ class SurveyResponseService(
         }
 
         val survey = surveyAdapter.getSurvey(surveyId)
-        if (survey.status == SurveyStatus.CLOSED) {
+        if (survey.status != SurveyStatus.IN_PROGRESS) {
             throw SurveyClosedException()
         }
         val surveyResponse = surveyResponseRequest.toDomain(surveyId)
