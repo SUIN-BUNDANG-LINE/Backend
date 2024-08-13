@@ -35,12 +35,7 @@ jobs:
 
             - name: application-secret.yml 등록
               run: |
-                echo "${{ env.SECRET_YML_CONTENT }}" > src/main/resources/application-secret.yml
-
-            - name: yml 확인
-              run: |
-                  cat src/main/resources/application-secret.yml
-
+                  echo "${SECRET_YML_CONTENT}" > src/main/resources/application-secret.yml
             - name: Set up newrelic.yml
               run: |
                   echo "${{ env.NEW_RELIC_YML }}" > newrelic/newrelic.yml
