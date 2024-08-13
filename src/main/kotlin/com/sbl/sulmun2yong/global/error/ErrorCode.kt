@@ -24,7 +24,7 @@ enum class ErrorCode(
     INVALID_REWARD(HttpStatus.BAD_REQUEST, "SV0011", "유효하지 않은 리워드 정보 입니다."),
     INVALID_PARTICIPANT(HttpStatus.BAD_REQUEST, "SV0012", "유효하지 않은 참여자입니다."),
     INVALID_SECTION_IDS(HttpStatus.BAD_REQUEST, "SV0013", "유효하지 않은 섹션 ID입니다."),
-    SURVEY_CLOSED(HttpStatus.BAD_REQUEST, "SV0014", "이미 마감된 설문입니다."),
+    SURVEY_CLOSED(HttpStatus.BAD_REQUEST, "SV0014", "응답을 받지 않는 설문입니다."),
     INVALID_UPDATE_SURVEY(HttpStatus.BAD_REQUEST, "SV0015", "설문 정보 갱신에 실패했습니다."),
     INVALID_SURVEY_ACCESS(HttpStatus.FORBIDDEN, "SV0016", "설문 접근 권한이 없습니다."),
     ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "SV0017", "이미 참여한 설문입니다."),
