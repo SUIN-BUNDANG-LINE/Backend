@@ -34,10 +34,11 @@ class FingerprintApi(
     private fun getVisits(visitorId: String): MutableList<ResponseVisits>? {
         val response: Response = api.getVisits(visitorId, null, null, 1, null, null)
         val product = getEvent(response.visits[0].requestId)
+        println(product)
         if (product.tampering.data.result == true ||
             product.botd.data.bot.result !== BotdDetectionResult.ResultEnum.NOT_DETECTED
         ) {
-            throw Exception("부정한 접근이 감지되었습니다")
+            throw UncleanVisitorException()
         }
         return response.visits
     }

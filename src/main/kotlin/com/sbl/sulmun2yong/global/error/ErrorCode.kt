@@ -30,6 +30,9 @@ enum class ErrorCode(
     ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "SV0017", "이미 참여한 설문입니다."),
     INVALID_SURVEY_START(HttpStatus.BAD_REQUEST, "SV0018", "설문 시작에 실패했습니다."),
 
+    // FingerPrint (FP)
+    UNCLEAN_VISITOR(HttpStatus.BAD_REQUEST, "FP0001", "유효하지 않은 방문자입니다."),
+
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),
     INVALID_DRAWING(HttpStatus.BAD_REQUEST, "DR0002", "유효하지 않은 추첨입니다."),
