@@ -32,7 +32,7 @@ data class SurveySaveRequest(
     )
 
     data class SectionCreateRequest(
-        val id: UUID,
+        val sectionId: UUID,
         val title: String,
         val description: String,
         val questions: List<QuestionCreateRequest>,
@@ -40,7 +40,7 @@ data class SurveySaveRequest(
     ) {
         fun toDomain(sectionIds: SectionIds) =
             Section(
-                id = SectionId.Standard(id),
+                id = SectionId.Standard(sectionId),
                 title = title,
                 description = description,
                 routingStrategy = getRoutingStrategy(),
@@ -76,7 +76,7 @@ data class SurveySaveRequest(
     )
 
     data class QuestionCreateRequest(
-        val id: UUID,
+        val questionId: UUID,
         val type: QuestionType,
         val title: String,
         val description: String,
@@ -88,14 +88,14 @@ data class SurveySaveRequest(
             when (type) {
                 QuestionType.TEXT_RESPONSE ->
                     StandardTextQuestion(
-                        id = id,
+                        id = questionId,
                         title = title,
                         description = description,
                         isRequired = isRequired,
                     )
                 QuestionType.SINGLE_CHOICE ->
                     StandardSingleChoiceQuestion(
-                        id = id,
+                        id = questionId,
                         title = title,
                         description = description,
                         isRequired = isRequired,
@@ -107,7 +107,7 @@ data class SurveySaveRequest(
                     )
                 QuestionType.MULTIPLE_CHOICE ->
                     StandardMultipleChoiceQuestion(
-                        id = id,
+                        id = questionId,
                         title = title,
                         description = description,
                         isRequired = isRequired,
