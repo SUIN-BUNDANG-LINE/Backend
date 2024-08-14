@@ -1,6 +1,9 @@
 package com.sbl.sulmun2yong.global.fingerprint
 
 import com.fingerprint.api.FingerprintApi
+import com.fingerprint.model.BotdDetectionResult
+import com.fingerprint.model.EventResponse
+import com.fingerprint.model.ProductsResponse
 import com.fingerprint.model.Response
 import com.fingerprint.model.ResponseVisits
 import com.fingerprint.sdk.ApiClient
@@ -30,11 +33,17 @@ class FingerprintApi(
 
     private fun getVisits(visitorId: String): MutableList<ResponseVisits>? {
         val response: Response = api.getVisits(visitorId, null, null, 1, null, null)
+        val product = getEvent(response.visits[0].requestId)
+        if (product.tampering.data.result == true ||
+            product.botd.data.bot.result !== BotdDetectionResult.ResultEnum.NOT_DETECTED
+        ) {
+            throw UncleanVisitorException()
+        }
         return response.visits
     }
 
-//    fun getEvent(requestId: String) {
-//        val response: EventResponse = api.getEvent(requestId)
-//        println(response.products.toString())
-//    }
+    fun getEvent(requestId: String): ProductsResponse {
+        val response: EventResponse = api.getEvent(requestId)
+        return response.products
+    }
 }
