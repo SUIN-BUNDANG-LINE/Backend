@@ -45,7 +45,7 @@ data class SurveyMakeInfoResponse(
     )
 
     data class SectionMakeInfoResponse(
-        val id: UUID,
+        val sectionId: UUID,
         val title: String,
         val description: String,
         val questions: List<QuestionMakeInfoResponse>,
@@ -54,7 +54,7 @@ data class SurveyMakeInfoResponse(
         companion object {
             fun from(section: Section) =
                 SectionMakeInfoResponse(
-                    id = section.id.value,
+                    sectionId = section.id.value,
                     title = section.title,
                     description = section.description,
                     questions = section.questions.map { QuestionMakeInfoResponse.from(it) },
@@ -96,7 +96,7 @@ data class SurveyMakeInfoResponse(
     )
 
     data class QuestionMakeInfoResponse(
-        val id: UUID,
+        val questionId: UUID,
         val type: QuestionType,
         val title: String,
         val description: String,
@@ -107,7 +107,7 @@ data class SurveyMakeInfoResponse(
         companion object {
             fun from(question: Question) =
                 QuestionMakeInfoResponse(
-                    id = question.id,
+                    questionId = question.id,
                     type = question.questionType,
                     title = question.title,
                     description = question.description,

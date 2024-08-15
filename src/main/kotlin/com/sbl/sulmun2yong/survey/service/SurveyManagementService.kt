@@ -37,7 +37,7 @@ class SurveyManagementService(
         val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
         val newSurvey =
             with(surveySaveRequest) {
-                val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.id) })
+                val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.sectionId) })
                 survey.updateContent(
                     title = this.title,
                     description = this.description,
