@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.global.config
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
+import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomAuthenticationSuccessHandler
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomLogoutSuccessHandler
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStrategy
@@ -21,6 +22,8 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
@@ -45,6 +48,10 @@ class SecurityConfig(
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
+    fun cookieAuthorizationRequestRepository(): AuthorizationRequestRepository<OAuth2AuthorizationRequest> =
+        HttpCookieOAuth2AuthorizationRequestRepository()
+
+    @Bean
     fun userDetailsService(): UserDetailsService {
         val user =
             User
@@ -54,6 +61,16 @@ class SecurityConfig(
                 .roles("SWAGGER_USER")
                 .build()
         return InMemoryUserDetailsManager(user)
+    }
+
+    @Bean
+    fun forwardedHeaderFilter(): FilterRegistrationBean<ForwardedHeaderFilter> {
+        val filterRegistrationBean = FilterRegistrationBean<ForwardedHeaderFilter>()
+
+        filterRegistrationBean.filter = ForwardedHeaderFilter()
+        filterRegistrationBean.order = Ordered.HIGHEST_PRECEDENCE
+
+        return filterRegistrationBean
     }
 
     @ConditionalOnProperty(prefix = "swagger", name = ["login"], havingValue = "true")
@@ -87,6 +104,13 @@ class SecurityConfig(
                 disable()
             }
             oauth2Login {
+                authorizationEndpoint {
+                    baseUri = "/oauth2/authorization"
+                    authorizationRequestRepository = cookieAuthorizationRequestRepository()
+                }
+                redirectionEndpoint {
+                    baseUri = "/login/oauth2/code/*"
+                }
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
@@ -120,15 +144,5 @@ class SecurityConfig(
             }
         }
         return http.build()
-    }
-
-    @Bean
-    fun forwardedHeaderFilter(): FilterRegistrationBean<ForwardedHeaderFilter> {
-        val filterRegistrationBean = FilterRegistrationBean<ForwardedHeaderFilter>()
-
-        filterRegistrationBean.filter = ForwardedHeaderFilter()
-        filterRegistrationBean.order = Ordered.HIGHEST_PRECEDENCE
-
-        return filterRegistrationBean
     }
 }

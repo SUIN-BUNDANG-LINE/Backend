@@ -1,10 +1,11 @@
 package com.sbl.sulmun2yong.global.config.oauth2.handler
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2User
+import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.Companion.REDIRECT_URI_PARAM_COOKIE_NAME
+import com.sbl.sulmun2yong.global.util.CookieUtils
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 
@@ -17,7 +18,10 @@ class CustomAuthenticationSuccessHandler(
         authentication: Authentication,
     ) {
         // 상태 코드 설정
-        response.status = HttpStatus.OK.value()
+        val redirectUri =
+            CookieUtils
+                .getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME)
+                .map(Cookie::getValue)
 
         val principal = authentication.principal
         val defaultUserProfile =

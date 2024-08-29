@@ -11,14 +11,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @Configuration
 class WebMvcConfig(
     @Value("\${frontend.base-url}")
-    private val baseUrl: String,
+    private val frontendBaseUrl: String,
     private val loginUserArgumentResolver: LoginUserArgumentResolver,
     private val isAdminArgumentResolver: IsAdminArgumentResolver,
 ) : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry
             .addMapping("/**")
-            .allowedOrigins(baseUrl) // 프론트엔드 도메인
+            .allowedOrigins(frontendBaseUrl) // 프론트엔드 도메인
             .allowedMethods("GET", "POST", "PUT", "DELETE")
             .allowCredentials(true)
             .allowedHeaders("*")

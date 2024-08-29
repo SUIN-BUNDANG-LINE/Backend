@@ -2,6 +2,8 @@ package com.sbl.sulmun2yong.user.controller.doc
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.ws.rs.QueryParam
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,5 +18,7 @@ interface LoginApiDoc {
     @ResponseBody
     fun login(
         @PathVariable provider: String,
+        @QueryParam("redirectUrl") redirectUrl: String?,
+        request: HttpServletRequest,
     ): ResponseEntity<Any>
 }
