@@ -30,6 +30,7 @@ class LoginController(
 
         val oauth2RedirectUrl = "/oauth2/authorization/$provider?redirect_uri=$userRedirectUrl"
         httpHeaders.location = URI.create(oauth2RedirectUrl)
+
         return ResponseEntity(httpHeaders, HttpStatus.FOUND)
     }
 }
