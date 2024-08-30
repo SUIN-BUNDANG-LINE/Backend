@@ -9,7 +9,7 @@ import java.util.Base64
 object CookieUtils {
     fun getCookie(
         request: HttpServletRequest,
-        name: String?,
+        name: String,
     ): Cookie {
         val cookies: Array<Cookie> = request.cookies
 
@@ -19,7 +19,7 @@ object CookieUtils {
 
     fun findCookie(
         request: HttpServletRequest,
-        name: String?,
+        name: String,
     ): Cookie? {
         val cookies: Array<Cookie> = request.cookies
         return cookies.firstOrNull { it.name == name }
@@ -27,8 +27,8 @@ object CookieUtils {
 
     fun addCookie(
         response: HttpServletResponse,
-        name: String?,
-        value: String?,
+        name: String,
+        value: String,
         maxAge: Int,
     ) {
         val cookie = Cookie(name, value)
@@ -41,7 +41,7 @@ object CookieUtils {
     fun deleteCookie(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        name: String?,
+        name: String,
     ) {
         val cookies: Array<Cookie>? = request.cookies
         if (cookies.isNullOrEmpty()) {
@@ -58,7 +58,7 @@ object CookieUtils {
         }
     }
 
-    fun serialize(cookieObject: Any?): String =
+    fun serialize(cookieObject: Any): String =
         Base64
             .getUrlEncoder()
             .encodeToString(SerializationUtils.serialize(cookieObject))
