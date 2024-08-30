@@ -22,10 +22,10 @@ class LoginController(
     @ResponseBody
     override fun login(
         @PathVariable provider: String,
-        @QueryParam("redirect_uri") redirectUri: String?,
+        @QueryParam("redirect_uri") redirectUrl: String?,
         request: HttpServletRequest,
     ): ResponseEntity<Any> {
-        val userRedirectUrl = redirectUri ?: backendBaseUrl
+        val userRedirectUrl = redirectUrl ?: backendBaseUrl
         val httpHeaders = HttpHeaders()
 
         val oauth2RedirectUrl = "/oauth2/authorization/$provider?redirect_uri=$userRedirectUrl"

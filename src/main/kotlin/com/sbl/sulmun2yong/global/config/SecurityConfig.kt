@@ -33,7 +33,9 @@ import org.springframework.web.filter.ForwardedHeaderFilter
 @Configuration
 class SecurityConfig(
     @Value("\${frontend.base-url}")
-    private val frontEndBaseUrl: String,
+    private val frontendBaseUrl: String,
+    @Value("\${backend.base-url}")
+    private val backendBaseUrl: String,
     @Value("\${swagger.username}")
     private val username: String?,
     @Value("\${swagger.password}")
@@ -114,12 +116,12 @@ class SecurityConfig(
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(frontEndBaseUrl)
+                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(frontendBaseUrl, backendBaseUrl)
             }
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(frontEndBaseUrl, sessionRegistry())
+                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry())
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))

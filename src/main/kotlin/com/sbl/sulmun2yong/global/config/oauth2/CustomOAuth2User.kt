@@ -27,5 +27,6 @@ data class CustomOAuth2User(
         DefaultUserProfile(
             id = id,
             nickname = nickname,
+            role = role,
         )
 }

@@ -10,11 +10,12 @@ import org.springframework.stereotype.Component
 
 @Component
 class HttpCookieOAuth2AuthorizationRequestRepository : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-    override fun loadAuthorizationRequest(request: HttpServletRequest): OAuth2AuthorizationRequest? =
-        CookieUtils
-            .getCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
-            .map { cookie -> CookieUtils.deserialize(cookie, OAuth2AuthorizationRequest::class.java) }
-            .orElse(null)
+    override fun loadAuthorizationRequest(request: HttpServletRequest): OAuth2AuthorizationRequest? {
+        val cookie = CookieUtils.findCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
+        return cookie?.let {
+            CookieUtils.deserialize(cookie, OAuth2AuthorizationRequest::class.java)
+        }
+    }
 
     override fun removeAuthorizationRequest(
         request: HttpServletRequest,

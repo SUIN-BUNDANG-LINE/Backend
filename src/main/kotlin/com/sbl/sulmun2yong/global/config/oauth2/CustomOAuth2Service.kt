@@ -33,8 +33,7 @@ class CustomOAuth2Service(
         val providerId = oAuth2UserInfo.getProviderId()
         val phoneNumber: String? = oAuth2UserInfo.getPhoneNumber()
 
-        // TODO: 전화번호가 등록되어 있는 유저가 소셜로그인에서 전화번호를 제공하지 않는 Google이나 Kakao로 로그인 시
-        //  전화번호가 사라지고 ROLE이 변경되는 문제 수정하기
+        // TODO: 전화번호가 등록되어 있는 유저가 소셜로그인에서 전화번호를 제공하지 않는 Google이나 Kakao로 로그인 시 전화번호가 사라지고 ROLE이 변경되는 문제 수정하기
         val user: User? = userAdapter.findByProviderAndProviderId(provider, providerId)
         val upsertedUser =
             user?.withUpdatePhoneNumber(phoneNumber)
