@@ -18,7 +18,7 @@ interface LoginApiDoc {
     @ResponseBody
     fun login(
         @PathVariable provider: String,
-        @QueryParam("redirectUrl") redirectUrl: String?,
+        @QueryParam("redirect_path") redirectPathAfterLogin: String?,
         request: HttpServletRequest,
     ): ResponseEntity<Any>
 }

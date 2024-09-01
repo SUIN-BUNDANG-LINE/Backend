@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.global.config.oauth2.handler
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2User
+import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository
 import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.Companion.REDIRECT_URI_PARAM_COOKIE_NAME
 import com.sbl.sulmun2yong.global.util.CookieUtils
 import com.sbl.sulmun2yong.user.domain.UserRole
@@ -13,6 +14,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 class CustomAuthenticationSuccessHandler(
     private val frontendBaseUrl: String,
     private val backendBaseUrl: String,
+    private val httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
@@ -27,13 +29,15 @@ class CustomAuthenticationSuccessHandler(
                 throw IllegalArgumentException("CustomOAuth2User 타입이 아닙니다.")
             }
 
-        val redirectUriCookieValue = CookieUtils.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME).value
-        val redirectUri =
-            if (redirectUriCookieValue == backendBaseUrl && defaultUserProfile.role != UserRole.ROLE_ADMIN) {
-                frontendBaseUrl
-            } else {
-                redirectUriCookieValue
-            }
+        val redirectUriAfterLogin =
+            CookieUtils.findCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME)?.value
+                ?: if (defaultUserProfile.role == UserRole.ROLE_ADMIN) {
+                    backendBaseUrl
+                } else {
+                    frontendBaseUrl
+                }
+
+        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response)
 
         // 기본 프로필 쿠키 생성
         val cookie = Cookie("user-profile", defaultUserProfile.toBase64Json())
@@ -41,6 +45,6 @@ class CustomAuthenticationSuccessHandler(
         response.addCookie(cookie)
 
         // 리디렉트
-        response.sendRedirect(redirectUri)
+        response.sendRedirect(redirectUriAfterLogin)
     }
 }

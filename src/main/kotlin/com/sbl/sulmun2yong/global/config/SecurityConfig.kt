@@ -22,8 +22,6 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
@@ -50,7 +48,7 @@ class SecurityConfig(
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
-    fun cookieAuthorizationRequestRepository(): AuthorizationRequestRepository<OAuth2AuthorizationRequest> =
+    fun cookieAuthorizationRequestRepository(): HttpCookieOAuth2AuthorizationRequestRepository =
         HttpCookieOAuth2AuthorizationRequestRepository()
 
     @Bean
@@ -110,13 +108,11 @@ class SecurityConfig(
                     baseUri = "/oauth2/authorization"
                     authorizationRequestRepository = cookieAuthorizationRequestRepository()
                 }
-                redirectionEndpoint {
-                    baseUri = "/login/oauth2/code/*"
-                }
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(frontendBaseUrl, backendBaseUrl)
+                authenticationSuccessHandler =
+                    CustomAuthenticationSuccessHandler(frontendBaseUrl, backendBaseUrl, cookieAuthorizationRequestRepository())
             }
             logout {
                 logoutUrl = "/user/logout"
