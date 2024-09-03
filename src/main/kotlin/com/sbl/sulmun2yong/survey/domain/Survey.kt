@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
+import com.sbl.sulmun2yong.survey.domain.reward.DrawType
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -14,7 +15,6 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 
-// TODO: 설문 일정 관련 속성들을 하나의 클래스로 묶기
 data class Survey(
     val id: UUID,
     val title: String,
@@ -24,9 +24,10 @@ data class Survey(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipantCount: Int,
+    val drawType: DrawType,
+    /** 해당 설문의 설문이용 노출 여부(false면 메인 페이지 노출 X, 링크를 통해서만 접근 가능) */
+    val isVisible: Boolean,
     val makerId: UUID,
-    val rewards: List<Reward>,
     val sections: List<Section>,
 ) {
     init {
@@ -34,9 +35,6 @@ data class Survey(
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
-        require(isTargetParticipantsEnough()) { throw InvalidSurveyException() }
-        // TODO: 추후에 리워드가 없는 설문도 생성할 수 있도록 수정하기
-        require(rewards.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
@@ -46,7 +44,6 @@ data class Survey(
         const val DEFAULT_DESCRIPTION = ""
         const val DEFAULT_SURVEY_DURATION = 60L
         const val DEFAULT_FINISH_MESSAGE = "설문에 참여해주셔서 감사합니다."
-        const val DEFAULT_TARGET_PARTICIPANT_COUNT = 100
 
         fun create(makerId: UUID) =
             Survey(
@@ -58,9 +55,9 @@ data class Survey(
                 finishedAt = getDefaultFinishedAt(),
                 status = SurveyStatus.NOT_STARTED,
                 finishMessage = DEFAULT_FINISH_MESSAGE,
-                targetParticipantCount = DEFAULT_TARGET_PARTICIPANT_COUNT,
+                drawType = DrawType.Free(listOf()),
+                isVisible = true,
                 makerId = makerId,
-                rewards = listOf(Reward.create()),
                 sections = listOf(Section.create()),
             )
 
@@ -100,15 +97,15 @@ data class Survey(
         thumbnail: String?,
         finishedAt: Date,
         finishMessage: String,
-        targetParticipantCount: Int,
-        rewards: List<Reward>,
+        drawType: DrawType,
+        isVisible: Boolean,
         sections: List<Section>,
     ): Survey {
         // 설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야한다.
         require(
             status == SurveyStatus.NOT_STARTED ||
                 status == SurveyStatus.IN_MODIFICATION &&
-                isRewardInfoEquals(targetParticipantCount, rewards),
+                drawType == this.drawType,
         ) {
             throw InvalidUpdateSurveyException()
         }
@@ -118,17 +115,11 @@ data class Survey(
             thumbnail = thumbnail,
             finishedAt = finishedAt,
             finishMessage = finishMessage,
-            targetParticipantCount = targetParticipantCount,
-            rewards = rewards,
+            drawType = drawType,
+            isVisible = isVisible,
             sections = sections,
         )
     }
-
-    /** 리워드 관련 정보가 같은지 확인하는 메서드 */
-    private fun isRewardInfoEquals(
-        targetParticipantCount: Int,
-        rewards: List<Reward>,
-    ) = targetParticipantCount == this.targetParticipantCount && rewards == this.rewards
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 
@@ -137,15 +128,11 @@ data class Survey(
         return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
     }
 
-    fun getRewardCount() = rewards.sumOf { it.count }
-
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 
     private fun isSurveyStatusValid() = publishedAt != null || status == SurveyStatus.NOT_STARTED
 
     private fun isFinishedAtAfterPublishedAt() = publishedAt == null || finishedAt.after(publishedAt)
-
-    private fun isTargetParticipantsEnough() = targetParticipantCount >= getRewardCount()
 
     private fun isSectionIdsValid(): Boolean {
         val sectionIds = SectionIds.from(sections.map { it.id })
