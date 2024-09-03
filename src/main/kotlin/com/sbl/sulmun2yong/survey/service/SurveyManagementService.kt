@@ -72,12 +72,14 @@ class SurveyManagementService(
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         surveyAdapter.save(survey.start())
-        val drawingBoard =
-            DrawingBoard.create(
-                surveyId = survey.id,
-                boardSize = survey.targetParticipantCount,
-                rewards = survey.rewards,
-            )
-        drawingBoardAdapter.save(drawingBoard)
+        if (survey.drawType is DrawType.Immediate) {
+            val drawingBoard =
+                DrawingBoard.create(
+                    surveyId = survey.id,
+                    boardSize = survey.drawType.targetParticipantCount,
+                    rewards = survey.drawType.rewards,
+                )
+            drawingBoardAdapter.save(drawingBoard)
+        }
     }
 }
