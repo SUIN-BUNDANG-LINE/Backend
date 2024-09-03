@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.reward.DrawType
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -54,6 +55,7 @@ object SurveyFixtureFactory {
         targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
         makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
+        isVisible: Boolean = true,
         sections: List<Section> = SECTIONS,
     ) = Survey(
         id = id,
@@ -64,9 +66,14 @@ object SurveyFixtureFactory {
         finishedAt = finishedAt,
         status = status,
         finishMessage = finishMessage + id,
-        targetParticipantCount = targetParticipantCount,
         makerId = makerId,
-        rewards = rewards,
+        drawType = createDrawType(rewards, targetParticipantCount),
+        isVisible = isVisible,
         sections = sections,
     )
+
+    fun createDrawType(
+        rewards: List<Reward> = REWARDS,
+        targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
+    ) = DrawType.Immediate(rewards, targetParticipantCount)
 }
