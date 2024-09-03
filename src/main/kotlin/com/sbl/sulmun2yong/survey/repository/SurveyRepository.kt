@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Repository
 interface SurveyRepository : MongoRepository<SurveyDocument, UUID> {
-    fun findByStatus(
+    fun findByStatusAndIsVisibleTrue(
         status: SurveyStatus,
         pageable: Pageable,
     ): Page<SurveyDocument>
