@@ -43,7 +43,7 @@ class SurveyResponseService(
         val participant = Participant.create(visitorId, surveyId, null)
         participantAdapter.saveParticipant(participant)
         responseAdapter.saveSurveyResponse(surveyResponse, participant.id)
-        return SurveyParticipantResponse(participant.id)
+        return SurveyParticipantResponse(participant.id, survey.isImmediateDraw())
     }
 
     private fun validateIsAlreadyParticipated(

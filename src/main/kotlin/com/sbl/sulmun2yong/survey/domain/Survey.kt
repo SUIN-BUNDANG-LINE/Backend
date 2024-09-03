@@ -128,6 +128,8 @@ data class Survey(
         return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
     }
 
+    fun isImmediateDraw() = drawType is DrawType.Immediate
+
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 
     private fun isSurveyStatusValid() = publishedAt != null || status == SurveyStatus.NOT_STARTED
