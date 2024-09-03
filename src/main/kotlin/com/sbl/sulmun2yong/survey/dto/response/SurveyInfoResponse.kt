@@ -11,24 +11,24 @@ data class SurveyInfoResponse(
     val description: String,
     val status: SurveyStatus,
     val finishedAt: Date,
-    val currentParticipants: Int,
-    val targetParticipants: Int,
+    val currentParticipants: Int?,
+    val targetParticipants: Int?,
     val thumbnail: String,
     val rewards: List<RewardInfoResponse>,
 ) {
     companion object {
         fun of(
             survey: Survey,
-            currentParticipants: Int,
+            currentParticipants: Int?,
         ) = SurveyInfoResponse(
             title = survey.title,
             description = survey.description,
             status = survey.status,
             finishedAt = survey.finishedAt,
             currentParticipants = currentParticipants,
-            targetParticipants = survey.targetParticipantCount,
+            targetParticipants = survey.drawType.targetParticipantCount,
+            rewards = survey.drawType.rewards.map { it.toResponse() },
             thumbnail = survey.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
-            rewards = survey.rewards.map { it.toResponse() },
         )
     }
 
