@@ -23,10 +23,10 @@ data class SurveyListResponse(
                             thumbnail = it.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
                             title = it.title,
                             description = it.description,
-                            targetParticipants = it.targetParticipantCount,
+                            targetParticipants = it.drawType.targetParticipantCount,
                             finishedAt = it.finishedAt,
-                            rewardCount = it.getRewardCount(),
-                            rewards = it.rewards.toRewardInfoResponses(),
+                            rewardCount = it.drawType.getRewardCount(),
+                            rewards = it.drawType.rewards.toRewardInfoResponses(),
                         )
                     },
             )
@@ -37,7 +37,7 @@ data class SurveyListResponse(
         val thumbnail: String,
         val title: String,
         val description: String,
-        val targetParticipants: Int,
+        val targetParticipants: Int?,
         val rewardCount: Int,
         val finishedAt: Date,
         val rewards: List<RewardInfoResponse>,
