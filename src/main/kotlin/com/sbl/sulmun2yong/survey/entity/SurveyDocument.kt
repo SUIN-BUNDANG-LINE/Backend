@@ -10,6 +10,7 @@ import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
+import com.sbl.sulmun2yong.survey.domain.reward.DrawType
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
@@ -32,7 +33,8 @@ data class SurveyDocument(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipantCount: Int,
+    val targetParticipantCount: Int?,
+    val isVisible: Boolean,
     val makerId: UUID,
     val rewards: List<RewardSubDocument>,
     val sections: List<SectionSubDocument>,
@@ -48,9 +50,10 @@ data class SurveyDocument(
                 finishedAt = survey.finishedAt,
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.targetParticipantCount,
+                targetParticipantCount = survey.drawType.targetParticipantCount,
                 makerId = survey.makerId,
-                rewards = survey.rewards.map { it.toDocument() },
+                rewards = survey.drawType.rewards.map { it.toDocument() },
+                isVisible = survey.isVisible,
                 sections = survey.sections.map { it.toDocument() },
             )
 
@@ -156,9 +159,9 @@ data class SurveyDocument(
             publishedAt = this.publishedAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            targetParticipantCount = this.targetParticipantCount,
+            drawType = DrawType.of(this.rewards.map { it.toDomain() }, this.targetParticipantCount),
+            isVisible = this.isVisible,
             makerId = this.makerId,
-            rewards = this.rewards.map { it.toDomain() },
             sections = this.sections.map { it.toDomain(sectionIds) },
         )
     }
