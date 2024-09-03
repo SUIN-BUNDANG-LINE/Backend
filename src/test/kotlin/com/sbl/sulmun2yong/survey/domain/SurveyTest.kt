@@ -397,4 +397,25 @@ class SurveyTest {
         assertThrows<InvalidSurveyStartException> { survey2.start() }
         assertThrows<InvalidSurveyStartException> { survey3.start() }
     }
+
+    @Test
+    fun `설문은 설문의 추첨 방식이 즉시 추첨 방식인지 확인할 수 있다`() {
+        // given
+        val survey1 = createSurvey(finishedAt = DateUtil.getDateAfterDay(), publishedAt = null, status = SurveyStatus.NOT_STARTED)
+        val survey2 =
+            createSurvey(
+                finishedAt = DateUtil.getDateAfterDay(),
+                publishedAt = null,
+                status = SurveyStatus.NOT_STARTED,
+                targetParticipantCount = null,
+            )
+
+        // when
+        val isImmediateDraw1 = survey1.isImmediateDraw()
+        val isImmediateDraw2 = survey2.isImmediateDraw()
+
+        // then
+        assertEquals(true, isImmediateDraw1)
+        assertEquals(false, isImmediateDraw2)
+    }
 }

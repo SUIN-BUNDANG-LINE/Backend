@@ -52,7 +52,7 @@ object SurveyFixtureFactory {
         finishedAt: Date = FINISHED_AT,
         status: SurveyStatus = SURVEY_STATUS,
         finishMessage: String = FINISH_MESSAGE,
-        targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
+        targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
         makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
         isVisible: Boolean = true,
@@ -74,6 +74,6 @@ object SurveyFixtureFactory {
 
     fun createDrawType(
         rewards: List<Reward> = REWARDS,
-        targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
-    ) = DrawType.Immediate(rewards, targetParticipantCount)
+        targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
+    ) = DrawType.of(rewards, targetParticipantCount)
 }
