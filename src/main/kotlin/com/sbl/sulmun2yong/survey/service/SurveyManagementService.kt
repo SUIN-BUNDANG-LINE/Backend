@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.reward.DrawType
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -44,8 +45,8 @@ class SurveyManagementService(
                     thumbnail = this.thumbnail,
                     finishedAt = this.finishedAt,
                     finishMessage = this.finishMessage,
-                    targetParticipantCount = this.targetParticipantCount,
-                    rewards = rewards,
+                    drawType = DrawType.of(rewards, this.targetParticipantCount),
+                    isVisible = this.isVisible,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
             }
