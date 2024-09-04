@@ -45,6 +45,10 @@ class SurveyAdapter(
     }
 
     fun save(survey: Survey) {
-        surveyRepository.save(SurveyDocument.from(survey))
+        val previousSurveyDocument = surveyRepository.findById(survey.id)
+        val surveyDocument = SurveyDocument.from(survey)
+        // 기존 설문을 업데이트하는 경우, createdAt을 유지
+        if (previousSurveyDocument.isPresent) surveyDocument.createdAt = previousSurveyDocument.get().createdAt
+        surveyRepository.save(surveyDocument)
     }
 }
