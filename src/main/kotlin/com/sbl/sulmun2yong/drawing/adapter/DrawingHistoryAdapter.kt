@@ -13,8 +13,8 @@ import java.util.UUID
 class DrawingHistoryAdapter(
     private val drawingHistoryRepository: DrawingHistoryRepository,
 ) {
-    fun save(drawingHistory: DrawingHistory) {
-        drawingHistoryRepository.save(DrawingHistoryDocument.of(drawingHistory))
+    fun insert(drawingHistory: DrawingHistory) {
+        drawingHistoryRepository.insert(DrawingHistoryDocument.of(drawingHistory))
     }
 
     fun findBySurveyIdAndParticipantIdOrPhoneNumber(

@@ -10,11 +10,11 @@ import java.util.UUID
 class ResponseAdapter(
     private val responseRepository: ResponseRepository,
 ) {
-    fun saveSurveyResponse(
+    fun insertSurveyResponse(
         surveyResponse: SurveyResponse,
         participantId: UUID,
     ) {
-        responseRepository.saveAll(surveyResponse.toDocuments(participantId))
+        responseRepository.insert(surveyResponse.toDocuments(participantId))
     }
 
     private fun SurveyResponse.toDocuments(participantId: UUID): List<ResponseDocument> =
