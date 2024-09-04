@@ -9,13 +9,14 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SECTIONS
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SURVEY_STATUS
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.THUMBNAIL
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createDrawType
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createRewardInfo
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.reward.DrawType
+import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardInfo
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -81,7 +82,7 @@ class SurveyTest {
             assertEquals(PUBLISHED_AT, this.publishedAt)
             assertEquals(SURVEY_STATUS, this.status)
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
-            assertEquals(createDrawType(), this.drawType)
+            assertEquals(createRewardInfo(), this.rewardInfo)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
             assertEquals(SECTIONS, this.sections)
@@ -106,7 +107,7 @@ class SurveyTest {
             assertEquals(null, this.publishedAt)
             assertEquals(SurveyStatus.NOT_STARTED, this.status)
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
-            assertEquals(DrawType.Free(listOf()), this.drawType)
+            assertEquals(ByUserRewardInfo(listOf()), this.rewardInfo)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
             assertEquals(listOf(this.sections.first()), this.sections)
@@ -243,7 +244,7 @@ class SurveyTest {
         val newDescription = "new description"
         val newThumbnail = "new thumbnail"
         val newFinishMessage = "new finish message"
-        val newDrawType = DrawType.of(listOf(Reward("new reward", "new category", 1)), 10)
+        val newRewardInfo = RewardInfo.of(listOf(Reward("new reward", "new category", 1)), 10)
         val newIsVisible = false
         val sectionId = SectionId.Standard(UUID.randomUUID())
         val newSections =
@@ -267,7 +268,7 @@ class SurveyTest {
                 thumbnail = newThumbnail,
                 finishedAt = survey.finishedAt,
                 finishMessage = newFinishMessage,
-                drawType = newDrawType,
+                rewardInfo = newRewardInfo,
                 isVisible = newIsVisible,
                 sections =
                     listOf(
@@ -289,7 +290,7 @@ class SurveyTest {
             assertEquals(newThumbnail, this.thumbnail)
             assertEquals(survey.finishedAt, this.finishedAt)
             assertEquals(newFinishMessage, this.finishMessage)
-            assertEquals(newDrawType, this.drawType)
+            assertEquals(newRewardInfo, this.rewardInfo)
             assertEquals(isVisible, this.isVisible)
             assertEquals(newSections, this.sections)
         }
@@ -311,7 +312,7 @@ class SurveyTest {
                 thumbnail = survey1.thumbnail,
                 finishedAt = survey1.finishedAt,
                 finishMessage = survey1.finishMessage,
-                drawType = survey1.drawType,
+                rewardInfo = survey1.rewardInfo,
                 isVisible = survey1.isVisible,
                 sections = survey1.sections,
             )
@@ -324,7 +325,7 @@ class SurveyTest {
                 thumbnail = survey2.thumbnail,
                 finishedAt = survey2.finishedAt,
                 finishMessage = survey2.finishMessage,
-                drawType = survey2.drawType,
+                rewardInfo = survey2.rewardInfo,
                 isVisible = survey2.isVisible,
                 sections = survey2.sections,
             )
@@ -337,7 +338,7 @@ class SurveyTest {
                 thumbnail = survey3.thumbnail,
                 finishedAt = survey3.finishedAt,
                 finishMessage = survey3.finishMessage,
-                drawType = survey3.drawType,
+                rewardInfo = survey3.rewardInfo,
                 isVisible = survey3.isVisible,
                 sections = survey3.sections,
             )
@@ -350,7 +351,7 @@ class SurveyTest {
                 thumbnail = survey3.thumbnail,
                 finishedAt = survey3.finishedAt,
                 finishMessage = survey3.finishMessage,
-                drawType = DrawType.Free(listOf()),
+                rewardInfo = ByUserRewardInfo(listOf()),
                 isVisible = survey3.isVisible,
                 sections = survey3.sections,
             )

@@ -23,10 +23,10 @@ data class SurveyListResponse(
                             thumbnail = it.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
                             title = it.title,
                             description = it.description,
-                            targetParticipants = it.drawType.targetParticipantCount,
+                            targetParticipants = it.rewardInfo.targetParticipantCount,
                             finishedAt = it.finishedAt,
-                            rewardCount = it.drawType.getRewardCount(),
-                            rewards = it.drawType.rewards.toRewardInfoResponses(),
+                            rewardCount = it.rewardInfo.getRewardCount(),
+                            rewards = it.rewardInfo.rewards.toRewardInfoResponses(),
                         )
                     },
             )

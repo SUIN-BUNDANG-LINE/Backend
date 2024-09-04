@@ -2,7 +2,8 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.reward.DrawType
+import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -24,7 +25,7 @@ data class Survey(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val drawType: DrawType,
+    val rewardInfo: RewardInfo,
     /** 해당 설문의 설문이용 노출 여부(false면 메인 페이지 노출 X, 링크를 통해서만 접근 가능) */
     val isVisible: Boolean,
     val makerId: UUID,
@@ -55,7 +56,7 @@ data class Survey(
                 finishedAt = getDefaultFinishedAt(),
                 status = SurveyStatus.NOT_STARTED,
                 finishMessage = DEFAULT_FINISH_MESSAGE,
-                drawType = DrawType.Free(listOf()),
+                rewardInfo = ByUserRewardInfo(listOf()),
                 isVisible = true,
                 makerId = makerId,
                 sections = listOf(Section.create()),
@@ -97,7 +98,7 @@ data class Survey(
         thumbnail: String?,
         finishedAt: Date,
         finishMessage: String,
-        drawType: DrawType,
+        rewardInfo: RewardInfo,
         isVisible: Boolean,
         sections: List<Section>,
     ): Survey {
@@ -105,7 +106,7 @@ data class Survey(
         require(
             status == SurveyStatus.NOT_STARTED ||
                 status == SurveyStatus.IN_MODIFICATION &&
-                drawType == this.drawType,
+                rewardInfo == this.rewardInfo,
         ) {
             throw InvalidUpdateSurveyException()
         }
@@ -115,7 +116,7 @@ data class Survey(
             thumbnail = thumbnail,
             finishedAt = finishedAt,
             finishMessage = finishMessage,
-            drawType = drawType,
+            rewardInfo = rewardInfo,
             isVisible = isVisible,
             sections = sections,
         )
@@ -128,7 +129,7 @@ data class Survey(
         return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
     }
 
-    fun isImmediateDraw() = drawType is DrawType.Immediate
+    fun isImmediateDraw() = rewardInfo.isImmediateDraw
 
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 

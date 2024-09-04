@@ -26,8 +26,8 @@ data class SurveyInfoResponse(
             status = survey.status,
             finishedAt = survey.finishedAt,
             currentParticipants = currentParticipants,
-            targetParticipants = survey.drawType.targetParticipantCount,
-            rewards = survey.drawType.rewards.map { it.toResponse() },
+            targetParticipants = survey.rewardInfo.targetParticipantCount,
+            rewards = survey.rewardInfo.rewards.map { it.toResponse() },
             thumbnail = survey.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
         )
     }

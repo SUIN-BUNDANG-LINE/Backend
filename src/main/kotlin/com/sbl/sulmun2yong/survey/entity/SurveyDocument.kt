@@ -10,8 +10,8 @@ import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
-import com.sbl.sulmun2yong.survey.domain.reward.DrawType
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -50,9 +50,9 @@ data class SurveyDocument(
                 finishedAt = survey.finishedAt,
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.drawType.targetParticipantCount,
+                targetParticipantCount = survey.rewardInfo.targetParticipantCount,
                 makerId = survey.makerId,
-                rewards = survey.drawType.rewards.map { it.toDocument() },
+                rewards = survey.rewardInfo.rewards.map { it.toDocument() },
                 isVisible = survey.isVisible,
                 sections = survey.sections.map { it.toDocument() },
             )
@@ -159,7 +159,7 @@ data class SurveyDocument(
             publishedAt = this.publishedAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            drawType = DrawType.of(this.rewards.map { it.toDomain() }, this.targetParticipantCount),
+            rewardInfo = RewardInfo.of(this.rewards.map { it.toDomain() }, this.targetParticipantCount),
             isVisible = this.isVisible,
             makerId = this.makerId,
             sections = this.sections.map { it.toDomain(sectionIds) },
