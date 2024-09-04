@@ -18,8 +18,9 @@ data class SurveyMakeInfoResponse(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipantCount: Int,
+    val targetParticipantCount: Int?,
     val rewards: List<RewardMakeInfoResponse>,
+    val isVisible: Boolean,
     val sections: List<SectionMakeInfoResponse>,
 ) {
     companion object {
@@ -32,8 +33,9 @@ data class SurveyMakeInfoResponse(
                 finishedAt = survey.finishedAt,
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.targetParticipantCount,
-                rewards = survey.rewards.map { RewardMakeInfoResponse(it.name, it.category, it.count) },
+                targetParticipantCount = survey.rewardInfo.targetParticipantCount,
+                rewards = survey.rewardInfo.rewards.map { RewardMakeInfoResponse(it.name, it.category, it.count) },
+                isVisible = survey.isVisible,
                 sections = survey.sections.map { SectionMakeInfoResponse.from(it) },
             )
     }

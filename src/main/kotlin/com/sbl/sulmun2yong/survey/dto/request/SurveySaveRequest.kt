@@ -21,8 +21,9 @@ data class SurveySaveRequest(
     val thumbnail: String?,
     val finishedAt: Date,
     val finishMessage: String,
-    val targetParticipantCount: Int,
+    val targetParticipantCount: Int?,
     val rewards: List<RewardCreateRequest>,
+    val isVisible: Boolean,
     val sections: List<SectionCreateRequest>,
 ) {
     data class RewardCreateRequest(

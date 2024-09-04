@@ -1,8 +1,9 @@
 package com.sbl.sulmun2yong.fixture.survey
 
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -51,9 +52,10 @@ object SurveyFixtureFactory {
         finishedAt: Date = FINISHED_AT,
         status: SurveyStatus = SURVEY_STATUS,
         finishMessage: String = FINISH_MESSAGE,
-        targetParticipantCount: Int = TARGET_PARTICIPANT_COUNT,
+        targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
         makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
+        isVisible: Boolean = true,
         sections: List<Section> = SECTIONS,
     ) = Survey(
         id = id,
@@ -64,9 +66,14 @@ object SurveyFixtureFactory {
         finishedAt = finishedAt,
         status = status,
         finishMessage = finishMessage + id,
-        targetParticipantCount = targetParticipantCount,
         makerId = makerId,
-        rewards = rewards,
+        rewardInfo = createRewardInfo(rewards, targetParticipantCount),
+        isVisible = isVisible,
         sections = sections,
     )
+
+    fun createRewardInfo(
+        rewards: List<Reward> = REWARDS,
+        targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
+    ) = RewardInfo.of(rewards, targetParticipantCount)
 }

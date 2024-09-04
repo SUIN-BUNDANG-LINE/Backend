@@ -29,6 +29,7 @@ enum class ErrorCode(
     INVALID_SURVEY_ACCESS(HttpStatus.FORBIDDEN, "SV0016", "설문 접근 권한이 없습니다."),
     ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "SV0017", "이미 참여한 설문입니다."),
     INVALID_SURVEY_START(HttpStatus.BAD_REQUEST, "SV0018", "설문 시작에 실패했습니다."),
+    INVALID_REWARD_INFO(HttpStatus.BAD_REQUEST, "SV0019", "유효하지 않은 리워드 정보입니다."),
 
     // FingerPrint (FP)
     UNCLEAN_VISITOR(HttpStatus.BAD_REQUEST, "FP0001", "유효하지 않은 방문자입니다."),

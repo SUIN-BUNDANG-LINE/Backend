@@ -3,8 +3,10 @@ package com.sbl.sulmun2yong.survey.service
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawRewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
@@ -44,8 +46,8 @@ class SurveyManagementService(
                     thumbnail = this.thumbnail,
                     finishedAt = this.finishedAt,
                     finishMessage = this.finishMessage,
-                    targetParticipantCount = this.targetParticipantCount,
-                    rewards = rewards,
+                    rewardInfo = RewardInfo.of(rewards, this.targetParticipantCount),
+                    isVisible = this.isVisible,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
             }
@@ -71,12 +73,14 @@ class SurveyManagementService(
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         surveyAdapter.save(survey.start())
-        val drawingBoard =
-            DrawingBoard.create(
-                surveyId = survey.id,
-                boardSize = survey.targetParticipantCount,
-                rewards = survey.rewards,
-            )
-        drawingBoardAdapter.save(drawingBoard)
+        if (survey.rewardInfo is ImmediateDrawRewardInfo) {
+            val drawingBoard =
+                DrawingBoard.create(
+                    surveyId = survey.id,
+                    boardSize = survey.rewardInfo.targetParticipantCount,
+                    rewards = survey.rewardInfo.rewards,
+                )
+            drawingBoardAdapter.save(drawingBoard)
+        }
     }
 }

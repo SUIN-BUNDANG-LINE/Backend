@@ -13,8 +13,8 @@ import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardAccessException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID

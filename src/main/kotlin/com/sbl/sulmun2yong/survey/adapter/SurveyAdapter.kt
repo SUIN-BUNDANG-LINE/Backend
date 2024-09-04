@@ -24,7 +24,7 @@ class SurveyAdapter(
         isAsc: Boolean,
     ): Page<Survey> {
         val pageRequest = PageRequest.of(page, size, getSurveySort(sortType, isAsc))
-        val surveyDocuments = surveyRepository.findByStatus(SurveyStatus.IN_PROGRESS, pageRequest)
+        val surveyDocuments = surveyRepository.findByStatusAndIsVisibleTrue(SurveyStatus.IN_PROGRESS, pageRequest)
         val surveys = surveyDocuments.content.map { it.toDomain() }
         return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
     }
