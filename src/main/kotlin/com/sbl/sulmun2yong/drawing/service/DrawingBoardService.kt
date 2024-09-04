@@ -72,7 +72,7 @@ class DrawingBoardService(
         val changedDrawingBoard = drawingResult.changedDrawingBoard
         drawingBoardAdapter.save(drawingResult.changedDrawingBoard)
         // 추첨 기록 저장
-        drawingHistoryAdapter.save(
+        drawingHistoryAdapter.insert(
             DrawingHistory.create(
                 participantId = participantId,
                 phoneNumber = phoneNumberData,

@@ -18,6 +18,10 @@ class DrawingBoardAdapter(
             .toDomain()
 
     fun save(drawingBoard: DrawingBoard) {
-        drawingBoardRepository.save(DrawingBoardDocument.of(drawingBoard))
+        val previousDrawingBoardDocument = drawingBoardRepository.findById(drawingBoard.id)
+        val drawingBoardDocument = DrawingBoardDocument.of(drawingBoard)
+        // 기존 추첨 보드를 업데이트하는 경우, createdAt을 유지
+        if (previousDrawingBoardDocument.isPresent) drawingBoardDocument.createdAt = previousDrawingBoardDocument.get().createdAt
+        drawingBoardRepository.save(drawingBoardDocument)
     }
 }

@@ -41,8 +41,8 @@ class SurveyResponseService(
         survey.validateResponse(surveyResponse)
         // TODO: 참가자 객체의 UserId에 실제 유저 값 넣기
         val participant = Participant.create(visitorId, surveyId, null)
-        participantAdapter.saveParticipant(participant)
-        responseAdapter.saveSurveyResponse(surveyResponse, participant.id)
+        participantAdapter.insert(participant)
+        responseAdapter.insertSurveyResponse(surveyResponse, participant.id)
         return SurveyParticipantResponse(participant.id, survey.isImmediateDraw())
     }
 
