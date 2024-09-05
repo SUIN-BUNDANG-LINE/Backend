@@ -24,6 +24,7 @@ class ResponseAdapter(
                     ResponseDocument(
                         id = UUID.randomUUID(),
                         participantId = participantId,
+                        surveyId = this.surveyId,
                         questionId = questionResponse.questionId,
                         content = it.content,
                     )
