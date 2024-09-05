@@ -122,6 +122,7 @@ class SecurityConfig(
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
                 authorize("/api/v1/user/**", authenticated)
+                authorize("/api/v1/surveys/results/**", authenticated)
                 // TODO: 추후에 AUTHENTICATED_USER 로 수정
                 authorize("/api/v1/surveys/workbench/**", hasRole("ADMIN"))
                 authorize("/**", permitAll)
