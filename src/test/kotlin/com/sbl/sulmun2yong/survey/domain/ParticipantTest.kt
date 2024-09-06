@@ -11,7 +11,6 @@ class ParticipantTest {
         // given
         val participantId = UUID.randomUUID()
         val surveyId = UUID.randomUUID()
-        val visitorId = "abcdefg"
         val userId = UUID.randomUUID()
 
         Mockito.mockStatic(UUID::class.java).use { mockedUUID ->

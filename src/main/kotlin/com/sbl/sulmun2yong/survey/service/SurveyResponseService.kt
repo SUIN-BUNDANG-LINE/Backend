@@ -24,10 +24,8 @@ class SurveyResponseService(
         surveyResponseRequest: SurveyResponseRequest,
         isAdmin: Boolean,
     ): SurveyParticipantResponse {
-        if (!isAdmin) {
-            validateIsAlreadyParticipated(surveyId)
-        }
         // 이미 참여한 설문인지 검증(Admin인 경우 스킵)
+        if (!isAdmin) validateIsAlreadyParticipated(surveyId)
 
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status != SurveyStatus.IN_PROGRESS) {
