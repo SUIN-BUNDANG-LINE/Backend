@@ -12,8 +12,6 @@ import java.util.UUID
 data class SurveyResponseRequest(
     @field:Valid
     val sectionResponses: List<SectionResponseRequest>,
-    @field:Size(max = 100, message = "visitorId는 최대 100자까지 입력 가능합니다.")
-    val visitorId: String,
 ) {
     data class SectionResponseRequest(
         val sectionId: UUID,
