@@ -15,18 +15,15 @@ class ParticipantAdapter(
         participantRepository.insert(ParticipantDocument.of(participant))
     }
 
-    fun getParticipant(id: UUID): Participant =
+    fun getByParticipantId(id: UUID): Participant =
         participantRepository
             .findById(id)
             .orElseThrow { InvalidParticipantException() }
             .toDomain()
 
-    fun findBySurveyIdAndVisitorId(
-        surveyId: UUID,
-        visitorId: String,
-    ): Participant? =
+    fun findBySurveyId(surveyId: UUID): Participant? =
         participantRepository
-            .findBySurveyIdAndVisitorId(surveyId, visitorId)
+            .findBySurveyId(surveyId)
             .map { it.toDomain() }
             .orElse(null)
 }

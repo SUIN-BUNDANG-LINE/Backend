@@ -2,7 +2,6 @@ package com.sbl.sulmun2yong.drawing.service
 
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
@@ -14,7 +13,6 @@ import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -46,7 +44,7 @@ class DrawingBoardService(
     ): DrawingResultResponse {
         // 유효성 검증
         // 참가했는가
-        val participant = participantAdapter.getParticipant(participantId)
+        val participant = participantAdapter.getByParticipantId(participantId)
         val surveyId = participant.surveyId
 
         // 추첨 기록이 있는가
@@ -93,30 +91,5 @@ class DrawingBoardService(
                 is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
             }
         return drawingResultResponse
-    }
-
-    fun makeDrawingBoard(
-        surveyId: UUID,
-        boardSize: Int,
-        surveyRewards: List<Reward>,
-    ) {
-        // TODO: 적절한 다른 패키지간 도메인 변환 로직 도입
-        val rewards =
-            surveyRewards
-                .map {
-                    Reward(
-                        name = it.name,
-                        category = it.category,
-                        count = it.count,
-                    )
-                }
-
-        val drawingBoard =
-            DrawingBoard.create(
-                surveyId = surveyId,
-                boardSize = boardSize,
-                rewards = rewards,
-            )
-        drawingBoardAdapter.save(drawingBoard)
     }
 }
