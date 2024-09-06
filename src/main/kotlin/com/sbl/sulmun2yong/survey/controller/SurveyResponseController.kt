@@ -1,9 +1,7 @@
 package com.sbl.sulmun2yong.survey.controller
 
-import com.sbl.sulmun2yong.global.annotation.IsAdmin
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyResponseApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
-import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import com.sbl.sulmun2yong.survey.service.SurveyResponseService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
@@ -23,9 +21,5 @@ class SurveyResponseController(
     override fun responseToSurvey(
         @PathVariable("survey-id") surveyId: UUID,
         @Valid @RequestBody surveyResponseRequest: SurveyResponseRequest,
-        @IsAdmin isAdmin: Boolean,
-    ): ResponseEntity<SurveyParticipantResponse> =
-        ResponseEntity.ok(
-            surveyResponseService.responseToSurvey(surveyId, surveyResponseRequest, isAdmin),
-        )
+    ) = ResponseEntity.ok(surveyResponseService.responseToSurvey(surveyId, surveyResponseRequest))
 }

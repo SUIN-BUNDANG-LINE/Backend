@@ -7,7 +7,6 @@ import com.sbl.sulmun2yong.survey.domain.Participant
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
-import com.sbl.sulmun2yong.survey.exception.AlreadyParticipatedException
 import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -22,11 +21,7 @@ class SurveyResponseService(
     fun responseToSurvey(
         surveyId: UUID,
         surveyResponseRequest: SurveyResponseRequest,
-        isAdmin: Boolean,
     ): SurveyParticipantResponse {
-        // 이미 참여한 설문인지 검증(Admin인 경우 스킵)
-        if (!isAdmin) validateIsAlreadyParticipated(surveyId)
-
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status != SurveyStatus.IN_PROGRESS) {
             throw SurveyClosedException()
@@ -38,12 +33,5 @@ class SurveyResponseService(
         participantAdapter.insert(participant)
         responseAdapter.insertSurveyResponse(surveyResponse, participant.id)
         return SurveyParticipantResponse(participant.id, survey.isImmediateDraw())
-    }
-
-    private fun validateIsAlreadyParticipated(surveyId: UUID) {
-        val participant = participantAdapter.findBySurveyId(surveyId)
-        participant?.let {
-            throw AlreadyParticipatedException()
-        }
     }
 }
