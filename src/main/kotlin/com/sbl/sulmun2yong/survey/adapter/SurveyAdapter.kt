@@ -51,4 +51,9 @@ class SurveyAdapter(
         if (previousSurveyDocument.isPresent) surveyDocument.createdAt = previousSurveyDocument.get().createdAt
         surveyRepository.save(surveyDocument)
     }
+
+    fun existsByIdAndMakerId(
+        surveyId: UUID,
+        userId: UUID,
+    ) = surveyRepository.existsByIdAndMakerId(surveyId, userId)
 }

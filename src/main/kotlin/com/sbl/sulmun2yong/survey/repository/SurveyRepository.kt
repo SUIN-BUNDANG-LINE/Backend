@@ -14,4 +14,9 @@ interface SurveyRepository : MongoRepository<SurveyDocument, UUID> {
         status: SurveyStatus,
         pageable: Pageable,
     ): Page<SurveyDocument>
+
+    fun existsByIdAndMakerId(
+        surveyId: UUID,
+        userId: UUID,
+    ): Boolean
 }

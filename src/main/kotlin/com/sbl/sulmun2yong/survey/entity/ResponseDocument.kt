@@ -10,6 +10,7 @@ data class ResponseDocument(
     @Id
     val id: UUID,
     val participantId: UUID,
+    val surveyId: UUID,
     val questionId: UUID,
     val content: String,
 ) : BaseTimeDocument()
