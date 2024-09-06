@@ -18,13 +18,12 @@ class ParticipantTest {
             mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(participantId)
 
             // when
-            val participant = Participant.create(visitorId, surveyId, userId)
+            val participant = Participant.create(surveyId, userId)
 
             // then
             with(participant) {
                 assertEquals(participantId, this.id)
                 assertEquals(surveyId, this.surveyId)
-                assertEquals(visitorId, this.visitorId)
                 assertEquals(userId, this.userId)
             }
         }
