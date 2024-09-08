@@ -29,6 +29,7 @@ enum class ErrorCode(
     INVALID_SURVEY_ACCESS(HttpStatus.FORBIDDEN, "SV0016", "설문 접근 권한이 없습니다."),
     INVALID_SURVEY_START(HttpStatus.BAD_REQUEST, "SV0018", "설문 시작에 실패했습니다."),
     INVALID_REWARD_INFO(HttpStatus.BAD_REQUEST, "SV0019", "유효하지 않은 리워드 정보입니다."),
+    INVALID_RESULT_DETAILS(HttpStatus.BAD_REQUEST, "SV0020", "유효하지 않은 설문 결과입니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),
