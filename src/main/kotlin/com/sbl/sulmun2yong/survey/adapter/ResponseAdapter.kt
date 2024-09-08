@@ -33,16 +33,17 @@ class ResponseAdapter(
             }
         }
 
-    fun getResponses(surveyId: UUID): SurveyResult {
+    fun getSurveyResult(surveyId: UUID): SurveyResult {
         val responses = responseRepository.findBySurveyId(surveyId)
-        return SurveyResult(responses = responses.map { it.toDomain() })
+        val groupingResponses = responses.groupBy { "${it.questionId}|${it.participantId}" }.values
+        groupingResponses.map { it.toDomain() }
+        return SurveyResult(resultDetails = groupingResponses.map { it.toDomain() })
     }
 
-    private fun ResponseDocument.toDomain() =
-        SurveyResult.Response(
-            questionId = this.questionId,
-            participantId = this.participantId,
-            content = this.content,
-            createdAt = this.createdAt,
+    private fun List<ResponseDocument>.toDomain() =
+        SurveyResult.ResultDetails(
+            questionId = first().questionId,
+            participantId = first().participantId,
+            contents = map { responseDocument -> responseDocument.content },
         )
 }
