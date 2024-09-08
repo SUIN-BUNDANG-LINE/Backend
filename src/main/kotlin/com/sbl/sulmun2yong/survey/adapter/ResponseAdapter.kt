@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.adapter
 
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
+import com.sbl.sulmun2yong.survey.domain.result.ResultDetails
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
 import com.sbl.sulmun2yong.survey.entity.ResponseDocument
 import com.sbl.sulmun2yong.survey.repository.ResponseRepository
@@ -41,7 +42,7 @@ class ResponseAdapter(
     }
 
     private fun List<ResponseDocument>.toDomain() =
-        SurveyResult.ResultDetails(
+        ResultDetails(
             questionId = first().questionId,
             participantId = first().participantId,
             contents = map { responseDocument -> responseDocument.content },
