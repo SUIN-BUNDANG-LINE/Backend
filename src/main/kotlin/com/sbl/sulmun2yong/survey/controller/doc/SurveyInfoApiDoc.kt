@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.survey.controller.doc
 
+import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
+import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveysResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
@@ -34,4 +36,10 @@ interface SurveyInfoApiDoc {
     fun getSurveyProgressInfo(
         @PathVariable("survey-id") surveyId: UUID,
     ): ResponseEntity<SurveyProgressInfoResponse>
+
+    @Operation(summary = "마이페이지 설문 목록 조회")
+    @GetMapping("/my-page")
+    fun getMyPageSurveys(
+        @LoginUser userId: UUID,
+    ): ResponseEntity<MyPageSurveysResponse>
 }

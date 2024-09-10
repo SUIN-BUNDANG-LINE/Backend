@@ -124,6 +124,7 @@ class SecurityConfig(
                 authorize("/api/v1/user/**", authenticated)
                 authorize("/api/v1/surveys/results/**", authenticated)
                 authorize("/api/v1/s3/**", authenticated)
+                authorize("/api/v1/surveys/my-page", authenticated)
                 // TODO: 추후에 AUTHENTICATED_USER 로 수정
                 authorize("/api/v1/surveys/workbench/**", hasRole("ADMIN"))
                 authorize("/**", permitAll)

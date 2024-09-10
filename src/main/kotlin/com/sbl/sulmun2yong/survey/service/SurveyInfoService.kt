@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
+import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveysResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
@@ -44,5 +45,10 @@ class SurveyInfoService(
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status != SurveyStatus.IN_PROGRESS) throw InvalidSurveyAccessException()
         return SurveyProgressInfoResponse.of(survey)
+    }
+
+    fun getMyPageSurveys(makerId: UUID): MyPageSurveysResponse {
+        val surveys = surveyAdapter.getMyPageSurveys(makerId)
+        return MyPageSurveysResponse.from(surveys)
     }
 }

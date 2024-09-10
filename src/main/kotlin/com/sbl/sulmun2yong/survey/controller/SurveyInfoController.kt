@@ -1,7 +1,9 @@
 package com.sbl.sulmun2yong.survey.controller
 
+import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyInfoApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
+import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveysResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
@@ -16,7 +18,9 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/surveys")
-class SurveyInfoController(private val surveyInfoService: SurveyInfoService) : SurveyInfoApiDoc {
+class SurveyInfoController(
+    private val surveyInfoService: SurveyInfoService,
+) : SurveyInfoApiDoc {
     @GetMapping("/list")
     override fun getSurveysWithPagination(
         @RequestParam(defaultValue = "10") size: Int,
@@ -37,4 +41,9 @@ class SurveyInfoController(private val surveyInfoService: SurveyInfoService) : S
     override fun getSurveyProgressInfo(
         @PathVariable("survey-id") surveyId: UUID,
     ): ResponseEntity<SurveyProgressInfoResponse> = ResponseEntity.ok(surveyInfoService.getSurveyProgressInfo(surveyId))
+
+    @GetMapping("/my-page")
+    override fun getMyPageSurveys(
+        @LoginUser userId: UUID,
+    ): ResponseEntity<MyPageSurveysResponse> = ResponseEntity.ok(surveyInfoService.getMyPageSurveys(userId))
 }
