@@ -56,4 +56,6 @@ class SurveyAdapter(
         surveyId: UUID,
         userId: UUID,
     ) = surveyRepository.existsByIdAndMakerId(surveyId, userId)
+
+    fun getMyPageSurveys(makerId: UUID) = surveyRepository.findByMakerId(makerId).map { it.toDomain() }
 }

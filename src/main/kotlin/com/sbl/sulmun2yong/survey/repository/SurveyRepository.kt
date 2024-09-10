@@ -19,4 +19,6 @@ interface SurveyRepository : MongoRepository<SurveyDocument, UUID> {
         surveyId: UUID,
         userId: UUID,
     ): Boolean
+
+    fun findByMakerId(makerId: UUID): List<SurveyDocument>
 }
