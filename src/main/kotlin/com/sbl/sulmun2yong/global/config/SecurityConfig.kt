@@ -8,12 +8,12 @@ import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStr
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomInvalidSessionStrategy
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.security.servlet.RequestMatcherProvider
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.core.session.SessionRegistry
@@ -76,19 +76,21 @@ class SecurityConfig(
     @ConditionalOnProperty(prefix = "swagger", name = ["login"], havingValue = "true")
     @Order(0)
     @Bean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .securityMatcher("/swagger-ui/**", "/v3/api-docs/**", "/login")
-            .csrf { it.disable() }
-            .authorizeHttpRequests { requests ->
-                requests
-                    .requestMatchers("/swagger-ui/**")
-                    .hasAnyRole("SWAGGER_USER", "ADMIN")
-                    .requestMatchers("/v3/api-docs/**")
-                    .hasAnyRole("SWAGGER_USER", "ADMIN")
-                    .requestMatchers("/**")
-                    .permitAll()
-            }.formLogin(Customizer.withDefaults())
+    fun filterChain(
+        http: HttpSecurity,
+        requestMatcherProvider: RequestMatcherProvider,
+    ): SecurityFilterChain {
+        http {
+            csrf { disable() }
+            securityMatcher("/swagger-ui/**", "/v3/api-docs/**", "/login")
+            authorizeHttpRequests {
+                authorize("/swagger-ui/**", hasAnyRole("SWAGGER_USER", "ADMIN"))
+                authorize("/v3/api-docs/**", hasAnyRole("SWAGGER_USER", "ADMIN"))
+                authorize("/api/v1/surveys/results/**", authenticated)
+                authorize("/**", permitAll)
+            }
+            formLogin { loginPage = "/login" }
+        }
 
         return http.build()
     }
