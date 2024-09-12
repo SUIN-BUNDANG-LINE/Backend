@@ -28,7 +28,7 @@ enum class ErrorCode(
     INVALID_UPDATE_SURVEY(HttpStatus.BAD_REQUEST, "SV0015", "설문 정보 갱신에 실패했습니다."),
     INVALID_SURVEY_ACCESS(HttpStatus.FORBIDDEN, "SV0016", "설문 접근 권한이 없습니다."),
     INVALID_SURVEY_START(HttpStatus.BAD_REQUEST, "SV0018", "설문 시작에 실패했습니다."),
-    INVALID_REWARD_SETTING(HttpStatus.BAD_REQUEST, "SV0019", "유효하지 않은 리워드 정보입니다."),
+    INVALID_REWARD_SETTING(HttpStatus.BAD_REQUEST, "SV0019", "유효하지 않은 리워드 지급 설정입니다."),
     INVALID_RESULT_DETAILS(HttpStatus.BAD_REQUEST, "SV0020", "유효하지 않은 설문 결과입니다."),
     INVALID_QUESTION_FILTER(HttpStatus.BAD_REQUEST, "SV0021", "유효하지 않은 질문 필터입니다."),
     INVALID_FINISHED_AT(HttpStatus.BAD_REQUEST, "SV0022", "유효하지 않은 마감일입니다."),
