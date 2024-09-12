@@ -1,50 +1,137 @@
 package com.sbl.sulmun2yong.survey.domain.reward
 
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory
+import com.sbl.sulmun2yong.global.util.DateUtil
+import com.sbl.sulmun2yong.survey.exception.InvalidFinishedAtException
 import com.sbl.sulmun2yong.survey.exception.InvalidRewardSettingException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.util.Calendar
 import kotlin.test.assertEquals
 
 class RewardSettingTest {
     @Test
-    fun `리워드 정보를 생성하면 정보가 올바르게 설정된다`() {
+    fun `리워드 설정을 생성하면 정보가 올바르게 설정된다`() {
         // given
         val rewards = SurveyFixtureFactory.REWARDS
         val targetParticipantCount = SurveyFixtureFactory.TARGET_PARTICIPANT_COUNT
+        val finishedAt = SurveyFixtureFactory.FINISHED_AT
 
         // when
-        val immediateRewardSetting1 = ImmediateDrawRewardSetting(rewards, targetParticipantCount)
-        val immediateRewardSetting2 = RewardSetting.of(rewards, targetParticipantCount)
-        val freeRewardSetting1 = ByUserRewardSetting(listOf())
-        val freeRewardSetting2 = RewardSetting.of(listOf(), null)
+        val immediateRewardSetting1 = ImmediateDrawSetting(rewards, targetParticipantCount, FinishedAt(finishedAt))
+        val immediateRewardSetting2 = RewardSetting.of(rewards, targetParticipantCount, finishedAt)
+        val selfManagementSetting1 = SelfManagementSetting(rewards, FinishedAt(finishedAt))
+        val selfManagementSetting2 = RewardSetting.of(rewards, null, finishedAt)
+        val noRewardSetting1 = NoRewardSetting
+        val noRewardSetting2 = RewardSetting.of(listOf(), null, null)
 
         // then
-        assertEquals(rewards, immediateRewardSetting1.rewards)
-        assertEquals(targetParticipantCount, immediateRewardSetting1.targetParticipantCount)
-        assertEquals(true, immediateRewardSetting1.isImmediateDraw)
-        assertEquals(rewards, immediateRewardSetting2.rewards)
-        assertEquals(targetParticipantCount, immediateRewardSetting2.targetParticipantCount)
-        assertEquals(true, immediateRewardSetting2.isImmediateDraw)
-        assertEquals(emptyList(), freeRewardSetting1.rewards)
-        assertEquals(null, freeRewardSetting1.targetParticipantCount)
-        assertEquals(false, freeRewardSetting1.isImmediateDraw)
-        assertEquals(emptyList(), freeRewardSetting2.rewards)
-        assertEquals(null, freeRewardSetting2.targetParticipantCount)
-        assertEquals(false, freeRewardSetting2.isImmediateDraw)
+        // 즉시 추첨
+        with(immediateRewardSetting1) {
+            assertEquals(RewardSettingType.IMMEDIATE_DRAW, this.type)
+            assertEquals(rewards, this.rewards)
+            assertEquals(targetParticipantCount, this.targetParticipantCount)
+            assertEquals(FinishedAt(finishedAt), this.finishedAt)
+            assertEquals(true, this.isImmediateDraw)
+        }
+        with(immediateRewardSetting2) {
+            assertEquals(RewardSettingType.IMMEDIATE_DRAW, this.type)
+            assertEquals(rewards, this.rewards)
+            assertEquals(targetParticipantCount, this.targetParticipantCount)
+            assertEquals(FinishedAt(finishedAt), this.finishedAt)
+            assertEquals(true, this.isImmediateDraw)
+        }
+        // 직접 추첨
+        with(selfManagementSetting1) {
+            assertEquals(RewardSettingType.SELF_MANAGEMENT, this.type)
+            assertEquals(rewards, this.rewards)
+            assertEquals(null, this.targetParticipantCount)
+            assertEquals(FinishedAt(finishedAt), this.finishedAt)
+            assertEquals(false, this.isImmediateDraw)
+        }
+        with(selfManagementSetting2) {
+            assertEquals(RewardSettingType.SELF_MANAGEMENT, this.type)
+            assertEquals(rewards, this.rewards)
+            assertEquals(null, this.targetParticipantCount)
+            assertEquals(FinishedAt(finishedAt), this.finishedAt)
+            assertEquals(false, this.isImmediateDraw)
+        }
+        // 리워드 미 지급
+        with(noRewardSetting1) {
+            assertEquals(RewardSettingType.NO_REWARD, this.type)
+            assertEquals(emptyList(), this.rewards)
+            assertEquals(null, this.targetParticipantCount)
+            assertEquals(null, this.finishedAt)
+            assertEquals(false, this.isImmediateDraw)
+        }
+        with(noRewardSetting2) {
+            assertEquals(RewardSettingType.NO_REWARD, this.type)
+            assertEquals(emptyList(), this.rewards)
+            assertEquals(null, this.targetParticipantCount)
+            assertEquals(null, this.finishedAt)
+            assertEquals(false, this.isImmediateDraw)
+        }
+    }
+
+    @Test
+    fun `리워드 설정를 잘못 생성하면 예외가 발생한다`() {
+        assertThrows<InvalidRewardSettingException> {
+            RewardSetting.of(SurveyFixtureFactory.REWARDS, null, null)
+        }
     }
 
     @Test
     fun `즉시 추첨은 리워드가 하나 이상 존재해야한다`() {
         assertThrows<InvalidRewardSettingException> {
-            ImmediateDrawRewardSetting(listOf(), 0)
+            ImmediateDrawSetting(listOf(), 10, FinishedAt(SurveyFixtureFactory.FINISHED_AT))
         }
     }
 
     @Test
     fun `즉시 추첨은 리워드 개수의 총합이 목표 참여자 수보다 적어야한다`() {
         assertThrows<InvalidRewardSettingException> {
-            ImmediateDrawRewardSetting(SurveyFixtureFactory.REWARDS, 1)
+            ImmediateDrawSetting(SurveyFixtureFactory.REWARDS, 1, FinishedAt(SurveyFixtureFactory.FINISHED_AT))
         }
+    }
+
+    @Test
+    fun `직접 지급은 리워드가 하나 이상 존재해야한다`() {
+        assertThrows<InvalidRewardSettingException> {
+            SelfManagementSetting(listOf(), FinishedAt(SurveyFixtureFactory.FINISHED_AT))
+        }
+    }
+
+    @Test
+    fun `설문 종료일을 생성하면 정보가 올바르게 설정된다`() {
+        // given
+        val date = SurveyFixtureFactory.FINISHED_AT
+
+        // when
+        val finishedAt = FinishedAt(date)
+
+        // then
+        assertEquals(date, finishedAt.value)
+    }
+
+    @Test
+    fun `설문 종료일은 분 단위 이하가 0이여야 한다`() {
+        // given
+        val calendar = Calendar.getInstance()
+        calendar.time = DateUtil.getCurrentDate()
+        calendar.set(Calendar.MINUTE, 1)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val date1 = calendar.time
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 1)
+        val date2 = calendar.time
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 1)
+        val date3 = calendar.time
+
+        // when, then
+        assertThrows<InvalidFinishedAtException> { FinishedAt(date1) }
+        assertThrows<InvalidFinishedAtException> { FinishedAt(date2) }
+        assertThrows<InvalidFinishedAtException> { FinishedAt(date3) }
     }
 }
