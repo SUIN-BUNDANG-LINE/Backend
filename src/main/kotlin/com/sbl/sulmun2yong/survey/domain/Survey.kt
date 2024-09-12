@@ -2,8 +2,8 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardInfo
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -25,7 +25,7 @@ data class Survey(
     val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val rewardInfo: RewardInfo,
+    val rewardSetting: RewardSetting,
     /** 해당 설문의 설문이용 노출 여부(false면 메인 페이지 노출 X, 링크를 통해서만 접근 가능) */
     val isVisible: Boolean,
     val makerId: UUID,
@@ -56,7 +56,7 @@ data class Survey(
                 finishedAt = getDefaultFinishedAt(),
                 status = SurveyStatus.NOT_STARTED,
                 finishMessage = DEFAULT_FINISH_MESSAGE,
-                rewardInfo = ByUserRewardInfo(listOf()),
+                rewardSetting = ByUserRewardSetting(listOf()),
                 isVisible = true,
                 makerId = makerId,
                 sections = listOf(Section.create()),
@@ -98,7 +98,7 @@ data class Survey(
         thumbnail: String?,
         finishedAt: Date,
         finishMessage: String,
-        rewardInfo: RewardInfo,
+        rewardSetting: RewardSetting,
         isVisible: Boolean,
         sections: List<Section>,
     ): Survey {
@@ -106,7 +106,7 @@ data class Survey(
         require(
             status == SurveyStatus.NOT_STARTED ||
                 status == SurveyStatus.IN_MODIFICATION &&
-                rewardInfo == this.rewardInfo,
+                rewardSetting == this.rewardSetting,
         ) {
             throw InvalidUpdateSurveyException()
         }
@@ -116,7 +116,7 @@ data class Survey(
             thumbnail = thumbnail,
             finishedAt = finishedAt,
             finishMessage = finishMessage,
-            rewardInfo = rewardInfo,
+            rewardSetting = rewardSetting,
             isVisible = isVisible,
             sections = sections,
         )
@@ -129,7 +129,7 @@ data class Survey(
         return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
     }
 
-    fun isImmediateDraw() = rewardInfo.isImmediateDraw
+    fun isImmediateDraw() = rewardSetting.isImmediateDraw
 
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 

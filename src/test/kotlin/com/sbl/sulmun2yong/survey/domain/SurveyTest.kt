@@ -9,14 +9,14 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SECTIONS
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SURVEY_STATUS
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.THUMBNAIL
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createRewardInfo
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createRewardSetting
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -82,7 +82,7 @@ class SurveyTest {
             assertEquals(PUBLISHED_AT, this.publishedAt)
             assertEquals(SURVEY_STATUS, this.status)
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
-            assertEquals(createRewardInfo(), this.rewardInfo)
+            assertEquals(createRewardSetting(), this.rewardSetting)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
             assertEquals(SECTIONS, this.sections)
@@ -107,7 +107,7 @@ class SurveyTest {
             assertEquals(null, this.publishedAt)
             assertEquals(SurveyStatus.NOT_STARTED, this.status)
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
-            assertEquals(ByUserRewardInfo(listOf()), this.rewardInfo)
+            assertEquals(ByUserRewardSetting(listOf()), this.rewardSetting)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
             assertEquals(listOf(this.sections.first()), this.sections)
@@ -244,7 +244,7 @@ class SurveyTest {
         val newDescription = "new description"
         val newThumbnail = "new thumbnail"
         val newFinishMessage = "new finish message"
-        val newRewardInfo = RewardInfo.of(listOf(Reward("new reward", "new category", 1)), 10)
+        val newRewardSetting = RewardSetting.of(listOf(Reward("new reward", "new category", 1)), 10)
         val newIsVisible = false
         val sectionId = SectionId.Standard(UUID.randomUUID())
         val newSections =
@@ -268,7 +268,7 @@ class SurveyTest {
                 thumbnail = newThumbnail,
                 finishedAt = survey.finishedAt,
                 finishMessage = newFinishMessage,
-                rewardInfo = newRewardInfo,
+                rewardSetting = newRewardSetting,
                 isVisible = newIsVisible,
                 sections =
                     listOf(
@@ -290,7 +290,7 @@ class SurveyTest {
             assertEquals(newThumbnail, this.thumbnail)
             assertEquals(survey.finishedAt, this.finishedAt)
             assertEquals(newFinishMessage, this.finishMessage)
-            assertEquals(newRewardInfo, this.rewardInfo)
+            assertEquals(newRewardSetting, this.rewardSetting)
             assertEquals(isVisible, this.isVisible)
             assertEquals(newSections, this.sections)
         }
@@ -312,7 +312,7 @@ class SurveyTest {
                 thumbnail = survey1.thumbnail,
                 finishedAt = survey1.finishedAt,
                 finishMessage = survey1.finishMessage,
-                rewardInfo = survey1.rewardInfo,
+                rewardSetting = survey1.rewardSetting,
                 isVisible = survey1.isVisible,
                 sections = survey1.sections,
             )
@@ -325,7 +325,7 @@ class SurveyTest {
                 thumbnail = survey2.thumbnail,
                 finishedAt = survey2.finishedAt,
                 finishMessage = survey2.finishMessage,
-                rewardInfo = survey2.rewardInfo,
+                rewardSetting = survey2.rewardSetting,
                 isVisible = survey2.isVisible,
                 sections = survey2.sections,
             )
@@ -338,7 +338,7 @@ class SurveyTest {
                 thumbnail = survey3.thumbnail,
                 finishedAt = survey3.finishedAt,
                 finishMessage = survey3.finishMessage,
-                rewardInfo = survey3.rewardInfo,
+                rewardSetting = survey3.rewardSetting,
                 isVisible = survey3.isVisible,
                 sections = survey3.sections,
             )
@@ -351,7 +351,7 @@ class SurveyTest {
                 thumbnail = survey3.thumbnail,
                 finishedAt = survey3.finishedAt,
                 finishMessage = survey3.finishMessage,
-                rewardInfo = ByUserRewardInfo(listOf()),
+                rewardSetting = ByUserRewardSetting(listOf()),
                 isVisible = survey3.isVisible,
                 sections = survey3.sections,
             )

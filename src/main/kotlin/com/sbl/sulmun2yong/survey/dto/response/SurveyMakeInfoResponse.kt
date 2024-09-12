@@ -33,8 +33,8 @@ data class SurveyMakeInfoResponse(
                 finishedAt = survey.finishedAt,
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.rewardInfo.targetParticipantCount,
-                rewards = survey.rewardInfo.rewards.map { RewardMakeInfoResponse(it.name, it.category, it.count) },
+                targetParticipantCount = survey.rewardSetting.targetParticipantCount,
+                rewards = survey.rewardSetting.rewards.map { RewardMakeInfoResponse(it.name, it.category, it.count) },
                 isVisible = survey.isVisible,
                 sections = survey.sections.map { SectionMakeInfoResponse.from(it) },
             )
