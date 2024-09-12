@@ -75,8 +75,17 @@ class RewardSettingTest {
 
     @Test
     fun `리워드 설정를 잘못 생성하면 예외가 발생한다`() {
+        // 리워드는 존재하는데 종료일이 없는 경우
         assertThrows<InvalidRewardSettingException> {
             RewardSetting.of(SurveyFixtureFactory.REWARDS, null, null)
+        }
+        // 리워드가 존재하지 않는데 종료일이 있는 경우
+        assertThrows<InvalidRewardSettingException> {
+            RewardSetting.of(emptyList(), null, SurveyFixtureFactory.FINISHED_AT)
+        }
+        // 리워드가 존재하지 않는데 목표 참여자 수가 있는 경우
+        assertThrows<InvalidRewardSettingException> {
+            RewardSetting.of(emptyList(), 100, null)
         }
     }
 

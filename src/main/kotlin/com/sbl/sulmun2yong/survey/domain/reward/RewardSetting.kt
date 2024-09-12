@@ -18,7 +18,11 @@ interface RewardSetting {
             targetParticipantCount: Int?,
             finishedAt: Date?,
         ) = if (rewards.isEmpty()) {
-            NoRewardSetting
+            if (finishedAt == null && targetParticipantCount == null) {
+                NoRewardSetting
+            } else {
+                throw InvalidRewardSettingException()
+            }
         } else if (finishedAt == null) {
             throw InvalidRewardSettingException()
         } else if (targetParticipantCount == null) {
