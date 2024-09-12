@@ -36,6 +36,7 @@ class ResponseAdapter(
 
     fun getSurveyResult(surveyId: UUID): SurveyResult {
         val responses = responseRepository.findBySurveyId(surveyId)
+        // TODO: 추후 DB Level에서 처리하도록 변경 + 필터링을 동적쿼리로 하도록 변경
         val groupingResponses = responses.groupBy { "${it.questionId}|${it.participantId}" }.values
         groupingResponses.map { it.toDomain() }
         return SurveyResult(resultDetails = groupingResponses.map { it.toDomain() })
