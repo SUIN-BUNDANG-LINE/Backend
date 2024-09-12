@@ -3,11 +3,12 @@ package com.sbl.sulmun2yong.survey.domain.reward
 import com.sbl.sulmun2yong.survey.exception.InvalidRewardSettingException
 
 /** 즉시 추첨(설문 참여 후 추첨 보드를 통해 즉시 추첨 진행) */
-data class ImmediateDrawRewardSetting(
+data class ImmediateDrawSetting(
     override val rewards: List<Reward>,
     override val targetParticipantCount: Int,
+    override val finishedAt: FinishedAt,
 ) : RewardSetting {
-    override val isImmediateDraw = true
+    override val type = RewardSettingType.IMMEDIATE_DRAW
 
     init {
         require(rewards.isNotEmpty()) { throw InvalidRewardSettingException() }
