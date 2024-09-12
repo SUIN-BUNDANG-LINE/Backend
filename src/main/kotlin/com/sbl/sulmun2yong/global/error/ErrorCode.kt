@@ -31,6 +31,7 @@ enum class ErrorCode(
     INVALID_REWARD_SETTING(HttpStatus.BAD_REQUEST, "SV0019", "유효하지 않은 리워드 정보입니다."),
     INVALID_RESULT_DETAILS(HttpStatus.BAD_REQUEST, "SV0020", "유효하지 않은 설문 결과입니다."),
     INVALID_QUESTION_FILTER(HttpStatus.BAD_REQUEST, "SV0021", "유효하지 않은 질문 필터입니다."),
+    INVALID_FINISHED_AT(HttpStatus.BAD_REQUEST, "SV0022", "유효하지 않은 마감일입니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),
