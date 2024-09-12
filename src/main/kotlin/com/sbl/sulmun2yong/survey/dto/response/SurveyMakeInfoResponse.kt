@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -15,11 +16,9 @@ data class SurveyMakeInfoResponse(
     val description: String,
     val thumbnail: String?,
     val publishedAt: Date?,
-    val finishedAt: Date,
+    val rewardSetting: RewardSettingResponse,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipantCount: Int?,
-    val rewards: List<RewardMakeInfoResponse>,
     val isVisible: Boolean,
     val sections: List<SectionMakeInfoResponse>,
 ) {
@@ -30,15 +29,26 @@ data class SurveyMakeInfoResponse(
                 description = survey.description,
                 thumbnail = survey.thumbnail,
                 publishedAt = survey.publishedAt,
-                finishedAt = survey.finishedAt,
+                rewardSetting =
+                    RewardSettingResponse(
+                        type = survey.rewardSetting.type,
+                        rewards = survey.rewardSetting.rewards.map { RewardMakeInfoResponse(it.name, it.category, it.count) },
+                        targetParticipantCount = survey.rewardSetting.targetParticipantCount,
+                        finishedAt = survey.rewardSetting.finishedAt?.value,
+                    ),
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.rewardSetting.targetParticipantCount,
-                rewards = survey.rewardSetting.rewards.map { RewardMakeInfoResponse(it.name, it.category, it.count) },
                 isVisible = survey.isVisible,
                 sections = survey.sections.map { SectionMakeInfoResponse.from(it) },
             )
     }
+
+    data class RewardSettingResponse(
+        val type: RewardSettingType,
+        val rewards: List<RewardMakeInfoResponse>,
+        val targetParticipantCount: Int?,
+        val finishedAt: Date?,
+    )
 
     data class RewardMakeInfoResponse(
         val name: String,
