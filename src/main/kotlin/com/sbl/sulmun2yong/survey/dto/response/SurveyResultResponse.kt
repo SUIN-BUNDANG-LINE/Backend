@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
+import com.sbl.sulmun2yong.survey.domain.result.ResultDetails
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
 import java.util.UUID
 
@@ -10,7 +11,7 @@ data class SurveyResultResponse(
         fun of(surveyResult: SurveyResult) =
             SurveyResultResponse(
                 results =
-                    surveyResult.responses.groupBy { it.questionId }.map {
+                    surveyResult.resultDetails.groupBy { it.questionId }.map {
                         Result.from(it.value)
                     },
             )
@@ -21,10 +22,16 @@ data class SurveyResultResponse(
         val responses: List<Response>,
     ) {
         companion object {
-            fun from(responses: List<SurveyResult.Response>): Result =
+            fun from(responses: List<ResultDetails>): Result =
                 Result(
                     questionId = responses.first().questionId,
-                    responses = responses.groupBy { it.content }.map { Response(it.key, it.value.size) },
+                    responses =
+                        responses
+                            .map { it.contents }
+                            .flatten()
+                            .groupingBy { it }
+                            .eachCount()
+                            .map { Response(it.key, it.value) },
                 )
         }
 
