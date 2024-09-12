@@ -35,3 +35,6 @@ frontend:
 
 backend:
     base-url: http://localhost:8080
+
+cloudfront:
+    base-url: https://files.sulmoon.io

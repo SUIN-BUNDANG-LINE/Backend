@@ -1,3 +1,5 @@
+package com.sbl.sulmun2yong.global.config
+
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,7 +17,6 @@ class S3Config(
 ) {
     @Bean
     fun s3Client(): S3Client {
-        // 액세스 키와 시크릿 키 설정
         val awsCredentials = AwsBasicCredentials.create(accessKey, secretKey)
 
         return S3Client

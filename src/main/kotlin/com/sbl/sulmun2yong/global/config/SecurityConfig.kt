@@ -86,12 +86,10 @@ class SecurityConfig(
             authorizeHttpRequests {
                 authorize("/swagger-ui/**", hasAnyRole("SWAGGER_USER", "ADMIN"))
                 authorize("/v3/api-docs/**", hasAnyRole("SWAGGER_USER", "ADMIN"))
-                authorize("/api/v1/surveys/results/**", authenticated)
                 authorize("/**", permitAll)
             }
-            formLogin { loginPage = "/login" }
+            formLogin {}
         }
-
         return http.build()
     }
 
