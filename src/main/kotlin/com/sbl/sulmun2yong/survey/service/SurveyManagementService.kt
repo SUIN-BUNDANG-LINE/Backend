@@ -4,7 +4,7 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
-import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawRewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -44,9 +44,8 @@ class SurveyManagementService(
                     title = this.title,
                     description = this.description,
                     thumbnail = this.thumbnail,
-                    finishedAt = this.finishedAt,
                     finishMessage = this.finishMessage,
-                    rewardSetting = RewardSetting.of(rewards, this.targetParticipantCount),
+                    rewardSetting = RewardSetting.of(rewards, this.targetParticipantCount, this.finishedAt),
                     isVisible = this.isVisible,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
@@ -73,7 +72,7 @@ class SurveyManagementService(
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         surveyAdapter.save(survey.start())
-        if (survey.rewardSetting is ImmediateDrawRewardSetting) {
+        if (survey.rewardSetting is ImmediateDrawSetting) {
             val drawingBoard =
                 DrawingBoard.create(
                     surveyId = survey.id,
