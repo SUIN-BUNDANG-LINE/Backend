@@ -6,12 +6,10 @@ import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 
 @Tag(name = "Login", description = "로그인 API")
-@RequestMapping("/api/v1/login")
 interface LoginApiDoc {
     @Operation(summary = "oauth 로그인")
     @GetMapping("/login/{provider}")
