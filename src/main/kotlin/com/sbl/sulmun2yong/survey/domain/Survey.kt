@@ -112,6 +112,11 @@ data class Survey(
         return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
     }
 
+    fun edit(): Survey {
+        require(status == SurveyStatus.IN_PROGRESS) { throw InvalidSurveyEditException() }
+        return copy(status = SurveyStatus.IN_MODIFICATION)
+    }
+
     fun isImmediateDraw() = rewardSetting.isImmediateDraw
 
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
