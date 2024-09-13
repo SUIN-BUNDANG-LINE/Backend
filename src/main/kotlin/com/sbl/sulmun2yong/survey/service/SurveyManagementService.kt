@@ -45,7 +45,13 @@ class SurveyManagementService(
                     description = this.description,
                     thumbnail = this.thumbnail,
                     finishMessage = this.finishMessage,
-                    rewardSetting = RewardSetting.of(rewards, this.rewardSetting.targetParticipantCount, this.rewardSetting.finishedAt),
+                    rewardSetting =
+                        RewardSetting.of(
+                            this.rewardSetting.type,
+                            rewards,
+                            this.rewardSetting.targetParticipantCount,
+                            this.rewardSetting.finishedAt,
+                        ),
                     isVisible = this.isVisible,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )

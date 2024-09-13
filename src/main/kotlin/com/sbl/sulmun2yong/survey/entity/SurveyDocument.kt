@@ -12,6 +12,7 @@ import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuest
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -34,6 +35,7 @@ data class SurveyDocument(
     val status: SurveyStatus,
     val finishMessage: String,
     val targetParticipantCount: Int?,
+    val rewardSettingType: RewardSettingType,
     val isVisible: Boolean,
     val makerId: UUID,
     val rewards: List<RewardSubDocument>,
@@ -53,6 +55,7 @@ data class SurveyDocument(
                 targetParticipantCount = survey.rewardSetting.targetParticipantCount,
                 makerId = survey.makerId,
                 rewards = survey.rewardSetting.rewards.map { it.toDocument() },
+                rewardSettingType = survey.rewardSetting.type,
                 isVisible = survey.isVisible,
                 sections = survey.sections.map { it.toDocument() },
             )
@@ -158,7 +161,13 @@ data class SurveyDocument(
             publishedAt = this.publishedAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            rewardSetting = RewardSetting.of(this.rewards.map { it.toDomain() }, this.targetParticipantCount, this.finishedAt),
+            rewardSetting =
+                RewardSetting.of(
+                    this.rewardSettingType,
+                    this.rewards.map { it.toDomain() },
+                    this.targetParticipantCount,
+                    this.finishedAt,
+                ),
             isVisible = this.isVisible,
             makerId = this.makerId,
             sections = this.sections.map { it.toDomain(sectionIds) },

@@ -14,21 +14,38 @@ interface RewardSetting {
 
     companion object {
         fun of(
+            type: RewardSettingType,
             rewards: List<Reward>,
             targetParticipantCount: Int?,
             finishedAt: Date?,
-        ) = if (rewards.isEmpty()) {
-            if (finishedAt == null && targetParticipantCount == null) {
-                NoRewardSetting
-            } else {
-                throw InvalidRewardSettingException()
+        ) = when (type) {
+            RewardSettingType.NO_REWARD -> {
+                if (rewards.isEmpty() && targetParticipantCount == null && finishedAt == null) {
+                    NoRewardSetting
+                } else {
+                    throw InvalidRewardSettingException()
+                }
             }
-        } else if (finishedAt == null) {
-            throw InvalidRewardSettingException()
-        } else if (targetParticipantCount == null) {
-            SelfManagementSetting(rewards, FinishedAt(finishedAt))
-        } else {
-            ImmediateDrawSetting(rewards, targetParticipantCount, FinishedAt(finishedAt))
+            RewardSettingType.SELF_MANAGEMENT -> {
+                if (rewards.isNotEmpty() &&
+                    targetParticipantCount == null &&
+                    finishedAt != null
+                ) {
+                    SelfManagementSetting(rewards, FinishedAt(finishedAt))
+                } else {
+                    throw InvalidRewardSettingException()
+                }
+            }
+            RewardSettingType.IMMEDIATE_DRAW -> {
+                if (rewards.isNotEmpty() &&
+                    targetParticipantCount != null &&
+                    finishedAt != null
+                ) {
+                    ImmediateDrawSetting(rewards, targetParticipantCount, FinishedAt(finishedAt))
+                } else {
+                    throw InvalidRewardSettingException()
+                }
+            }
         }
     }
 
