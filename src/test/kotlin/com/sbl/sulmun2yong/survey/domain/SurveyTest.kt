@@ -249,6 +249,21 @@ class SurveyTest {
     }
 
     @Test
+    fun `진행 중인 설문은 수정 중인 상태로 변경할 수 있다`() {
+        // given
+        val inProgressSurvey = createSurvey(status = SurveyStatus.IN_PROGRESS, targetParticipantCount = null)
+        val notStartedSurvey = createSurvey(status = SurveyStatus.NOT_STARTED, targetParticipantCount = null)
+        val inModificationSurvey = createSurvey(status = SurveyStatus.IN_MODIFICATION, targetParticipantCount = null)
+        val closedSurvey = createSurvey(status = SurveyStatus.CLOSED, targetParticipantCount = null)
+
+        // when, then
+        assertEquals(SurveyStatus.IN_MODIFICATION, inProgressSurvey.edit().status)
+        assertThrows<InvalidSurveyEditException> { notStartedSurvey.edit() }
+        assertThrows<InvalidSurveyEditException> { inModificationSurvey.edit() }
+        assertThrows<InvalidSurveyEditException> { closedSurvey.edit() }
+    }
+
+    @Test
     fun `설문의 내용를 업데이트할 수 있다`() {
         // given
         val newTitle = "new title"
