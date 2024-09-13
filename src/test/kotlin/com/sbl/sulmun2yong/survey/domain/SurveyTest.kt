@@ -22,6 +22,7 @@ import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.exception.InvalidPublishedAtException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
@@ -139,9 +140,9 @@ class SurveyTest {
             )
         }
         // 리워드 설정이 즉시 추첨인 설문은 시작일이 마감일 이후면 예외가 발생한다.
-        assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAtAfterFinishedAt) }
+        assertThrows<InvalidPublishedAtException> { createSurvey(publishedAt = publishedAtAfterFinishedAt) }
         // 리워드 설정이 직접 관리인 설문은 시작일이 마감일 이후면 예외가 발생한다.
-        assertThrows<InvalidSurveyException> {
+        assertThrows<InvalidPublishedAtException> {
             createSurvey(type = RewardSettingType.SELF_MANAGEMENT, publishedAt = publishedAtAfterFinishedAt, targetParticipantCount = null)
         }
         // 리워드 미 지급 설문은 마감일이 존재하지 않으므로 예외가 발생하지 않는다.

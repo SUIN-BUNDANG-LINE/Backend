@@ -9,6 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.reward.SelfManagementSetting
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.exception.InvalidPublishedAtException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
@@ -34,7 +35,7 @@ data class Survey(
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
-        require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
+        require(isFinishedAtAfterPublishedAt()) { throw InvalidPublishedAtException() }
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
