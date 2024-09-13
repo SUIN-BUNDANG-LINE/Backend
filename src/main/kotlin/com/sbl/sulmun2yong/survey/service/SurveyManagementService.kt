@@ -88,4 +88,14 @@ class SurveyManagementService(
             drawingBoardAdapter.save(drawingBoard)
         }
     }
+
+    fun editSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
+        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        surveyAdapter.save(survey.edit())
+    }
 }

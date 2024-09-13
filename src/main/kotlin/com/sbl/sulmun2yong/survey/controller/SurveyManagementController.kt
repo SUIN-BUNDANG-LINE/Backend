@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.survey.controller
 
-import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyManagementApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
@@ -20,7 +19,6 @@ import java.util.UUID
 @RequestMapping("/api/v1/surveys/workbench")
 class SurveyManagementController(
     private val surveyManagementService: SurveyManagementService,
-    private val drawingBoardAdapter: DrawingBoardAdapter,
 ) : SurveyManagementApiDoc {
     @PostMapping("/create")
     override fun createSurvey(
@@ -51,4 +49,10 @@ class SurveyManagementController(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
     ) = ResponseEntity.ok(surveyManagementService.startSurvey(surveyId = surveyId, makerId = id))
+
+    @PatchMapping("/edit/{surveyId}")
+    override fun editSurvey(
+        @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
+    ) = ResponseEntity.ok(surveyManagementService.editSurvey(surveyId = surveyId, makerId = id))
 }
