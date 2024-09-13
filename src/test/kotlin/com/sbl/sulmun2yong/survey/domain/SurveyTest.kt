@@ -9,14 +9,15 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SECTIONS
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.SURVEY_STATUS
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.THUMBNAIL
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.TITLE
-import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createRewardInfo
+import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createRewardSetting
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.NoRewardSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -28,9 +29,6 @@ import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
 
@@ -78,36 +76,23 @@ class SurveyTest {
             assertEquals(TITLE + id, this.title)
             assertEquals(DESCRIPTION + id, this.description)
             assertEquals(THUMBNAIL + id, this.thumbnail)
-            assertEquals(FINISHED_AT, this.finishedAt)
             assertEquals(PUBLISHED_AT, this.publishedAt)
             assertEquals(SURVEY_STATUS, this.status)
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
-            assertEquals(createRewardInfo(), this.rewardInfo)
+            assertEquals(createRewardSetting(), this.rewardSetting)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
             assertEquals(SECTIONS, this.sections)
         }
 
-        val finishDate =
-            Date.from(
-                LocalDateTime
-                    .now()
-                    .plusDays(Survey.DEFAULT_SURVEY_DURATION)
-                    .withSecond(0)
-                    .withNano(0)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant(),
-            )
-
         with(defaultSurvey) {
             assertEquals(Survey.DEFAULT_TITLE, this.title)
             assertEquals(Survey.DEFAULT_DESCRIPTION, this.description)
             assertEquals(null, this.thumbnail)
-            assertEquals(finishDate, this.finishedAt)
             assertEquals(null, this.publishedAt)
             assertEquals(SurveyStatus.NOT_STARTED, this.status)
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
-            assertEquals(ByUserRewardInfo(listOf()), this.rewardInfo)
+            assertEquals(NoRewardSetting, this.rewardSetting)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
             assertEquals(listOf(this.sections.first()), this.sections)
@@ -139,10 +124,36 @@ class SurveyTest {
     @Test
     fun `설문의 시작일이 마감일 이후면 예외가 발생한다`() {
         // given
-        val publishedAt = Date(FINISHED_AT.time + 24 * 60 * 60 * 1000)
+        val publishedAtAfterFinishedAt = DateUtil.getDateAfterDay(FINISHED_AT)
 
         // when, then
-        assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAt) }
+        // 아직 시작하지 않은 경우 예외가 발생하지 않는다.
+        assertDoesNotThrow {
+            createSurvey(
+                publishedAt = null,
+                status = SurveyStatus.NOT_STARTED,
+                targetParticipantCount = null,
+                finishedAt = null,
+                rewards = emptyList(),
+                type = RewardSettingType.NO_REWARD,
+            )
+        }
+        // 리워드 설정이 즉시 추첨인 설문은 시작일이 마감일 이후면 예외가 발생한다.
+        assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAtAfterFinishedAt) }
+        // 리워드 설정이 직접 관리인 설문은 시작일이 마감일 이후면 예외가 발생한다.
+        assertThrows<InvalidSurveyException> {
+            createSurvey(type = RewardSettingType.SELF_MANAGEMENT, publishedAt = publishedAtAfterFinishedAt, targetParticipantCount = null)
+        }
+        // 리워드 미 지급 설문은 마감일이 존재하지 않으므로 예외가 발생하지 않는다.
+        assertDoesNotThrow {
+            createSurvey(
+                type = RewardSettingType.NO_REWARD,
+                publishedAt = publishedAtAfterFinishedAt,
+                targetParticipantCount = null,
+                finishedAt = null,
+                rewards = emptyList(),
+            )
+        }
     }
 
     @Test
@@ -244,7 +255,13 @@ class SurveyTest {
         val newDescription = "new description"
         val newThumbnail = "new thumbnail"
         val newFinishMessage = "new finish message"
-        val newRewardInfo = RewardInfo.of(listOf(Reward("new reward", "new category", 1)), 10)
+        val newRewardSetting =
+            RewardSetting.of(
+                type = RewardSettingType.IMMEDIATE_DRAW,
+                listOf(Reward("new reward", "new category", 1)),
+                10,
+                DateUtil.getCurrentDate(noMin = true),
+            )
         val newIsVisible = false
         val sectionId = SectionId.Standard(UUID.randomUUID())
         val newSections =
@@ -266,9 +283,8 @@ class SurveyTest {
                 title = newTitle,
                 description = newDescription,
                 thumbnail = newThumbnail,
-                finishedAt = survey.finishedAt,
                 finishMessage = newFinishMessage,
-                rewardInfo = newRewardInfo,
+                rewardSetting = newRewardSetting,
                 isVisible = newIsVisible,
                 sections =
                     listOf(
@@ -288,9 +304,8 @@ class SurveyTest {
             assertEquals(newTitle, this.title)
             assertEquals(newDescription, this.description)
             assertEquals(newThumbnail, this.thumbnail)
-            assertEquals(survey.finishedAt, this.finishedAt)
             assertEquals(newFinishMessage, this.finishMessage)
-            assertEquals(newRewardInfo, this.rewardInfo)
+            assertEquals(newRewardSetting, this.rewardSetting)
             assertEquals(isVisible, this.isVisible)
             assertEquals(newSections, this.sections)
         }
@@ -310,9 +325,8 @@ class SurveyTest {
                 title = survey1.title,
                 description = survey1.description,
                 thumbnail = survey1.thumbnail,
-                finishedAt = survey1.finishedAt,
                 finishMessage = survey1.finishMessage,
-                rewardInfo = survey1.rewardInfo,
+                rewardSetting = survey1.rewardSetting,
                 isVisible = survey1.isVisible,
                 sections = survey1.sections,
             )
@@ -323,9 +337,8 @@ class SurveyTest {
                 title = survey2.title,
                 description = survey2.description,
                 thumbnail = survey2.thumbnail,
-                finishedAt = survey2.finishedAt,
                 finishMessage = survey2.finishMessage,
-                rewardInfo = survey2.rewardInfo,
+                rewardSetting = survey2.rewardSetting,
                 isVisible = survey2.isVisible,
                 sections = survey2.sections,
             )
@@ -336,9 +349,8 @@ class SurveyTest {
                 title = survey3.title,
                 description = survey3.description,
                 thumbnail = survey3.thumbnail,
-                finishedAt = survey3.finishedAt,
                 finishMessage = survey3.finishMessage,
-                rewardInfo = survey3.rewardInfo,
+                rewardSetting = survey3.rewardSetting,
                 isVisible = survey3.isVisible,
                 sections = survey3.sections,
             )
@@ -349,9 +361,8 @@ class SurveyTest {
                 title = survey3.title,
                 description = survey3.description,
                 thumbnail = survey3.thumbnail,
-                finishedAt = survey3.finishedAt,
                 finishMessage = survey3.finishMessage,
-                rewardInfo = ByUserRewardInfo(listOf()),
+                rewardSetting = NoRewardSetting,
                 isVisible = survey3.isVisible,
                 sections = survey3.sections,
             )
@@ -361,7 +372,12 @@ class SurveyTest {
     @Test
     fun `설문을 시작하면, 설문의 시작일과 상태가 업데이트된다`() {
         // given
-        val survey = createSurvey(finishedAt = DateUtil.getDateAfterDay(), publishedAt = null, status = SurveyStatus.NOT_STARTED)
+        val survey =
+            createSurvey(
+                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
+                publishedAt = null,
+                status = SurveyStatus.NOT_STARTED,
+            )
 
         // when
         val startedSurvey = survey.start()
@@ -374,24 +390,9 @@ class SurveyTest {
     @Test
     fun `설문이 시작 전 상태가 아니면 시작할 수 없다`() {
         // given
-        val survey1 =
-            createSurvey(
-                finishedAt = DateUtil.getDateAfterDay(),
-                publishedAt = DateUtil.getCurrentDate(),
-                status = SurveyStatus.IN_PROGRESS,
-            )
-        val survey2 =
-            createSurvey(
-                finishedAt = DateUtil.getDateAfterDay(),
-                publishedAt = DateUtil.getCurrentDate(),
-                status = SurveyStatus.IN_MODIFICATION,
-            )
-        val survey3 =
-            createSurvey(
-                finishedAt = DateUtil.getDateAfterDay(),
-                publishedAt = DateUtil.getCurrentDate(),
-                status = SurveyStatus.CLOSED,
-            )
+        val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS)
+        val survey2 = createSurvey(status = SurveyStatus.IN_MODIFICATION)
+        val survey3 = createSurvey(status = SurveyStatus.CLOSED)
 
         // when, then
         assertThrows<InvalidSurveyStartException> { survey1.start() }
@@ -402,13 +403,18 @@ class SurveyTest {
     @Test
     fun `설문은 설문의 추첨 방식이 즉시 추첨 방식인지 확인할 수 있다`() {
         // given
-        val survey1 = createSurvey(finishedAt = DateUtil.getDateAfterDay(), publishedAt = null, status = SurveyStatus.NOT_STARTED)
+        val survey1 =
+            createSurvey(
+                publishedAt = null,
+                status = SurveyStatus.NOT_STARTED,
+            )
         val survey2 =
             createSurvey(
-                finishedAt = DateUtil.getDateAfterDay(),
+                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
                 publishedAt = null,
                 status = SurveyStatus.NOT_STARTED,
                 targetParticipantCount = null,
+                type = RewardSettingType.SELF_MANAGEMENT,
             )
 
         // when

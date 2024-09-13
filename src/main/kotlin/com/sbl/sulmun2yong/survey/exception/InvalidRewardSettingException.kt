@@ -3,4 +3,4 @@ package com.sbl.sulmun2yong.survey.exception
 import com.sbl.sulmun2yong.global.error.BusinessException
 import com.sbl.sulmun2yong.global.error.ErrorCode
 
-class InvalidRewardInfoException : BusinessException(ErrorCode.INVALID_REWARD_INFO)
+class InvalidRewardSettingException : BusinessException(ErrorCode.INVALID_REWARD_SETTING)

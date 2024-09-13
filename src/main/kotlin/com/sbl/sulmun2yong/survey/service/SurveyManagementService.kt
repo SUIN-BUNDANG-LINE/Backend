@@ -4,9 +4,9 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
-import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawRewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
@@ -36,7 +36,7 @@ class SurveyManagementService(
         val survey = surveyAdapter.getSurvey(surveyId)
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
-        val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
+        val rewards = surveySaveRequest.rewardSetting.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
         val newSurvey =
             with(surveySaveRequest) {
                 val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.sectionId) })
@@ -44,9 +44,14 @@ class SurveyManagementService(
                     title = this.title,
                     description = this.description,
                     thumbnail = this.thumbnail,
-                    finishedAt = this.finishedAt,
                     finishMessage = this.finishMessage,
-                    rewardInfo = RewardInfo.of(rewards, this.targetParticipantCount),
+                    rewardSetting =
+                        RewardSetting.of(
+                            this.rewardSetting.type,
+                            rewards,
+                            this.rewardSetting.targetParticipantCount,
+                            this.rewardSetting.finishedAt,
+                        ),
                     isVisible = this.isVisible,
                     sections = this.sections.map { it.toDomain(sectionIds) },
                 )
@@ -73,12 +78,12 @@ class SurveyManagementService(
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         surveyAdapter.save(survey.start())
-        if (survey.rewardInfo is ImmediateDrawRewardInfo) {
+        if (survey.rewardSetting is ImmediateDrawSetting) {
             val drawingBoard =
                 DrawingBoard.create(
                     surveyId = survey.id,
-                    boardSize = survey.rewardInfo.targetParticipantCount,
-                    rewards = survey.rewardInfo.rewards,
+                    boardSize = survey.rewardSetting.targetParticipantCount,
+                    rewards = survey.rewardSetting.rewards,
                 )
             drawingBoardAdapter.save(drawingBoard)
         }

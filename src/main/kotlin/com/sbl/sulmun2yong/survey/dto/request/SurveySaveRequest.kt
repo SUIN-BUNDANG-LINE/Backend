@@ -6,6 +6,7 @@ import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -19,13 +20,18 @@ data class SurveySaveRequest(
     val description: String,
     // TODO: 섬네일의 URL이 우리 서비스의 S3 URL인지 확인하기
     val thumbnail: String?,
-    val finishedAt: Date,
     val finishMessage: String,
-    val targetParticipantCount: Int?,
-    val rewards: List<RewardCreateRequest>,
     val isVisible: Boolean,
+    val rewardSetting: RewardSettingResponse,
     val sections: List<SectionCreateRequest>,
 ) {
+    data class RewardSettingResponse(
+        val type: RewardSettingType,
+        val rewards: List<RewardCreateRequest>,
+        val targetParticipantCount: Int?,
+        val finishedAt: Date?,
+    )
+
     data class RewardCreateRequest(
         val name: String,
         val category: String,

@@ -1,14 +1,15 @@
 package com.sbl.sulmun2yong.fixture.survey
 
+import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import java.time.Instant
 import java.util.Date
 import java.util.UUID
 
@@ -17,7 +18,7 @@ object SurveyFixtureFactory {
     const val DESCRIPTION = "설문 설명"
     const val THUMBNAIL = "설문 썸네일"
     val SURVEY_STATUS = SurveyStatus.IN_PROGRESS
-    val FINISHED_AT = Date.from(Instant.now())!!
+    val FINISHED_AT = DateUtil.getCurrentDate(noMin = true)
     val PUBLISHED_AT = Date(FINISHED_AT.time - 24 * 60 * 60 * 10000)
     const val FINISH_MESSAGE = "설문이 종료되었습니다."
     const val TARGET_PARTICIPANT_COUNT = 100
@@ -41,7 +42,6 @@ object SurveyFixtureFactory {
                 ),
             )
         }
-    const val REWARD_COUNT = 9
 
     fun createSurvey(
         id: UUID = UUID.randomUUID(),
@@ -49,10 +49,11 @@ object SurveyFixtureFactory {
         description: String = DESCRIPTION,
         thumbnail: String = THUMBNAIL,
         publishedAt: Date? = PUBLISHED_AT,
-        finishedAt: Date = FINISHED_AT,
+        finishedAt: Date? = FINISHED_AT,
         status: SurveyStatus = SURVEY_STATUS,
         finishMessage: String = FINISH_MESSAGE,
         targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
+        type: RewardSettingType = RewardSettingType.IMMEDIATE_DRAW,
         makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
         isVisible: Boolean = true,
@@ -63,17 +64,18 @@ object SurveyFixtureFactory {
         description = description + id,
         thumbnail = thumbnail + id,
         publishedAt = publishedAt,
-        finishedAt = finishedAt,
         status = status,
         finishMessage = finishMessage + id,
         makerId = makerId,
-        rewardInfo = createRewardInfo(rewards, targetParticipantCount),
+        rewardSetting = createRewardSetting(type, rewards, targetParticipantCount, finishedAt),
         isVisible = isVisible,
         sections = sections,
     )
 
-    fun createRewardInfo(
+    fun createRewardSetting(
+        type: RewardSettingType = RewardSettingType.IMMEDIATE_DRAW,
         rewards: List<Reward> = REWARDS,
         targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
-    ) = RewardInfo.of(rewards, targetParticipantCount)
+        finishedAt: Date? = FINISHED_AT,
+    ) = RewardSetting.of(type, rewards, targetParticipantCount, finishedAt)
 }

@@ -2,8 +2,10 @@ package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
-import com.sbl.sulmun2yong.survey.domain.reward.ByUserRewardInfo
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
+import com.sbl.sulmun2yong.survey.domain.reward.NoRewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.SelfManagementSetting
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
@@ -11,8 +13,6 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 
@@ -22,10 +22,9 @@ data class Survey(
     val description: String,
     val thumbnail: String?,
     val publishedAt: Date?,
-    val finishedAt: Date,
     val status: SurveyStatus,
     val finishMessage: String,
-    val rewardInfo: RewardInfo,
+    val rewardSetting: RewardSetting,
     /** 해당 설문의 설문이용 노출 여부(false면 메인 페이지 노출 X, 링크를 통해서만 접근 가능) */
     val isVisible: Boolean,
     val makerId: UUID,
@@ -43,7 +42,6 @@ data class Survey(
         const val DEFAULT_THUMBNAIL_URL = "https://test-oriddle-bucket.s3.ap-northeast-2.amazonaws.com/surveyImage.webp"
         const val DEFAULT_TITLE = "제목 없는 설문"
         const val DEFAULT_DESCRIPTION = ""
-        const val DEFAULT_SURVEY_DURATION = 60L
         const val DEFAULT_FINISH_MESSAGE = "설문에 참여해주셔서 감사합니다."
 
         fun create(makerId: UUID) =
@@ -53,25 +51,12 @@ data class Survey(
                 description = DEFAULT_DESCRIPTION,
                 thumbnail = null,
                 publishedAt = null,
-                finishedAt = getDefaultFinishedAt(),
                 status = SurveyStatus.NOT_STARTED,
                 finishMessage = DEFAULT_FINISH_MESSAGE,
-                rewardInfo = ByUserRewardInfo(listOf()),
+                rewardSetting = NoRewardSetting,
                 isVisible = true,
                 makerId = makerId,
                 sections = listOf(Section.create()),
-            )
-
-        /** 설문 종료일 기본 값은 현재 날짜 기준 60일 뒤, 초 단위 이하 제거 */
-        private fun getDefaultFinishedAt() =
-            Date.from(
-                LocalDateTime
-                    .now()
-                    .plusDays(DEFAULT_SURVEY_DURATION)
-                    .withSecond(0)
-                    .withNano(0)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant(),
             )
     }
 
@@ -96,9 +81,8 @@ data class Survey(
         title: String,
         description: String,
         thumbnail: String?,
-        finishedAt: Date,
         finishMessage: String,
-        rewardInfo: RewardInfo,
+        rewardSetting: RewardSetting,
         isVisible: Boolean,
         sections: List<Section>,
     ): Survey {
@@ -106,7 +90,7 @@ data class Survey(
         require(
             status == SurveyStatus.NOT_STARTED ||
                 status == SurveyStatus.IN_MODIFICATION &&
-                rewardInfo == this.rewardInfo,
+                rewardSetting == this.rewardSetting,
         ) {
             throw InvalidUpdateSurveyException()
         }
@@ -114,9 +98,8 @@ data class Survey(
             title = title,
             description = description,
             thumbnail = thumbnail,
-            finishedAt = finishedAt,
             finishMessage = finishMessage,
-            rewardInfo = rewardInfo,
+            rewardSetting = rewardSetting,
             isVisible = isVisible,
             sections = sections,
         )
@@ -129,13 +112,18 @@ data class Survey(
         return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
     }
 
-    fun isImmediateDraw() = rewardInfo.isImmediateDraw
+    fun isImmediateDraw() = rewardSetting.isImmediateDraw
 
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 
     private fun isSurveyStatusValid() = publishedAt != null || status == SurveyStatus.NOT_STARTED
 
-    private fun isFinishedAtAfterPublishedAt() = publishedAt == null || finishedAt.after(publishedAt)
+    private fun isFinishedAtAfterPublishedAt(): Boolean {
+        if (publishedAt == null) return true
+        if (rewardSetting is SelfManagementSetting) return rewardSetting.finishedAt.value.after(publishedAt)
+        if (rewardSetting is ImmediateDrawSetting) return rewardSetting.finishedAt.value.after(publishedAt)
+        return true
+    }
 
     private fun isSectionIdsValid(): Boolean {
         val sectionIds = SectionIds.from(sections.map { it.id })

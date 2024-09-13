@@ -3,18 +3,19 @@ package com.sbl.sulmun2yong.survey.dto.response
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import java.util.Date
 
-// TODO: 설문 제작자 정보도 추가하기
 data class SurveyInfoResponse(
     val title: String,
     val description: String,
     val status: SurveyStatus,
-    val finishedAt: Date,
+    val type: RewardSettingType,
+    val finishedAt: Date?,
     val currentParticipants: Int?,
     val targetParticipants: Int?,
-    val thumbnail: String,
     val rewards: List<RewardInfoResponse>,
+    val thumbnail: String,
 ) {
     companion object {
         fun of(
@@ -24,10 +25,11 @@ data class SurveyInfoResponse(
             title = survey.title,
             description = survey.description,
             status = survey.status,
-            finishedAt = survey.finishedAt,
+            type = survey.rewardSetting.type,
+            finishedAt = survey.rewardSetting.finishedAt?.value,
             currentParticipants = currentParticipants,
-            targetParticipants = survey.rewardInfo.targetParticipantCount,
-            rewards = survey.rewardInfo.rewards.map { it.toResponse() },
+            targetParticipants = survey.rewardSetting.targetParticipantCount,
+            rewards = survey.rewardSetting.rewards.map { it.toResponse() },
             thumbnail = survey.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
         )
     }

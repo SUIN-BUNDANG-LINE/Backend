@@ -11,7 +11,8 @@ import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQue
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
-import com.sbl.sulmun2yong.survey.domain.reward.RewardInfo
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -30,10 +31,11 @@ data class SurveyDocument(
     val description: String,
     val thumbnail: String?,
     val publishedAt: Date?,
-    val finishedAt: Date,
+    val finishedAt: Date?,
     val status: SurveyStatus,
     val finishMessage: String,
     val targetParticipantCount: Int?,
+    val rewardSettingType: RewardSettingType,
     val isVisible: Boolean,
     val makerId: UUID,
     val rewards: List<RewardSubDocument>,
@@ -47,12 +49,13 @@ data class SurveyDocument(
                 description = survey.description,
                 thumbnail = survey.thumbnail,
                 publishedAt = survey.publishedAt,
-                finishedAt = survey.finishedAt,
+                finishedAt = survey.rewardSetting.finishedAt?.value,
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.rewardInfo.targetParticipantCount,
+                targetParticipantCount = survey.rewardSetting.targetParticipantCount,
                 makerId = survey.makerId,
-                rewards = survey.rewardInfo.rewards.map { it.toDocument() },
+                rewards = survey.rewardSetting.rewards.map { it.toDocument() },
+                rewardSettingType = survey.rewardSetting.type,
                 isVisible = survey.isVisible,
                 sections = survey.sections.map { it.toDocument() },
             )
@@ -155,11 +158,16 @@ data class SurveyDocument(
             title = this.title,
             description = this.description,
             thumbnail = this.thumbnail,
-            finishedAt = this.finishedAt,
             publishedAt = this.publishedAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            rewardInfo = RewardInfo.of(this.rewards.map { it.toDomain() }, this.targetParticipantCount),
+            rewardSetting =
+                RewardSetting.of(
+                    this.rewardSettingType,
+                    this.rewards.map { it.toDomain() },
+                    this.targetParticipantCount,
+                    this.finishedAt,
+                ),
             isVisible = this.isVisible,
             makerId = this.makerId,
             sections = this.sections.map { it.toDomain(sectionIds) },

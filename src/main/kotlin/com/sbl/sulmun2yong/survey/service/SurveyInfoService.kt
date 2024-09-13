@@ -36,7 +36,7 @@ class SurveyInfoService(
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status == SurveyStatus.NOT_STARTED) throw InvalidSurveyAccessException()
         val selectedTicketCount =
-            if (survey.rewardInfo.isImmediateDraw) drawingBoardAdapter.getBySurveyId(surveyId).selectedTicketCount else null
+            if (survey.rewardSetting.isImmediateDraw) drawingBoardAdapter.getBySurveyId(surveyId).selectedTicketCount else null
         return SurveyInfoResponse.of(survey, selectedTicketCount)
     }
 
