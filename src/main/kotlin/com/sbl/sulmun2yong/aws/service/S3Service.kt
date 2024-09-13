@@ -24,7 +24,7 @@ class S3Service(
         fileValidator.validateFileOf(receivedFile)
 
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
-        val keyName = "${receivedFile.originalFilename}_$timestamp"
+        val keyName = "${timestamp}_${receivedFile.originalFilename}"
 
         val putObjectRequest =
             PutObjectRequest
