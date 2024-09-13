@@ -17,6 +17,7 @@ import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.reward.NoRewardSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -134,15 +135,24 @@ class SurveyTest {
                 targetParticipantCount = null,
                 finishedAt = null,
                 rewards = emptyList(),
+                type = RewardSettingType.NO_REWARD,
             )
         }
         // 리워드 설정이 즉시 추첨인 설문은 시작일이 마감일 이후면 예외가 발생한다.
         assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAtAfterFinishedAt) }
         // 리워드 설정이 직접 관리인 설문은 시작일이 마감일 이후면 예외가 발생한다.
-        assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAtAfterFinishedAt, targetParticipantCount = null) }
+        assertThrows<InvalidSurveyException> {
+            createSurvey(type = RewardSettingType.SELF_MANAGEMENT, publishedAt = publishedAtAfterFinishedAt, targetParticipantCount = null)
+        }
         // 리워드 미 지급 설문은 마감일이 존재하지 않으므로 예외가 발생하지 않는다.
         assertDoesNotThrow {
-            createSurvey(publishedAt = publishedAtAfterFinishedAt, targetParticipantCount = null, finishedAt = null, rewards = emptyList())
+            createSurvey(
+                type = RewardSettingType.NO_REWARD,
+                publishedAt = publishedAtAfterFinishedAt,
+                targetParticipantCount = null,
+                finishedAt = null,
+                rewards = emptyList(),
+            )
         }
     }
 
@@ -247,6 +257,7 @@ class SurveyTest {
         val newFinishMessage = "new finish message"
         val newRewardSetting =
             RewardSetting.of(
+                type = RewardSettingType.IMMEDIATE_DRAW,
                 listOf(Reward("new reward", "new category", 1)),
                 10,
                 DateUtil.getCurrentDate(noMin = true),
@@ -394,7 +405,6 @@ class SurveyTest {
         // given
         val survey1 =
             createSurvey(
-                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
                 publishedAt = null,
                 status = SurveyStatus.NOT_STARTED,
             )
@@ -404,6 +414,7 @@ class SurveyTest {
                 publishedAt = null,
                 status = SurveyStatus.NOT_STARTED,
                 targetParticipantCount = null,
+                type = RewardSettingType.SELF_MANAGEMENT,
             )
 
         // when

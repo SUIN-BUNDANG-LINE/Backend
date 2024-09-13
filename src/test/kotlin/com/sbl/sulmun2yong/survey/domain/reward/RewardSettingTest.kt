@@ -19,11 +19,11 @@ class RewardSettingTest {
 
         // when
         val immediateRewardSetting1 = ImmediateDrawSetting(rewards, targetParticipantCount, FinishedAt(finishedAt))
-        val immediateRewardSetting2 = RewardSetting.of(rewards, targetParticipantCount, finishedAt)
+        val immediateRewardSetting2 = RewardSetting.of(RewardSettingType.IMMEDIATE_DRAW, rewards, targetParticipantCount, finishedAt)
         val selfManagementSetting1 = SelfManagementSetting(rewards, FinishedAt(finishedAt))
-        val selfManagementSetting2 = RewardSetting.of(rewards, null, finishedAt)
+        val selfManagementSetting2 = RewardSetting.of(RewardSettingType.SELF_MANAGEMENT, rewards, null, finishedAt)
         val noRewardSetting1 = NoRewardSetting
-        val noRewardSetting2 = RewardSetting.of(listOf(), null, null)
+        val noRewardSetting2 = RewardSetting.of(RewardSettingType.NO_REWARD, listOf(), null, null)
 
         // then
         // 즉시 추첨
@@ -75,17 +75,50 @@ class RewardSettingTest {
 
     @Test
     fun `리워드 설정를 잘못 생성하면 예외가 발생한다`() {
-        // 리워드는 존재하는데 종료일이 없는 경우
-        assertThrows<InvalidRewardSettingException> {
-            RewardSetting.of(SurveyFixtureFactory.REWARDS, null, null)
+        // 리워드 미지급
+        with(RewardSettingType.NO_REWARD) {
+            // 리워드가 존재하는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, SurveyFixtureFactory.REWARDS, null, null)
+            }
+            // targetParticipant가 존재하는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, emptyList(), 100, null)
+            }
+            // finishedAt이 존재하는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, emptyList(), null, SurveyFixtureFactory.FINISHED_AT)
+            }
         }
-        // 리워드가 존재하지 않는데 종료일이 있는 경우
-        assertThrows<InvalidRewardSettingException> {
-            RewardSetting.of(emptyList(), null, SurveyFixtureFactory.FINISHED_AT)
+        // 직접 지급
+        with(RewardSettingType.SELF_MANAGEMENT) {
+            // 리워드가 없는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, emptyList(), 100, SurveyFixtureFactory.FINISHED_AT)
+            }
+            // targetParticipant가 존재하는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, SurveyFixtureFactory.REWARDS, 100, SurveyFixtureFactory.FINISHED_AT)
+            }
+            // finishedAt이 없는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, SurveyFixtureFactory.REWARDS, null, null)
+            }
         }
-        // 리워드가 존재하지 않는데 목표 참여자 수가 있는 경우
-        assertThrows<InvalidRewardSettingException> {
-            RewardSetting.of(emptyList(), 100, null)
+        // 즉시 추첨
+        with(RewardSettingType.IMMEDIATE_DRAW) {
+            // 리워드가 없는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, emptyList(), 100, SurveyFixtureFactory.FINISHED_AT)
+            }
+            // targetParticipant가 존재하지 않는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, SurveyFixtureFactory.REWARDS, null, SurveyFixtureFactory.FINISHED_AT)
+            }
+            // finishedAt이 없는 경우 예외 발생
+            assertThrows<InvalidRewardSettingException> {
+                RewardSetting.of(this, SurveyFixtureFactory.REWARDS, 100, null)
+            }
         }
     }
 

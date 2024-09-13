@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -52,6 +53,7 @@ object SurveyFixtureFactory {
         status: SurveyStatus = SURVEY_STATUS,
         finishMessage: String = FINISH_MESSAGE,
         targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
+        type: RewardSettingType = RewardSettingType.IMMEDIATE_DRAW,
         makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
         isVisible: Boolean = true,
@@ -65,14 +67,15 @@ object SurveyFixtureFactory {
         status = status,
         finishMessage = finishMessage + id,
         makerId = makerId,
-        rewardSetting = createRewardSetting(rewards, targetParticipantCount, finishedAt),
+        rewardSetting = createRewardSetting(type, rewards, targetParticipantCount, finishedAt),
         isVisible = isVisible,
         sections = sections,
     )
 
     fun createRewardSetting(
+        type: RewardSettingType = RewardSettingType.IMMEDIATE_DRAW,
         rewards: List<Reward> = REWARDS,
         targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
         finishedAt: Date? = FINISHED_AT,
-    ) = RewardSetting.of(rewards, targetParticipantCount, finishedAt)
+    ) = RewardSetting.of(type, rewards, targetParticipantCount, finishedAt)
 }
