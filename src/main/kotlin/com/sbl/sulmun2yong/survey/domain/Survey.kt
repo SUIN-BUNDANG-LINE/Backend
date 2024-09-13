@@ -107,10 +107,14 @@ data class Survey(
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 
-    fun start(): Survey {
-        require(status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyStartException() }
-        return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
-    }
+    /** 설문을 IN_PROGRESS 상태로 변경하는 메서드. 설문이 시작 전이거나 수정 중인 경우만 가능하다. */
+    fun start() =
+        when (status) {
+            SurveyStatus.NOT_STARTED -> copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
+            SurveyStatus.IN_MODIFICATION -> copy(status = SurveyStatus.IN_PROGRESS)
+            SurveyStatus.IN_PROGRESS -> throw InvalidSurveyStartException()
+            SurveyStatus.CLOSED -> throw InvalidSurveyStartException()
+        }
 
     fun edit(): Survey {
         require(status == SurveyStatus.IN_PROGRESS) { throw InvalidSurveyEditException() }

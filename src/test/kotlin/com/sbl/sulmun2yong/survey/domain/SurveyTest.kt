@@ -387,32 +387,40 @@ class SurveyTest {
     @Test
     fun `설문을 시작하면, 설문의 시작일과 상태가 업데이트된다`() {
         // given
-        val survey =
+        val notStartedSurvey =
             createSurvey(
                 finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
                 publishedAt = null,
+                targetParticipantCount = null,
                 status = SurveyStatus.NOT_STARTED,
+            )
+        val inModificationSurvey =
+            createSurvey(
+                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
+                targetParticipantCount = null,
+                status = SurveyStatus.IN_MODIFICATION,
             )
 
         // when
-        val startedSurvey = survey.start()
+        val startedSurvey1 = notStartedSurvey.start()
+        val startedSurvey2 = inModificationSurvey.start()
 
         // then
-        assertEquals(DateUtil.getCurrentDate(), startedSurvey.publishedAt)
-        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey.status)
+        assertEquals(DateUtil.getCurrentDate(), startedSurvey1.publishedAt)
+        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey1.status)
+        assertEquals(inModificationSurvey.publishedAt, startedSurvey2.publishedAt)
+        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey2.status)
     }
 
     @Test
-    fun `설문이 시작 전 상태가 아니면 시작할 수 없다`() {
+    fun `설문이 시작 전 상태나 수정 중인 상태가 아니면 시작할 수 없다`() {
         // given
-        val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS)
-        val survey2 = createSurvey(status = SurveyStatus.IN_MODIFICATION)
-        val survey3 = createSurvey(status = SurveyStatus.CLOSED)
+        val inProgressSurvey = createSurvey(status = SurveyStatus.IN_PROGRESS)
+        val inModificationSurvey = createSurvey(status = SurveyStatus.CLOSED)
 
         // when, then
-        assertThrows<InvalidSurveyStartException> { survey1.start() }
-        assertThrows<InvalidSurveyStartException> { survey2.start() }
-        assertThrows<InvalidSurveyStartException> { survey3.start() }
+        assertThrows<InvalidSurveyStartException> { inProgressSurvey.start() }
+        assertThrows<InvalidSurveyStartException> { inModificationSurvey.start() }
     }
 
     @Test
