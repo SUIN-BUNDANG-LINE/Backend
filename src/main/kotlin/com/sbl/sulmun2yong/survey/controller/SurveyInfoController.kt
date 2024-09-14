@@ -2,6 +2,8 @@ package com.sbl.sulmun2yong.survey.controller
 
 import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyInfoApiDoc
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.dto.request.MySurveySortType
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveysResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
@@ -45,5 +47,7 @@ class SurveyInfoController(
     @GetMapping("/my-page")
     override fun getMyPageSurveys(
         @LoginUser userId: UUID,
-    ): ResponseEntity<MyPageSurveysResponse> = ResponseEntity.ok(surveyInfoService.getMyPageSurveys(userId))
+        @RequestParam status: SurveyStatus?,
+        @RequestParam(defaultValue = "LAST_MODIFIED") sortType: MySurveySortType,
+    ): ResponseEntity<MyPageSurveysResponse> = ResponseEntity.ok(surveyInfoService.getMyPageSurveys(userId, status, sortType))
 }
