@@ -21,6 +21,4 @@ interface SurveyRepository :
         surveyId: UUID,
         userId: UUID,
     ): Boolean
-
-    fun findByMakerId(makerId: UUID): List<SurveyDocument>
 }

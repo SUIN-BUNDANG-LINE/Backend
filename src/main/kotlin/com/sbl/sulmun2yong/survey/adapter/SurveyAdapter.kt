@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.survey.adapter
 
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.dto.request.MySurveySortType
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.entity.SurveyDocument
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
@@ -57,5 +58,9 @@ class SurveyAdapter(
         userId: UUID,
     ) = surveyRepository.existsByIdAndMakerId(surveyId, userId)
 
-    fun getMyPageSurveys(makerId: UUID) = surveyRepository.findByMakerId(makerId).map { it.toDomain() }
+    fun getMyPageSurveysInfo(
+        makerId: UUID,
+        status: SurveyStatus?,
+        sortType: MySurveySortType,
+    ) = surveyRepository.findSurveysWithResponseCount(makerId, status, sortType)
 }
