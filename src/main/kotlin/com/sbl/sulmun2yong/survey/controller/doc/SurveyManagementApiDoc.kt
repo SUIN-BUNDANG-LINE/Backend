@@ -44,4 +44,11 @@ interface SurveyManagementApiDoc {
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
     ): ResponseEntity<Unit>
+
+    @Operation(summary = "설문 수정 API")
+    @PatchMapping("/edit/{surveyId}")
+    fun editSurvey(
+        @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
+    ): ResponseEntity<Unit>
 }

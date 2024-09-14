@@ -32,6 +32,8 @@ enum class ErrorCode(
     INVALID_RESULT_DETAILS(HttpStatus.BAD_REQUEST, "SV0020", "유효하지 않은 설문 결과입니다."),
     INVALID_QUESTION_FILTER(HttpStatus.BAD_REQUEST, "SV0021", "유효하지 않은 질문 필터입니다."),
     INVALID_FINISHED_AT(HttpStatus.BAD_REQUEST, "SV0022", "유효하지 않은 마감일입니다."),
+    INVALID_SURVEY_EDIT(HttpStatus.BAD_REQUEST, "SV0023", "설문 수정 상태 변경에 실패했습니다."),
+    INVALID_PUBLISHED_AT(HttpStatus.BAD_REQUEST, "SV0024", "설문 마감일이 설문 공개일 보다 빠릅니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),

@@ -22,6 +22,7 @@ import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.exception.InvalidPublishedAtException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
@@ -139,9 +140,9 @@ class SurveyTest {
             )
         }
         // 리워드 설정이 즉시 추첨인 설문은 시작일이 마감일 이후면 예외가 발생한다.
-        assertThrows<InvalidSurveyException> { createSurvey(publishedAt = publishedAtAfterFinishedAt) }
+        assertThrows<InvalidPublishedAtException> { createSurvey(publishedAt = publishedAtAfterFinishedAt) }
         // 리워드 설정이 직접 관리인 설문은 시작일이 마감일 이후면 예외가 발생한다.
-        assertThrows<InvalidSurveyException> {
+        assertThrows<InvalidPublishedAtException> {
             createSurvey(type = RewardSettingType.SELF_MANAGEMENT, publishedAt = publishedAtAfterFinishedAt, targetParticipantCount = null)
         }
         // 리워드 미 지급 설문은 마감일이 존재하지 않으므로 예외가 발생하지 않는다.
@@ -246,6 +247,25 @@ class SurveyTest {
 
         // then
         assertEquals(SurveyStatus.CLOSED, finishedSurvey.status)
+    }
+
+    @Test
+    fun `진행 중인 설문은 수정 중인 상태로 변경할 수 있다`() {
+        // given
+        val inProgressSurvey =
+            createSurvey(type = RewardSettingType.SELF_MANAGEMENT, status = SurveyStatus.IN_PROGRESS, targetParticipantCount = null)
+        val notStartedSurvey =
+            createSurvey(type = RewardSettingType.SELF_MANAGEMENT, status = SurveyStatus.NOT_STARTED, targetParticipantCount = null)
+        val inModificationSurvey =
+            createSurvey(type = RewardSettingType.SELF_MANAGEMENT, status = SurveyStatus.IN_MODIFICATION, targetParticipantCount = null)
+        val closedSurvey =
+            createSurvey(type = RewardSettingType.SELF_MANAGEMENT, status = SurveyStatus.CLOSED, targetParticipantCount = null)
+
+        // when, then
+        assertEquals(SurveyStatus.IN_MODIFICATION, inProgressSurvey.edit().status)
+        assertThrows<InvalidSurveyEditException> { notStartedSurvey.edit() }
+        assertThrows<InvalidSurveyEditException> { inModificationSurvey.edit() }
+        assertThrows<InvalidSurveyEditException> { closedSurvey.edit() }
     }
 
     @Test
@@ -372,32 +392,42 @@ class SurveyTest {
     @Test
     fun `설문을 시작하면, 설문의 시작일과 상태가 업데이트된다`() {
         // given
-        val survey =
+        val notStartedSurvey =
             createSurvey(
+                type = RewardSettingType.SELF_MANAGEMENT,
                 finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
                 publishedAt = null,
+                targetParticipantCount = null,
                 status = SurveyStatus.NOT_STARTED,
+            )
+        val inModificationSurvey =
+            createSurvey(
+                type = RewardSettingType.SELF_MANAGEMENT,
+                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
+                targetParticipantCount = null,
+                status = SurveyStatus.IN_MODIFICATION,
             )
 
         // when
-        val startedSurvey = survey.start()
+        val startedSurvey1 = notStartedSurvey.start()
+        val startedSurvey2 = inModificationSurvey.start()
 
         // then
-        assertEquals(DateUtil.getCurrentDate(), startedSurvey.publishedAt)
-        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey.status)
+        assertEquals(DateUtil.getCurrentDate(), startedSurvey1.publishedAt)
+        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey1.status)
+        assertEquals(inModificationSurvey.publishedAt, startedSurvey2.publishedAt)
+        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey2.status)
     }
 
     @Test
-    fun `설문이 시작 전 상태가 아니면 시작할 수 없다`() {
+    fun `설문이 시작 전 상태나 수정 중인 상태가 아니면 시작할 수 없다`() {
         // given
-        val survey1 = createSurvey(status = SurveyStatus.IN_PROGRESS)
-        val survey2 = createSurvey(status = SurveyStatus.IN_MODIFICATION)
-        val survey3 = createSurvey(status = SurveyStatus.CLOSED)
+        val inProgressSurvey = createSurvey(status = SurveyStatus.IN_PROGRESS)
+        val inModificationSurvey = createSurvey(status = SurveyStatus.CLOSED)
 
         // when, then
-        assertThrows<InvalidSurveyStartException> { survey1.start() }
-        assertThrows<InvalidSurveyStartException> { survey2.start() }
-        assertThrows<InvalidSurveyStartException> { survey3.start() }
+        assertThrows<InvalidSurveyStartException> { inProgressSurvey.start() }
+        assertThrows<InvalidSurveyStartException> { inModificationSurvey.start() }
     }
 
     @Test

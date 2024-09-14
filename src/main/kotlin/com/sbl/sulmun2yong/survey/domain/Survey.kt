@@ -9,6 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.reward.SelfManagementSetting
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.exception.InvalidPublishedAtException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
@@ -34,7 +35,7 @@ data class Survey(
         require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
-        require(isFinishedAtAfterPublishedAt()) { throw InvalidSurveyException() }
+        require(isFinishedAtAfterPublishedAt()) { throw InvalidPublishedAtException() }
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
     }
 
@@ -107,9 +108,18 @@ data class Survey(
 
     fun finish() = copy(status = SurveyStatus.CLOSED)
 
-    fun start(): Survey {
-        require(status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyStartException() }
-        return copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
+    /** 설문을 IN_PROGRESS 상태로 변경하는 메서드. 설문이 시작 전이거나 수정 중인 경우만 가능하다. */
+    fun start() =
+        when (status) {
+            SurveyStatus.NOT_STARTED -> copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
+            SurveyStatus.IN_MODIFICATION -> copy(status = SurveyStatus.IN_PROGRESS)
+            SurveyStatus.IN_PROGRESS -> throw InvalidSurveyStartException()
+            SurveyStatus.CLOSED -> throw InvalidSurveyStartException()
+        }
+
+    fun edit(): Survey {
+        require(status == SurveyStatus.IN_PROGRESS) { throw InvalidSurveyEditException() }
+        return copy(status = SurveyStatus.IN_MODIFICATION)
     }
 
     fun isImmediateDraw() = rewardSetting.isImmediateDraw
