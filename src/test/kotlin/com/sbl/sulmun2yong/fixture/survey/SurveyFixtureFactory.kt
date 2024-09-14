@@ -57,6 +57,7 @@ object SurveyFixtureFactory {
         makerId: UUID = UUID.randomUUID(),
         rewards: List<Reward> = REWARDS,
         isVisible: Boolean = true,
+        updatedAt: Date = DateUtil.getCurrentDate(noSec = false, noMilliSecond = false),
         sections: List<Section> = SECTIONS,
     ) = Survey(
         id = id,
@@ -69,6 +70,7 @@ object SurveyFixtureFactory {
         makerId = makerId,
         rewardSetting = createRewardSetting(type, rewards, targetParticipantCount, finishedAt),
         isVisible = isVisible,
+        updatedAt = updatedAt,
         sections = sections,
     )
 

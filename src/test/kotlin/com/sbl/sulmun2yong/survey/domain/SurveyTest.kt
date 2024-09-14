@@ -68,7 +68,8 @@ class SurveyTest {
     fun `설문을 생성하면 설문의 정보들이 설정된다`() {
         // given, when
         val makerId: UUID = UUID.randomUUID()
-        val survey = createSurvey(id = id, makerId = makerId)
+        val updatedAt = DateUtil.getCurrentDate(noSec = false, noMilliSecond = false)
+        val survey = createSurvey(id = id, makerId = makerId, updatedAt = updatedAt)
         val defaultSurvey = Survey.create(makerId)
 
         // then
@@ -83,6 +84,7 @@ class SurveyTest {
             assertEquals(createRewardSetting(), this.rewardSetting)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
+            assertEquals(updatedAt, this.updatedAt)
             assertEquals(SECTIONS, this.sections)
         }
 
