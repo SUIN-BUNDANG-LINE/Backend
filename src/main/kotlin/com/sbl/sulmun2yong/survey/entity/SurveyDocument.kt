@@ -170,7 +170,6 @@ data class SurveyDocument(
                 ),
             isVisible = this.isVisible,
             makerId = this.makerId,
-            updatedAt = this.updatedAt,
             sections = this.sections.map { it.toDomain(sectionIds) },
         )
     }
