@@ -9,7 +9,9 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface SurveyRepository : MongoRepository<SurveyDocument, UUID> {
+interface SurveyRepository :
+    MongoRepository<SurveyDocument, UUID>,
+    SurveyCustomRepository {
     fun findByStatusAndIsVisibleTrue(
         status: SurveyStatus,
         pageable: Pageable,
