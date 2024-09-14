@@ -28,7 +28,7 @@ class SurveyCustomRepositoryImpl(
 
         val projectStage =
             Aggregation
-                .project("_id", "title", "thumbnail", "updatedAt", "status", "publishedAt", "finishedAt")
+                .project("_id", "title", "thumbnail", "updatedAt", "status", "finishedAt")
                 .andExpression("size(participantDocs)")
                 .`as`("responseCount")
 

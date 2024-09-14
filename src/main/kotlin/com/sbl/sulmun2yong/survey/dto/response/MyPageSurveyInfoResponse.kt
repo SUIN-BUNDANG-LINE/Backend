@@ -10,7 +10,6 @@ data class MyPageSurveyInfoResponse(
     val thumbnail: String?,
     val updatedAt: Date,
     val status: SurveyStatus,
-    val publishedAt: Date?,
     val finishedAt: Date?,
     val responseCount: Int,
 )
