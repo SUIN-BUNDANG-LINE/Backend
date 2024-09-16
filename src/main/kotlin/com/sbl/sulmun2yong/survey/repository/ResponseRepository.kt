@@ -8,4 +8,9 @@ import java.util.UUID
 @Repository
 interface ResponseRepository : MongoRepository<ResponseDocument, UUID> {
     fun findBySurveyId(surveyId: UUID): List<ResponseDocument>
+
+    fun findBySurveyIdAndParticipantId(
+        surveyId: UUID,
+        participantId: UUID,
+    ): List<ResponseDocument>
 }
