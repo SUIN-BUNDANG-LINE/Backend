@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.ai.controller.doc
 
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerateRequest
-import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerateResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
@@ -14,5 +14,5 @@ interface GenerateAPIDoc {
     @PostMapping("/survey")
     fun generateSurvey(
         @RequestBody request: SurveyGenerateRequest,
-    ): ResponseEntity<SurveyGenerateResponse>
+    ): ResponseEntity<SurveyMakeInfoResponse>
 }

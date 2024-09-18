@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.ai.service
 
-import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerateResponse
+import com.sbl.sulmun2yong.ai.domain.SurveyGeneratedByAI
 import com.sbl.sulmun2yong.global.util.FileValidator
+import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -17,7 +17,7 @@ class GenerateService(
         job: String,
         groupName: String,
         fileUrl: String,
-    ): SurveyGenerateResponse {
+    ): SurveyMakeInfoResponse  {
         fileValidator.validateFileUrlOf(fileUrl)
 
         val restTemplate = RestTemplate()
@@ -29,14 +29,14 @@ class GenerateService(
                 "file_url" to fileUrl,
             )
 
-        val response: ResponseEntity<SurveyGenerateResponse> =
-            restTemplate.postForEntity(
-                url,
-                requestBody,
-                SurveyGenerateResponse::class.java,
-            )
+        val response =
+            restTemplate
+                .postForEntity(
+                    url,
+                    requestBody,
+                    SurveyGeneratedByAI::class.java,
+                ).body ?: throw Exception("AI 서버에서 설문 생성에 실패했습니다.")
 
-        val responseBody = response.body ?: throw RuntimeException("Failed to generate survey")
-        return responseBody
+        return SurveyMakeInfoResponse.of(response)
     }
 }
