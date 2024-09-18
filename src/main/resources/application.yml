@@ -36,7 +36,7 @@ frontend:
 backend:
     base-url: http://localhost:8080
 
-ai-sever:
+ai-server:
     base-url: http://localhost:8000
 
 cloudfront:
