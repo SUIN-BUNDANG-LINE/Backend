@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 
-@Tag(name = "AI 생성 기능", description = "AI 생성 기능 관련 API")
+@Tag(name = "AI", description = "AI 생성 기능 관련 API")
 interface GenerateAPIDoc {
     @Operation(summary = "설문 생성")
     @PostMapping("/survey")

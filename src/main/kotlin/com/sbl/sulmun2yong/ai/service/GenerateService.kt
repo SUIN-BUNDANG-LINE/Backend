@@ -33,7 +33,6 @@ class GenerateService(
             )
 
         val responseBody = response.body ?: throw RuntimeException("Failed to generate survey")
-        println(responseBody)
         return responseBody
     }
 }

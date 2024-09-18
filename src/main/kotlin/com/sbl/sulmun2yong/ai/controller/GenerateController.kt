@@ -2,7 +2,6 @@ package com.sbl.sulmun2yong.ai.controller
 
 import com.sbl.sulmun2yong.ai.controller.doc.GenerateAPIDoc
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerateRequest
-import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerateResponse
 import com.sbl.sulmun2yong.ai.service.GenerateService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,6 +17,5 @@ class GenerateController(
     @PostMapping("/survey")
     override fun generateSurvey(
         @RequestBody request: SurveyGenerateRequest,
-    ): ResponseEntity<SurveyGenerateResponse> =
-        ResponseEntity.ok(generateService.generateSurvey(request.job, request.groupName, request.fileUrl))
+    ) = ResponseEntity.ok(generateService.generateSurvey(request.job, request.groupName, request.fileUrl))
 }
