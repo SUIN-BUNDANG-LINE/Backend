@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
 @Tag(name = "SurveyResult", description = "설문 결과 관련 API")
@@ -19,5 +20,6 @@ interface SurveyResultApiDoc {
         @PathVariable("survey-id") surveyId: UUID,
         @LoginUser id: UUID,
         @RequestBody surveyResultRequest: SurveyResultRequest,
+        @RequestParam participantId: UUID?,
     ): ResponseEntity<SurveyResultResponse>
 }

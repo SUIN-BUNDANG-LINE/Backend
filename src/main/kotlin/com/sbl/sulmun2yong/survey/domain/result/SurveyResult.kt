@@ -16,6 +16,8 @@ data class SurveyResult(
         return filteredSurveyResult
     }
 
+    fun findResultDetailsByQuestionId(questionId: UUID) = resultDetails.filter { it.questionId == questionId }
+
     private fun filterByQuestionFilter(questionFilter: QuestionFilter): SurveyResult {
         val participantSet = getMatchedParticipants(questionFilter)
         return if (questionFilter.isPositive) {

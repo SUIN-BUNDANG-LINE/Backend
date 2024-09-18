@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain.result
 
 import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.EXCEPT_STUDENT_FILTER
+import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.JOB_QUESTION_ID
 import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.K_J_FOOD_FILTER
 import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.MAN_FILTER
 import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.PARTICIPANT_RESULT_DETAILS_1
@@ -156,6 +157,23 @@ class SurveyResultTest {
         with(filteredResult3.resultDetails) {
             assertEquals(12, size)
             assertTrue { this.containsAll(PARTICIPANT_RESULT_DETAILS_2) }
+        }
+    }
+
+    @Test
+    fun `설문 결과는 질문 ID를 받으면 해당 질문의 응답들만 반환한다`() {
+        // given
+        val surveyResult = SURVEY_RESULT
+
+        // when
+        val jobQuestionResponses = surveyResult.findResultDetailsByQuestionId(JOB_QUESTION_ID)
+
+        // then
+        assertEquals(3, jobQuestionResponses.size)
+        with(jobQuestionResponses.map { it.contents }.flatten()) {
+            assertEquals(true, containsAll(PARTICIPANT_RESULT_DETAILS_1[0].contents))
+            assertEquals(true, containsAll(PARTICIPANT_RESULT_DETAILS_2[0].contents))
+            assertEquals(true, containsAll(PARTICIPANT_RESULT_DETAILS_3[0].contents))
         }
     }
 }

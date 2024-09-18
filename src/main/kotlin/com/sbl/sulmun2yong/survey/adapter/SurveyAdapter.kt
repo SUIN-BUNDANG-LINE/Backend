@@ -53,10 +53,10 @@ class SurveyAdapter(
         surveyRepository.save(surveyDocument)
     }
 
-    fun existsByIdAndMakerId(
+    fun getByIdAndMakerId(
         surveyId: UUID,
-        userId: UUID,
-    ) = surveyRepository.existsByIdAndMakerId(surveyId, userId)
+        makerId: UUID,
+    ) = surveyRepository.findByIdAndMakerId(surveyId, makerId).orElseThrow { SurveyNotFoundException() }.toDomain()
 
     fun getMyPageSurveysInfo(
         makerId: UUID,
