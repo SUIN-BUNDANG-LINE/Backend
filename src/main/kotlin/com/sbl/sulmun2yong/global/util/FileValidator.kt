@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.global.util
 
+import com.sbl.sulmun2yong.ai.exception.InvalidFileUrlException
 import com.sbl.sulmun2yong.aws.exception.FileNameTooLongException
 import com.sbl.sulmun2yong.aws.exception.FileNameTooShortException
 import com.sbl.sulmun2yong.aws.exception.InvalidExtensionException
@@ -14,6 +15,7 @@ class FileValidator(
     private val maxFileNameLength: Int,
     private val allowedExtensions: MutableList<String>,
     private val allowedContentTypes: MutableList<String>,
+    private val cloudFrontBaseUrl: String,
 ) {
     companion object {
         fun from(
@@ -21,6 +23,7 @@ class FileValidator(
             maxFileNameLength: Int,
             allowedExtensions: String,
             allowedContentTypes: String,
+            cloudFrontBaseUrl: String,
         ): FileValidator {
             val fileSize = maxFileSize.toBytes()
             val extensions = allowedExtensions.split(",").toMutableList()
@@ -31,6 +34,7 @@ class FileValidator(
                 maxFileNameLength,
                 extensions,
                 contentTypes,
+                cloudFrontBaseUrl,
             )
         }
     }
@@ -60,6 +64,12 @@ class FileValidator(
         }
         if (!checkIsAllowedExtensionOrType(contentType)) {
             throw InvalidExtensionException()
+        }
+    }
+
+    fun validateFileUrlOf(fileUrl: String) {
+        if (fileUrl.startsWith(cloudFrontBaseUrl).not()) {
+            throw InvalidFileUrlException()
         }
     }
 }

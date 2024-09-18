@@ -63,4 +63,7 @@ enum class ErrorCode(
     FILE_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "S30004", "파일 이름이 너무 깁니다."),
     NO_FILE_EXIST(HttpStatus.BAD_REQUEST, "S30005", "파일이 존재하지 않습니다."),
     NO_EXTENSION_EXIST(HttpStatus.BAD_REQUEST, "S30006", "파일 확장자가 존재하지 않습니다."),
+
+    // File (FL)
+    INVALID_FILE_URL(HttpStatus.BAD_REQUEST, "FL0001", "유효하지 않은 파일 주소입니다."),
 }

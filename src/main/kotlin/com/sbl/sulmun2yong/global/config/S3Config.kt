@@ -26,6 +26,8 @@ class S3Config(
     private val allowedExtensions: String,
     @Value("\${aws.s3.allowed-content-types}")
     private val allowedContentTypes: String,
+    @Value("\${cloudfront.base-url}")
+    private val cloudFrontBaseUrl: String,
 ) {
     @Bean
     fun s3Client(): S3Client {
@@ -45,5 +47,6 @@ class S3Config(
             maxFileNameLength = maxFileNameLength,
             allowedExtensions = allowedExtensions,
             allowedContentTypes = allowedContentTypes,
+            cloudFrontBaseUrl = cloudFrontBaseUrl,
         )
 }
