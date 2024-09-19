@@ -1,12 +1,13 @@
 package com.sbl.sulmun2yong.ai.service
 
 import com.sbl.sulmun2yong.ai.domain.SurveyGeneratedByAI
-import com.sbl.sulmun2yong.ai.exception.GenerationByAIFailed
+import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
+import com.sbl.sulmun2yong.global.error.PythonServerExceptionHandler
 import com.sbl.sulmun2yong.global.util.FileValidator
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 
 @Service
@@ -40,21 +41,17 @@ class GenerateService(
                 "file_url" to fileUrl,
             )
 
-        val response =
-            RestTemplate()
-                .postForEntity(
-                    url,
-                    requestBody,
-                    SurveyGeneratedByAI::class.java,
-                )
-
-        val responseBody = response.body
-
-        if (response.statusCode != HttpStatus.OK ||
-            responseBody == null
-        ) {
-            throw GenerationByAIFailed()
-        }
+        val responseBody =
+            try {
+                RestTemplate()
+                    .postForEntity(
+                        url,
+                        requestBody,
+                        SurveyGeneratedByAI::class.java,
+                    ).body ?: throw SurveyGenerationByAIFailedException()
+            } catch (e: HttpClientErrorException) {
+                throw PythonServerExceptionHandler.handlerException(e)
+            }
 
         return responseBody
     }
