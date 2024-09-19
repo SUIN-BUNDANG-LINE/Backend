@@ -40,9 +40,8 @@ class GenerateService(
                 "file_url" to fileUrl,
             )
 
-        val restTemplate = RestTemplate()
         val response =
-            restTemplate
+            RestTemplate()
                 .postForEntity(
                     url,
                     requestBody,
