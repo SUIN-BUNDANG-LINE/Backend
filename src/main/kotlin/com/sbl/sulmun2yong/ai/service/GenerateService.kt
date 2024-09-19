@@ -18,7 +18,8 @@ class GenerateService(
         groupName: String,
         fileUrl: String,
     ): SurveyMakeInfoResponse {
-        fileValidator.validateFileUrlOf(fileUrl)
+        val allowedExtensions = mutableListOf(".txt", ".pdf")
+        fileValidator.validateFileUrlOf(fileUrl, allowedExtensions)
 
         val response = postRequestToAIServer(job, groupName, fileUrl)
 
