@@ -74,7 +74,7 @@ class FileValidator(
         if (fileUrl.startsWith(cloudFrontBaseUrl).not()) {
             throw InvalidFileUrlException()
         }
-        if (allowedExtensions.any { fileUrl.endsWith(it).not() }) {
+        if (allowedExtensions.none { fileUrl.endsWith(it) }) {
             throw InvalidExtensionException()
         }
     }
