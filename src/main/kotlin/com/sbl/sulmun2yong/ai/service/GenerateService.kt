@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.ai.exception.GenerationByAIFailed
 import com.sbl.sulmun2yong.global.util.FileValidator
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -40,14 +41,22 @@ class GenerateService(
             )
 
         val restTemplate = RestTemplate()
-        val surveyGeneratedByAI =
+        val response =
             restTemplate
                 .postForEntity(
                     url,
                     requestBody,
                     SurveyGeneratedByAI::class.java,
-                ).body ?: throw GenerationByAIFailed()
+                )
 
-        return surveyGeneratedByAI
+        val responseBody = response.body
+
+        if (response.statusCode != HttpStatus.OK ||
+            responseBody == null
+        ) {
+            throw GenerationByAIFailed()
+        }
+
+        return responseBody
     }
 }
