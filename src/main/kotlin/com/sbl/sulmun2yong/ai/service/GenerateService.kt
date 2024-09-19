@@ -17,10 +17,19 @@ class GenerateService(
         job: String,
         groupName: String,
         fileUrl: String,
-    ): SurveyMakeInfoResponse  {
+    ): SurveyMakeInfoResponse {
         fileValidator.validateFileUrlOf(fileUrl)
 
-        val restTemplate = RestTemplate()
+        val response = postRequestToAIServer(job, groupName, fileUrl)
+
+        return SurveyMakeInfoResponse.of(response)
+    }
+
+    private fun postRequestToAIServer(
+        job: String,
+        groupName: String,
+        fileUrl: String,
+    ): SurveyGeneratedByAI {
         val url = "$aiServerBaseUrl/generate/survey"
         val requestBody =
             mapOf(
@@ -29,7 +38,8 @@ class GenerateService(
                 "file_url" to fileUrl,
             )
 
-        val response =
+        val restTemplate = RestTemplate()
+        val surveyGeneratedByAI =
             restTemplate
                 .postForEntity(
                     url,
@@ -37,6 +47,6 @@ class GenerateService(
                     SurveyGeneratedByAI::class.java,
                 ).body ?: throw Exception("AI 서버에서 설문 생성에 실패했습니다.")
 
-        return SurveyMakeInfoResponse.of(response)
+        return surveyGeneratedByAI
     }
 }

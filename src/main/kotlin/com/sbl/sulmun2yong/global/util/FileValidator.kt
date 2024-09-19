@@ -1,12 +1,12 @@
 package com.sbl.sulmun2yong.global.util
 
-import com.sbl.sulmun2yong.ai.exception.InvalidFileUrlException
-import com.sbl.sulmun2yong.aws.exception.FileNameTooLongException
-import com.sbl.sulmun2yong.aws.exception.FileNameTooShortException
-import com.sbl.sulmun2yong.aws.exception.InvalidExtensionException
-import com.sbl.sulmun2yong.aws.exception.NoExtensionExistException
-import com.sbl.sulmun2yong.aws.exception.NoFileExistException
-import com.sbl.sulmun2yong.aws.exception.OutOfFileSizeException
+import com.sbl.sulmun2yong.global.util.exception.FileNameTooLongException
+import com.sbl.sulmun2yong.global.util.exception.FileNameTooShortException
+import com.sbl.sulmun2yong.global.util.exception.InvalidExtensionException
+import com.sbl.sulmun2yong.global.util.exception.InvalidFileUrlException
+import com.sbl.sulmun2yong.global.util.exception.NoExtensionExistException
+import com.sbl.sulmun2yong.global.util.exception.NoFileExistException
+import com.sbl.sulmun2yong.global.util.exception.OutOfFileSizeException
 import org.springframework.util.unit.DataSize
 import org.springframework.web.multipart.MultipartFile
 
