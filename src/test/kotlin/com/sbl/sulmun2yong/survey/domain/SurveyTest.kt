@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.fixture.survey.QuestionFixtureFactory
 import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createMockSection
+import com.sbl.sulmun2yong.fixture.survey.SectionFixtureFactory.createSection
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.DESCRIPTION
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.FINISHED_AT
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.FINISH_MESSAGE
@@ -14,6 +16,7 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory.createSurvey
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.response.SectionResponse
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
+import com.sbl.sulmun2yong.survey.domain.reward.FinishedAt
 import com.sbl.sulmun2yong.survey.domain.reward.NoRewardSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
@@ -102,8 +105,19 @@ class SurveyTest {
     }
 
     @Test
-    fun `설문을 생성할 때 섹션이 1개 이상 없으면 예외가 발생한다`() {
+    fun `진행 중인 설문을 생성할 때 섹션이 1개 이상 없으면 예외가 발생한다`() {
         assertThrows<InvalidSurveyException> { createSurvey(sections = listOf()) }
+    }
+
+    @Test
+    fun `진행 중인 설문을 생성할 때 중복되는 선택지가 있으면 예외가 발생한다`() {
+        // given
+        val question1 = QuestionFixtureFactory.createTextResponseQuestion()
+        val question2 = QuestionFixtureFactory.createSingleChoiceQuestion(contents = listOf("1", "1"))
+        val section = createSection(questions = listOf(question1, question2))
+
+        // when, then
+        assertThrows<InvalidSurveyException> { createSurvey(sections = listOf(section)) }
     }
 
     @Test
@@ -247,6 +261,7 @@ class SurveyTest {
 
         // when, then
         assertDoesNotThrow { createSurvey(sections = listOf(section1, section2, section3)) }
+        assertDoesNotThrow { createSurvey(sections = listOf(), status = SurveyStatus.NOT_STARTED, publishedAt = null) }
 
         assertThrows<InvalidSurveyException> { createSurvey(sections = listOf(section1, section2, section4)) }
     }
@@ -406,31 +421,50 @@ class SurveyTest {
     @Test
     fun `설문을 시작하면, 설문의 시작일과 상태가 업데이트된다`() {
         // given
-        val notStartedSurvey =
+        val finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true))
+        val notStartedSurvey1 =
             createSurvey(
                 type = RewardSettingType.SELF_MANAGEMENT,
-                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
+                finishedAt = finishedAt,
                 publishedAt = null,
                 targetParticipantCount = null,
                 status = SurveyStatus.NOT_STARTED,
             )
+        val notStartedSurvey2 =
+            createSurvey(
+                type = RewardSettingType.NO_REWARD,
+                finishedAt = null,
+                targetParticipantCount = null,
+                rewards = emptyList(),
+                publishedAt = null,
+                status = SurveyStatus.NOT_STARTED,
+            )
         val inModificationSurvey =
             createSurvey(
-                type = RewardSettingType.SELF_MANAGEMENT,
-                finishedAt = DateUtil.getDateAfterDay(date = DateUtil.getCurrentDate(noMin = true)),
+                type = RewardSettingType.NO_REWARD,
+                finishedAt = null,
                 targetParticipantCount = null,
                 status = SurveyStatus.IN_MODIFICATION,
+                rewards = emptyList(),
             )
 
         // when
-        val startedSurvey1 = notStartedSurvey.start()
-        val startedSurvey2 = inModificationSurvey.start()
+        val startedSurvey1 = notStartedSurvey1.start()
+        val startedSurvey2 = notStartedSurvey2.start()
+        val startedSurvey3 = inModificationSurvey.start()
 
         // then
         assertEquals(DateUtil.getCurrentDate(), startedSurvey1.publishedAt)
         assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey1.status)
-        assertEquals(inModificationSurvey.publishedAt, startedSurvey2.publishedAt)
+        assertEquals(FinishedAt(finishedAt), startedSurvey1.rewardSetting.finishedAt)
+
+        assertEquals(DateUtil.getCurrentDate(), startedSurvey2.publishedAt)
         assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey2.status)
+        assertEquals(null, startedSurvey2.rewardSetting.finishedAt)
+
+        assertEquals(inModificationSurvey.publishedAt, startedSurvey3.publishedAt)
+        assertEquals(SurveyStatus.IN_PROGRESS, startedSurvey3.status)
+        assertEquals(null, startedSurvey3.rewardSetting.finishedAt)
     }
 
     @Test
