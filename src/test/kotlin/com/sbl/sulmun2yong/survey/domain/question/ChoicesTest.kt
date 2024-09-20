@@ -39,14 +39,21 @@ class ChoicesTest {
     }
 
     @Test
-    fun `선택지 목록의 내용은 중복될 수 없다`() {
+    fun `선택지 목록에 중복된 내용이 있는지 확인할 수 있다`() {
         // given
+        val uniqueContents = listOf("1", "2", "3")
         val duplicatedContents1 = listOf("1", "2", "2")
         val duplicatedContents2 = listOf("3", "3")
 
-        // when, then
-        assertThrows<InvalidChoiceException> { createChoices(duplicatedContents1, true) }
-        assertThrows<InvalidChoiceException> { createChoices(duplicatedContents2, false) }
+        // when
+        val uniqueChoices = createChoices(uniqueContents, true)
+        val duplicatedChoices1 = createChoices(duplicatedContents1, true)
+        val duplicatedChoices2 = createChoices(duplicatedContents2, false)
+
+        // then
+        assertEquals(true, uniqueChoices.isUnique())
+        assertEquals(false, duplicatedChoices1.isUnique())
+        assertEquals(false, duplicatedChoices2.isUnique())
     }
 
     @Test
