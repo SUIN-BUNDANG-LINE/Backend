@@ -36,10 +36,10 @@ data class Survey(
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidPublishedAtException() }
-        // 설문이 진행 중인 경우만 섹션이 비었는지, 섹션 ID가 유효한지, 선택지가 중복되는지 확인
+        require(isSectionIdsValid()) { throw InvalidSurveyException() }
+        // 설문이 진행 중인 경우만 섹션이 비었는지, 선택지가 중복되는지 확인
         if (status == SurveyStatus.IN_PROGRESS) {
             require(sections.isNotEmpty()) { throw InvalidSurveyException() }
-            require(isSectionIdsValid()) { throw InvalidSurveyException() }
             require(isAllChoicesUnique()) { throw InvalidSurveyException() }
         }
     }
@@ -156,6 +156,7 @@ data class Survey(
     }
 
     private fun isSectionIdsValid(): Boolean {
+        if (sections.isEmpty()) return true
         val sectionIds = SectionIds.from(sections.map { it.id })
         return sections.all { it.sectionIds == sectionIds }
     }
