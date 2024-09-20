@@ -14,6 +14,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
+import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
 import java.util.Date
 import java.util.UUID
 
@@ -113,7 +114,19 @@ data class Survey(
     /** 설문을 IN_PROGRESS 상태로 변경하는 메서드. 설문이 시작 전이거나 수정 중인 경우만 가능하다. */
     fun start() =
         when (status) {
-            SurveyStatus.NOT_STARTED -> copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
+            SurveyStatus.NOT_STARTED ->
+                copy(
+                    status = SurveyStatus.IN_PROGRESS,
+                    publishedAt = DateUtil.getCurrentDate(),
+                    rewardSetting =
+                        RewardSetting.of(
+                            type = rewardSetting.type,
+                            rewards = rewardSetting.rewards,
+                            targetParticipantCount = rewardSetting.targetParticipantCount,
+                            finishedAt = rewardSetting.finishedAt?.value,
+                            surveyStatus = SurveyStatus.IN_PROGRESS,
+                        ),
+                )
             SurveyStatus.IN_MODIFICATION -> copy(status = SurveyStatus.IN_PROGRESS)
             SurveyStatus.IN_PROGRESS -> throw InvalidSurveyStartException()
             SurveyStatus.CLOSED -> throw InvalidSurveyStartException()
