@@ -27,6 +27,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
+import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -179,6 +180,17 @@ class SurveyTest {
 
         val id = UUID.randomUUID()
         val survey = createSurvey(id = id, sections = listOf(section1, section2, section3))
+        val notStartedSurvey =
+            createSurvey(
+                id = id,
+                sections = listOf(section1, section2, section3),
+                status = SurveyStatus.NOT_STARTED,
+                rewards = emptyList(),
+                targetParticipantCount = null,
+                finishedAt = null,
+                publishedAt = null,
+                type = RewardSettingType.NO_REWARD,
+            )
 
         val surveyResponse1 =
             SurveyResponse(
@@ -215,6 +227,8 @@ class SurveyTest {
         assertThrows<InvalidSurveyResponseException> { survey.validateResponse(surveyResponse2) }
         // 마지막 섹션을 응답하지 않은 경우
         assertThrows<InvalidSurveyResponseException> { survey.validateResponse(surveyResponse3) }
+        // 설문이 시작되지 않은 경우 예외 발생
+        assertThrows<SurveyClosedException> { notStartedSurvey.validateResponse(surveyResponse1) }
     }
 
     @Test

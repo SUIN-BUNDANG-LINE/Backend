@@ -63,6 +63,8 @@ data class Survey(
 
     /** 설문의 응답 순서가 유효한지, 응답이 각 섹션에 유효한지 확인하는 메서드 */
     fun validateResponse(surveyResponse: SurveyResponse) {
+        // 진행 중인 설문이 아니면 응답이 유효한지 확인할 수 없다.
+        require(status == SurveyStatus.IN_PROGRESS) { throw SurveyClosedException() }
         // 확인할 응답의 예상 섹션 ID, 첫 응답의 섹션 ID는 첫 섹션의 ID
         var expectedSectionId: SectionId = sections.first().id
         for (sectionResponse in surveyResponse) {
