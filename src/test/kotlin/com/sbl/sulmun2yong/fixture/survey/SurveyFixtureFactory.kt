@@ -67,7 +67,7 @@ object SurveyFixtureFactory {
         status = status,
         finishMessage = finishMessage + id,
         makerId = makerId,
-        rewardSetting = createRewardSetting(type, rewards, targetParticipantCount, finishedAt),
+        rewardSetting = createRewardSetting(type, rewards, targetParticipantCount, finishedAt, status),
         isVisible = isVisible,
         sections = sections,
     )
@@ -77,5 +77,6 @@ object SurveyFixtureFactory {
         rewards: List<Reward> = REWARDS,
         targetParticipantCount: Int? = TARGET_PARTICIPANT_COUNT,
         finishedAt: Date? = FINISHED_AT,
-    ) = RewardSetting.of(type, rewards, targetParticipantCount, finishedAt)
+        status: SurveyStatus = SURVEY_STATUS,
+    ) = RewardSetting.of(type, rewards, targetParticipantCount, finishedAt, status)
 }

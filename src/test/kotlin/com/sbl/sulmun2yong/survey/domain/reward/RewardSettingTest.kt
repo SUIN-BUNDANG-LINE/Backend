@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.survey.domain.reward
 
 import com.sbl.sulmun2yong.fixture.survey.SurveyFixtureFactory
 import com.sbl.sulmun2yong.global.util.DateUtil
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.exception.InvalidFinishedAtException
 import com.sbl.sulmun2yong.survey.exception.InvalidRewardSettingException
 import org.junit.jupiter.api.Test
@@ -24,6 +25,10 @@ class RewardSettingTest {
         val selfManagementSetting2 = RewardSetting.of(RewardSettingType.SELF_MANAGEMENT, rewards, null, finishedAt)
         val noRewardSetting1 = NoRewardSetting
         val noRewardSetting2 = RewardSetting.of(RewardSettingType.NO_REWARD, listOf(), null, null)
+        val notStartedRewardSetting1 =
+            RewardSetting.of(RewardSettingType.IMMEDIATE_DRAW, listOf(), targetParticipantCount, null, SurveyStatus.NOT_STARTED)
+        val notStartedRewardSetting2 =
+            RewardSetting.of(RewardSettingType.NO_REWARD, rewards, null, finishedAt, SurveyStatus.NOT_STARTED)
 
         // then
         // 즉시 추첨
@@ -69,6 +74,21 @@ class RewardSettingTest {
             assertEquals(emptyList(), this.rewards)
             assertEquals(null, this.targetParticipantCount)
             assertEquals(null, this.finishedAt)
+            assertEquals(false, this.isImmediateDraw)
+        }
+        // 시작 전 상태의 불완전한 리워드 지급 설정
+        with(notStartedRewardSetting1) {
+            assertEquals(RewardSettingType.IMMEDIATE_DRAW, this.type)
+            assertEquals(emptyList(), this.rewards)
+            assertEquals(targetParticipantCount, this.targetParticipantCount)
+            assertEquals(null, this.finishedAt)
+            assertEquals(true, this.isImmediateDraw)
+        }
+        with(notStartedRewardSetting2) {
+            assertEquals(RewardSettingType.NO_REWARD, this.type)
+            assertEquals(rewards, this.rewards)
+            assertEquals(null, this.targetParticipantCount)
+            assertEquals(FinishedAt(finishedAt), this.finishedAt)
             assertEquals(false, this.isImmediateDraw)
         }
     }
