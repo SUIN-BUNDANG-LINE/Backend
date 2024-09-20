@@ -33,14 +33,19 @@ data class Survey(
     val sections: List<Section>,
 ) {
     init {
-        require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidPublishedAtException() }
-        require(isSectionIdsValid()) { throw InvalidSurveyException() }
+        // 설문이 진행 중인 경우만 섹션이 비었는지, 섹션 ID가 유효한지, 선택지가 중복되는지 확인
+        if (status == SurveyStatus.IN_PROGRESS) {
+            require(sections.isNotEmpty()) { throw InvalidSurveyException() }
+            require(isSectionIdsValid()) { throw InvalidSurveyException() }
+            require(isAllChoicesUnique()) { throw InvalidSurveyException() }
+        }
     }
 
     companion object {
+        // TODO: 기본 섬네일 URL은 프론트에서 처리하도록 변경
         const val DEFAULT_THUMBNAIL_URL = "https://test-oriddle-bucket.s3.ap-northeast-2.amazonaws.com/surveyImage.webp"
         const val DEFAULT_TITLE = "제목 없는 설문"
         const val DEFAULT_DESCRIPTION = ""
@@ -154,4 +159,6 @@ data class Survey(
         val sectionIds = SectionIds.from(sections.map { it.id })
         return sections.all { it.sectionIds == sectionIds }
     }
+
+    private fun isAllChoicesUnique() = sections.all { section -> section.questions.all { it.choices?.isUnique() ?: true } }
 }
