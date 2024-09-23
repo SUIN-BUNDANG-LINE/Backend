@@ -3,6 +3,7 @@ package com.sbl.sulmun2yong.survey.domain.result
 import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.EXCEPT_STUDENT_FILTER
 import com.sbl.sulmun2yong.fixture.survey.SurveyResultConstFactory.MAN_FILTER
 import com.sbl.sulmun2yong.survey.exception.InvalidQuestionFilterException
+import com.sbl.sulmun2yong.survey.exception.InvalidResultFilterException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
@@ -42,5 +43,11 @@ class ResultFilterTest {
 
         // then
         assertEquals(questionFilters, resultFilter.questionFilters)
+    }
+
+    @Test
+    fun `필터는 최대 20개 까지만 적용할 수 있다`() {
+        val questionFilters = List(ResultFilter.MAX_SIZE + 1) { QuestionFilter(UUID.randomUUID(), listOf("content"), true) }
+        assertThrows<InvalidResultFilterException> { ResultFilter(questionFilters) }
     }
 }
