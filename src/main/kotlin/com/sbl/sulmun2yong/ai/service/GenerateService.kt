@@ -18,6 +18,6 @@ class GenerateService(
         val allowedExtensions = mutableListOf(".txt", ".pdf")
         fileValidator.validateFileUrlOf(fileUrl, allowedExtensions)
 
-        return generateAdapter.postRequestWithFileUrl(job, groupName, fileUrl)
+        return generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl)
     }
 }

@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-import com.sbl.sulmun2yong.ai.dto.SurveyGeneratedByAI
+import com.sbl.sulmun2yong.ai.entity.SurveyGeneratedByAI
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
@@ -16,7 +16,7 @@ class GenerateAdapter(
 ) {
     private val url = "$aiServerBaseUrl/generate/survey"
 
-    fun postRequestWithFileUrl(
+    fun requestSurveyGenerationWithFileUrl(
         job: String,
         groupName: String,
         fileUrl: String,
