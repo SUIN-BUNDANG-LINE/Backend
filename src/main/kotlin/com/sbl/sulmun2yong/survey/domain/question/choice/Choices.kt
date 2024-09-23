@@ -9,8 +9,13 @@ data class Choices(
     /** 기타 선택지 허용 여부 */
     val isAllowOther: Boolean,
 ) {
+    companion object {
+        const val MAX_SIZE = 20
+    }
+
     init {
         if (standardChoices.isEmpty()) throw InvalidChoiceException()
+        if (standardChoices.size > MAX_SIZE) throw InvalidChoiceException()
     }
 
     /** 응답이 선택지에 포함되는지 확인 */
