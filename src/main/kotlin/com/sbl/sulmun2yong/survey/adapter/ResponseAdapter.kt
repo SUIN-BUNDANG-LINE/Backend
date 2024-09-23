@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.adapter
 
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
+import com.sbl.sulmun2yong.survey.domain.result.QuestionResult
 import com.sbl.sulmun2yong.survey.domain.result.ResultDetails
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
 import com.sbl.sulmun2yong.survey.entity.ResponseDocument
@@ -45,15 +46,20 @@ class ResponseAdapter(
                 responseRepository.findBySurveyId(surveyId)
             }
         // TODO: 추후 DB Level에서 처리하도록 변경 + 필터링을 동적쿼리로 하도록 변경
-        val groupingResponses = responses.groupBy { "${it.questionId}|${it.participantId}" }.values
-        groupingResponses.map { it.toDomain() }
-        return SurveyResult(resultDetails = groupingResponses.map { it.toDomain() })
+        val groupingResponses = responses.groupBy { it.questionId }.values
+        return SurveyResult(questionResults = groupingResponses.map { it.toDomain() })
     }
 
     private fun List<ResponseDocument>.toDomain() =
-        ResultDetails(
+        QuestionResult(
             questionId = first().questionId,
-            participantId = first().participantId,
-            contents = map { responseDocument -> responseDocument.content },
+            resultDetails =
+                this.groupBy { it.participantId }.map {
+                    ResultDetails(
+                        participantId = it.key,
+                        contents = it.value.map { responseDocument -> responseDocument.content },
+                    )
+                },
+            contents = this.map { it.content }.toSortedSet(),
         )
 }
