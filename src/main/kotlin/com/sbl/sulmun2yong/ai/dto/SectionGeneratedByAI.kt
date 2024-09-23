@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.domain
+package com.sbl.sulmun2yong.ai.dto
 
 class SectionGeneratedByAI(
     val title: String,

@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.ai.domain.QuestionGeneratedByAI
-import com.sbl.sulmun2yong.ai.domain.SectionGeneratedByAI
-import com.sbl.sulmun2yong.ai.domain.SurveyGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.QuestionGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.SectionGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.SurveyGeneratedByAI
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Question

@@ -6,7 +6,7 @@ import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.ai.exception.TextTooLongException
 import org.springframework.web.client.HttpClientErrorException
 
-class PythonServerExceptionHandler {
+class PythonServerExceptionMapper {
     companion object {
         private val objectMapper = ObjectMapper()
 
@@ -19,7 +19,7 @@ class PythonServerExceptionHandler {
             val detail: ErrorDetail = ErrorDetail(),
         )
 
-        fun handlerException(e: HttpClientErrorException): BusinessException {
+        fun mapException(e: HttpClientErrorException): BusinessException {
             val exception = objectMapper.readValue(e.responseBodyAsString, PythonServerException::class.java)
             when (exception.detail.code) {
                 "PY0001" -> throw SurveyGenerationByAIFailedException()
