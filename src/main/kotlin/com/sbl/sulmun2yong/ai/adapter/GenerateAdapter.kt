@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.ai.adapter
 import com.sbl.sulmun2yong.ai.dto.SurveyGeneratedByAI
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -21,7 +20,7 @@ class GenerateAdapter(
         job: String,
         groupName: String,
         fileUrl: String,
-    ): SurveyGeneratedByAI {
+    ): SurveyMakeInfoResponse {
         val requestBody =
             mapOf(
                 "job" to job,
@@ -29,7 +28,7 @@ class GenerateAdapter(
                 "file_url" to fileUrl,
             )
 
-        val responseBody =
+        val surveyGeneratedByAI =
             try {
                 RestTemplate()
                     .postForEntity(
@@ -41,7 +40,7 @@ class GenerateAdapter(
                 throw PythonServerExceptionMapper.mapException(e)
             }
 
-        val survey = Survey.of(responseBody)
+        val survey = surveyGeneratedByAI.toDomain()
         return SurveyMakeInfoResponse.of(survey)
     }
 }
