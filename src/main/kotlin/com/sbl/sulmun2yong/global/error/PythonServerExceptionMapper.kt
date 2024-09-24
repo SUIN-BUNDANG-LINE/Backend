@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.global.error
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.ai.exception.FileExtensionNotSupportedException
+import com.sbl.sulmun2yong.ai.exception.FileNotFoundException
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.ai.exception.TextTooLongException
 import org.springframework.web.client.HttpClientErrorException
@@ -24,6 +25,7 @@ object PythonServerExceptionMapper {
             "PY0001" -> throw SurveyGenerationByAIFailedException()
             "PY0002" -> throw TextTooLongException()
             "PY0003" -> throw FileExtensionNotSupportedException()
+            "PY0004" -> throw FileNotFoundException()
             else -> throw e
         }
     }
