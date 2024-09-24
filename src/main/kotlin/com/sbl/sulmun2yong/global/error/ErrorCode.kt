@@ -34,6 +34,7 @@ enum class ErrorCode(
     INVALID_FINISHED_AT(HttpStatus.BAD_REQUEST, "SV0022", "유효하지 않은 마감일입니다."),
     INVALID_SURVEY_EDIT(HttpStatus.BAD_REQUEST, "SV0023", "설문 수정 상태 변경에 실패했습니다."),
     INVALID_PUBLISHED_AT(HttpStatus.BAD_REQUEST, "SV0024", "설문 마감일이 설문 공개일 보다 빠릅니다."),
+    INVALID_RESULT_FILTER(HttpStatus.BAD_REQUEST, "SV0025", "필터는 최대 20개 까지만 적용 가능합니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),

@@ -39,6 +39,13 @@ class ChoicesTest {
     }
 
     @Test
+    fun `선택지는 최대 20개 까지만 추가할 수 있다`() {
+        val standardChoices = List(Choices.MAX_SIZE + 1) { Choice.Standard(it.toString()) }
+        assertThrows<InvalidChoiceException> { Choices(standardChoices, true) }
+        assertThrows<InvalidChoiceException> { Choices(standardChoices, false) }
+    }
+
+    @Test
     fun `선택지 목록에 중복된 내용이 있는지 확인할 수 있다`() {
         // given
         val uniqueContents = listOf("1", "2", "3")

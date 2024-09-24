@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.survey.domain.result.QuestionFilter
+import com.sbl.sulmun2yong.survey.domain.result.QuestionResult
 import com.sbl.sulmun2yong.survey.domain.result.ResultDetails
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
 import java.util.UUID
@@ -24,22 +25,18 @@ object SurveyResultConstFactory {
     val PARTICIPANT_RESULT_DETAILS_1 =
         listOf(
             ResultDetails(
-                questionId = JOB_QUESTION_ID,
                 participantId = PARTICIPANT_ID_1,
                 contents = listOf(JOB_QUESTION_CONTENTS[0]),
             ),
             ResultDetails(
-                questionId = GENDER_QUESTION_ID,
                 participantId = PARTICIPANT_ID_1,
                 contents = listOf(GENDER_QUESTION_CONTENTS[0]),
             ),
             ResultDetails(
-                questionId = FOOD_MULTIPLE_CHOICE_QUESTION_ID,
                 participantId = PARTICIPANT_ID_1,
                 contents = listOf(FOOD_MULTIPLE_CHOICE_QUESTION_CONTENTS[0], FOOD_MULTIPLE_CHOICE_QUESTION_CONTENTS[1]),
             ),
             ResultDetails(
-                questionId = FOOD_TEXT_RESPONSE_QUESTION_ID,
                 participantId = PARTICIPANT_ID_1,
                 contents = listOf(FOOD_TEXT_RESPONSE_QUESTION_CONTENTS[0]),
             ),
@@ -51,17 +48,14 @@ object SurveyResultConstFactory {
     val PARTICIPANT_RESULT_DETAILS_2 =
         listOf(
             ResultDetails(
-                questionId = JOB_QUESTION_ID,
                 participantId = PARTICIPANT_ID_2,
                 contents = listOf(JOB_QUESTION_CONTENTS[1]),
             ),
             ResultDetails(
-                questionId = GENDER_QUESTION_ID,
                 participantId = PARTICIPANT_ID_2,
                 contents = listOf(GENDER_QUESTION_CONTENTS[1]),
             ),
             ResultDetails(
-                questionId = FOOD_MULTIPLE_CHOICE_QUESTION_ID,
                 participantId = PARTICIPANT_ID_2,
                 contents =
                     listOf(
@@ -71,7 +65,6 @@ object SurveyResultConstFactory {
                     ),
             ),
             ResultDetails(
-                questionId = FOOD_TEXT_RESPONSE_QUESTION_ID,
                 participantId = PARTICIPANT_ID_2,
                 contents = listOf(FOOD_TEXT_RESPONSE_QUESTION_CONTENTS[1]),
             ),
@@ -83,31 +76,52 @@ object SurveyResultConstFactory {
     val PARTICIPANT_RESULT_DETAILS_3 =
         listOf(
             ResultDetails(
-                questionId = JOB_QUESTION_ID,
                 participantId = PARTICIPANT_ID_3,
                 contents = listOf(JOB_QUESTION_CONTENTS[0]),
             ),
             ResultDetails(
-                questionId = GENDER_QUESTION_ID,
                 participantId = PARTICIPANT_ID_3,
                 contents = listOf(GENDER_QUESTION_CONTENTS[1]),
             ),
             ResultDetails(
-                questionId = FOOD_MULTIPLE_CHOICE_QUESTION_ID,
                 participantId = PARTICIPANT_ID_3,
                 contents = listOf(FOOD_MULTIPLE_CHOICE_QUESTION_CONTENTS[2], FOOD_MULTIPLE_CHOICE_QUESTION_CONTENTS[4]),
             ),
             ResultDetails(
-                questionId = FOOD_TEXT_RESPONSE_QUESTION_ID,
                 participantId = PARTICIPANT_ID_3,
                 contents = listOf(FOOD_TEXT_RESPONSE_QUESTION_CONTENTS[2]),
             ),
         )
 
-    val SURVEY_RESULT =
-        SurveyResult(
-            resultDetails = PARTICIPANT_RESULT_DETAILS_1 + PARTICIPANT_RESULT_DETAILS_2 + PARTICIPANT_RESULT_DETAILS_3,
+    val QUESTION_RESULT_1 =
+        QuestionResult(
+            questionId = JOB_QUESTION_ID,
+            resultDetails = listOf(PARTICIPANT_RESULT_DETAILS_1[0], PARTICIPANT_RESULT_DETAILS_2[0], PARTICIPANT_RESULT_DETAILS_3[0]),
+            contents = JOB_QUESTION_CONTENTS.toSortedSet(),
         )
+
+    val QUESTION_RESULT_2 =
+        QuestionResult(
+            questionId = GENDER_QUESTION_ID,
+            resultDetails = listOf(PARTICIPANT_RESULT_DETAILS_1[1], PARTICIPANT_RESULT_DETAILS_2[1], PARTICIPANT_RESULT_DETAILS_3[1]),
+            contents = GENDER_QUESTION_CONTENTS.toSortedSet(),
+        )
+
+    val QUESTION_RESULT_3 =
+        QuestionResult(
+            questionId = FOOD_MULTIPLE_CHOICE_QUESTION_ID,
+            resultDetails = listOf(PARTICIPANT_RESULT_DETAILS_1[2], PARTICIPANT_RESULT_DETAILS_2[2], PARTICIPANT_RESULT_DETAILS_3[2]),
+            contents = FOOD_MULTIPLE_CHOICE_QUESTION_CONTENTS.toSortedSet(),
+        )
+
+    val QUESTION_RESULT_4 =
+        QuestionResult(
+            questionId = FOOD_TEXT_RESPONSE_QUESTION_ID,
+            resultDetails = listOf(PARTICIPANT_RESULT_DETAILS_1[3], PARTICIPANT_RESULT_DETAILS_2[3], PARTICIPANT_RESULT_DETAILS_3[3]),
+            contents = FOOD_TEXT_RESPONSE_QUESTION_CONTENTS.toSortedSet(),
+        )
+
+    val SURVEY_RESULT = SurveyResult(questionResults = listOf(QUESTION_RESULT_1, QUESTION_RESULT_2, QUESTION_RESULT_3, QUESTION_RESULT_4))
 
     val EXCEPT_STUDENT_FILTER = QuestionFilter(JOB_QUESTION_ID, listOf(JOB_QUESTION_CONTENTS[0]), false)
     val MAN_FILTER = QuestionFilter(GENDER_QUESTION_ID, listOf(GENDER_QUESTION_CONTENTS[0]), true)

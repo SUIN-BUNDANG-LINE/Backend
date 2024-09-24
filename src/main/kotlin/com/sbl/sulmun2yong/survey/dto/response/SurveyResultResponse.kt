@@ -1,21 +1,23 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.question.ChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
-import com.sbl.sulmun2yong.survey.domain.result.ResultDetails
+import com.sbl.sulmun2yong.survey.domain.result.QuestionResult
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import java.util.UUID
 
 data class SurveyResultResponse(
     val sectionResults: List<SectionResultResponse>,
+    val participantCount: Int,
 ) {
     companion object {
         fun of(
             surveyResult: SurveyResult,
             survey: Survey,
-        ) = SurveyResultResponse(survey.sections.map { SectionResultResponse.of(surveyResult, it) })
+        ) = SurveyResultResponse(survey.sections.map { SectionResultResponse.of(surveyResult, it) }, surveyResult.getParticipantCount())
     }
 
     data class SectionResultResponse(
@@ -32,11 +34,9 @@ data class SurveyResultResponse(
                     sectionId = section.id.value,
                     title = section.title,
                     questionResults =
-                        section.questions.map {
-                            QuestionResultResponse.of(
-                                question = it,
-                                responses = surveyResult.findResultDetailsByQuestionId(it.id),
-                            )
+                        section.questions.mapNotNull { question ->
+                            val questionResult = surveyResult.findQuestionResult(question.id)
+                            questionResult?.let { QuestionResultResponse.of(question, it) }
                         },
                 )
         }
@@ -48,27 +48,39 @@ data class SurveyResultResponse(
         val type: QuestionType,
         val participantCount: Int,
         val responses: List<Response>,
+        val responseContents: List<String>,
     ) {
         companion object {
             fun of(
                 question: Question,
-                responses: List<ResultDetails>,
+                questionResult: QuestionResult,
             ): QuestionResultResponse {
-                val contentCountMap =
-                    responses
-                        .map { it.contents }
-                        .flatten()
-                        .groupingBy { it }
-                        .eachCount()
-                        .toMutableMap()
-                val contents = question.choices?.standardChoices?.map { it.content } ?: emptyList()
-                contents.forEach { contentCountMap.putIfAbsent(it, 0) }
+                val allContents =
+                    if (question is ChoiceQuestion) {
+                        val tempContents = question.choices.standardChoices.map { it.content }
+                        tempContents + questionResult.contents.filter { !tempContents.contains(it) }
+                    } else {
+                        questionResult.contents.toList()
+                    }
+
+                val responses =
+                    if (question is ChoiceQuestion) {
+                        val contentCountMap =
+                            questionResult.resultDetails
+                                .flatMap { it.contents }
+                                .groupingBy { it }
+                                .eachCount()
+                        allContents.map { Response(it, contentCountMap[it] ?: 0) }
+                    } else {
+                        questionResult.resultDetails.map { Response(it.contents.first(), 1) }
+                    }
                 return QuestionResultResponse(
                     questionId = question.id,
                     title = question.title,
                     type = question.questionType,
-                    participantCount = responses.size,
-                    responses = contentCountMap.map { Response(it.key, it.value) },
+                    participantCount = questionResult.resultDetails.size,
+                    responses = responses,
+                    responseContents = allContents,
                 )
             }
         }

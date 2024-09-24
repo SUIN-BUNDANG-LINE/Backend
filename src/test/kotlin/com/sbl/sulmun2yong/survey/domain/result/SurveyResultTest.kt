@@ -29,54 +29,64 @@ class SurveyResultTest {
 
         val response1 =
             ResultDetails(
-                questionId = questionId1,
                 participantId = participantId1,
                 contents = contents1,
             )
         val response2 =
             ResultDetails(
-                questionId = questionId2,
                 participantId = participantId1,
                 contents = contents2,
             )
         val response3 =
             ResultDetails(
-                questionId = questionId1,
                 participantId = participantId2,
                 contents = contents3,
             )
 
+        val questionContents1 = sortedSetOf(contents1.first(), contents3.first())
+        val questionResult1 =
+            QuestionResult(
+                questionId = questionId1,
+                resultDetails = listOf(response1, response3),
+                contents = questionContents1,
+            )
+        val questionContents2 = sortedSetOf(contents2.first())
+        val questionResult2 =
+            QuestionResult(
+                questionId = questionId2,
+                resultDetails = listOf(response2),
+                contents = sortedSetOf(contents2.first()),
+            )
+
         // when
-        val surveyResult = SurveyResult(listOf(response1, response2, response3))
+        val surveyResult = SurveyResult(listOf(questionResult1, questionResult2))
 
         // then
-        with(surveyResult.resultDetails[0]) {
+        with(surveyResult.questionResults[0]) {
             assertEquals(questionId1, questionId)
-            assertEquals(participantId1, participantId)
-            assertEquals(contents1, contents)
+            assertEquals(questionContents1, contents)
+            assertEquals(contents1, resultDetails[0].contents)
+            assertEquals(participantId1, resultDetails[0].participantId)
+            assertEquals(contents3, resultDetails[1].contents)
+            assertEquals(participantId2, resultDetails[1].participantId)
         }
-        with(surveyResult.resultDetails[1]) {
+        with(surveyResult.questionResults[1]) {
             assertEquals(questionId2, questionId)
-            assertEquals(participantId1, participantId)
-            assertEquals(contents2, contents)
-        }
-        with(surveyResult.resultDetails[2]) {
-            assertEquals(questionId1, questionId)
-            assertEquals(participantId2, participantId)
-            assertEquals(contents3, contents)
+            assertEquals(questionContents2, contents)
+            assertEquals(contents2, resultDetails[0].contents)
+            assertEquals(participantId1, resultDetails[0].participantId)
         }
     }
 
     @Test
     fun `설문 결과 상세의 contents는 비어있을 수 없다`() {
         // given
-        val questionId = UUID.randomUUID()
         val participantId = UUID.randomUUID()
         val contents = emptyList<String>()
 
         // when, then
         assertThrows<InvalidResultDetailsException> {
-            ResultDetails(questionId, participantId, contents)
+            ResultDetails(participantId, contents)
         }
     }
 
@@ -110,9 +120,6 @@ class SurveyResultTest {
         val isMan3 = genderQuestionDetails3.isMatched(MAN_FILTER)
         val isKOrJFood3 = foodQuestionDetails3.isMatched(K_J_FOOD_FILTER)
 
-        // 다른 질문인 경우
-        val differentQuestion = foodQuestionDetails3.isMatched(MAN_FILTER)
-
         // then
         // 1번 참가자의 응답(학생, 남자, 한식 & 일식, 맛있어요!)
         assertEquals(true, isStudent1)
@@ -128,9 +135,6 @@ class SurveyResultTest {
         assertEquals(true, isStudent3)
         assertEquals(false, isMan3)
         assertEquals(false, isKOrJFood3)
-
-        // 다른 질문인 경우 false
-        assertEquals(false, differentQuestion)
     }
 
     @Test
@@ -139,24 +143,25 @@ class SurveyResultTest {
         val surveyResult = SURVEY_RESULT
         val exceptStudentAndKOrJFoodFilter = ResultFilter(listOf(EXCEPT_STUDENT_FILTER, K_J_FOOD_FILTER))
         val exceptStudentAndManAndKOrJFoodFilter = ResultFilter(listOf(EXCEPT_STUDENT_FILTER, MAN_FILTER, K_J_FOOD_FILTER))
-        val emptyFilter = ResultFilter(listOf())
+        val invalidFilter = ResultFilter(listOf(QuestionFilter(UUID.randomUUID(), listOf("invalid_content"), true)))
 
         // when
         val filteredResult1 = surveyResult.getFilteredResult(exceptStudentAndKOrJFoodFilter)
         val filteredResult2 = surveyResult.getFilteredResult(exceptStudentAndManAndKOrJFoodFilter)
-        val filteredResult3 = surveyResult.getFilteredResult(emptyFilter)
+        val filteredResult3 = surveyResult.getFilteredResult(invalidFilter)
 
         // then
-        with(filteredResult1.resultDetails) {
-            assertEquals(4, size)
+        with(filteredResult1.questionResults.map { it.resultDetails }.flatten()) {
             assertTrue { this.containsAll(PARTICIPANT_RESULT_DETAILS_2) }
         }
-        with(filteredResult2.resultDetails) {
+        with(filteredResult2.questionResults.map { it.resultDetails }.flatten()) {
             assertEquals(0, size)
         }
-        with(filteredResult3.resultDetails) {
-            assertEquals(12, size)
+        // 이상한 필터는 무시한다.
+        with(filteredResult3.questionResults.map { it.resultDetails }.flatten()) {
+            assertTrue { this.containsAll(PARTICIPANT_RESULT_DETAILS_1) }
             assertTrue { this.containsAll(PARTICIPANT_RESULT_DETAILS_2) }
+            assertTrue { this.containsAll(PARTICIPANT_RESULT_DETAILS_3) }
         }
     }
 
@@ -166,14 +171,26 @@ class SurveyResultTest {
         val surveyResult = SURVEY_RESULT
 
         // when
-        val jobQuestionResponses = surveyResult.findResultDetailsByQuestionId(JOB_QUESTION_ID)
+        val jobQuestionResponses = surveyResult.findQuestionResult(JOB_QUESTION_ID)
 
         // then
-        assertEquals(3, jobQuestionResponses.size)
-        with(jobQuestionResponses.map { it.contents }.flatten()) {
+        assertEquals(3, jobQuestionResponses?.resultDetails?.size)
+        with(jobQuestionResponses!!.resultDetails.map { it.contents }.flatten()) {
             assertEquals(true, containsAll(PARTICIPANT_RESULT_DETAILS_1[0].contents))
             assertEquals(true, containsAll(PARTICIPANT_RESULT_DETAILS_2[0].contents))
             assertEquals(true, containsAll(PARTICIPANT_RESULT_DETAILS_3[0].contents))
         }
+    }
+
+    @Test
+    fun `설문 결과는 해당 설문의 참여자 수를 가져올 수 있다`() {
+        // given
+        val surveyResult = SURVEY_RESULT
+
+        // when
+        val participantCount = surveyResult.getParticipantCount()
+
+        // then
+        assertEquals(3, participantCount)
     }
 }
