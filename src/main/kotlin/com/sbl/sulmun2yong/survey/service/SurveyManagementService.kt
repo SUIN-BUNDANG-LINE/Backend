@@ -5,10 +5,6 @@ import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
-import com.sbl.sulmun2yong.survey.domain.reward.Reward
-import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
-import com.sbl.sulmun2yong.survey.domain.section.SectionId
-import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
@@ -36,24 +32,16 @@ class SurveyManagementService(
         val survey = surveyAdapter.getSurvey(surveyId)
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
-        val rewards = surveySaveRequest.rewardSetting.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
         val newSurvey =
             with(surveySaveRequest) {
-                val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.sectionId) })
                 survey.updateContent(
                     title = this.title,
                     description = this.description,
                     thumbnail = this.thumbnail,
                     finishMessage = this.finishMessage,
-                    rewardSetting =
-                        RewardSetting.of(
-                            this.rewardSetting.type,
-                            rewards,
-                            this.rewardSetting.targetParticipantCount,
-                            this.rewardSetting.finishedAt,
-                        ),
+                    rewardSetting = this.rewardSetting.toDomain(survey.status),
                     isVisible = this.isVisible,
-                    sections = this.sections.map { it.toDomain(sectionIds) },
+                    sections = this.sections.toDomain(),
                 )
             }
         surveyAdapter.save(newSurvey)

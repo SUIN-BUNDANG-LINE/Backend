@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey.domain.reward
 
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.exception.InvalidRewardSettingException
 import java.util.Date
 
@@ -18,31 +19,26 @@ interface RewardSetting {
             rewards: List<Reward>,
             targetParticipantCount: Int?,
             finishedAt: Date?,
-        ) = when (type) {
-            RewardSettingType.NO_REWARD -> {
-                if (rewards.isEmpty() && targetParticipantCount == null && finishedAt == null) {
-                    NoRewardSetting
-                } else {
+            surveyStatus: SurveyStatus = SurveyStatus.IN_PROGRESS,
+        ): RewardSetting {
+            if (surveyStatus == SurveyStatus.NOT_STARTED) {
+                val finishedAtValue = finishedAt?.let { FinishedAt(it) }
+                return NotStartedDrawSetting(type, rewards, targetParticipantCount, finishedAtValue)
+            }
+            when (type) {
+                RewardSettingType.NO_REWARD -> {
+                    val isNoReward = rewards.isEmpty() && targetParticipantCount == null && finishedAt == null
+                    if (isNoReward) return NoRewardSetting
                     throw InvalidRewardSettingException()
                 }
-            }
-            RewardSettingType.SELF_MANAGEMENT -> {
-                if (rewards.isNotEmpty() &&
-                    targetParticipantCount == null &&
-                    finishedAt != null
-                ) {
-                    SelfManagementSetting(rewards, FinishedAt(finishedAt))
-                } else {
+                RewardSettingType.SELF_MANAGEMENT -> {
+                    val isSelfManagement = rewards.isNotEmpty() && targetParticipantCount == null && finishedAt != null
+                    if (isSelfManagement) return SelfManagementSetting(rewards, FinishedAt(finishedAt!!))
                     throw InvalidRewardSettingException()
                 }
-            }
-            RewardSettingType.IMMEDIATE_DRAW -> {
-                if (rewards.isNotEmpty() &&
-                    targetParticipantCount != null &&
-                    finishedAt != null
-                ) {
-                    ImmediateDrawSetting(rewards, targetParticipantCount, FinishedAt(finishedAt))
-                } else {
+                RewardSettingType.IMMEDIATE_DRAW -> {
+                    val isImmediateDraw = rewards.isNotEmpty() && targetParticipantCount != null && finishedAt != null
+                    if (isImmediateDraw) return ImmediateDrawSetting(rewards, targetParticipantCount!!, FinishedAt(finishedAt!!))
                     throw InvalidRewardSettingException()
                 }
             }

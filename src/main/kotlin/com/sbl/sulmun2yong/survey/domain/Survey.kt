@@ -14,6 +14,7 @@ import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
+import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
 import java.util.Date
 import java.util.UUID
 
@@ -32,14 +33,19 @@ data class Survey(
     val sections: List<Section>,
 ) {
     init {
-        require(sections.isNotEmpty()) { throw InvalidSurveyException() }
         require(isSectionsUnique()) { throw InvalidSurveyException() }
         require(isSurveyStatusValid()) { throw InvalidSurveyException() }
         require(isFinishedAtAfterPublishedAt()) { throw InvalidPublishedAtException() }
         require(isSectionIdsValid()) { throw InvalidSurveyException() }
+        // 설문이 진행 중인 경우만 섹션이 비었는지, 선택지가 중복되는지 확인
+        if (status == SurveyStatus.IN_PROGRESS) {
+            require(sections.isNotEmpty()) { throw InvalidSurveyException() }
+            require(isAllChoicesUnique()) { throw InvalidSurveyException() }
+        }
     }
 
     companion object {
+        // TODO: 기본 섬네일 URL은 프론트에서 처리하도록 변경
         const val DEFAULT_THUMBNAIL_URL = "https://test-oriddle-bucket.s3.ap-northeast-2.amazonaws.com/surveyImage.webp"
         const val DEFAULT_TITLE = "제목 없는 설문"
         const val DEFAULT_DESCRIPTION = ""
@@ -63,6 +69,8 @@ data class Survey(
 
     /** 설문의 응답 순서가 유효한지, 응답이 각 섹션에 유효한지 확인하는 메서드 */
     fun validateResponse(surveyResponse: SurveyResponse) {
+        // 진행 중인 설문이 아니면 응답이 유효한지 확인할 수 없다.
+        require(status == SurveyStatus.IN_PROGRESS) { throw SurveyClosedException() }
         // 확인할 응답의 예상 섹션 ID, 첫 응답의 섹션 ID는 첫 섹션의 ID
         var expectedSectionId: SectionId = sections.first().id
         for (sectionResponse in surveyResponse) {
@@ -111,7 +119,19 @@ data class Survey(
     /** 설문을 IN_PROGRESS 상태로 변경하는 메서드. 설문이 시작 전이거나 수정 중인 경우만 가능하다. */
     fun start() =
         when (status) {
-            SurveyStatus.NOT_STARTED -> copy(status = SurveyStatus.IN_PROGRESS, publishedAt = DateUtil.getCurrentDate())
+            SurveyStatus.NOT_STARTED ->
+                copy(
+                    status = SurveyStatus.IN_PROGRESS,
+                    publishedAt = DateUtil.getCurrentDate(),
+                    rewardSetting =
+                        RewardSetting.of(
+                            type = rewardSetting.type,
+                            rewards = rewardSetting.rewards,
+                            targetParticipantCount = rewardSetting.targetParticipantCount,
+                            finishedAt = rewardSetting.finishedAt?.value,
+                            surveyStatus = SurveyStatus.IN_PROGRESS,
+                        ),
+                )
             SurveyStatus.IN_MODIFICATION -> copy(status = SurveyStatus.IN_PROGRESS)
             SurveyStatus.IN_PROGRESS -> throw InvalidSurveyStartException()
             SurveyStatus.CLOSED -> throw InvalidSurveyStartException()
@@ -136,7 +156,10 @@ data class Survey(
     }
 
     private fun isSectionIdsValid(): Boolean {
+        if (sections.isEmpty()) return true
         val sectionIds = SectionIds.from(sections.map { it.id })
         return sections.all { it.sectionIds == sectionIds }
     }
+
+    private fun isAllChoicesUnique() = sections.all { section -> section.questions.all { it.choices?.isUnique() ?: true } }
 }

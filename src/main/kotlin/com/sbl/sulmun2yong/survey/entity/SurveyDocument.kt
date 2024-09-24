@@ -152,7 +152,13 @@ data class SurveyDocument(
     )
 
     fun toDomain(): Survey {
-        val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
+        val sections =
+            if (this.sections.isEmpty()) {
+                listOf()
+            } else {
+                val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
+                this.sections.map { it.toDomain(sectionIds) }
+            }
         return Survey(
             id = this.id,
             title = this.title,
@@ -167,12 +173,21 @@ data class SurveyDocument(
                     this.rewards.map { it.toDomain() },
                     this.targetParticipantCount,
                     this.finishedAt,
+                    this.status,
                 ),
             isVisible = this.isVisible,
             makerId = this.makerId,
-            sections = this.sections.map { it.toDomain(sectionIds) },
+            sections = this.sections.toDomain(),
         )
     }
+
+    private fun List<SectionSubDocument>.toDomain() =
+        if (this.isEmpty()) {
+            listOf()
+        } else {
+            val sectionIds = SectionIds.from(this.map { SectionId.Standard(it.sectionId) })
+            this.map { it.toDomain(sectionIds) }
+        }
 
     private fun RewardSubDocument.toDomain() =
         Reward(
