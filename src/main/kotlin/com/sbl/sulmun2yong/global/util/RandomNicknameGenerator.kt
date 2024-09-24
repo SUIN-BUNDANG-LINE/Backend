@@ -71,7 +71,7 @@ class RandomNicknameGenerator {
                 "열정있는",
             )
 
-        val animalNames =
+        private val animalNames =
             listOf(
                 "고양이",
                 "강아지",

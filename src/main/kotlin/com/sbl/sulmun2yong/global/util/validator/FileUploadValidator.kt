@@ -1,15 +1,15 @@
-package com.sbl.sulmun2yong.global.util
+package com.sbl.sulmun2yong.global.util.validator
 
-import com.sbl.sulmun2yong.aws.exception.FileNameTooLongException
-import com.sbl.sulmun2yong.aws.exception.FileNameTooShortException
-import com.sbl.sulmun2yong.aws.exception.InvalidExtensionException
-import com.sbl.sulmun2yong.aws.exception.NoExtensionExistException
-import com.sbl.sulmun2yong.aws.exception.NoFileExistException
-import com.sbl.sulmun2yong.aws.exception.OutOfFileSizeException
+import com.sbl.sulmun2yong.global.util.exception.FileNameTooLongException
+import com.sbl.sulmun2yong.global.util.exception.FileNameTooShortException
+import com.sbl.sulmun2yong.global.util.exception.InvalidExtensionException
+import com.sbl.sulmun2yong.global.util.exception.NoExtensionExistException
+import com.sbl.sulmun2yong.global.util.exception.NoFileExistException
+import com.sbl.sulmun2yong.global.util.exception.OutOfFileSizeException
 import org.springframework.util.unit.DataSize
 import org.springframework.web.multipart.MultipartFile
 
-class FileValidator(
+class FileUploadValidator(
     private val maxFileSize: Long,
     private val maxFileNameLength: Int,
     private val allowedExtensions: MutableList<String>,
@@ -21,12 +21,12 @@ class FileValidator(
             maxFileNameLength: Int,
             allowedExtensions: String,
             allowedContentTypes: String,
-        ): FileValidator {
+        ): FileUploadValidator {
             val fileSize = maxFileSize.toBytes()
             val extensions = allowedExtensions.split(",").toMutableList()
             val contentTypes = allowedContentTypes.split(",").toMutableList()
 
-            return FileValidator(
+            return FileUploadValidator(
                 fileSize,
                 maxFileNameLength,
                 extensions,
