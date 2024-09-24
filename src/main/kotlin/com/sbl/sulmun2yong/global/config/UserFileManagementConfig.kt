@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.global.config
 
-import com.sbl.sulmun2yong.global.util.FileValidator
+import com.sbl.sulmun2yong.global.util.validator.FileUploadValidator
+import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -11,7 +12,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 
 @Configuration
-class S3Config(
+class UserFileManagementConfig(
     // S3 클라이언트 관련
     @Value("\${aws.s3.access-key}")
     private val accessKey: String,
@@ -30,7 +31,7 @@ class S3Config(
     private val cloudFrontBaseUrl: String,
 ) {
     @Bean
-    fun s3Client(): S3Client {
+    fun createS3Client(): S3Client {
         val awsCredentials = AwsBasicCredentials.create(accessKey, secretKey)
 
         return S3Client
@@ -41,12 +42,14 @@ class S3Config(
     }
 
     @Bean
-    fun fileValidateValues(): FileValidator =
-        FileValidator.from(
+    fun createFileUploadValidator(): FileUploadValidator =
+        FileUploadValidator.from(
             maxFileSize = maxFileSize,
             maxFileNameLength = maxFileNameLength,
             allowedExtensions = allowedExtensions,
             allowedContentTypes = allowedContentTypes,
-            cloudFrontBaseUrl = cloudFrontBaseUrl,
         )
+
+    @Bean
+    fun createFileUrlValidator(): FileUrlValidator = FileUrlValidator.of(cloudFrontBaseUrl)
 }

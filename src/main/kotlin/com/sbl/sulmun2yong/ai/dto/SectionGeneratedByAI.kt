@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.entity
+package com.sbl.sulmun2yong.ai.dto
 
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section

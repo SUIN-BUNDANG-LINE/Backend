@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.aws.service
 
 import com.sbl.sulmun2yong.aws.dto.response.S3UploadResponse
-import com.sbl.sulmun2yong.global.util.FileValidator
+import com.sbl.sulmun2yong.global.util.validator.FileUploadValidator
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -18,10 +18,10 @@ class S3Service(
     private val bucketName: String,
     @Value("\${cloudfront.base-url}")
     private val cloudFrontUrl: String,
-    private val fileValidator: FileValidator,
+    private val fileUploadValidator: FileUploadValidator,
 ) {
     fun uploadFile(receivedFile: MultipartFile): S3UploadResponse {
-        fileValidator.validateFileOf(receivedFile)
+        fileUploadValidator.validateFileOf(receivedFile)
 
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssSSS"))
         val keyName = "${timestamp}_${receivedFile.originalFilename}"

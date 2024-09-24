@@ -56,14 +56,14 @@ enum class ErrorCode(
     // Data (DT)
     INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "DT0001", "유효하지 않은 전화번호입니다."),
 
-    // AWS S3 (S3)
-    INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "S30001", "허용하지 않는 확장자입니다."),
-    OUT_OF_FILE_SIZE(HttpStatus.BAD_REQUEST, "S30002", "파일 크기가 너무 큽니다."),
-    FILE_NAME_TOO_SHORT(HttpStatus.BAD_REQUEST, "S30003", "파일 이름이 너무 짧습니다."),
-    FILE_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "S30004", "파일 이름이 너무 깁니다."),
-    NO_FILE_EXIST(HttpStatus.BAD_REQUEST, "S30005", "파일이 존재하지 않습니다."),
-    NO_EXTENSION_EXIST(HttpStatus.BAD_REQUEST, "S30006", "파일 확장자가 존재하지 않습니다."),
-    INVALID_FILE_URL(HttpStatus.BAD_REQUEST, "S30001", "유효하지 않은 파일 주소입니다."),
+    // File Validator (FV)
+    INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "FV0001", "허용하지 않는 확장자입니다."),
+    OUT_OF_FILE_SIZE(HttpStatus.BAD_REQUEST, "FV0002", "파일 크기가 너무 큽니다."),
+    FILE_NAME_TOO_SHORT(HttpStatus.BAD_REQUEST, "FV0003", "파일 이름이 너무 짧습니다."),
+    FILE_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "FV0004", "파일 이름이 너무 깁니다."),
+    NO_FILE_EXIST(HttpStatus.BAD_REQUEST, "FV0005", "파일이 존재하지 않습니다."),
+    NO_EXTENSION_EXIST(HttpStatus.BAD_REQUEST, "FV0006", "파일 확장자가 존재하지 않습니다."),
+    INVALID_FILE_URL(HttpStatus.BAD_REQUEST, "FV0007", "유효하지 않은 파일 주소입니다."),
 
     // Python Server (PY)
     SURVEY_GENERATION_BY_AI_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PY0001", "AI를 활용한 설문 생성에 실패했습니다."),

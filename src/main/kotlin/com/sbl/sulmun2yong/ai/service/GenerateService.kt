@@ -1,13 +1,13 @@
 package com.sbl.sulmun2yong.ai.service
 
 import com.sbl.sulmun2yong.ai.adapter.GenerateAdapter
-import com.sbl.sulmun2yong.global.util.FileValidator
+import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.stereotype.Service
 
 @Service
 class GenerateService(
-    private val fileValidator: FileValidator,
+    private val fileUrlValidator: FileUrlValidator,
     private val generateAdapter: GenerateAdapter,
 ) {
     fun generateSurvey(
@@ -16,7 +16,7 @@ class GenerateService(
         fileUrl: String,
     ): SurveyMakeInfoResponse {
         val allowedExtensions = mutableListOf(".txt", ".pdf")
-        fileValidator.validateFileUrlOf(fileUrl, allowedExtensions)
+        fileUrlValidator.validateFileUrlOf(fileUrl, allowedExtensions)
 
         return generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl)
     }

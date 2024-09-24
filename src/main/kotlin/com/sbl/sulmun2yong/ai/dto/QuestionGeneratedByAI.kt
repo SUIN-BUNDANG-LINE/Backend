@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.entity
+package com.sbl.sulmun2yong.ai.dto
 
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice

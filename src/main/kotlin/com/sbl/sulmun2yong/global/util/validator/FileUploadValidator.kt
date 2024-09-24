@@ -1,21 +1,19 @@
-package com.sbl.sulmun2yong.global.util
+package com.sbl.sulmun2yong.global.util.validator
 
 import com.sbl.sulmun2yong.global.util.exception.FileNameTooLongException
 import com.sbl.sulmun2yong.global.util.exception.FileNameTooShortException
 import com.sbl.sulmun2yong.global.util.exception.InvalidExtensionException
-import com.sbl.sulmun2yong.global.util.exception.InvalidFileUrlException
 import com.sbl.sulmun2yong.global.util.exception.NoExtensionExistException
 import com.sbl.sulmun2yong.global.util.exception.NoFileExistException
 import com.sbl.sulmun2yong.global.util.exception.OutOfFileSizeException
 import org.springframework.util.unit.DataSize
 import org.springframework.web.multipart.MultipartFile
 
-class FileValidator(
+class FileUploadValidator(
     private val maxFileSize: Long,
     private val maxFileNameLength: Int,
     private val allowedExtensions: MutableList<String>,
     private val allowedContentTypes: MutableList<String>,
-    private val cloudFrontBaseUrl: String,
 ) {
     companion object {
         fun from(
@@ -23,18 +21,16 @@ class FileValidator(
             maxFileNameLength: Int,
             allowedExtensions: String,
             allowedContentTypes: String,
-            cloudFrontBaseUrl: String,
-        ): FileValidator {
+        ): FileUploadValidator {
             val fileSize = maxFileSize.toBytes()
             val extensions = allowedExtensions.split(",").toMutableList()
             val contentTypes = allowedContentTypes.split(",").toMutableList()
 
-            return FileValidator(
+            return FileUploadValidator(
                 fileSize,
                 maxFileNameLength,
                 extensions,
                 contentTypes,
-                cloudFrontBaseUrl,
             )
         }
     }
@@ -63,18 +59,6 @@ class FileValidator(
             throw FileNameTooLongException()
         }
         if (!checkIsAllowedExtensionOrType(contentType)) {
-            throw InvalidExtensionException()
-        }
-    }
-
-    fun validateFileUrlOf(
-        fileUrl: String,
-        allowedExtensions: MutableList<String>,
-    ) {
-        if (fileUrl.startsWith(cloudFrontBaseUrl).not()) {
-            throw InvalidFileUrlException()
-        }
-        if (allowedExtensions.none { fileUrl.endsWith(it) }) {
             throw InvalidExtensionException()
         }
     }

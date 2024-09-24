@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-import com.sbl.sulmun2yong.ai.entity.SurveyGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.SurveyGeneratedByAI
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate
 class GenerateAdapter(
     @Value("\${ai-server.base-url}")
     private val aiServerBaseUrl: String,
+    private val restTemplate: RestTemplate,
 ) {
     private val url = "$aiServerBaseUrl/generate/survey"
 
@@ -30,7 +31,7 @@ class GenerateAdapter(
 
         val surveyGeneratedByAI =
             try {
-                RestTemplate()
+                restTemplate
                     .postForEntity(
                         url,
                         requestBody,

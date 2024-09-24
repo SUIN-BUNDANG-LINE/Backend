@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.entity
+package com.sbl.sulmun2yong.ai.dto
 
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
