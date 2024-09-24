@@ -10,6 +10,8 @@ class SectionGeneratedByAI(
     val description: String,
     val questions: List<QuestionGeneratedByAI>,
 ) {
+    private val defaultRoutingStrategy = RoutingStrategy.NumericalOrder
+
     fun toDomain(
         sectionId: SectionId.Standard,
         sectionIds: SectionIds,
@@ -18,7 +20,7 @@ class SectionGeneratedByAI(
             id = sectionId,
             title = title,
             description = description,
-            routingStrategy = RoutingStrategy.NumericalOrder,
+            routingStrategy = defaultRoutingStrategy,
             questions = questions.map { it.toDomain() },
             sectionIds = sectionIds,
         )
