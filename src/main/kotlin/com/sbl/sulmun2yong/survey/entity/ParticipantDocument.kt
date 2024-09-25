@@ -27,5 +27,6 @@ data class ParticipantDocument(
             id = this.id,
             surveyId = this.surveyId,
             userId = this.userId,
+            createdAt = this.createdAt,
         )
 }

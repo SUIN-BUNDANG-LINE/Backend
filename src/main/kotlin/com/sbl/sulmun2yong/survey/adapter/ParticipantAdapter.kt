@@ -21,9 +21,8 @@ class ParticipantAdapter(
             .orElseThrow { InvalidParticipantException() }
             .toDomain()
 
-    fun findBySurveyId(surveyId: UUID): Participant? =
+    fun findBySurveyId(surveyId: UUID): List<Participant> =
         participantRepository
             .findBySurveyId(surveyId)
             .map { it.toDomain() }
-            .orElse(null)
 }

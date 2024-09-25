@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.survey.domain
 
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
 
@@ -12,6 +13,7 @@ class ParticipantTest {
         val participantId = UUID.randomUUID()
         val surveyId = UUID.randomUUID()
         val userId = UUID.randomUUID()
+        val createdAt = Date()
 
         Mockito.mockStatic(UUID::class.java).use { mockedUUID ->
             mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(participantId)
@@ -26,5 +28,7 @@ class ParticipantTest {
                 assertEquals(userId, this.userId)
             }
         }
+
+        assertEquals(createdAt, Participant(participantId, surveyId, userId, createdAt).createdAt)
     }
 }
