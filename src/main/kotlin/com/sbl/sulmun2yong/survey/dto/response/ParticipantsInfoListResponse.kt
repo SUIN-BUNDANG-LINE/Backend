@@ -9,7 +9,7 @@ import java.util.UUID
 
 data class ParticipantsInfoListResponse(
     val participants: List<ParticipantInfoResponse>,
-    val isImmediateDraw: Boolean,
+    val targetParticipant: Int?,
 ) {
     data class ParticipantInfoResponse(
         val participantId: UUID,
@@ -59,6 +59,7 @@ data class ParticipantsInfoListResponse(
         fun of(
             participants: List<Participant>,
             drawingHistories: DrawingHistoryGroup?,
+            targetParticipant: Int?,
         ): ParticipantsInfoListResponse {
             if (drawingHistories == null) {
                 return ParticipantsInfoListResponse(
@@ -70,7 +71,7 @@ data class ParticipantsInfoListResponse(
                                 drawInfo = null,
                             )
                         },
-                    isImmediateDraw = false,
+                    targetParticipant = targetParticipant,
                 )
             }
 
@@ -86,7 +87,7 @@ data class ParticipantsInfoListResponse(
                             drawInfo = DrawInfoResponse.from(drawingHistory),
                         )
                     },
-                isImmediateDraw = true,
+                targetParticipant = targetParticipant,
             )
         }
     }

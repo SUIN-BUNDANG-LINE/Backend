@@ -20,6 +20,6 @@ class SurveyParticipantService(
         val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         val participants = participantAdapter.findBySurveyId(surveyId)
         val drawingHistories = if (survey.isImmediateDraw()) drawingHistoryAdapter.getBySurveyId(surveyId, false) else null
-        return ParticipantsInfoListResponse.of(participants, drawingHistories)
+        return ParticipantsInfoListResponse.of(participants, drawingHistories, survey.rewardSetting.targetParticipantCount)
     }
 }
