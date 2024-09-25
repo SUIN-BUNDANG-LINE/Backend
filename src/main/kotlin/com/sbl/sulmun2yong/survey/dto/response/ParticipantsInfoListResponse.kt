@@ -7,8 +7,9 @@ import com.sbl.sulmun2yong.survey.domain.Participant
 import java.util.Date
 import java.util.UUID
 
-data class ParticipantInfoListResponse(
+data class ParticipantsInfoListResponse(
     val participants: List<ParticipantInfoResponse>,
+    val isImmediateDraw: Boolean,
 ) {
     data class ParticipantInfoResponse(
         val participantId: UUID,
@@ -58,30 +59,34 @@ data class ParticipantInfoListResponse(
         fun of(
             participants: List<Participant>,
             drawingHistories: DrawingHistoryGroup?,
-        ): ParticipantInfoListResponse {
+        ): ParticipantsInfoListResponse {
             if (drawingHistories == null) {
-                return ParticipantInfoListResponse(
-                    participants.map {
-                        ParticipantInfoResponse(
-                            participantId = it.id,
-                            participatedAt = it.createdAt,
-                            drawInfo = null,
-                        )
-                    },
+                return ParticipantsInfoListResponse(
+                    participants =
+                        participants.map {
+                            ParticipantInfoResponse(
+                                participantId = it.id,
+                                participatedAt = it.createdAt,
+                                drawInfo = null,
+                            )
+                        },
+                    isImmediateDraw = false,
                 )
             }
 
             val drawingHistoryMap = drawingHistories.histories.associateBy { it.participantId }
 
-            return ParticipantInfoListResponse(
-                participants.map {
-                    val drawingHistory = drawingHistoryMap[it.id]
-                    ParticipantInfoResponse(
-                        participantId = it.id,
-                        participatedAt = it.createdAt,
-                        drawInfo = DrawInfoResponse.from(drawingHistory),
-                    )
-                },
+            return ParticipantsInfoListResponse(
+                participants =
+                    participants.map {
+                        val drawingHistory = drawingHistoryMap[it.id]
+                        ParticipantInfoResponse(
+                            participantId = it.id,
+                            participatedAt = it.createdAt,
+                            drawInfo = DrawInfoResponse.from(drawingHistory),
+                        )
+                    },
+                isImmediateDraw = true,
             )
         }
     }

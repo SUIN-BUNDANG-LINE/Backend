@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.survey.controller.doc
 
 import com.sbl.sulmun2yong.global.annotation.LoginUser
-import com.sbl.sulmun2yong.survey.dto.response.ParticipantInfoListResponse
+import com.sbl.sulmun2yong.survey.dto.response.ParticipantsInfoListResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
@@ -16,5 +16,5 @@ interface SurveyParticipantApiDoc {
     fun getSurveyParticipants(
         @PathVariable("survey-id") surveyId: UUID,
         @LoginUser id: UUID,
-    ): ResponseEntity<ParticipantInfoListResponse>
+    ): ResponseEntity<ParticipantsInfoListResponse>
 }
