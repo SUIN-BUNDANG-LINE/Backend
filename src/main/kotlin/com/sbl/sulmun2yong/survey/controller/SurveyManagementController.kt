@@ -55,4 +55,10 @@ class SurveyManagementController(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
     ) = ResponseEntity.ok(surveyManagementService.editSurvey(surveyId = surveyId, makerId = id))
+
+    @PatchMapping("/finish/{surveyId}")
+    override fun finishSurvey(
+        @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
+    ) = ResponseEntity.ok(surveyManagementService.finishSurvey(surveyId = surveyId, makerId = id))
 }

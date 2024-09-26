@@ -87,4 +87,12 @@ class SurveyManagementService(
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
         surveyAdapter.save(survey.edit())
     }
+
+    fun finishSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        surveyAdapter.save(survey.finish())
+    }
 }
