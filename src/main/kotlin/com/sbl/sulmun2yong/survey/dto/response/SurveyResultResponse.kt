@@ -17,7 +17,8 @@ data class SurveyResultResponse(
         fun of(
             surveyResult: SurveyResult,
             survey: Survey,
-        ) = SurveyResultResponse(survey.sections.map { SectionResultResponse.of(surveyResult, it) }, surveyResult.getParticipantCount())
+            participantCount: Int,
+        ) = SurveyResultResponse(survey.sections.map { SectionResultResponse.of(surveyResult, it) }, participantCount)
     }
 
     data class SectionResultResponse(
