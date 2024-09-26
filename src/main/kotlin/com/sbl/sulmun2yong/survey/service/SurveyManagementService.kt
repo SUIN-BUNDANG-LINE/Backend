@@ -8,7 +8,6 @@ import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
-import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -29,9 +28,7 @@ class SurveyManagementService(
         surveySaveRequest: SurveySaveRequest,
         makerId: UUID,
     ) {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         val newSurvey =
             with(surveySaveRequest) {
                 survey.updateContent(
@@ -51,9 +48,7 @@ class SurveyManagementService(
         surveyId: UUID,
         makerId: UUID,
     ): SurveyMakeInfoResponse {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         return SurveyMakeInfoResponse.of(survey)
     }
 
@@ -62,9 +57,7 @@ class SurveyManagementService(
         surveyId: UUID,
         makerId: UUID,
     ) {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         val startedSurvey = survey.start()
         surveyAdapter.save(startedSurvey)
         if (startedSurvey.rewardSetting is ImmediateDrawSetting) {
@@ -82,9 +75,15 @@ class SurveyManagementService(
         surveyId: UUID,
         makerId: UUID,
     ) {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         surveyAdapter.save(survey.edit())
+    }
+
+    fun finishSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        surveyAdapter.save(survey.finish())
     }
 }

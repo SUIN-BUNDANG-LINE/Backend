@@ -51,4 +51,11 @@ interface SurveyManagementApiDoc {
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
     ): ResponseEntity<Unit>
+
+    @Operation(summary = "설문 종료 API")
+    @PatchMapping("/finish/{surveyId}")
+    fun finishSurvey(
+        @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
+    ): ResponseEntity<Unit>
 }

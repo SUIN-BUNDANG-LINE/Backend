@@ -17,7 +17,8 @@ data class SurveyResultResponse(
         fun of(
             surveyResult: SurveyResult,
             survey: Survey,
-        ) = SurveyResultResponse(survey.sections.map { SectionResultResponse.of(surveyResult, it) }, surveyResult.getParticipantCount())
+            participantCount: Int,
+        ) = SurveyResultResponse(survey.sections.map { SectionResultResponse.of(surveyResult, it) }, participantCount)
     }
 
     data class SectionResultResponse(
@@ -33,11 +34,7 @@ data class SurveyResultResponse(
                 SectionResultResponse(
                     sectionId = section.id.value,
                     title = section.title,
-                    questionResults =
-                        section.questions.mapNotNull { question ->
-                            val questionResult = surveyResult.findQuestionResult(question.id)
-                            questionResult?.let { QuestionResultResponse.of(question, it) }
-                        },
+                    questionResults = section.questions.map { QuestionResultResponse.of(it, surveyResult.findQuestionResult(it.id)) },
                 )
         }
     }
@@ -53,8 +50,19 @@ data class SurveyResultResponse(
         companion object {
             fun of(
                 question: Question,
-                questionResult: QuestionResult,
+                questionResult: QuestionResult?,
             ): QuestionResultResponse {
+                if (questionResult == null) {
+                    return QuestionResultResponse(
+                        questionId = question.id,
+                        title = question.title,
+                        type = question.questionType,
+                        participantCount = 0,
+                        responses = listOf(),
+                        responseContents = question.choices?.standardChoices?.map { it.content } ?: listOf(),
+                    )
+                }
+
                 val allContents =
                     if (question is ChoiceQuestion) {
                         val tempContents = question.choices.standardChoices.map { it.content }
