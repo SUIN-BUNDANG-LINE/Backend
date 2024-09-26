@@ -65,13 +65,14 @@ class SurveyManagementService(
         val survey = surveyAdapter.getSurvey(surveyId)
         // 현재 유저와 설문 제작자가 다를 경우 예외 발생
         if (survey.makerId != makerId) throw InvalidSurveyAccessException()
-        surveyAdapter.save(survey.start())
-        if (survey.rewardSetting is ImmediateDrawSetting) {
+        val startedSurvey = survey.start()
+        surveyAdapter.save(startedSurvey)
+        if (startedSurvey.rewardSetting is ImmediateDrawSetting) {
             val drawingBoard =
                 DrawingBoard.create(
-                    surveyId = survey.id,
-                    boardSize = survey.rewardSetting.targetParticipantCount,
-                    rewards = survey.rewardSetting.rewards,
+                    surveyId = startedSurvey.id,
+                    boardSize = startedSurvey.rewardSetting.targetParticipantCount,
+                    rewards = startedSurvey.rewardSetting.rewards,
                 )
             drawingBoardAdapter.save(drawingBoard)
         }
