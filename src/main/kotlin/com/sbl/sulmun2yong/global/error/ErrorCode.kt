@@ -68,7 +68,7 @@ enum class ErrorCode(
 
     // Python Server (PY)
     SURVEY_GENERATION_BY_AI_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PY0001", "AI를 활용한 설문 생성에 실패했습니다."),
-    TEXT_TOO_LONG(HttpStatus.BAD_REQUEST, "PY0002", "텍스트 길이는 1만 2천자 이하여야 합니다"),
+    TEXT_TOO_LONG(HttpStatus.BAD_REQUEST, "PY0002", "텍스트의 길이가 너무 깁니다"),
     FILE_EXTENSION_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "PY0003", "지원하지 않는 파일 확장자입니다."),
     FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0004", "파일을 찾을 수 없습니다."),
 }

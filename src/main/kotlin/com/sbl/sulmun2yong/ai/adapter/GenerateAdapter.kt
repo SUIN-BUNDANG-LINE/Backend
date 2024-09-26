@@ -15,25 +15,53 @@ class GenerateAdapter(
     private val aiServerBaseUrl: String,
     private val restTemplate: RestTemplate,
 ) {
-    private val url = "$aiServerBaseUrl/generate/survey"
-
     fun requestSurveyGenerationWithFileUrl(
         job: String,
         groupName: String,
         fileUrl: String,
+        userPrompt: String,
     ): SurveyMakeInfoResponse {
+        val requestUrl = "$aiServerBaseUrl/generate/survey/file-url"
+
         val requestBody =
             mapOf(
                 "job" to job,
                 "group_name" to groupName,
                 "file_url" to fileUrl,
+                "user_prompt" to userPrompt,
             )
 
+        return requestToGenerateSurvey(requestUrl, requestBody)
+    }
+
+    fun requestSurveyGenerationWithTextDocument(
+        job: String,
+        groupName: String,
+        textDocument: String,
+        userPrompt: String,
+    ): SurveyMakeInfoResponse {
+        val requestUrl = "$aiServerBaseUrl/generate/survey/text-document"
+
+        val requestBody =
+            mapOf(
+                "job" to job,
+                "group_name" to groupName,
+                "text_document" to textDocument,
+                "user_prompt" to userPrompt,
+            )
+
+        return requestToGenerateSurvey(requestUrl, requestBody)
+    }
+
+    private fun requestToGenerateSurvey(
+        requestUrl: String,
+        requestBody: Map<String, String>,
+    ): SurveyMakeInfoResponse {
         val surveyGeneratedByAI =
             try {
                 restTemplate
                     .postForEntity(
-                        url,
+                        requestUrl,
                         requestBody,
                         SurveyGeneratedByAI::class.java,
                     ).body ?: throw SurveyGenerationByAIFailedException()
