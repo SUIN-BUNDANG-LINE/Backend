@@ -12,7 +12,7 @@ class QuestionGeneratedByAI(
     private val questionType: QuestionType,
     private val title: String,
     private val isRequired: Boolean,
-    private val choices: List<String>,
+    private val choices: List<String>?,
     private val isAllowOther: Boolean,
 ) {
     fun toDomain() =
@@ -24,7 +24,7 @@ class QuestionGeneratedByAI(
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
                     // TODO: Document를 Domain클래스로 변환 중에 생긴 에러는 여기서 직접 반환하도록 수정
-                    choices = Choices(this.choices.map { Choice.Standard(it) }, isAllowOther),
+                    choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.MULTIPLE_CHOICE ->
                 StandardMultipleChoiceQuestion(
@@ -33,7 +33,7 @@ class QuestionGeneratedByAI(
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
                     // TODO: Document를 Domain클래스로 변환 중에 생긴 에러는 여기서 직접 반환하도록 수정
-                    choices = Choices(this.choices.map { Choice.Standard(it) }, isAllowOther),
+                    choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
                 )
             QuestionType.TEXT_RESPONSE ->
                 StandardTextQuestion(

@@ -10,14 +10,22 @@ class GenerateService(
     private val fileUrlValidator: FileUrlValidator,
     private val generateAdapter: GenerateAdapter,
 ) {
-    fun generateSurvey(
+    fun generateSurveyWithFileUrl(
         job: String,
         groupName: String,
         fileUrl: String,
+        userPrompt: String,
     ): SurveyMakeInfoResponse {
         val allowedExtensions = mutableListOf(".txt", ".pdf")
         fileUrlValidator.validateFileUrlOf(fileUrl, allowedExtensions)
 
-        return generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl)
+        return generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl, userPrompt)
     }
+
+    fun generateSurveyWithTextDocument(
+        job: String,
+        groupName: String,
+        textDocument: String,
+        userPrompt: String,
+    ): SurveyMakeInfoResponse = generateAdapter.requestSurveyGenerationWithTextDocument(job, groupName, textDocument, userPrompt)
 }
