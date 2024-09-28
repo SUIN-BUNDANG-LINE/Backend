@@ -19,7 +19,7 @@ class WebMvcConfig(
         registry
             .addMapping("/**")
             .allowedOrigins(frontendBaseUrl) // 프론트엔드 도메인
-            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
             .allowCredentials(true)
             .allowedHeaders("*")
     }
