@@ -7,6 +7,7 @@ import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -55,6 +56,13 @@ interface SurveyManagementApiDoc {
     @Operation(summary = "설문 종료 API")
     @PatchMapping("/finish/{surveyId}")
     fun finishSurvey(
+        @PathVariable("surveyId") surveyId: UUID,
+        @LoginUser id: UUID,
+    ): ResponseEntity<Unit>
+
+    @Operation(summary = "설문 삭제 API")
+    @DeleteMapping("/delete/{surveyId}")
+    fun deleteSurvey(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
     ): ResponseEntity<Unit>
