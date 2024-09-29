@@ -11,4 +11,9 @@ interface SurveyCustomRepository {
         status: SurveyStatus?,
         sortType: MySurveySortType,
     ): List<MyPageSurveyInfoResponse>
+
+    fun softDelete(
+        surveyId: UUID,
+        makerId: UUID,
+    ): Boolean
 }

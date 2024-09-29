@@ -64,4 +64,12 @@ class SurveyAdapter(
         status: SurveyStatus?,
         sortType: MySurveySortType,
     ) = surveyRepository.findSurveysWithResponseCount(makerId, status, sortType)
+
+    fun delete(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val isSuccess = surveyRepository.softDelete(surveyId, makerId)
+        if (!isSuccess) throw SurveyNotFoundException()
+    }
 }
