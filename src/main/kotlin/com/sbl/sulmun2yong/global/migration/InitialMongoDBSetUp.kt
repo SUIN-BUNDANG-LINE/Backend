@@ -7,6 +7,7 @@ import io.mongock.api.annotations.RollbackExecution
 import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.MongoTemplate
 
+/** 최초에 컬렉션들을 생성하는 Migration Class */
 @ChangeUnit(id = "InitialMongoDBSetUp", order = "001", author = "hunhui")
 class InitialMongoDBSetUp {
     companion object {
