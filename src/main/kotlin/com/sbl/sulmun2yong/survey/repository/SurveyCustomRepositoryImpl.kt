@@ -19,7 +19,7 @@ class SurveyCustomRepositoryImpl(
     ): List<MyPageSurveyInfoResponse> {
         val matchStage =
             Aggregation.match(
-                Criteria.where("makerId").`is`(makerId).apply {
+                Criteria.where("makerId").`is`(makerId).and("isDeleted").`is`(false).apply {
                     status?.let { and("status").`is`(it) }
                 },
             )

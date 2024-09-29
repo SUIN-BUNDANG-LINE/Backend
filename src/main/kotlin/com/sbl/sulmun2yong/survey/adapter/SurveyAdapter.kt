@@ -25,12 +25,13 @@ class SurveyAdapter(
         isAsc: Boolean,
     ): Page<Survey> {
         val pageRequest = PageRequest.of(page, size, getSurveySort(sortType, isAsc))
-        val surveyDocuments = surveyRepository.findByStatusAndIsVisibleTrue(SurveyStatus.IN_PROGRESS, pageRequest)
+        val surveyDocuments = surveyRepository.findByStatusAndIsVisibleTrueAndIsDeletedFalse(SurveyStatus.IN_PROGRESS, pageRequest)
         val surveys = surveyDocuments.content.map { it.toDomain() }
         return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
     }
 
-    fun getSurvey(surveyId: UUID) = surveyRepository.findById(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
+    fun getSurvey(surveyId: UUID) =
+        surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
 
     private fun getSurveySort(
         sortType: SurveySortType,
@@ -46,7 +47,7 @@ class SurveyAdapter(
     }
 
     fun save(survey: Survey) {
-        val previousSurveyDocument = surveyRepository.findById(survey.id)
+        val previousSurveyDocument = surveyRepository.findByIdAndIsDeletedFalse(survey.id)
         val surveyDocument = SurveyDocument.from(survey)
         // 기존 설문을 업데이트하는 경우, createdAt을 유지
         if (previousSurveyDocument.isPresent) surveyDocument.createdAt = previousSurveyDocument.get().createdAt
@@ -56,7 +57,7 @@ class SurveyAdapter(
     fun getByIdAndMakerId(
         surveyId: UUID,
         makerId: UUID,
-    ) = surveyRepository.findByIdAndMakerId(surveyId, makerId).orElseThrow { SurveyNotFoundException() }.toDomain()
+    ) = surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }.toDomain()
 
     fun getMyPageSurveysInfo(
         makerId: UUID,
