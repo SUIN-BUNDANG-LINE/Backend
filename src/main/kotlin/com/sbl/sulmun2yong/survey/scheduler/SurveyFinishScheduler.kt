@@ -13,7 +13,7 @@ class SurveyFinishScheduler(
 ) {
     private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
-    @Scheduled(cron = "0 * * * * *") // 매 시 정각에 실행
+    @Scheduled(cron = "0 0 * * * *") // 매 시 정각에 실행
     fun closeExpiredSurveys() {
         val targetSurveys = surveyAdapter.findFinishTargets(Date())
         val finishedTargetSurveys =
