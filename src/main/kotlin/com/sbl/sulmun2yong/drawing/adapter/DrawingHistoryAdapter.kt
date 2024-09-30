@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.drawing.adapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistoryGroup
 import com.sbl.sulmun2yong.drawing.entity.DrawingHistoryDocument
-import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingHistoryException
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import org.springframework.stereotype.Component
@@ -37,7 +36,11 @@ class DrawingHistoryAdapter(
                 false -> drawingHistoryRepository.findBySurveyId(surveyId)
             }
         if (!dto.isPresent) {
-            throw InvalidDrawingHistoryException()
+            return DrawingHistoryGroup(
+                surveyId = dto.get().id,
+                count = 0,
+                histories = emptyList(),
+            )
         }
         return DrawingHistoryGroup(
             surveyId = dto.get().id,
