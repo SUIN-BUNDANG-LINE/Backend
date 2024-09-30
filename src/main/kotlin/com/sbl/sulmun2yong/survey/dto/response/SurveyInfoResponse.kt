@@ -15,7 +15,7 @@ data class SurveyInfoResponse(
     val currentParticipants: Int?,
     val targetParticipants: Int?,
     val rewards: List<RewardInfoResponse>,
-    val thumbnail: String,
+    val thumbnail: String?,
 ) {
     companion object {
         fun of(
@@ -30,7 +30,7 @@ data class SurveyInfoResponse(
             currentParticipants = currentParticipants,
             targetParticipants = survey.rewardSetting.targetParticipantCount,
             rewards = survey.rewardSetting.rewards.map { it.toResponse() },
-            thumbnail = survey.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
+            thumbnail = survey.thumbnail,
         )
     }
 

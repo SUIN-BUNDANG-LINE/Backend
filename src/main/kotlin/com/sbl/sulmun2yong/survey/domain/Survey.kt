@@ -45,8 +45,6 @@ data class Survey(
     }
 
     companion object {
-        // TODO: 기본 섬네일 URL은 프론트에서 처리하도록 변경
-        const val DEFAULT_THUMBNAIL_URL = "https://test-oriddle-bucket.s3.ap-northeast-2.amazonaws.com/surveyImage.webp"
         const val DEFAULT_TITLE = "제목 없는 설문"
         const val DEFAULT_DESCRIPTION = ""
         const val DEFAULT_FINISH_MESSAGE = "설문에 참여해주셔서 감사합니다."

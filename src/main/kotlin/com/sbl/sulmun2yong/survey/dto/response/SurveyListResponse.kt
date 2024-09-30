@@ -21,7 +21,7 @@ data class SurveyListResponse(
                     surveys.map {
                         SurveyInfoResponse(
                             surveyId = it.id,
-                            thumbnail = it.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
+                            thumbnail = it.thumbnail,
                             title = it.title,
                             description = it.description,
                             targetParticipants = it.rewardSetting.targetParticipantCount,
@@ -36,7 +36,7 @@ data class SurveyListResponse(
 
     data class SurveyInfoResponse(
         val surveyId: UUID,
-        val thumbnail: String,
+        val thumbnail: String?,
         val title: String,
         val description: String,
         val targetParticipants: Int?,
