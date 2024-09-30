@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
@@ -60,7 +61,8 @@ class SurveyManagementService(
         val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         val startedSurvey = survey.start()
         surveyAdapter.save(startedSurvey)
-        if (startedSurvey.rewardSetting is ImmediateDrawSetting) {
+        // 즉시 추첨이면서 최초 시작 시 추첨 보드 생성
+        if (startedSurvey.rewardSetting is ImmediateDrawSetting && survey.status == SurveyStatus.NOT_STARTED) {
             val drawingBoard =
                 DrawingBoard.create(
                     surveyId = startedSurvey.id,
