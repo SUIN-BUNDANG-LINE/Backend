@@ -45,9 +45,9 @@ data class Survey(
     }
 
     companion object {
-        const val DEFAULT_TITLE = "제목 없는 설문"
+        const val DEFAULT_TITLE = ""
         const val DEFAULT_DESCRIPTION = ""
-        const val DEFAULT_FINISH_MESSAGE = "설문에 참여해주셔서 감사합니다."
+        const val DEFAULT_FINISH_MESSAGE = ""
 
         fun create(makerId: UUID) =
             Survey(
