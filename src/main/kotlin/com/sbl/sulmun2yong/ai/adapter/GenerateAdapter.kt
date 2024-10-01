@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-import com.sbl.sulmun2yong.ai.dto.SurveyGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.ChatSessionIdWithSurveyGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerationResponse
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
@@ -20,7 +21,7 @@ class GenerateAdapter(
         groupName: String,
         fileUrl: String,
         userPrompt: String,
-    ): SurveyMakeInfoResponse {
+    ): SurveyGenerationResponse {
         val requestUrl = "$aiServerBaseUrl/generate/survey/file-url"
 
         val requestBody =
@@ -39,7 +40,7 @@ class GenerateAdapter(
         groupName: String,
         textDocument: String,
         userPrompt: String,
-    ): SurveyMakeInfoResponse {
+    ): SurveyGenerationResponse {
         val requestUrl = "$aiServerBaseUrl/generate/survey/text-document"
 
         val requestBody =
@@ -56,20 +57,22 @@ class GenerateAdapter(
     private fun requestToGenerateSurvey(
         requestUrl: String,
         requestBody: Map<String, String>,
-    ): SurveyMakeInfoResponse {
-        val surveyGeneratedByAI =
+    ): SurveyGenerationResponse {
+        val chatSessionIdWithSurveyGeneratedByAI =
             try {
                 restTemplate
                     .postForEntity(
                         requestUrl,
                         requestBody,
-                        SurveyGeneratedByAI::class.java,
+                        ChatSessionIdWithSurveyGeneratedByAI::class.java,
                     ).body ?: throw SurveyGenerationByAIFailedException()
             } catch (e: HttpClientErrorException) {
                 throw PythonServerExceptionMapper.mapException(e)
             }
 
-        val survey = surveyGeneratedByAI.toDomain()
-        return SurveyMakeInfoResponse.of(survey)
+        val chatSessionId = chatSessionIdWithSurveyGeneratedByAI.chatSessionId
+        val survey = chatSessionIdWithSurveyGeneratedByAI.surveyGeneratedByAI.toDomain()
+        val surveyMakeInfoResponse = SurveyMakeInfoResponse.of(survey)
+        return SurveyGenerationResponse.from(chatSessionId, surveyMakeInfoResponse)
     }
 }

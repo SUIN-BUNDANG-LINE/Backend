@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.ai.controller.doc
 
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithTextDocumentRequest
-import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
+import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerationResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
@@ -15,11 +15,11 @@ interface GenerateAPIDoc {
     @PostMapping("/survey/file-url")
     fun generateSurveyWithFileUrl(
         @RequestBody request: SurveyGenerationWithFileUrlRequest,
-    ): ResponseEntity<SurveyMakeInfoResponse>
+    ): ResponseEntity<SurveyGenerationResponse>
 
     @Operation(summary = "텍스트 입력을 통한 AI 설문 생성")
     @PostMapping("/survey/text-document")
     fun generateSurveyWithTextDocument(
         @RequestBody request: SurveyGenerationWithTextDocumentRequest,
-    ): ResponseEntity<SurveyMakeInfoResponse>
+    ): ResponseEntity<SurveyGenerationResponse>
 }

@@ -32,6 +32,19 @@ services:
         volumes:
             - sulmun2yong-test-mongodb:/data/db
 
+    sulmun2yong-test-redis:
+        image: redis:latest
+        container_name: sulmun2yong-test-redis
+        restart: always
+        environment:
+            REDIS_PASSWORD: ${REDIS_PASSWORD}
+        expose:
+            - "6379"
+        ports:
+            - "6379:6379"
+        volumes:
+            - sulmun2yong-test-redis:/data
+
 volumes:
     sulmun2yong-test-db:
     sulmun2yong-test-mongodb:
