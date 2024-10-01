@@ -37,7 +37,7 @@ class DrawingHistoryAdapter(
             }
         if (!dto.isPresent) {
             return DrawingHistoryGroup(
-                surveyId = dto.get().id,
+                surveyId = surveyId,
                 count = 0,
                 histories = emptyList(),
             )
