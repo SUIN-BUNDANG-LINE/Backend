@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import java.util.Date
 import java.util.UUID
 
 @Component
@@ -71,5 +72,11 @@ class SurveyAdapter(
     ) {
         val isSuccess = surveyRepository.softDelete(surveyId, makerId)
         if (!isSuccess) throw SurveyNotFoundException()
+    }
+
+    fun findFinishTargets(now: Date) = surveyRepository.findFinishTargets(now).map { it.toDomain() }
+
+    fun saveAll(surveys: List<Survey>) {
+        surveyRepository.saveAll(surveys.map { SurveyDocument.from(it) })
     }
 }
