@@ -48,6 +48,10 @@ dependencies {
     // mongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
+    // mongock
+    implementation("io.mongock:mongock-springboot:5.4.4")
+    implementation("io.mongock:mongodb-springdata-v4-driver:5.4.4")
+
     // validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
 

@@ -41,3 +41,7 @@ ai-server:
 
 cloudfront:
     base-url: https://files.sulmoon.io
+
+mongock:
+    enabled: true
+    migration-scan-package: com.sbl.sulmun2yong.global.migration
