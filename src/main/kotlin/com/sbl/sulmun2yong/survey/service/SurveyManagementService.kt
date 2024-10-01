@@ -88,4 +88,11 @@ class SurveyManagementService(
         val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         surveyAdapter.save(survey.finish())
     }
+
+    fun deleteSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        surveyAdapter.delete(surveyId, makerId)
+    }
 }

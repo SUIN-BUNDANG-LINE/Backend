@@ -13,13 +13,15 @@ import java.util.UUID
 interface SurveyRepository :
     MongoRepository<SurveyDocument, UUID>,
     SurveyCustomRepository {
-    fun findByStatusAndIsVisibleTrue(
+    fun findByStatusAndIsVisibleTrueAndIsDeletedFalse(
         status: SurveyStatus,
         pageable: Pageable,
     ): Page<SurveyDocument>
 
-    fun findByIdAndMakerId(
+    fun findByIdAndMakerIdAndIsDeletedFalse(
         id: UUID,
         makerId: UUID,
     ): Optional<SurveyDocument>
+
+    fun findByIdAndIsDeletedFalse(id: UUID): Optional<SurveyDocument>
 }

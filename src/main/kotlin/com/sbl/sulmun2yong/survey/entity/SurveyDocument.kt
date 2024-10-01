@@ -40,6 +40,7 @@ data class SurveyDocument(
     val makerId: UUID,
     val rewards: List<RewardSubDocument>,
     val sections: List<SectionSubDocument>,
+    val isDeleted: Boolean = false,
 ) : BaseTimeDocument() {
     companion object {
         fun from(survey: Survey) =
@@ -151,15 +152,8 @@ data class SurveyDocument(
         val isAllowOther: Boolean,
     )
 
-    fun toDomain(): Survey {
-        val sections =
-            if (this.sections.isEmpty()) {
-                listOf()
-            } else {
-                val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
-                this.sections.map { it.toDomain(sectionIds) }
-            }
-        return Survey(
+    fun toDomain(): Survey =
+        Survey(
             id = this.id,
             title = this.title,
             description = this.description,
@@ -179,7 +173,6 @@ data class SurveyDocument(
             makerId = this.makerId,
             sections = this.sections.toDomain(),
         )
-    }
 
     private fun List<SectionSubDocument>.toDomain() =
         if (this.isEmpty()) {
