@@ -25,4 +25,13 @@ class ParticipantAdapter(
         participantRepository
             .findBySurveyId(surveyId)
             .map { it.toDomain() }
+
+    fun findBySurveyIdAndVisitorId(
+        surveyId: UUID,
+        visitorId: String,
+    ): Participant? =
+        participantRepository
+            .findBySurveyIdAndVisitorId(surveyId, visitorId)
+            .map { it.toDomain() }
+            .orElse(null)
 }
