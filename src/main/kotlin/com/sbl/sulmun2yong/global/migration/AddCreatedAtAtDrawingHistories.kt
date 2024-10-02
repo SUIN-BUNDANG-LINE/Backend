@@ -12,7 +12,7 @@ import org.springframework.data.mongodb.core.query.Update
 import java.util.Date
 
 /** RewardHistories 컬렉션에 createdAt을 넣는 Migration Class */
-@ChangeUnit(id = "AddCreatedAtAtDrawingHistories", order = "006", author = "hunhui")
+@ChangeUnit(id = "AddCreatedAtAtDrawingHistories", order = "005", author = "hunhui")
 class AddCreatedAtAtDrawingHistories(
     private val mongoTemplate: MongoTemplate,
     private val surveyRepository: SurveyRepository,
@@ -25,11 +25,11 @@ class AddCreatedAtAtDrawingHistories(
         val now = Date()
         val update = Update().set("createdAt", now)
         mongoTemplate.updateMulti(query, update, "drawingHistories")
-        log.info("006-AddCreatedAtAtDrawingHistories 완료")
+        log.info("005-AddCreatedAtAtDrawingHistories 완료")
     }
 
     @RollbackExecution
     fun rollback() {
-        log.warn("006-AddCreatedAtAtDrawingHistories 롤백")
+        log.warn("005-AddCreatedAtAtDrawingHistories 롤백")
     }
 }

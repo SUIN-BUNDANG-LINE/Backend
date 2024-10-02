@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 
 /** Surveys 컬렉션의 isDelete가 null인 경우 기본값 false를 넣는 Migration Class */
-@ChangeUnit(id = "AddIsDeletedFieldAtSurveyDocument", order = "002", author = "hunhui")
+@ChangeUnit(id = "AddIsDeletedFieldAtSurveyDocument", order = "001", author = "hunhui")
 class AddIsDeletedFieldAtSurveyDocument {
     private val log = LoggerFactory.getLogger(AddIsDeletedFieldAtSurveyDocument::class.java)
 
@@ -19,11 +19,11 @@ class AddIsDeletedFieldAtSurveyDocument {
         val query = Query(Criteria.where("isDeleted").`is`(null))
         val update = Update().set("isDeleted", false)
         mongoTemplate.updateMulti(query, update, "surveys")
-        log.info("002-AddIsDeletedFieldAtSurveyDocument 완료")
+        log.info("001-AddIsDeletedFieldAtSurveyDocument 완료")
     }
 
     @RollbackExecution
     fun rollback() {
-        log.warn("002-AddIsDeletedFieldAtSurveyDocument 롤백")
+        log.warn("001-AddIsDeletedFieldAtSurveyDocument 롤백")
     }
 }

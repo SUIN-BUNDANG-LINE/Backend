@@ -14,7 +14,7 @@ import java.nio.ByteBuffer
 import java.util.UUID
 
 /** Responses 컬렉션에 surveyId를 넣는 Migration Class */
-@ChangeUnit(id = "AddSurveyIdAtResponses", order = "005", author = "hunhui")
+@ChangeUnit(id = "AddSurveyIdAtResponses", order = "002", author = "hunhui")
 class AddSurveyIdAtResponses(
     private val mongoTemplate: MongoTemplate,
     private val surveyRepository: SurveyRepository,
@@ -53,7 +53,7 @@ class AddSurveyIdAtResponses(
             }
         }
 
-        log.info("005-AddSurveyIdAtResponses 완료")
+        log.info("002-AddSurveyIdAtResponses 완료")
     }
 
     private fun binaryToUUID(binary: Binary): UUID {
@@ -71,6 +71,6 @@ class AddSurveyIdAtResponses(
             "responses",
         )
 
-        log.warn("005-AddSurveyIdAtResponses 롤백")
+        log.warn("002-AddSurveyIdAtResponses 롤백")
     }
 }
