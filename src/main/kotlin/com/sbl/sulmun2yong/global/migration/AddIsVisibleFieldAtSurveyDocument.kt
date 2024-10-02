@@ -9,21 +9,21 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 
-/** Surveys 컬렉션의 isDelete가 null인 경우 기본값 false를 넣는 Migration Class */
-@ChangeUnit(id = "AddIsDeletedFieldAtSurveyDocument", order = "001", author = "hunhui")
-class AddIsDeletedFieldAtSurveyDocument {
-    private val log = LoggerFactory.getLogger(AddIsDeletedFieldAtSurveyDocument::class.java)
+/** Surveys 컬렉션의 isVisible이 null인 경우 기본값 true를 넣는 Migration Class */
+@ChangeUnit(id = "AddIsVisibleFieldAtSurveyDocument", order = "006", author = "hunhui")
+class AddIsVisibleFieldAtSurveyDocument {
+    private val log = LoggerFactory.getLogger(AddIsVisibleFieldAtSurveyDocument::class.java)
 
     @Execution
     fun addIsDeletedField(mongoTemplate: MongoTemplate) {
-        val query = Query(Criteria.where("isDeleted").`is`(null))
-        val update = Update().set("isDeleted", false)
+        val query = Query(Criteria.where("isVisible").`is`(null))
+        val update = Update().set("isVisible", true)
         mongoTemplate.updateMulti(query, update, "surveys")
-        log.info("001-AddIsDeletedFieldAtSurveyDocument 완료")
+        log.info("006-AddIsVisibleFieldAtSurveyDocument 완료")
     }
 
     @RollbackExecution
     fun rollback() {
-        log.warn("001-AddIsDeletedFieldAtSurveyDocument 롤백")
+        log.warn("006-AddIsVisibleFieldAtSurveyDocument 롤백")
     }
 }
