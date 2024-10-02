@@ -16,7 +16,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/ai/generate")
-class AIAIGenerateController(
+class AIGenerateController(
     private val generateService: GenerateService,
 ) : AIGenerateApiDoc {
     @PostMapping("/survey/file-url")
