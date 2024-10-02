@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.global.migration
 
-import com.sbl.sulmun2yong.global.error.GlobalExceptionHandler
 import com.sbl.sulmun2yong.survey.entity.SurveyDocument
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
@@ -14,7 +13,7 @@ import org.springframework.data.mongodb.core.query.Update
 /** Surveys 컬렉션의 isDelete가 null인 경우 기본값 false를 넣는 Migration Class */
 @ChangeUnit(id = "AddIsDeletedFieldAtSurveyDocument", order = "002", author = "hunhui")
 class AddIsDeletedFieldAtSurveyDocument {
-    private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+    private val log = LoggerFactory.getLogger(AddIsDeletedFieldAtSurveyDocument::class.java)
 
     @Execution
     fun addIsDeletedField(mongoTemplate: MongoTemplate) {

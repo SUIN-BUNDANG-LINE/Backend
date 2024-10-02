@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.global.migration
 
-import com.sbl.sulmun2yong.global.error.GlobalExceptionHandler
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution
@@ -28,7 +27,7 @@ class InitialMongoDBSetUp {
             )
     }
 
-    private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+    private val log = LoggerFactory.getLogger(InitialMongoDBSetUp::class.java)
 
     @Execution
     fun initialSetup(mongoTemplate: MongoTemplate) {
