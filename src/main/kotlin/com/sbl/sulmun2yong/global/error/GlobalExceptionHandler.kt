@@ -7,6 +7,7 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -48,5 +49,11 @@ class GlobalExceptionHandler {
     protected fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ErrorResponse {
         log.warn(e.message, e)
         return ErrorResponse.of(ErrorCode.INPUT_INVALID_VALUE, e.bindingResult)
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    protected fun handleMaxUploadSizeExceededException(e: MaxUploadSizeExceededException): ErrorResponse {
+        log.warn(e.message, e)
+        return ErrorResponse.of(ErrorCode.FILE_SIZE_EXCEEDED)
     }
 }

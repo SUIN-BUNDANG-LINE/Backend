@@ -12,6 +12,7 @@ enum class ErrorCode(
     INPUT_INVALID_VALUE(HttpStatus.BAD_REQUEST, "GL0002", "잘못된 입력입니다."),
     LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "GL0003", "로그인이 필요합니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "GL0004", "접근 권한이 없습니다."),
+    FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "GL0005", "파일은 최대 5mb까지만 업로드할 수 있습니다."),
 
     // Survey (SV)
     SURVEY_NOT_FOUND(HttpStatus.NOT_FOUND, "SV0002", "설문을 찾을 수 없습니다."),
@@ -59,7 +60,6 @@ enum class ErrorCode(
 
     // File Validator (FV)
     INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "FV0001", "허용하지 않는 확장자입니다."),
-    OUT_OF_FILE_SIZE(HttpStatus.REQUEST_ENTITY_TOO_LARGE, "FV0002", "파일 크기가 너무 큽니다."),
     FILE_NAME_TOO_SHORT(HttpStatus.BAD_REQUEST, "FV0003", "파일 이름이 너무 짧습니다."),
     FILE_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "FV0004", "파일 이름이 너무 깁니다."),
     NO_FILE_EXIST(HttpStatus.BAD_REQUEST, "FV0005", "파일이 존재하지 않습니다."),
