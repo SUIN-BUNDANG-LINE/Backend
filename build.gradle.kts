@@ -35,6 +35,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    // fingerprint
+    implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v6.0.0")
+
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")

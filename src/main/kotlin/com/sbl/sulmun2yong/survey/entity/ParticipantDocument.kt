@@ -10,6 +10,7 @@ import java.util.UUID
 data class ParticipantDocument(
     @Id
     val id: UUID,
+    val visitorId: String,
     val surveyId: UUID,
     val userId: UUID?,
 ) : BaseTimeDocument() {
@@ -17,6 +18,7 @@ data class ParticipantDocument(
         fun of(participant: Participant) =
             ParticipantDocument(
                 id = participant.id,
+                visitorId = participant.visitorId,
                 surveyId = participant.surveyId,
                 userId = participant.userId,
             )
@@ -25,6 +27,7 @@ data class ParticipantDocument(
     fun toDomain() =
         Participant(
             id = this.id,
+            visitorId = this.visitorId,
             surveyId = this.surveyId,
             userId = this.userId,
             createdAt = this.createdAt,
