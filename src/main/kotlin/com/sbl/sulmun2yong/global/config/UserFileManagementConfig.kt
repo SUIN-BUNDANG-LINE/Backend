@@ -5,7 +5,6 @@ import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.util.unit.DataSize
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
@@ -19,8 +18,6 @@ class UserFileManagementConfig(
     @Value("\${aws.s3.secret-key}")
     private val secretKey: String,
     // 파일 예외처리 관련
-    @Value("\${aws.s3.max-file-size}")
-    private val maxFileSize: DataSize,
     @Value("\${aws.s3.max-file-name-length}")
     private val maxFileNameLength: Int,
     @Value("\${aws.s3.allowed-extensions}")
@@ -44,7 +41,6 @@ class UserFileManagementConfig(
     @Bean
     fun createFileUploadValidator(): FileUploadValidator =
         FileUploadValidator.from(
-            maxFileSize = maxFileSize,
             maxFileNameLength = maxFileNameLength,
             allowedExtensions = allowedExtensions,
             allowedContentTypes = allowedContentTypes,

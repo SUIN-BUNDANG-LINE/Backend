@@ -59,7 +59,6 @@ enum class ErrorCode(
 
     // File Validator (FV)
     INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "FV0001", "허용하지 않는 확장자입니다."),
-    OUT_OF_FILE_SIZE(HttpStatus.BAD_REQUEST, "FV0002", "파일 크기가 너무 큽니다."),
     FILE_NAME_TOO_SHORT(HttpStatus.BAD_REQUEST, "FV0003", "파일 이름이 너무 짧습니다."),
     FILE_NAME_TOO_LONG(HttpStatus.BAD_REQUEST, "FV0004", "파일 이름이 너무 깁니다."),
     NO_FILE_EXIST(HttpStatus.BAD_REQUEST, "FV0005", "파일이 존재하지 않습니다."),
