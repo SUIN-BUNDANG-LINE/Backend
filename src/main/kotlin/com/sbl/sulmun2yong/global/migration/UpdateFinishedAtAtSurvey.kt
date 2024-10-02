@@ -20,13 +20,11 @@ class UpdateFinishedAtAtSurvey(
 
     @Execution
     fun updateFinishedAtAtSurvey() {
-        // finishedAt 필드가 존재하는 도큐먼트를 모두 조회
         val query = Query(Criteria.where("finishedAt").exists(true))
         val surveys = mongoTemplate.find(query, SurveyDocument::class.java)
 
         surveys.forEach { survey ->
             survey.finishedAt?.let {
-                // finishedAt 시간을 분 이하 단위(초, 나노초) 제거
                 val updatedFinishedAt =
                     it
                         .toInstant()
@@ -36,19 +34,10 @@ class UpdateFinishedAtAtSurvey(
                         .withNano(0)
                         .toInstant()
 
-                // 업데이트 내용을 설정
                 val update = Update().set("finishedAt", updatedFinishedAt)
 
-                // id 기준으로 해당 도큐먼트 업데이트, id 필드 확인 필요
                 val updateQuery = Query(Criteria.where("_id").`is`(survey.id)) // MongoDB에서 _id를 사용
-                val result = mongoTemplate.updateFirst(updateQuery, update, "surveys")
-
-                // 업데이트 결과 확인
-                if (result.modifiedCount == 0L) {
-                    log.warn("Survey ${survey.id} 업데이트 실패")
-                } else {
-                    log.info("Survey ${survey.id} 업데이트 성공")
-                }
+                mongoTemplate.updateFirst(updateQuery, update, "surveys")
             }
         }
         log.info("004-UpdateFinishedAtAtSurvey 완료")

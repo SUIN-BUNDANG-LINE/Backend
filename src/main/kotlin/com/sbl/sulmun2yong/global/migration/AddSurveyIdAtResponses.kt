@@ -41,7 +41,6 @@ class AddSurveyIdAtResponses(
             val questionId = questionIdBinary?.let { binaryToUUID(it) }
             if (questionId != null) {
                 val surveyId = questionIdSurveyIdMap[questionId]
-                println(surveyId)
                 if (surveyId != null) {
                     val update = Update().set("surveyId", surveyId)
                     val updateQuery = Query(Criteria.where("_id").`is`(response["_id"]))
