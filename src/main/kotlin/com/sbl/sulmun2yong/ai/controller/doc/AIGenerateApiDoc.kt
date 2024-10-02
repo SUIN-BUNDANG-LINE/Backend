@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 
 @Tag(name = "AI", description = "AI 기능 관련 API")
-interface GenerateAPIDoc {
+interface AIGenerateApiDoc {
     @Operation(summary = "파일을 통한 AI 설문 생성")
     @PostMapping("/survey/file-url")
     fun generateSurveyWithFileUrl(

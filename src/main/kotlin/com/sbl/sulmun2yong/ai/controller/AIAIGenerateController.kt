@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.ai.controller
 
-import com.sbl.sulmun2yong.ai.controller.doc.GenerateAPIDoc
+import com.sbl.sulmun2yong.ai.controller.doc.AIGenerateApiDoc
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithTextDocumentRequest
 import com.sbl.sulmun2yong.ai.service.GenerateService
@@ -16,9 +16,9 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/ai/generate")
-class AIGenerateController(
+class AIAIGenerateController(
     private val generateService: GenerateService,
-) : GenerateAPIDoc {
+) : AIGenerateApiDoc {
     @PostMapping("/survey/file-url")
     override fun generateSurveyWithFileUrl(
         @RequestBody surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
