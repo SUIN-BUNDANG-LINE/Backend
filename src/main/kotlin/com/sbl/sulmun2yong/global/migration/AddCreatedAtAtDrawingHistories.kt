@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.global.migration
 
-import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution
@@ -15,7 +14,6 @@ import java.util.Date
 @ChangeUnit(id = "AddCreatedAtAtDrawingHistories", order = "005", author = "hunhui")
 class AddCreatedAtAtDrawingHistories(
     private val mongoTemplate: MongoTemplate,
-    private val surveyRepository: SurveyRepository,
 ) {
     private val log = LoggerFactory.getLogger(AddCreatedAtAtDrawingHistories::class.java)
 

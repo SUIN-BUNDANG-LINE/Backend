@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.global.migration
 
-import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution
@@ -14,7 +13,6 @@ import org.springframework.data.mongodb.core.query.Update
 @ChangeUnit(id = "AddRewardSettingTypeAtSurvey", order = "003", author = "hunhui")
 class AddRewardSettingTypeAtSurvey(
     private val mongoTemplate: MongoTemplate,
-    private val surveyRepository: SurveyRepository,
 ) {
     private val log = LoggerFactory.getLogger(AddRewardSettingTypeAtSurvey::class.java)
 

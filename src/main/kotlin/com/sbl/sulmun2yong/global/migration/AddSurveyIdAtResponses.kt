@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.global.migration
 
-import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution
@@ -10,26 +9,23 @@ import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
-import java.nio.ByteBuffer
-import java.util.UUID
 
 /** Responses 컬렉션에 surveyId를 넣는 Migration Class */
 @ChangeUnit(id = "AddSurveyIdAtResponses", order = "002", author = "hunhui")
 class AddSurveyIdAtResponses(
     private val mongoTemplate: MongoTemplate,
-    private val surveyRepository: SurveyRepository,
 ) {
     private val log = LoggerFactory.getLogger(AddSurveyIdAtResponses::class.java)
 
     @Execution
     fun addSurveyIdAtResponses() {
+        val surveys = mongoTemplate.find(Query(), Map::class.java, "surveys")
         val questionIdSurveyIdMap =
-            surveyRepository
-                .findAll()
+            surveys
                 .flatMap { survey ->
-                    survey.sections.flatMap { section ->
-                        section.questions.map { question ->
-                            question.questionId to survey.id
+                    (survey["sections"] as List<Map<String, Any>>).flatMap { section ->
+                        (section["questions"] as List<Map<String, Any>>).map { question ->
+                            question["questionId"] to survey["_id"]
                         }
                     }
                 }.toMap()
@@ -37,8 +33,7 @@ class AddSurveyIdAtResponses(
         val responseDocuments = mongoTemplate.find(Query(), Map::class.java, "responses")
 
         responseDocuments.forEach { response ->
-            val questionIdBinary = response["questionId"] as? Binary
-            val questionId = questionIdBinary?.let { binaryToUUID(it) }
+            val questionId = response["questionId"] as? Binary
             if (questionId != null) {
                 val surveyId = questionIdSurveyIdMap[questionId]
                 if (surveyId != null) {
@@ -54,13 +49,6 @@ class AddSurveyIdAtResponses(
         }
 
         log.info("002-AddSurveyIdAtResponses 완료")
-    }
-
-    private fun binaryToUUID(binary: Binary): UUID {
-        val byteBuffer = ByteBuffer.wrap(binary.data)
-        val mostSigBits = byteBuffer.long
-        val leastSigBits = byteBuffer.long
-        return UUID(mostSigBits, leastSigBits)
     }
 
     @RollbackExecution
