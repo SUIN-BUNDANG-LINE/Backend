@@ -30,21 +30,25 @@ class FingerprintApi(
         if (visits.isNullOrEmpty()) {
             throw Exception("Invalid visitorId")
         }
+        checkIsVisitorClean(visits)
     }
 
     private fun getVisits(visitorId: String): MutableList<ResponseVisits>? {
         val response: Response = api.getVisits(visitorId, null, null, 1, null, null)
-        val product = getEvent(response.visits[0].requestId)
+        return response.visits
+    }
+
+    private fun getEvent(requestId: String): ProductsResponse {
+        val response: EventResponse = api.getEvent(requestId)
+        return response.products
+    }
+
+    private fun checkIsVisitorClean(visits: MutableList<ResponseVisits>) {
+        val product = getEvent(visits[0].requestId)
         if (product.tampering.data.result == true ||
             product.botd.data.bot.result !== BotdDetectionResult.ResultEnum.NOT_DETECTED
         ) {
             throw UncleanVisitorException()
         }
-        return response.visits
-    }
-
-    fun getEvent(requestId: String): ProductsResponse {
-        val response: EventResponse = api.getEvent(requestId)
-        return response.products
     }
 }
