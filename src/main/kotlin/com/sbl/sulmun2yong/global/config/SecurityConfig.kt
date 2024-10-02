@@ -126,8 +126,7 @@ class SecurityConfig(
                 authorize("/api/v1/surveys/results/**", authenticated)
                 authorize("/api/v1/s3/**", authenticated)
                 authorize("/api/v1/ai/**", authenticated)
-                // TODO: 추후에 AUTHENTICATED_USER 로 수정
-                authorize("/api/v1/surveys/workbench/**", hasRole("ADMIN"))
+                authorize("/api/v1/surveys/workbench/**", authenticated)
                 authorize("/**", permitAll)
             }
             exceptionHandling {
