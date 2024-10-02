@@ -48,3 +48,4 @@ services:
 volumes:
     sulmun2yong-test-db:
     sulmun2yong-test-mongodb:
+    sulmun2yong-test-redis:
