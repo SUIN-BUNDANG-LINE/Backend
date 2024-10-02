@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.ai.adapter
 
 import com.sbl.sulmun2yong.ai.dto.ChatSessionIdWithSurveyGeneratedByAI
-import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerationResponse
+import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
@@ -21,7 +21,7 @@ class GenerateAdapter(
         groupName: String,
         fileUrl: String,
         userPrompt: String,
-    ): SurveyGenerationResponse {
+    ): AISurveyGenerationResponse {
         val requestUrl = "$aiServerBaseUrl/generate/survey/file-url"
 
         val requestBody =
@@ -40,7 +40,7 @@ class GenerateAdapter(
         groupName: String,
         textDocument: String,
         userPrompt: String,
-    ): SurveyGenerationResponse {
+    ): AISurveyGenerationResponse {
         val requestUrl = "$aiServerBaseUrl/generate/survey/text-document"
 
         val requestBody =
@@ -57,7 +57,7 @@ class GenerateAdapter(
     private fun requestToGenerateSurvey(
         requestUrl: String,
         requestBody: Map<String, String>,
-    ): SurveyGenerationResponse {
+    ): AISurveyGenerationResponse {
         val chatSessionIdWithSurveyGeneratedByAI =
             try {
                 restTemplate
@@ -73,6 +73,6 @@ class GenerateAdapter(
         val chatSessionId = chatSessionIdWithSurveyGeneratedByAI.chatSessionId
         val survey = chatSessionIdWithSurveyGeneratedByAI.surveyGeneratedByAI.toDomain()
         val surveyMakeInfoResponse = SurveyMakeInfoResponse.of(survey)
-        return SurveyGenerationResponse.from(chatSessionId, surveyMakeInfoResponse)
+        return AISurveyGenerationResponse.from(chatSessionId, surveyMakeInfoResponse)
     }
 }

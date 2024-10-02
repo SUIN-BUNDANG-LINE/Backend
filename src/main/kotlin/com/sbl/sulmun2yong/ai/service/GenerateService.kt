@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.ai.service
 import com.sbl.sulmun2yong.ai.adapter.GenerateAdapter
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithTextDocumentRequest
-import com.sbl.sulmun2yong.ai.dto.response.SurveyGenerationResponse
+import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
 import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
 import org.springframework.stereotype.Service
 
@@ -12,7 +12,7 @@ class GenerateService(
     private val fileUrlValidator: FileUrlValidator,
     private val generateAdapter: GenerateAdapter,
 ) {
-    fun generateSurveyWithFileUrl(surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest): SurveyGenerationResponse {
+    fun generateSurveyWithFileUrl(surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest): AISurveyGenerationResponse {
         val allowedExtensions = mutableListOf(".txt", ".pdf")
 
         val job = surveyGenerationWithFileUrlRequest.job
@@ -27,7 +27,7 @@ class GenerateService(
 
     fun generateSurveyWithTextDocument(
         surveyGenerationWithTextDocumentRequest: SurveyGenerationWithTextDocumentRequest,
-    ): SurveyGenerationResponse {
+    ): AISurveyGenerationResponse {
         val job = surveyGenerationWithTextDocumentRequest.job
         val groupName = surveyGenerationWithTextDocumentRequest.groupName
         val textDocument = surveyGenerationWithTextDocumentRequest.textDocument

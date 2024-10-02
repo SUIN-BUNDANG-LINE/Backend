@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.ai.dto.response
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import java.util.UUID
 
-class SurveyGenerationResponse(
+class AISurveyGenerationResponse(
     val chatSessionId: UUID,
     val generatedSurvey: SurveyMakeInfoResponse,
 ) {
@@ -11,6 +11,6 @@ class SurveyGenerationResponse(
         fun from(
             chatSessionId: UUID,
             generatedSurvey: SurveyMakeInfoResponse,
-        ): SurveyGenerationResponse = SurveyGenerationResponse(chatSessionId, generatedSurvey)
+        ): AISurveyGenerationResponse = AISurveyGenerationResponse(chatSessionId, generatedSurvey)
     }
 }
