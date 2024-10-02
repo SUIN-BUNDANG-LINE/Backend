@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 class CustomAuthenticationSuccessHandler(
     private val frontendBaseUrl: String,
     private val backendBaseUrl: String,
+    private val cookieDomain: String,
     private val httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
@@ -42,6 +43,9 @@ class CustomAuthenticationSuccessHandler(
         // 기본 프로필 쿠키 생성
         val cookie = Cookie("user-profile", defaultUserProfile.toBase64Json())
         cookie.path = "/"
+        if (cookieDomain != "localhost") {
+            cookie.domain = cookieDomain
+        }
         response.addCookie(cookie)
 
         // 리디렉트
