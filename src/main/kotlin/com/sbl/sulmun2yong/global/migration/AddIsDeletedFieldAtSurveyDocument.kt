@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.global.migration
 
-import com.sbl.sulmun2yong.survey.entity.SurveyDocument
 import io.mongock.api.annotations.ChangeUnit
 import io.mongock.api.annotations.Execution
 import io.mongock.api.annotations.RollbackExecution
@@ -19,7 +18,7 @@ class AddIsDeletedFieldAtSurveyDocument {
     fun addIsDeletedField(mongoTemplate: MongoTemplate) {
         val query = Query(Criteria.where("isDeleted").`is`(null))
         val update = Update().set("isDeleted", false)
-        mongoTemplate.updateMulti(query, update, SurveyDocument::class.java)
+        mongoTemplate.updateMulti(query, update, "surveys")
         log.info("002-AddIsDeletedFieldAtSurveyDocument 완료")
     }
 
