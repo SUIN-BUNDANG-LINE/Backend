@@ -8,6 +8,8 @@ import java.util.UUID
 
 @Repository
 interface ParticipantRepository : MongoRepository<ParticipantDocument, UUID> {
+    fun findBySurveyId(surveyId: UUID): List<ParticipantDocument>
+
     fun findBySurveyIdAndVisitorId(
         surveyId: UUID,
         visitorId: String,

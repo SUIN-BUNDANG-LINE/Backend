@@ -13,7 +13,11 @@ class UserAdapter(
     private val userRepository: UserRepository,
 ) {
     fun save(user: User) {
-        userRepository.save(UserDocument.of(user))
+        val previousUserDocument = userRepository.findById(user.id)
+        val userDocument = UserDocument.of(user)
+        // 기존 유저를 업데이트하는 경우, createdAt을 유지
+        if (previousUserDocument.isPresent) userDocument.createdAt = previousUserDocument.get().createdAt
+        userRepository.save(userDocument)
     }
 
     fun getById(id: UUID): User =

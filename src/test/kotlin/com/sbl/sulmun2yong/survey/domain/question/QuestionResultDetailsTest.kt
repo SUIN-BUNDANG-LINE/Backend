@@ -9,7 +9,7 @@ import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertEquals
 
-class QuestionResponseTest {
+class QuestionResultDetailsTest {
     private val contentA = "A"
     private val contentB = "B"
     private val detailA = ResponseDetail(contentA)

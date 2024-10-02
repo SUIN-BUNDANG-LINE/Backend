@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -50,12 +51,20 @@ dependencies {
     // mongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
+    // mongock
+    implementation("io.mongock:mongock-springboot:5.4.4")
+    implementation("io.mongock:mongodb-springdata-v4-driver:5.4.4")
+
     // validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // Swagger
     implementation("org.springdoc:springdoc-openapi:2.3.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
+    // AWS
+    implementation("software.amazon.awssdk:bom:2.27.24")
+    implementation("software.amazon.awssdk:s3:2.27.24")
 
     // test
     testImplementation("org.mockito:mockito-core:4.0.0")
@@ -72,6 +81,13 @@ dependencies {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 

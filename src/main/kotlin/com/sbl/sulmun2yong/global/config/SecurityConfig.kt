@@ -1,18 +1,19 @@
 package com.sbl.sulmun2yong.global.config
 
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
+import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomAuthenticationSuccessHandler
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomLogoutSuccessHandler
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStrategy
 import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomInvalidSessionStrategy
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.security.servlet.RequestMatcherProvider
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
-import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.core.session.SessionRegistry
@@ -30,7 +31,9 @@ import org.springframework.web.filter.ForwardedHeaderFilter
 @Configuration
 class SecurityConfig(
     @Value("\${frontend.base-url}")
-    private val frontEndBaseUrl: String,
+    private val frontendBaseUrl: String,
+    @Value("\${backend.base-url}")
+    private val backendBaseUrl: String,
     @Value("\${swagger.username}")
     private val username: String?,
     @Value("\${swagger.password}")
@@ -45,6 +48,10 @@ class SecurityConfig(
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
+    fun cookieAuthorizationRequestRepository(): HttpCookieOAuth2AuthorizationRequestRepository =
+        HttpCookieOAuth2AuthorizationRequestRepository()
+
+    @Bean
     fun userDetailsService(): UserDetailsService {
         val user =
             User
@@ -56,23 +63,33 @@ class SecurityConfig(
         return InMemoryUserDetailsManager(user)
     }
 
+    @Bean
+    fun forwardedHeaderFilter(): FilterRegistrationBean<ForwardedHeaderFilter> {
+        val filterRegistrationBean = FilterRegistrationBean<ForwardedHeaderFilter>()
+
+        filterRegistrationBean.filter = ForwardedHeaderFilter()
+        filterRegistrationBean.order = Ordered.HIGHEST_PRECEDENCE
+
+        return filterRegistrationBean
+    }
+
     @ConditionalOnProperty(prefix = "swagger", name = ["login"], havingValue = "true")
     @Order(0)
     @Bean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .securityMatcher("/swagger-ui/**", "/v3/api-docs/**", "/login")
-            .csrf { it.disable() }
-            .authorizeHttpRequests { requests ->
-                requests
-                    .requestMatchers("/swagger-ui/**")
-                    .hasAnyRole("SWAGGER_USER", "ADMIN")
-                    .requestMatchers("/v3/api-docs/**")
-                    .hasAnyRole("SWAGGER_USER", "ADMIN")
-                    .requestMatchers("/**")
-                    .permitAll()
-            }.formLogin(Customizer.withDefaults())
-
+    fun filterChain(
+        http: HttpSecurity,
+        requestMatcherProvider: RequestMatcherProvider,
+    ): SecurityFilterChain {
+        http {
+            csrf { disable() }
+            securityMatcher("/swagger-ui/**", "/v3/api-docs/**", "/login")
+            authorizeHttpRequests {
+                authorize("/swagger-ui/**", hasAnyRole("SWAGGER_USER", "ADMIN"))
+                authorize("/v3/api-docs/**", hasAnyRole("SWAGGER_USER", "ADMIN"))
+                authorize("/**", permitAll)
+            }
+            formLogin {}
+        }
         return http.build()
     }
 
@@ -87,21 +104,29 @@ class SecurityConfig(
                 disable()
             }
             oauth2Login {
+                authorizationEndpoint {
+                    baseUri = "/oauth2/authorization"
+                    authorizationRequestRepository = cookieAuthorizationRequestRepository()
+                }
                 userInfoEndpoint {
                     userService = customOAuth2Service
                 }
-                authenticationSuccessHandler = CustomAuthenticationSuccessHandler(frontEndBaseUrl)
+                authenticationSuccessHandler =
+                    CustomAuthenticationSuccessHandler(frontendBaseUrl, backendBaseUrl, cookieAuthorizationRequestRepository())
             }
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(frontEndBaseUrl, sessionRegistry())
+                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry())
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
                 authorize("/api/v1/user/**", authenticated)
-                // TODO: 추후에 AUTHENTICATED_USER 로 수정
-                authorize("/api/v1/surveys/workbench/**", hasRole("ADMIN"))
+                authorize("/api/v1/surveys/my-page", authenticated)
+                authorize("/api/v1/surveys/results/**", authenticated)
+                authorize("/api/v1/s3/**", authenticated)
+                authorize("/api/v1/ai/**", authenticated)
+                authorize("/api/v1/surveys/workbench/**", authenticated)
                 authorize("/**", permitAll)
             }
             exceptionHandling {
@@ -120,15 +145,5 @@ class SecurityConfig(
             }
         }
         return http.build()
-    }
-
-    @Bean
-    fun forwardedHeaderFilter(): FilterRegistrationBean<ForwardedHeaderFilter> {
-        val filterRegistrationBean = FilterRegistrationBean<ForwardedHeaderFilter>()
-
-        filterRegistrationBean.filter = ForwardedHeaderFilter()
-        filterRegistrationBean.order = Ordered.HIGHEST_PRECEDENCE
-
-        return filterRegistrationBean
     }
 }

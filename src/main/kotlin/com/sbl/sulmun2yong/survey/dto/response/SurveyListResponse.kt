@@ -1,7 +1,8 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import java.util.Date
 import java.util.UUID
 
@@ -20,13 +21,14 @@ data class SurveyListResponse(
                     surveys.map {
                         SurveyInfoResponse(
                             surveyId = it.id,
-                            thumbnail = it.thumbnail ?: Survey.DEFAULT_THUMBNAIL_URL,
+                            thumbnail = it.thumbnail,
                             title = it.title,
                             description = it.description,
-                            targetParticipants = it.targetParticipantCount,
-                            finishedAt = it.finishedAt,
-                            rewardCount = it.getRewardCount(),
-                            rewards = it.rewards.toRewardInfoResponses(),
+                            targetParticipants = it.rewardSetting.targetParticipantCount,
+                            finishedAt = it.rewardSetting.finishedAt?.value,
+                            rewardCount = it.rewardSetting.getRewardCount(),
+                            rewardSettingType = it.rewardSetting.type,
+                            rewards = it.rewardSetting.rewards.toRewardInfoResponses(),
                         )
                     },
             )
@@ -34,12 +36,13 @@ data class SurveyListResponse(
 
     data class SurveyInfoResponse(
         val surveyId: UUID,
-        val thumbnail: String,
+        val thumbnail: String?,
         val title: String,
         val description: String,
-        val targetParticipants: Int,
+        val targetParticipants: Int?,
         val rewardCount: Int,
-        val finishedAt: Date,
+        val finishedAt: Date?,
+        val rewardSettingType: RewardSettingType,
         val rewards: List<RewardInfoResponse>,
     )
 

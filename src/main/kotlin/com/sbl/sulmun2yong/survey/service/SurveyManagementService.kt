@@ -3,14 +3,12 @@ package com.sbl.sulmun2yong.survey.service
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
-import com.sbl.sulmun2yong.survey.domain.section.SectionId
-import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
-import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -31,22 +29,17 @@ class SurveyManagementService(
         surveySaveRequest: SurveySaveRequest,
         makerId: UUID,
     ) {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
-        val rewards = surveySaveRequest.rewards.map { Reward(name = it.name, category = it.category, count = it.count) }
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         val newSurvey =
             with(surveySaveRequest) {
-                val sectionIds = SectionIds.from(surveySaveRequest.sections.map { SectionId.Standard(it.id) })
                 survey.updateContent(
                     title = this.title,
                     description = this.description,
                     thumbnail = this.thumbnail,
-                    finishedAt = this.finishedAt,
                     finishMessage = this.finishMessage,
-                    targetParticipantCount = this.targetParticipantCount,
-                    rewards = rewards,
-                    sections = this.sections.map { it.toDomain(sectionIds) },
+                    rewardSetting = this.rewardSetting.toDomain(survey.status),
+                    isVisible = this.isVisible,
+                    sections = this.sections.toDomain(),
                 )
             }
         surveyAdapter.save(newSurvey)
@@ -56,9 +49,7 @@ class SurveyManagementService(
         surveyId: UUID,
         makerId: UUID,
     ): SurveyMakeInfoResponse {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
         return SurveyMakeInfoResponse.of(survey)
     }
 
@@ -67,16 +58,41 @@ class SurveyManagementService(
         surveyId: UUID,
         makerId: UUID,
     ) {
-        val survey = surveyAdapter.getSurvey(surveyId)
-        // 현재 유저와 설문 제작자가 다를 경우 예외 발생
-        if (survey.makerId != makerId) throw InvalidSurveyAccessException()
-        surveyAdapter.save(survey.start())
-        val drawingBoard =
-            DrawingBoard.create(
-                surveyId = survey.id,
-                boardSize = survey.targetParticipantCount,
-                rewards = survey.rewards,
-            )
-        drawingBoardAdapter.save(drawingBoard)
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        val startedSurvey = survey.start()
+        surveyAdapter.save(startedSurvey)
+        // 즉시 추첨이면서 최초 시작 시 추첨 보드 생성
+        if (startedSurvey.rewardSetting is ImmediateDrawSetting && survey.status == SurveyStatus.NOT_STARTED) {
+            val drawingBoard =
+                DrawingBoard.create(
+                    surveyId = startedSurvey.id,
+                    boardSize = startedSurvey.rewardSetting.targetParticipantCount,
+                    rewards = startedSurvey.rewardSetting.rewards,
+                )
+            drawingBoardAdapter.save(drawingBoard)
+        }
+    }
+
+    fun editSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        surveyAdapter.save(survey.edit())
+    }
+
+    fun finishSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        surveyAdapter.save(survey.finish())
+    }
+
+    fun deleteSurvey(
+        surveyId: UUID,
+        makerId: UUID,
+    ) {
+        surveyAdapter.delete(surveyId, makerId)
     }
 }

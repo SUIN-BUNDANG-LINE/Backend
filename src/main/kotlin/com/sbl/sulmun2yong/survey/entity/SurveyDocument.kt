@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.survey.entity
 
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
-import com.sbl.sulmun2yong.survey.domain.Reward
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Question
@@ -11,6 +10,9 @@ import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -29,13 +31,16 @@ data class SurveyDocument(
     val description: String,
     val thumbnail: String?,
     val publishedAt: Date?,
-    val finishedAt: Date,
+    val finishedAt: Date?,
     val status: SurveyStatus,
     val finishMessage: String,
-    val targetParticipantCount: Int,
+    val targetParticipantCount: Int?,
+    val rewardSettingType: RewardSettingType,
+    val isVisible: Boolean,
     val makerId: UUID,
     val rewards: List<RewardSubDocument>,
     val sections: List<SectionSubDocument>,
+    val isDeleted: Boolean = false,
 ) : BaseTimeDocument() {
     companion object {
         fun from(survey: Survey) =
@@ -45,12 +50,14 @@ data class SurveyDocument(
                 description = survey.description,
                 thumbnail = survey.thumbnail,
                 publishedAt = survey.publishedAt,
-                finishedAt = survey.finishedAt,
+                finishedAt = survey.rewardSetting.finishedAt?.value,
                 status = survey.status,
                 finishMessage = survey.finishMessage,
-                targetParticipantCount = survey.targetParticipantCount,
+                targetParticipantCount = survey.rewardSetting.targetParticipantCount,
                 makerId = survey.makerId,
-                rewards = survey.rewards.map { it.toDocument() },
+                rewards = survey.rewardSetting.rewards.map { it.toDocument() },
+                rewardSettingType = survey.rewardSetting.type,
+                isVisible = survey.isVisible,
                 sections = survey.sections.map { it.toDocument() },
             )
 
@@ -145,23 +152,35 @@ data class SurveyDocument(
         val isAllowOther: Boolean,
     )
 
-    fun toDomain(): Survey {
-        val sectionIds = SectionIds.from(this.sections.map { SectionId.Standard(it.sectionId) })
-        return Survey(
+    fun toDomain(): Survey =
+        Survey(
             id = this.id,
             title = this.title,
             description = this.description,
             thumbnail = this.thumbnail,
-            finishedAt = this.finishedAt,
             publishedAt = this.publishedAt,
             status = this.status,
             finishMessage = this.finishMessage,
-            targetParticipantCount = this.targetParticipantCount,
+            rewardSetting =
+                RewardSetting.of(
+                    this.rewardSettingType,
+                    this.rewards.map { it.toDomain() },
+                    this.targetParticipantCount,
+                    this.finishedAt,
+                    this.status,
+                ),
+            isVisible = this.isVisible,
             makerId = this.makerId,
-            rewards = this.rewards.map { it.toDomain() },
-            sections = this.sections.map { it.toDomain(sectionIds) },
+            sections = this.sections.toDomain(),
         )
-    }
+
+    private fun List<SectionSubDocument>.toDomain() =
+        if (this.isEmpty()) {
+            listOf()
+        } else {
+            val sectionIds = SectionIds.from(this.map { SectionId.Standard(it.sectionId) })
+            this.map { it.toDomain(sectionIds) }
+        }
 
     private fun RewardSubDocument.toDomain() =
         Reward(

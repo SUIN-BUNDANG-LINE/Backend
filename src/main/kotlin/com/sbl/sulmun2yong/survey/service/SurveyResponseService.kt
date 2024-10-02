@@ -5,11 +5,9 @@ import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Participant
-import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import com.sbl.sulmun2yong.survey.exception.AlreadyParticipatedException
-import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -32,18 +30,14 @@ class SurveyResponseService(
             validateIsAlreadyParticipated(surveyId, visitorId)
             fingerprintApi.validateVisitorId(visitorId)
         }
-
         val survey = surveyAdapter.getSurvey(surveyId)
-        if (survey.status != SurveyStatus.IN_PROGRESS) {
-            throw SurveyClosedException()
-        }
         val surveyResponse = surveyResponseRequest.toDomain(surveyId)
         survey.validateResponse(surveyResponse)
         // TODO: 참가자 객체의 UserId에 실제 유저 값 넣기
         val participant = Participant.create(visitorId, surveyId, null)
-        participantAdapter.saveParticipant(participant)
-        responseAdapter.saveSurveyResponse(surveyResponse, participant.id)
-        return SurveyParticipantResponse(participant.id)
+        participantAdapter.insert(participant)
+        responseAdapter.insertSurveyResponse(surveyResponse, participant.id)
+        return SurveyParticipantResponse(participant.id, survey.isImmediateDraw())
     }
 
     private fun validateIsAlreadyParticipated(

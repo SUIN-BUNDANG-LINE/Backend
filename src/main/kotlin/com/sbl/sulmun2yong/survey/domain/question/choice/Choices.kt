@@ -9,9 +9,13 @@ data class Choices(
     /** 기타 선택지 허용 여부 */
     val isAllowOther: Boolean,
 ) {
+    companion object {
+        const val MAX_SIZE = 20
+    }
+
     init {
         if (standardChoices.isEmpty()) throw InvalidChoiceException()
-        if (standardChoices.size != standardChoices.distinct().size) throw InvalidChoiceException()
+        if (standardChoices.size > MAX_SIZE) throw InvalidChoiceException()
     }
 
     /** 응답이 선택지에 포함되는지 확인 */
@@ -22,4 +26,6 @@ data class Choices(
 
     /** 선택지 기반 라우팅의 선택지와 같은지 비교하기 위해 선택지 집합을 얻는다. */
     fun getChoiceSet() = if (isAllowOther) standardChoices.toSet() + Choice.Other else standardChoices.toSet()
+
+    fun isUnique() = standardChoices.size == standardChoices.distinct().size
 }

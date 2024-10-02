@@ -4,7 +4,7 @@ import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
-import com.sbl.sulmun2yong.survey.domain.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import java.util.UUID
 
 class DrawingBoard(

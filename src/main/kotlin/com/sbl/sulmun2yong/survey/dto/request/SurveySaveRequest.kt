@@ -1,11 +1,15 @@
 package com.sbl.sulmun2yong.survey.dto.request
 
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
+import com.sbl.sulmun2yong.survey.domain.reward.Reward
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
+import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -19,12 +23,44 @@ data class SurveySaveRequest(
     val description: String,
     // TODO: 섬네일의 URL이 우리 서비스의 S3 URL인지 확인하기
     val thumbnail: String?,
-    val finishedAt: Date,
     val finishMessage: String,
-    val targetParticipantCount: Int,
-    val rewards: List<RewardCreateRequest>,
+    val isVisible: Boolean,
+    val rewardSetting: RewardSettingResponse,
     val sections: List<SectionCreateRequest>,
 ) {
+    fun List<SectionCreateRequest>.toDomain() =
+        if (isEmpty()) {
+            listOf()
+        } else {
+            val sectionIds = SectionIds.from(this.map { SectionId.Standard(it.sectionId) })
+            this.map {
+                Section(
+                    id = SectionId.Standard(it.sectionId),
+                    title = it.title,
+                    description = it.description,
+                    routingStrategy = it.getRoutingStrategy(),
+                    questions = it.questions.map { question -> question.toDomain() },
+                    sectionIds = sectionIds,
+                )
+            }
+        }
+
+    data class RewardSettingResponse(
+        val type: RewardSettingType,
+        val rewards: List<RewardCreateRequest>,
+        val targetParticipantCount: Int?,
+        val finishedAt: Date?,
+    ) {
+        fun toDomain(surveyStatus: SurveyStatus) =
+            RewardSetting.of(
+                type,
+                rewards.map { Reward(it.name, it.category, it.count) },
+                targetParticipantCount,
+                finishedAt,
+                surveyStatus,
+            )
+    }
+
     data class RewardCreateRequest(
         val name: String,
         val category: String,
@@ -32,23 +68,13 @@ data class SurveySaveRequest(
     )
 
     data class SectionCreateRequest(
-        val id: UUID,
+        val sectionId: UUID,
         val title: String,
         val description: String,
         val questions: List<QuestionCreateRequest>,
         val routeDetails: RouteDetailsCreateRequest,
     ) {
-        fun toDomain(sectionIds: SectionIds) =
-            Section(
-                id = SectionId.Standard(id),
-                title = title,
-                description = description,
-                routingStrategy = getRoutingStrategy(),
-                questions = questions.map { it.toDomain() },
-                sectionIds = sectionIds,
-            )
-
-        private fun getRoutingStrategy() =
+        fun getRoutingStrategy() =
             when (routeDetails.type) {
                 RoutingType.NUMERICAL_ORDER -> RoutingStrategy.NumericalOrder
                 RoutingType.SET_BY_USER -> RoutingStrategy.SetByUser(SectionId.from(routeDetails.nextSectionId))
@@ -76,7 +102,7 @@ data class SurveySaveRequest(
     )
 
     data class QuestionCreateRequest(
-        val id: UUID,
+        val questionId: UUID,
         val type: QuestionType,
         val title: String,
         val description: String,
@@ -88,14 +114,14 @@ data class SurveySaveRequest(
             when (type) {
                 QuestionType.TEXT_RESPONSE ->
                     StandardTextQuestion(
-                        id = id,
+                        id = questionId,
                         title = title,
                         description = description,
                         isRequired = isRequired,
                     )
                 QuestionType.SINGLE_CHOICE ->
                     StandardSingleChoiceQuestion(
-                        id = id,
+                        id = questionId,
                         title = title,
                         description = description,
                         isRequired = isRequired,
@@ -107,7 +133,7 @@ data class SurveySaveRequest(
                     )
                 QuestionType.MULTIPLE_CHOICE ->
                     StandardMultipleChoiceQuestion(
-                        id = id,
+                        id = questionId,
                         title = title,
                         description = description,
                         isRequired = isRequired,

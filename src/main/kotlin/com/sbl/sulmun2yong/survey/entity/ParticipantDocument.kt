@@ -18,9 +18,9 @@ data class ParticipantDocument(
         fun of(participant: Participant) =
             ParticipantDocument(
                 id = participant.id,
+                visitorId = participant.visitorId,
                 surveyId = participant.surveyId,
                 userId = participant.userId,
-                visitorId = participant.visitorId,
             )
     }
 
@@ -30,5 +30,6 @@ data class ParticipantDocument(
             visitorId = this.visitorId,
             surveyId = this.surveyId,
             userId = this.userId,
+            createdAt = this.createdAt,
         )
 }

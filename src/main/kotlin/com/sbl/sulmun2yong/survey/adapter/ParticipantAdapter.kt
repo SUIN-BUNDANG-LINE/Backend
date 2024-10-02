@@ -11,15 +11,20 @@ import java.util.UUID
 class ParticipantAdapter(
     val participantRepository: ParticipantRepository,
 ) {
-    fun saveParticipant(participant: Participant) {
-        participantRepository.save(ParticipantDocument.of(participant))
+    fun insert(participant: Participant) {
+        participantRepository.insert(ParticipantDocument.of(participant))
     }
 
-    fun getParticipant(id: UUID): Participant =
+    fun getByParticipantId(id: UUID): Participant =
         participantRepository
             .findById(id)
             .orElseThrow { InvalidParticipantException() }
             .toDomain()
+
+    fun findBySurveyId(surveyId: UUID): List<Participant> =
+        participantRepository
+            .findBySurveyId(surveyId)
+            .map { it.toDomain() }
 
     fun findBySurveyIdAndVisitorId(
         surveyId: UUID,
