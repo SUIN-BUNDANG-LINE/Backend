@@ -34,6 +34,8 @@ class SecurityConfig(
     private val frontendBaseUrl: String,
     @Value("\${backend.base-url}")
     private val backendBaseUrl: String,
+    @Value("\${cookie.domain}")
+    private val cookieDomain: String,
     @Value("\${swagger.username}")
     private val username: String?,
     @Value("\${swagger.password}")
@@ -112,7 +114,12 @@ class SecurityConfig(
                     userService = customOAuth2Service
                 }
                 authenticationSuccessHandler =
-                    CustomAuthenticationSuccessHandler(frontendBaseUrl, backendBaseUrl, cookieAuthorizationRequestRepository())
+                    CustomAuthenticationSuccessHandler(
+                        frontendBaseUrl,
+                        backendBaseUrl,
+                        cookieDomain,
+                        cookieAuthorizationRequestRepository(),
+                    )
             }
             logout {
                 logoutUrl = "/user/logout"

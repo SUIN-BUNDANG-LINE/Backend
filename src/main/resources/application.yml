@@ -36,6 +36,9 @@ frontend:
 backend:
     base-url: http://localhost:8080
 
+cookie:
+    domain: localhost
+
 ai-server:
     base-url: http://localhost:8000
 
