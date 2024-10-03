@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 @RequestMapping("api/v1/ai/chat")
@@ -20,6 +21,7 @@ class AIChatController(
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
         request: HttpServletRequest,
     ): ResponseEntity<SurveyMakeInfoResponse> {
-        chatService.editSurveyDataWithChat(editSurveyDataWithChatRequest)
+        val chatSessionId = request.getAttribute("chatSessionId") as UUID
+        return ResponseEntity.ok(chatService.editSurveyDataWithChat(chatSessionId, editSurveyDataWithChatRequest))
     }
 }

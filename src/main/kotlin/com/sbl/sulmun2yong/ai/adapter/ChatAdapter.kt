@@ -1,9 +1,11 @@
 package com.sbl.sulmun2yong.ai.adapter
 
 import com.sbl.sulmun2yong.ai.dto.ChatSessionIdWithSurveyGeneratedByAI
-import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
+import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.question.Question
+import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -18,16 +20,16 @@ class ChatAdapter(
     private val restTemplate: RestTemplate,
 ) {
     fun requestEditSurveyWithChat(
-        surveyId: UUID,
-        modificationTargetId: UUID,
+        chatSessionId: UUID,
+        survey: Survey,
         userPrompt: String,
     ): SurveyMakeInfoResponse {
-        val requestUrl = "$aiServerBaseUrl/chat/edit"
+        val requestUrl = "$aiServerBaseUrl/chat/edit/survey"
 
         val requestBody =
             mapOf(
-                "survey_id" to surveyId,
-                "modification_target_id" to modificationTargetId,
+                "chat_session_id" to chatSessionId,
+                "survey" to survey,
                 "user_prompt" to userPrompt,
             )
 
@@ -35,43 +37,43 @@ class ChatAdapter(
     }
 
     fun requestEditSectionWithChat(
-        surveyId: UUID,
-        modificationTargetId: UUID,
+        chatSessionId: UUID,
+        section: Section,
         userPrompt: String,
     ): SurveyMakeInfoResponse {
-        val requestUrl = "$aiServerBaseUrl/chat/edit"
+        val requestUrl = "$aiServerBaseUrl/chat/edit/section"
 
         val requestBody =
             mapOf(
-                "survey_id" to surveyId,
-                "modification_target_id" to modificationTargetId,
+                "chat_session_id" to chatSessionId,
+                "section" to Section,
                 "user_prompt" to userPrompt,
             )
 
-        return requestToEditSurveyWithChat(requestUrl, requestBody)
+        return requestEditWithChat(requestUrl, requestBody)
     }
 
     fun requestEditQuestionWithChat(
-        surveyId: UUID,
-        modificationTargetId: UUID,
+        chatSessionId: UUID,
+        question: Question,
         userPrompt: String,
     ): SurveyMakeInfoResponse {
-        val requestUrl = "$aiServerBaseUrl/chat/edit"
+        val requestUrl = "$aiServerBaseUrl/chat/edit/question"
 
         val requestBody =
             mapOf(
-                "survey_id" to surveyId,
-                "modification_target_id" to modificationTargetId,
+                "chat_session_id" to chatSessionId,
+                "question" to Question,
                 "user_prompt" to userPrompt,
             )
 
-        return requestToEditSurveyWithChat(requestUrl, requestBody)
+        return requestEditWithChat(requestUrl, requestBody)
     }
 
     private fun requestEditWithChat(
         requestUrl: String,
-        requestBody: Map<String, String>,
-    ): AISurveyGenerationResponse {
+        requestBody: Map<String, Any>,
+    ): SurveyMakeInfoResponse {
         val chatSessionIdWithSurveyGeneratedByAI =
             try {
                 restTemplate
@@ -84,9 +86,7 @@ class ChatAdapter(
                 throw PythonServerExceptionMapper.mapException(e)
             }
 
-        val chatSessionId = chatSessionIdWithSurveyGeneratedByAI.chatSessionId
         val survey = chatSessionIdWithSurveyGeneratedByAI.surveyGeneratedByAI.toDomain()
-        val surveyMakeInfoResponse = SurveyMakeInfoResponse.of(survey)
-        return AISurveyGenerationResponse.from(chatSessionId, surveyMakeInfoResponse)
+        return SurveyMakeInfoResponse.of(survey)
     }
 }
