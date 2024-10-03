@@ -9,52 +9,66 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
+import java.util.UUID
 
 @Component
-class GenerateAdapter(
+class ChatAdapter(
     @Value("\${ai-server.base-url}")
     private val aiServerBaseUrl: String,
     private val restTemplate: RestTemplate,
 ) {
-    fun requestSurveyGenerationWithFileUrl(
-        job: String,
-        groupName: String,
-        fileUrl: String,
+    fun requestEditSurveyWithChat(
+        surveyId: UUID,
+        modificationTargetId: UUID,
         userPrompt: String,
-    ): AISurveyGenerationResponse {
-        val requestUrl = "$aiServerBaseUrl/generate/survey/file-url"
+    ): SurveyMakeInfoResponse {
+        val requestUrl = "$aiServerBaseUrl/chat/edit"
 
         val requestBody =
             mapOf(
-                "job" to job,
-                "group_name" to groupName,
-                "file_url" to fileUrl,
+                "survey_id" to surveyId,
+                "modification_target_id" to modificationTargetId,
                 "user_prompt" to userPrompt,
             )
 
-        return requestGenerateSurvey(requestUrl, requestBody)
+        return requestEditWithChat(requestUrl, requestBody)
     }
 
-    fun requestSurveyGenerationWithTextDocument(
-        job: String,
-        groupName: String,
-        textDocument: String,
+    fun requestEditSectionWithChat(
+        surveyId: UUID,
+        modificationTargetId: UUID,
         userPrompt: String,
-    ): AISurveyGenerationResponse {
-        val requestUrl = "$aiServerBaseUrl/generate/survey/text-document"
+    ): SurveyMakeInfoResponse {
+        val requestUrl = "$aiServerBaseUrl/chat/edit"
 
         val requestBody =
             mapOf(
-                "job" to job,
-                "group_name" to groupName,
-                "text_document" to textDocument,
+                "survey_id" to surveyId,
+                "modification_target_id" to modificationTargetId,
                 "user_prompt" to userPrompt,
             )
 
-        return requestGenerateSurvey(requestUrl, requestBody)
+        return requestToEditSurveyWithChat(requestUrl, requestBody)
     }
 
-    private fun requestGenerateSurvey(
+    fun requestEditQuestionWithChat(
+        surveyId: UUID,
+        modificationTargetId: UUID,
+        userPrompt: String,
+    ): SurveyMakeInfoResponse {
+        val requestUrl = "$aiServerBaseUrl/chat/edit"
+
+        val requestBody =
+            mapOf(
+                "survey_id" to surveyId,
+                "modification_target_id" to modificationTargetId,
+                "user_prompt" to userPrompt,
+            )
+
+        return requestToEditSurveyWithChat(requestUrl, requestBody)
+    }
+
+    private fun requestEditWithChat(
         requestUrl: String,
         requestBody: Map<String, String>,
     ): AISurveyGenerationResponse {
