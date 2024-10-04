@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-import com.sbl.sulmun2yong.ai.dto.ChatSessionIdWithSurveyGeneratedByAI
+import com.sbl.sulmun2yong.ai.dto.PythonServerQuestionFormat
+import com.sbl.sulmun2yong.ai.dto.PythonServerSectionFormat
+import com.sbl.sulmun2yong.ai.dto.PythonServerSurveyFormat
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.domain.Survey
@@ -29,7 +31,7 @@ class ChatAdapter(
         val requestBody =
             mapOf(
                 "chat_session_id" to chatSessionId,
-                "survey" to survey,
+                "survey" to PythonServerSurveyFormat.of(survey),
                 "user_prompt" to userPrompt,
             )
 
@@ -46,7 +48,7 @@ class ChatAdapter(
         val requestBody =
             mapOf(
                 "chat_session_id" to chatSessionId,
-                "section" to Section,
+                "section" to PythonServerSectionFormat.of(section),
                 "user_prompt" to userPrompt,
             )
 
@@ -63,7 +65,7 @@ class ChatAdapter(
         val requestBody =
             mapOf(
                 "chat_session_id" to chatSessionId,
-                "question" to Question,
+                "question" to PythonServerQuestionFormat.of(question),
                 "user_prompt" to userPrompt,
             )
 
@@ -74,19 +76,19 @@ class ChatAdapter(
         requestUrl: String,
         requestBody: Map<String, Any>,
     ): SurveyMakeInfoResponse {
-        val chatSessionIdWithSurveyGeneratedByAI =
+        val surveyGeneratedByAI =
             try {
                 restTemplate
                     .postForEntity(
                         requestUrl,
                         requestBody,
-                        ChatSessionIdWithSurveyGeneratedByAI::class.java,
+                        PythonServerSurveyFormat::class.java,
                     ).body ?: throw SurveyGenerationByAIFailedException()
             } catch (e: HttpClientErrorException) {
                 throw PythonServerExceptionMapper.mapException(e)
             }
 
-        val survey = chatSessionIdWithSurveyGeneratedByAI.surveyGeneratedByAI.toDomain()
+        val survey = surveyGeneratedByAI.toDomain()
         return SurveyMakeInfoResponse.of(survey)
     }
 }

@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.ai.service
 
 import com.sbl.sulmun2yong.ai.adapter.ChatAdapter
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
+import com.sbl.sulmun2yong.ai.exception.InvalidModificationTargetId
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.stereotype.Service
@@ -18,14 +19,25 @@ class ChatService(
     ): SurveyMakeInfoResponse {
         val surveyId = editSurveyDataWithChatRequest.surveyId
         val modificationTargetId = editSurveyDataWithChatRequest.modificationTargetId
+        val userPrompt = editSurveyDataWithChatRequest.userPrompt
+
         val targetSurvey = surveyAdapter.getSurvey(surveyId)
 
-        val survey = targetSurvey.findSurveyById(modificationTargetId)!!
-        val section = targetSurvey.findSectionById(modificationTargetId)!!
-        val question = targetSurvey.findQuestionById(modificationTargetId)!!
+        val surveyOfTargetSurvey = targetSurvey.findSurveyById(modificationTargetId)
+        if (surveyOfTargetSurvey != null) {
+            return chatAdapter.requestEditSurveyWithChat(chatSessionId, surveyOfTargetSurvey, userPrompt)
+        }
 
-        chatAdapter.requestEditSurveyWithChat(chatSessionId, survey, editSurveyDataWithChatRequest.userPrompt)
-        chatAdapter.requestEditSectionWithChat(chatSessionId, section, editSurveyDataWithChatRequest.userPrompt)
-        return chatAdapter.requestEditQuestionWithChat(chatSessionId, question, editSurveyDataWithChatRequest.userPrompt)
+        val sectionOfTargetSurvey = targetSurvey.findSectionById(modificationTargetId)
+        if (sectionOfTargetSurvey != null) {
+            return chatAdapter.requestEditSectionWithChat(chatSessionId, sectionOfTargetSurvey, userPrompt)
+        }
+
+        val questionOfTargetSurvey = targetSurvey.findQuestionById(modificationTargetId)
+        if (questionOfTargetSurvey != null) {
+            return chatAdapter.requestEditQuestionWithChat(chatSessionId, questionOfTargetSurvey, userPrompt)
+        }
+
+        throw InvalidModificationTargetId()
     }
 }

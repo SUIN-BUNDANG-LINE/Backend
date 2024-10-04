@@ -5,10 +5,10 @@ import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 
-class SectionGeneratedByAI(
+class PythonServerSectionFormat(
     val title: String,
     val description: String,
-    val questions: List<QuestionGeneratedByAI>,
+    val questions: List<PythonServerQuestionFormat>,
 ) {
     private val defaultRoutingStrategy = RoutingStrategy.NumericalOrder
 
@@ -24,4 +24,13 @@ class SectionGeneratedByAI(
             questions = questions.map { it.toDomain() },
             sectionIds = sectionIds,
         )
+
+    companion object {
+        fun of(section: Section) =
+            PythonServerSectionFormat(
+                title = section.title,
+                description = section.description,
+                questions = section.questions.map { PythonServerQuestionFormat.of(it) },
+            )
+    }
 }

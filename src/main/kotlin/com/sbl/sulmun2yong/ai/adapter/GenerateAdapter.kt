@@ -71,7 +71,7 @@ class GenerateAdapter(
             }
 
         val chatSessionId = chatSessionIdWithSurveyGeneratedByAI.chatSessionId
-        val survey = chatSessionIdWithSurveyGeneratedByAI.surveyGeneratedByAI.toDomain()
+        val survey = chatSessionIdWithSurveyGeneratedByAI.pythonServerSurveyFormat.toDomain()
         val surveyMakeInfoResponse = SurveyMakeInfoResponse.of(survey)
         return AISurveyGenerationResponse.from(chatSessionId, surveyMakeInfoResponse)
     }

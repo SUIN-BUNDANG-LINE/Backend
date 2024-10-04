@@ -4,5 +4,5 @@ import java.util.UUID
 
 class ChatSessionIdWithSurveyGeneratedByAI(
     val chatSessionId: UUID,
-    val surveyGeneratedByAI: SurveyGeneratedByAI,
+    val pythonServerSurveyFormat: PythonServerSurveyFormat,
 )

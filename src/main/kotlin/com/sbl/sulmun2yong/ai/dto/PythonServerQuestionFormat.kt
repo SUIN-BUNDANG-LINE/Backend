@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.ai.dto
 
+import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
@@ -8,7 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuest
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import java.util.UUID
 
-class QuestionGeneratedByAI(
+class PythonServerQuestionFormat(
     private val questionType: QuestionType,
     private val title: String,
     private val isRequired: Boolean,
@@ -46,5 +47,14 @@ class QuestionGeneratedByAI(
 
     companion object {
         private const val DEFAULT_DESCRIPTION = ""
+
+        fun of(question: Question) =
+            PythonServerQuestionFormat(
+                questionType = QuestionType.SINGLE_CHOICE,
+                title = question.title,
+                isRequired = question.isRequired,
+                choices = question.choices?.standardChoices?.map { it.content },
+                isAllowOther = question.choices?.isAllowOther ?: false,
+            )
     }
 }

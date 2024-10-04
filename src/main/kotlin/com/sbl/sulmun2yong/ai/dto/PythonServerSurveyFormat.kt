@@ -5,11 +5,11 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.util.UUID
 
-class SurveyGeneratedByAI(
+class PythonServerSurveyFormat(
     private val title: String,
     private val description: String,
     private val finishMessage: String,
-    private val sections: List<SectionGeneratedByAI>,
+    private val sections: List<PythonServerSectionFormat>,
 ) {
     fun toDomain(): Survey {
         val sectionIds = List(sections.size) { SectionId.Standard(UUID.randomUUID()) }
@@ -33,5 +33,15 @@ class SurveyGeneratedByAI(
             isVisible = false,
             sections = sections,
         )
+    }
+
+    companion object {
+        fun of(survey: Survey) =
+            PythonServerSurveyFormat(
+                title = survey.title,
+                description = survey.description,
+                finishMessage = survey.finishMessage,
+                sections = survey.sections.map { PythonServerSectionFormat.of(it) },
+            )
     }
 }
