@@ -11,7 +11,7 @@ class PythonServerSurveyFormat(
     val finishMessage: String,
     val sections: List<PythonServerSectionFormat>,
 ) {
-    fun toDomain(): Survey {
+    fun toNewSurvey(): Survey {
         val sectionIds = List(sections.size) { SectionId.Standard(UUID.randomUUID()) }
         val sectionIdsManger = SectionIds.from(sectionIds)
 

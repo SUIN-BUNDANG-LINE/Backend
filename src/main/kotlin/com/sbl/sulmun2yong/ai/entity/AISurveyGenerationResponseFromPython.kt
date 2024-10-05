@@ -10,6 +10,6 @@ data class AISurveyGenerationResponseFromPython(
     fun toDomain() =
         AIGeneratedSurvey(
             chatSessionId = chatSessionId,
-            survey = pythonServerSurveyFormat.toDomain(),
+            survey = pythonServerSurveyFormat.toNewSurvey(),
         )
 }
