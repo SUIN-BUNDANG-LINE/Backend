@@ -21,7 +21,10 @@ class AIChatController(
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
         request: HttpServletRequest,
     ): ResponseEntity<SurveyMakeInfoResponse> {
-        val chatSessionId = request.getAttribute("chatSessionId") as UUID
-        return ResponseEntity.ok(chatService.editSurveyDataWithChat(chatSessionId, editSurveyDataWithChatRequest))
+        val cookies = request.cookies
+        val chatSessionId =
+            cookies?.firstOrNull { it.name == "chat-session-id" }?.value ?: throw RuntimeException("chat-session-id cookie not found")
+
+        return ResponseEntity.ok(chatService.editSurveyDataWithChat(UUID.fromString(chatSessionId), editSurveyDataWithChatRequest))
     }
 }

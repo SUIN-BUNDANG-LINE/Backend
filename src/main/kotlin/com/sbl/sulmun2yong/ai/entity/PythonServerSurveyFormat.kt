@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.dto
+package com.sbl.sulmun2yong.ai.entity
 
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
@@ -6,10 +6,10 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.util.UUID
 
 class PythonServerSurveyFormat(
-    private val title: String,
-    private val description: String,
-    private val finishMessage: String,
-    private val sections: List<PythonServerSectionFormat>,
+    val title: String,
+    val description: String,
+    val finishMessage: String,
+    val sections: List<PythonServerSectionFormat>,
 ) {
     fun toDomain(): Survey {
         val sectionIds = List(sections.size) { SectionId.Standard(UUID.randomUUID()) }

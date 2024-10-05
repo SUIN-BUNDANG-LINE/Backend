@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.dto
+package com.sbl.sulmun2yong.ai.entity
 
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
@@ -10,13 +10,13 @@ class PythonServerSectionFormat(
     val description: String,
     val questions: List<PythonServerQuestionFormat>,
 ) {
-    private val defaultRoutingStrategy = RoutingStrategy.NumericalOrder
-
     fun toDomain(
         sectionId: SectionId.Standard,
         sectionIds: SectionIds,
-    ): Section =
-        Section(
+    ): Section {
+        val defaultRoutingStrategy = RoutingStrategy.NumericalOrder
+
+        return Section(
             id = sectionId,
             title = title,
             description = description,
@@ -24,6 +24,7 @@ class PythonServerSectionFormat(
             questions = questions.map { it.toDomain() },
             sectionIds = sectionIds,
         )
+    }
 
     companion object {
         fun of(section: Section) =
