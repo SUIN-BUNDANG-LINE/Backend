@@ -16,13 +16,14 @@ class ChatService(
 ) {
     fun editSurveyDataWithChat(
         chatSessionId: UUID,
+        makerId: UUID,
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
     ): AISurveyEditResponse {
         val surveyId = editSurveyDataWithChatRequest.surveyId
         val modificationTargetId = editSurveyDataWithChatRequest.modificationTargetId
         val userPrompt = editSurveyDataWithChatRequest.userPrompt
 
-        val targetSurvey: Survey = surveyAdapter.getSurvey(surveyId)
+        val targetSurvey: Survey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
 
         val surveyOfTargetSurvey = targetSurvey.findSurveyById(modificationTargetId)
         if (surveyOfTargetSurvey != null) {
