@@ -1,5 +1,11 @@
 package com.sbl.sulmun2yong.ai.adapter
 
+import com.sbl.sulmun2yong.ai.domain.PythonFormattedQuestion
+import com.sbl.sulmun2yong.ai.domain.PythonFormattedSection
+import com.sbl.sulmun2yong.ai.domain.PythonFormattedSurvey
+import com.sbl.sulmun2yong.ai.dto.python.request.EditQuestionRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.EditSectionRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.EditSurveyRequestToPython
 import com.sbl.sulmun2yong.ai.repository.ChatRepository
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Question
@@ -15,28 +21,39 @@ class ChatAdapter(
         chatSessionId: UUID,
         survey: Survey,
         userPrompt: String,
-    ): Survey {
-        val pythonServerSurveyFormat = chatRepository.requestEditSurvey(chatSessionId, survey, userPrompt)
-        return pythonServerSurveyFormat.toNewSurvey()
-    }
+    ): PythonFormattedSurvey =
+        chatRepository
+            .requestEditSurvey(
+                EditSurveyRequestToPython(
+                    chatSessionId = chatSessionId,
+                    survey = PythonFormattedSurvey.of(survey),
+                    userPrompt = userPrompt,
+                ),
+            ).toDomain()
 
     fun requestEditSectionWithChat(
         chatSessionId: UUID,
         section: Section,
         userPrompt: String,
-    ): Section {
-        val pythonServerSectionFormat = chatRepository.requestEditSection(chatSessionId, section, userPrompt)
-        val sectionId = section.id
-        val sectionIds = section.sectionIds
-        return pythonServerSectionFormat.toDomain(sectionId, sectionIds)
-    }
+    ) = chatRepository
+        .requestEditSection(
+            EditSectionRequestToPython(
+                chatSessionId = chatSessionId,
+                section = PythonFormattedSection.of(section),
+                userPrompt = userPrompt,
+            ),
+        ).toDomain()
 
     fun requestEditQuestionWithChat(
         chatSessionId: UUID,
         question: Question,
         userPrompt: String,
-    ): Question {
-        val pythonServerQuestionFormat = chatRepository.requestEditQuestion(chatSessionId, question, userPrompt)
-        return pythonServerQuestionFormat.toDomain()
-    }
+    ) = chatRepository
+        .requestEditQuestion(
+            EditQuestionRequestToPython(
+                chatSessionId = chatSessionId,
+                question = PythonFormattedQuestion.of(question),
+                userPrompt = userPrompt,
+            ),
+        ).toDomain()
 }

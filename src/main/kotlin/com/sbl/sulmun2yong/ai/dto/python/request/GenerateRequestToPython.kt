@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.dto.python.request.generate
+package com.sbl.sulmun2yong.ai.dto.python.request
 
 interface GenerateRequestToPython {
     val job: String

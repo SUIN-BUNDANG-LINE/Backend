@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.global.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters
 import org.springframework.context.annotation.Bean
@@ -14,12 +16,18 @@ import org.springframework.web.util.DefaultUriBuilderFactory
 class RestTemplateConfig(
     @Value("\${ai-server.base-url}")
     private val aiServerBaseUrl: String,
-    private val snakeTypeObjectMapper: ObjectMapper,
 ) {
     @Bean
-    fun requestToPythonServerTemplate(messageConverters: HttpMessageConverters) =
-        RestTemplate(listOf(MappingJackson2HttpMessageConverter(snakeTypeObjectMapper)))
+    fun requestToPythonServerTemplate(messageConverters: HttpMessageConverters): RestTemplate {
+        val objectMapper =
+            ObjectMapper().apply {
+                propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+                registerKotlinModule()
+            }
+
+        return RestTemplate(listOf(MappingJackson2HttpMessageConverter(objectMapper)))
             .apply {
                 uriTemplateHandler = DefaultUriBuilderFactory(aiServerBaseUrl)
             }
+    }
 }

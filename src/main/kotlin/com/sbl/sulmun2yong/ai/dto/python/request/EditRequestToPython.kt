@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.ai.dto.python.request.edit
+package com.sbl.sulmun2yong.ai.dto.python.request
 
 import java.util.UUID
 

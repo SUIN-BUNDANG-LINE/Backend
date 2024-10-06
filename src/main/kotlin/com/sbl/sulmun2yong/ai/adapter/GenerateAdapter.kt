@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.ai.adapter
 
 import com.sbl.sulmun2yong.ai.domain.AIGeneratedSurvey
+import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithFileUrlRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithTextDocumentRequestToPython
 import com.sbl.sulmun2yong.ai.repository.GenerateRepository
 import org.springframework.stereotype.Component
 
@@ -14,15 +16,17 @@ class GenerateAdapter(
         fileUrl: String,
         userPrompt: String,
     ): AIGeneratedSurvey {
-        val aiSurveyGenerationResponseFromPython =
+        val generateSurveyResponseFromPython =
             generateRepository.requestWithFileUrl(
-                job = job,
-                groupName = groupName,
-                fileUrl = fileUrl,
-                userPrompt = userPrompt,
+                GenerateWithFileUrlRequestToPython(
+                    job = job,
+                    groupName = groupName,
+                    userPrompt = userPrompt,
+                    fileUrl = fileUrl,
+                ),
             )
 
-        return aiSurveyGenerationResponseFromPython.toDomain()
+        return generateSurveyResponseFromPython.toDomain()
     }
 
     fun requestSurveyGenerationWithTextDocument(
@@ -31,14 +35,16 @@ class GenerateAdapter(
         textDocument: String,
         userPrompt: String,
     ): AIGeneratedSurvey {
-        val aiSurveyGenerationResponseFromPython =
+        val generateSurveyResponseFromPython =
             generateRepository.requestWithTextDocument(
-                job = job,
-                groupName = groupName,
-                textDocument = textDocument,
-                userPrompt = userPrompt,
+                GenerateWithTextDocumentRequestToPython(
+                    job = job,
+                    groupName = groupName,
+                    userPrompt = userPrompt,
+                    textDocument = textDocument,
+                ),
             )
 
-        return aiSurveyGenerationResponseFromPython.toDomain()
+        return generateSurveyResponseFromPython.toDomain()
     }
 }

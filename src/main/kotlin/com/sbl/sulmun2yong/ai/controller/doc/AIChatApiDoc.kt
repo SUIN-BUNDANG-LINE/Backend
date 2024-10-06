@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.ai.controller.doc
 
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
-import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
+import com.sbl.sulmun2yong.ai.dto.response.AISurveyEditResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
@@ -16,5 +16,5 @@ interface AIChatApiDoc {
     fun editSurveyWithChat(
         @RequestBody editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
         request: HttpServletRequest,
-    ): ResponseEntity<SurveyMakeInfoResponse>
+    ): ResponseEntity<AISurveyEditResponse>
 }

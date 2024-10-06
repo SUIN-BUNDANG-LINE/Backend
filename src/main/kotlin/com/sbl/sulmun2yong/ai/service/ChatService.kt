@@ -2,10 +2,10 @@ package com.sbl.sulmun2yong.ai.service
 
 import com.sbl.sulmun2yong.ai.adapter.ChatAdapter
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
+import com.sbl.sulmun2yong.ai.dto.response.AISurveyEditResponse
 import com.sbl.sulmun2yong.ai.exception.InvalidModificationTargetId
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
-import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -17,7 +17,7 @@ class ChatService(
     fun editSurveyDataWithChat(
         chatSessionId: UUID,
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
-    ): SurveyMakeInfoResponse {
+    ): AISurveyEditResponse {
         val surveyId = editSurveyDataWithChatRequest.surveyId
         val modificationTargetId = editSurveyDataWithChatRequest.modificationTargetId
         val userPrompt = editSurveyDataWithChatRequest.userPrompt
@@ -26,17 +26,33 @@ class ChatService(
 
         val surveyOfTargetSurvey = targetSurvey.findSurveyById(modificationTargetId)
         if (surveyOfTargetSurvey != null) {
-            val survey = chatAdapter.requestEditSurveyWithChat(chatSessionId, surveyOfTargetSurvey, userPrompt)
+            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, surveyOfTargetSurvey, userPrompt)
+            val updatedSurvey = pythonFormattedSurvey.toUpdatedSurvey(targetSurvey)
+            surveyAdapter.save(updatedSurvey)
+
+            return AISurveyEditResponse.of(updatedSurvey, targetSurvey, updatedSurvey)
         }
 
         val sectionOfTargetSurvey = targetSurvey.findSectionById(modificationTargetId)
         if (sectionOfTargetSurvey != null) {
-            val section = chatAdapter.requestEditSectionWithChat(chatSessionId, sectionOfTargetSurvey, userPrompt)
+            val pythonFormattedSection = chatAdapter.requestEditSectionWithChat(chatSessionId, sectionOfTargetSurvey, userPrompt)
+            val updatedSurvey = pythonFormattedSection.toUpdatedSurvey(modificationTargetId, targetSurvey)
+            surveyAdapter.save(updatedSurvey)
+
+            return AISurveyEditResponse.of(
+                updatedSurvey,
+                sectionOfTargetSurvey,
+                pythonFormattedSection.toSection(sectionOfTargetSurvey.id, sectionOfTargetSurvey.sectionIds),
+            )
         }
 
         val questionOfTargetSurvey = targetSurvey.findQuestionById(modificationTargetId)
         if (questionOfTargetSurvey != null) {
-            val question = chatAdapter.requestEditQuestionWithChat(chatSessionId, questionOfTargetSurvey, userPrompt)
+            val pythonFormattedQuestion = chatAdapter.requestEditQuestionWithChat(chatSessionId, questionOfTargetSurvey, userPrompt)
+            val updatedSurvey = pythonFormattedQuestion.toUpdatedSurvey(modificationTargetId, targetSurvey)
+            surveyAdapter.save(updatedSurvey)
+
+            return AISurveyEditResponse.of(updatedSurvey, questionOfTargetSurvey, pythonFormattedQuestion.toQuestion(modificationTargetId))
         }
 
         throw InvalidModificationTargetId()

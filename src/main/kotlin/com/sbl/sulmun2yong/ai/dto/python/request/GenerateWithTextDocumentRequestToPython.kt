@@ -1,8 +1,8 @@
-package com.sbl.sulmun2yong.ai.dto.python.request.generate
+package com.sbl.sulmun2yong.ai.dto.python.request
 
-class GenerateWithFileUrlRequestToPython(
+data class GenerateWithTextDocumentRequestToPython(
     override val job: String,
     override val groupName: String,
     override val userPrompt: String,
-    val fileUrl: String,
+    val textDocument: String,
 ) : GenerateRequestToPython

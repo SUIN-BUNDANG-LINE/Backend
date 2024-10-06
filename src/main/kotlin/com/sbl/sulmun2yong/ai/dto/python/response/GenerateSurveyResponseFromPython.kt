@@ -1,15 +1,15 @@
-package com.sbl.sulmun2yong.ai.entity
+package com.sbl.sulmun2yong.ai.dto.python.response
 
 import com.sbl.sulmun2yong.ai.domain.AIGeneratedSurvey
 import java.util.UUID
 
-data class AISurveyGenerationResponseFromPython(
+data class GenerateSurveyResponseFromPython(
     val chatSessionId: UUID,
-    val pythonServerSurveyFormat: PythonServerSurveyFormat,
+    val survey: SurveyResponseFromPython,
 ) {
     fun toDomain() =
         AIGeneratedSurvey(
             chatSessionId = chatSessionId,
-            survey = pythonServerSurveyFormat.toNewSurvey(),
+            survey = survey.toDomain().toNewSurvey(),
         )
 }
