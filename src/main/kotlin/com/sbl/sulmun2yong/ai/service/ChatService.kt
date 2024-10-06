@@ -29,7 +29,6 @@ class ChatService(
         if (surveyOfTargetSurvey != null) {
             val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, surveyOfTargetSurvey, userPrompt)
             val updatedSurvey = pythonFormattedSurvey.toUpdatedSurvey(targetSurvey)
-            surveyAdapter.save(updatedSurvey)
 
             return AISurveyEditResponse.of(updatedSurvey, targetSurvey, updatedSurvey)
         }
@@ -38,7 +37,6 @@ class ChatService(
         if (sectionOfTargetSurvey != null) {
             val pythonFormattedSection = chatAdapter.requestEditSectionWithChat(chatSessionId, sectionOfTargetSurvey, userPrompt)
             val updatedSurvey = pythonFormattedSection.toUpdatedSurvey(modificationTargetId, targetSurvey)
-            surveyAdapter.save(updatedSurvey)
 
             return AISurveyEditResponse.of(
                 updatedSurvey,
@@ -51,7 +49,6 @@ class ChatService(
         if (questionOfTargetSurvey != null) {
             val pythonFormattedQuestion = chatAdapter.requestEditQuestionWithChat(chatSessionId, questionOfTargetSurvey, userPrompt)
             val updatedSurvey = pythonFormattedQuestion.toUpdatedSurvey(modificationTargetId, targetSurvey)
-            surveyAdapter.save(updatedSurvey)
 
             return AISurveyEditResponse.of(updatedSurvey, questionOfTargetSurvey, pythonFormattedQuestion.toQuestion(modificationTargetId))
         }
