@@ -53,11 +53,11 @@ class PythonFormattedSection(
     }
 
     companion object {
-        fun of(section: Section) =
+        fun from(section: Section) =
             PythonFormattedSection(
                 title = section.title,
                 description = section.description,
-                questions = section.questions.map { PythonFormattedQuestion.of(it) },
+                questions = section.questions.map { PythonFormattedQuestion.from(it) },
             )
     }
 }

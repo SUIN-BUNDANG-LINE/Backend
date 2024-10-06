@@ -143,12 +143,7 @@ data class Survey(
 
     fun isImmediateDraw() = rewardSetting.isImmediateDraw
 
-    // id가 설문, 섹션, 질문 중 무엇인지 알아내고 해당 도메인을 반환한다
-    fun findSurveyById(id: UUID): Survey? {
-        if (this.id == id) return this
-        return null
-    }
-
+    // id가 섹션, 질문 중 무엇인지 알아내고 해당 도메인을 반환한다
     fun findSectionById(id: UUID): Section? = sections.find { it.id.value == id }
 
     fun findQuestionById(id: UUID): Question? =

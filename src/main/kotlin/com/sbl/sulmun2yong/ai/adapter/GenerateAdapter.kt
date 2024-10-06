@@ -1,14 +1,19 @@
 package com.sbl.sulmun2yong.ai.adapter
 
 import com.sbl.sulmun2yong.ai.domain.AIGeneratedSurvey
+import com.sbl.sulmun2yong.ai.dto.python.request.GenerateRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithFileUrlRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithTextDocumentRequestToPython
-import com.sbl.sulmun2yong.ai.repository.GenerateRepository
+import com.sbl.sulmun2yong.ai.dto.python.response.GenerateSurveyResponseFromPython
+import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
+import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import org.springframework.stereotype.Component
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.RestTemplate
 
 @Component
 class GenerateAdapter(
-    private val generateRepository: GenerateRepository,
+    private val requestToPythonServerTemplate: RestTemplate,
 ) {
     fun requestSurveyGenerationWithFileUrl(
         job: String,
@@ -17,7 +22,7 @@ class GenerateAdapter(
         userPrompt: String,
     ): AIGeneratedSurvey {
         val generateSurveyResponseFromPython =
-            generateRepository.requestWithFileUrl(
+            requestWithFileUrl(
                 GenerateWithFileUrlRequestToPython(
                     job = job,
                     groupName = groupName,
@@ -36,7 +41,7 @@ class GenerateAdapter(
         userPrompt: String,
     ): AIGeneratedSurvey {
         val generateSurveyResponseFromPython =
-            generateRepository.requestWithTextDocument(
+            requestWithTextDocument(
                 GenerateWithTextDocumentRequestToPython(
                     job = job,
                     groupName = groupName,
@@ -47,4 +52,35 @@ class GenerateAdapter(
 
         return generateSurveyResponseFromPython.toDomain()
     }
+
+    private fun requestWithFileUrl(
+        generateWithFileUrlRequestToPython: GenerateWithFileUrlRequestToPython,
+    ): GenerateSurveyResponseFromPython =
+        requestGenerateSurvey(
+            "/generate/survey/file-url",
+            generateWithFileUrlRequestToPython,
+        )
+
+    private fun requestWithTextDocument(
+        generateWithTextDocumentRequestToPython: GenerateWithTextDocumentRequestToPython,
+    ): GenerateSurveyResponseFromPython =
+        requestGenerateSurvey(
+            "/generate/survey/text-document",
+            generateWithTextDocumentRequestToPython,
+        )
+
+    private fun requestGenerateSurvey(
+        requestUrl: String,
+        requestBody: GenerateRequestToPython,
+    ): GenerateSurveyResponseFromPython =
+        try {
+            requestToPythonServerTemplate
+                .postForEntity(
+                    requestUrl,
+                    requestBody,
+                    GenerateSurveyResponseFromPython::class.java,
+                ).body ?: throw SurveyGenerationByAIFailedException()
+        } catch (e: HttpClientErrorException) {
+            throw PythonServerExceptionMapper.mapException(e)
+        }
 }

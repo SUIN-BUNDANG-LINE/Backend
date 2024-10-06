@@ -59,12 +59,12 @@ class PythonFormattedSurvey(
     }
 
     companion object {
-        fun of(survey: Survey) =
+        fun from(survey: Survey) =
             PythonFormattedSurvey(
                 title = survey.title,
                 description = survey.description,
                 finishMessage = survey.finishMessage,
-                sections = survey.sections.map { PythonFormattedSection.of(it) },
+                sections = survey.sections.map { PythonFormattedSection.from(it) },
             )
     }
 }

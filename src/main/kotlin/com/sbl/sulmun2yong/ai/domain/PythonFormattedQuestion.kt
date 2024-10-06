@@ -78,7 +78,7 @@ class PythonFormattedQuestion(
     companion object {
         private const val DEFAULT_DESCRIPTION = ""
 
-        fun of(question: Question) =
+        fun from(question: Question) =
             PythonFormattedQuestion(
                 questionType = question.questionType,
                 title = question.title,

@@ -25,9 +25,8 @@ class ChatService(
 
         val targetSurvey: Survey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
 
-        val surveyOfTargetSurvey = targetSurvey.findSurveyById(modificationTargetId)
-        if (surveyOfTargetSurvey != null) {
-            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, surveyOfTargetSurvey, userPrompt)
+        if (surveyId == modificationTargetId) {
+            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, targetSurvey, userPrompt)
             val updatedSurvey = pythonFormattedSurvey.toUpdatedSurvey(targetSurvey)
 
             return AISurveyEditResponse.of(updatedSurvey, targetSurvey, updatedSurvey)

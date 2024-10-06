@@ -9,7 +9,7 @@ data class AISurveyGenerationResponse(
     val generatedSurvey: SurveyMakeInfoResponse,
 ) {
     companion object {
-        fun of(aiGeneratedSurvey: AIGeneratedSurvey): AISurveyGenerationResponse =
+        fun from(aiGeneratedSurvey: AIGeneratedSurvey): AISurveyGenerationResponse =
             AISurveyGenerationResponse(aiGeneratedSurvey.chatSessionId, SurveyMakeInfoResponse.of(aiGeneratedSurvey.survey))
     }
 }

@@ -18,8 +18,8 @@ data class AISurveyEditResponse(
         ): AISurveyEditResponse =
             AISurveyEditResponse(
                 editedSurvey = SurveyMakeInfoResponse.of(editedSurvey),
-                originalData = SurveyData.SurveyDataItem.of(originalData),
-                editedData = SurveyData.SurveyDataItem.of(editedData),
+                originalData = SurveyData.SurveyDataItem.from(originalData),
+                editedData = SurveyData.SurveyDataItem.from(editedData),
             )
 
         fun of(
@@ -29,8 +29,8 @@ data class AISurveyEditResponse(
         ): AISurveyEditResponse =
             AISurveyEditResponse(
                 editedSurvey = SurveyMakeInfoResponse.of(editedSurvey),
-                originalData = SurveyData.SectionDataItem.of(originalData),
-                editedData = SurveyData.SectionDataItem.of(editedData),
+                originalData = SurveyData.SectionDataItem.from(originalData),
+                editedData = SurveyData.SectionDataItem.from(editedData),
             )
 
         fun of(
@@ -40,8 +40,8 @@ data class AISurveyEditResponse(
         ): AISurveyEditResponse =
             AISurveyEditResponse(
                 editedSurvey = SurveyMakeInfoResponse.of(editedSurvey),
-                originalData = SurveyData.QuestionDataItem.of(originalData),
-                editedData = SurveyData.QuestionDataItem.of(editedData),
+                originalData = SurveyData.QuestionDataItem.from(originalData),
+                editedData = SurveyData.QuestionDataItem.from(editedData),
             )
     }
 
@@ -50,7 +50,7 @@ data class AISurveyEditResponse(
             val survey: SurveyMakeInfoResponse,
         ) : SurveyData() {
             companion object {
-                fun of(survey: Survey): SurveyDataItem = SurveyDataItem(SurveyMakeInfoResponse.of(survey))
+                fun from(survey: Survey): SurveyDataItem = SurveyDataItem(SurveyMakeInfoResponse.of(survey))
             }
         }
 
@@ -58,7 +58,7 @@ data class AISurveyEditResponse(
             val section: SurveyMakeInfoResponse.SectionMakeInfoResponse,
         ) : SurveyData() {
             companion object {
-                fun of(section: Section): SectionDataItem = SectionDataItem(SurveyMakeInfoResponse.SectionMakeInfoResponse.from(section))
+                fun from(section: Section): SectionDataItem = SectionDataItem(SurveyMakeInfoResponse.SectionMakeInfoResponse.from(section))
             }
         }
 
@@ -66,7 +66,7 @@ data class AISurveyEditResponse(
             val question: SurveyMakeInfoResponse.QuestionMakeInfoResponse,
         ) : SurveyData() {
             companion object {
-                fun of(question: Question): QuestionDataItem =
+                fun from(question: Question): QuestionDataItem =
                     QuestionDataItem(SurveyMakeInfoResponse.QuestionMakeInfoResponse.from(question))
             }
         }

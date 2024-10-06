@@ -26,7 +26,7 @@ object PythonServerExceptionMapper {
             "PY0002" -> throw TextTooLongException()
             "PY0003" -> throw FileExtensionNotSupportedException()
             "PY0004" -> throw FileNotFoundException()
-            else -> throw e
+            else -> throw SurveyGenerationByAIFailedException()
         }
     }
 }
