@@ -45,7 +45,7 @@ class AIGenerateController(
     ) {
         val cookie =
             Cookie("chat-session-id", chatSessionId.toString()).apply {
-                maxAge = 3600
+                maxAge = 60 * 60 * 24
                 path = "/"
                 isHttpOnly = true
             }
