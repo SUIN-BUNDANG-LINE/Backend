@@ -51,7 +51,7 @@ class SecurityConfig(
 
     @Bean
     fun cookieAuthorizationRequestRepository(): HttpCookieOAuth2AuthorizationRequestRepository =
-        HttpCookieOAuth2AuthorizationRequestRepository(cookieDomain)
+        HttpCookieOAuth2AuthorizationRequestRepository()
 
     @Bean
     fun userDetailsService(): UserDetailsService {

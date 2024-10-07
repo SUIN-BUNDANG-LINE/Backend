@@ -7,9 +7,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 
-class HttpCookieOAuth2AuthorizationRequestRepository(
-    private val cookieDomain: String,
-) : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+class HttpCookieOAuth2AuthorizationRequestRepository : AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     override fun loadAuthorizationRequest(request: HttpServletRequest): OAuth2AuthorizationRequest? {
         val cookie = CookieUtils.findCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
         return cookie?.let {
@@ -38,7 +36,6 @@ class HttpCookieOAuth2AuthorizationRequestRepository(
             OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME,
             CookieUtils.serialize(authorizationRequest),
             COOKIE_EXPIRE_SECONDS,
-            cookieDomain,
         )
         val redirectUriAfterLogin = request.getParameter(REDIRECT_URI_PARAM_COOKIE_NAME)
         if (StringUtils.isNotBlank(redirectUriAfterLogin)) {
@@ -47,7 +44,6 @@ class HttpCookieOAuth2AuthorizationRequestRepository(
                 REDIRECT_URI_PARAM_COOKIE_NAME,
                 redirectUriAfterLogin,
                 COOKIE_EXPIRE_SECONDS,
-                cookieDomain,
             )
         }
     }
