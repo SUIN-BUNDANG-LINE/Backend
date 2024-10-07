@@ -1,5 +1,7 @@
-package com.sbl.sulmun2yong.ai.dto
+package com.sbl.sulmun2yong.ai.domain
 
+import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
@@ -8,18 +10,18 @@ import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuest
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import java.util.UUID
 
-class QuestionGeneratedByAI(
-    private val questionType: QuestionType,
-    private val title: String,
-    private val isRequired: Boolean,
-    private val choices: List<String>?,
-    private val isAllowOther: Boolean,
+class PythonFormattedQuestion(
+    val questionType: QuestionType,
+    val title: String,
+    val isRequired: Boolean,
+    val choices: List<String>?,
+    val isAllowOther: Boolean,
 ) {
-    fun toDomain() =
+    fun toQuestion(id: UUID) =
         when (questionType) {
             QuestionType.SINGLE_CHOICE ->
                 StandardSingleChoiceQuestion(
-                    id = UUID.randomUUID(),
+                    id = id,
                     title = this.title,
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
@@ -28,7 +30,7 @@ class QuestionGeneratedByAI(
                 )
             QuestionType.MULTIPLE_CHOICE ->
                 StandardMultipleChoiceQuestion(
-                    id = UUID.randomUUID(),
+                    id = id,
                     title = this.title,
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
@@ -37,14 +39,52 @@ class QuestionGeneratedByAI(
                 )
             QuestionType.TEXT_RESPONSE ->
                 StandardTextQuestion(
-                    id = UUID.randomUUID(),
+                    id = id,
                     title = this.title,
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
                 )
         }
 
+    fun toUpdatedSurvey(
+        questionId: UUID,
+        survey: Survey,
+    ): Survey {
+        val updatedSections =
+            survey.sections.map { section ->
+                val updatedQuestions =
+                    section.questions.map { question ->
+                        if (question.id == questionId) {
+                            this.toQuestion(questionId)
+                        } else {
+                            question
+                        }
+                    }
+
+                section.copy(questions = updatedQuestions)
+            }
+
+        return survey.updateContent(
+            title = survey.title,
+            description = survey.description,
+            thumbnail = survey.thumbnail,
+            finishMessage = survey.finishMessage,
+            rewardSetting = survey.rewardSetting,
+            isVisible = survey.isVisible,
+            sections = updatedSections,
+        )
+    }
+
     companion object {
         private const val DEFAULT_DESCRIPTION = ""
+
+        fun from(question: Question) =
+            PythonFormattedQuestion(
+                questionType = question.questionType,
+                title = question.title,
+                isRequired = question.isRequired,
+                choices = question.choices?.standardChoices?.map { it.content },
+                isAllowOther = question.choices?.isAllowOther ?: false,
+            )
     }
 }

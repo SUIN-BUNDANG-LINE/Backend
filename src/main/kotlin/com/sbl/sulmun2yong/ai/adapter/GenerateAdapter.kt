@@ -1,38 +1,37 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-import com.sbl.sulmun2yong.ai.dto.ChatSessionIdWithSurveyGeneratedByAI
-import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
+import com.sbl.sulmun2yong.ai.domain.AIGeneratedSurvey
+import com.sbl.sulmun2yong.ai.dto.python.request.GenerateRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithFileUrlRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithTextDocumentRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.response.GenerateSurveyResponseFromPython
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
-import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
 
 @Component
 class GenerateAdapter(
-    @Value("\${ai-server.base-url}")
-    private val aiServerBaseUrl: String,
-    private val restTemplate: RestTemplate,
+    private val requestToPythonServerTemplate: RestTemplate,
 ) {
     fun requestSurveyGenerationWithFileUrl(
         job: String,
         groupName: String,
         fileUrl: String,
         userPrompt: String,
-    ): AISurveyGenerationResponse {
-        val requestUrl = "$aiServerBaseUrl/generate/survey/file-url"
-
-        val requestBody =
-            mapOf(
-                "job" to job,
-                "group_name" to groupName,
-                "file_url" to fileUrl,
-                "user_prompt" to userPrompt,
+    ): AIGeneratedSurvey {
+        val generateSurveyResponseFromPython =
+            requestWithFileUrl(
+                GenerateWithFileUrlRequestToPython(
+                    job = job,
+                    groupName = groupName,
+                    userPrompt = userPrompt,
+                    fileUrl = fileUrl,
+                ),
             )
 
-        return requestToGenerateSurvey(requestUrl, requestBody)
+        return generateSurveyResponseFromPython.toDomain()
     }
 
     fun requestSurveyGenerationWithTextDocument(
@@ -40,39 +39,48 @@ class GenerateAdapter(
         groupName: String,
         textDocument: String,
         userPrompt: String,
-    ): AISurveyGenerationResponse {
-        val requestUrl = "$aiServerBaseUrl/generate/survey/text-document"
-
-        val requestBody =
-            mapOf(
-                "job" to job,
-                "group_name" to groupName,
-                "text_document" to textDocument,
-                "user_prompt" to userPrompt,
+    ): AIGeneratedSurvey {
+        val generateSurveyResponseFromPython =
+            requestWithTextDocument(
+                GenerateWithTextDocumentRequestToPython(
+                    job = job,
+                    groupName = groupName,
+                    userPrompt = userPrompt,
+                    textDocument = textDocument,
+                ),
             )
 
-        return requestToGenerateSurvey(requestUrl, requestBody)
+        return generateSurveyResponseFromPython.toDomain()
     }
 
-    private fun requestToGenerateSurvey(
+    private fun requestWithFileUrl(
+        generateWithFileUrlRequestToPython: GenerateWithFileUrlRequestToPython,
+    ): GenerateSurveyResponseFromPython =
+        requestGenerateSurvey(
+            "/generate/survey/file-url",
+            generateWithFileUrlRequestToPython,
+        )
+
+    private fun requestWithTextDocument(
+        generateWithTextDocumentRequestToPython: GenerateWithTextDocumentRequestToPython,
+    ): GenerateSurveyResponseFromPython =
+        requestGenerateSurvey(
+            "/generate/survey/text-document",
+            generateWithTextDocumentRequestToPython,
+        )
+
+    private fun requestGenerateSurvey(
         requestUrl: String,
-        requestBody: Map<String, String>,
-    ): AISurveyGenerationResponse {
-        val chatSessionIdWithSurveyGeneratedByAI =
-            try {
-                restTemplate
-                    .postForEntity(
-                        requestUrl,
-                        requestBody,
-                        ChatSessionIdWithSurveyGeneratedByAI::class.java,
-                    ).body ?: throw SurveyGenerationByAIFailedException()
-            } catch (e: HttpClientErrorException) {
-                throw PythonServerExceptionMapper.mapException(e)
-            }
-
-        val chatSessionId = chatSessionIdWithSurveyGeneratedByAI.chatSessionId
-        val survey = chatSessionIdWithSurveyGeneratedByAI.surveyGeneratedByAI.toDomain()
-        val surveyMakeInfoResponse = SurveyMakeInfoResponse.of(survey)
-        return AISurveyGenerationResponse.from(chatSessionId, surveyMakeInfoResponse)
-    }
+        requestBody: GenerateRequestToPython,
+    ): GenerateSurveyResponseFromPython =
+        try {
+            requestToPythonServerTemplate
+                .postForEntity(
+                    requestUrl,
+                    requestBody,
+                    GenerateSurveyResponseFromPython::class.java,
+                ).body ?: throw SurveyGenerationByAIFailedException()
+        } catch (e: HttpClientErrorException) {
+            throw PythonServerExceptionMapper.mapException(e)
+        }
 }

@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.survey.domain
 
 import com.sbl.sulmun2yong.global.util.DateUtil
+import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.domain.reward.NoRewardSetting
@@ -141,6 +142,14 @@ data class Survey(
     }
 
     fun isImmediateDraw() = rewardSetting.isImmediateDraw
+
+    // id가 섹션, 질문 중 무엇인지 알아내고 해당 도메인을 반환한다
+    fun findSectionById(id: UUID): Section? = sections.find { it.id.value == id }
+
+    fun findQuestionById(id: UUID): Question? =
+        sections
+            .flatMap { it.questions }
+            .find { it.id == id }
 
     private fun isSectionsUnique() = sections.size == sections.distinctBy { it.id }.size
 

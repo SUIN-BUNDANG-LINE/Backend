@@ -22,7 +22,7 @@ class GenerateService(
 
         fileUrlValidator.validateFileUrlOf(fileUrl, allowedExtensions)
 
-        return generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl, userPrompt)
+        return AISurveyGenerationResponse.from(generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl, userPrompt))
     }
 
     fun generateSurveyWithTextDocument(
@@ -33,6 +33,8 @@ class GenerateService(
         val textDocument = surveyGenerationWithTextDocumentRequest.textDocument
         val userPrompt = surveyGenerationWithTextDocumentRequest.userPrompt
 
-        return generateAdapter.requestSurveyGenerationWithTextDocument(job, groupName, textDocument, userPrompt)
+        return AISurveyGenerationResponse.from(
+            generateAdapter.requestSurveyGenerationWithTextDocument(job, groupName, textDocument, userPrompt),
+        )
     }
 }
