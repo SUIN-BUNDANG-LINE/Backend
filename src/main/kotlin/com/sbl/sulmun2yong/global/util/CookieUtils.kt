@@ -30,13 +30,11 @@ object CookieUtils {
         name: String,
         value: String,
         maxAge: Int,
-        domain: String,
     ) {
         val cookie = Cookie(name, value)
         cookie.path = "/"
         cookie.isHttpOnly = true
         cookie.maxAge = maxAge
-        cookie.domain = domain
         response.addCookie(cookie)
     }
 
