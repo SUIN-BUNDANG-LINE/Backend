@@ -1,74 +1,213 @@
 package com.sbl.sulmun2yong.ai.dto.response
 
 import com.sbl.sulmun2yong.survey.domain.Survey
-import com.sbl.sulmun2yong.survey.domain.question.Question
-import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
+import java.util.UUID
 
 data class AISurveyEditResponse(
-    val editedSurvey: SurveyMakeInfoResponse,
-    val originalData: SurveyData,
-    val editedData: SurveyData,
+    val surveyBasicInfo: SurveyInfoChangeDTO,
+    val sections: List<SectionChangeDTO>,
 ) {
-    companion object {
-        fun of(
-            editedSurvey: Survey,
-            originalData: Survey,
-            editedData: Survey,
-        ): AISurveyEditResponse =
-            AISurveyEditResponse(
-                editedSurvey = SurveyMakeInfoResponse.of(editedSurvey),
-                originalData = SurveyData.SurveyDataItem.from(originalData),
-                editedData = SurveyData.SurveyDataItem.from(editedData),
-            )
+    data class SurveyInfoChangeDTO(
+        val surveyId: UUID,
+        val changeType: ChangeType,
+        val originalData: SurveyBasicInfo?,
+        val modifiedData: SurveyBasicInfo?,
+    )
 
-        fun of(
-            editedSurvey: Survey,
-            originalData: Section,
-            editedData: Section,
-        ): AISurveyEditResponse =
-            AISurveyEditResponse(
-                editedSurvey = SurveyMakeInfoResponse.of(editedSurvey),
-                originalData = SurveyData.SectionDataItem.from(originalData),
-                editedData = SurveyData.SectionDataItem.from(editedData),
-            )
+    data class SurveyBasicInfo(
+        val title: String,
+        val description: String,
+        val finishMessage: String,
+    )
 
-        fun of(
-            editedSurvey: Survey,
-            originalData: Question,
-            editedData: Question,
-        ): AISurveyEditResponse =
-            AISurveyEditResponse(
-                editedSurvey = SurveyMakeInfoResponse.of(editedSurvey),
-                originalData = SurveyData.QuestionDataItem.from(originalData),
-                editedData = SurveyData.QuestionDataItem.from(editedData),
-            )
+    data class SectionChangeDTO(
+        val sectionId: UUID,
+        val sectionBasicInfo: SectionInfoChangeDTO,
+        val questions: List<QuestionChangeDTO>,
+    )
+
+    data class SectionInfoChangeDTO(
+        val changeType: ChangeType,
+        val originalData: SectionBasicInfo?,
+        val modifiedData: SectionBasicInfo?,
+    )
+
+    data class SectionBasicInfo(
+        val title: String,
+        val description: String,
+    )
+
+    data class QuestionChangeDTO(
+        val questionId: UUID,
+        val changeType: ChangeType,
+        val originalData: QuestionBasicInfo?,
+        val modifiedData: QuestionBasicInfo?,
+    )
+
+    data class QuestionBasicInfo(
+        val type: QuestionType,
+        val title: String,
+        val description: String,
+        val isRequired: Boolean,
+        val isAllowOther: Boolean,
+        val choices: List<String>?,
+    )
+
+    enum class ChangeType {
+        UNCHANGED,
+        MODIFIED,
+        DELETED,
+        CREATED,
     }
 
-    sealed class SurveyData {
-        data class SurveyDataItem(
-            val survey: SurveyMakeInfoResponse,
-        ) : SurveyData() {
-            companion object {
-                fun from(survey: Survey): SurveyDataItem = SurveyDataItem(SurveyMakeInfoResponse.of(survey))
-            }
+    companion object {
+        fun compareSurveys(
+            originalSurvey: Survey,
+            editedSurvey: Survey,
+        ): AISurveyEditResponse {
+            val originalSurveyMakeInfoResponse = SurveyMakeInfoResponse.of(originalSurvey)
+            val editedSurveyMakeInfoResponse = SurveyMakeInfoResponse.of(editedSurvey)
+
+            val surveyInfoChange =
+                compareSurveyInfo(
+                    originalSurvey.id,
+                    originalSurveyMakeInfoResponse.title,
+                    originalSurveyMakeInfoResponse.description,
+                    originalSurveyMakeInfoResponse.finishMessage,
+                    editedSurveyMakeInfoResponse.title,
+                    editedSurveyMakeInfoResponse.description,
+                    editedSurveyMakeInfoResponse.finishMessage,
+                )
+
+            val sectionChanges =
+                originalSurveyMakeInfoResponse.sections.map { originalSection ->
+                    val matchingModifiedSection =
+                        editedSurveyMakeInfoResponse.sections.find { it.sectionId == originalSection.sectionId }
+                    compareSections(originalSection, matchingModifiedSection)
+                } +
+                    editedSurveyMakeInfoResponse.sections
+                        .filter { newSection ->
+                            originalSurveyMakeInfoResponse.sections.none { it.sectionId == newSection.sectionId }
+                        }.map { newSection ->
+                            SectionChangeDTO(
+                                newSection.sectionId,
+                                SectionInfoChangeDTO(ChangeType.CREATED, null, SectionBasicInfo(newSection.title, newSection.description)),
+                                newSection.questions.map { newQuestion ->
+                                    QuestionChangeDTO(
+                                        questionId = newQuestion.questionId,
+                                        ChangeType.CREATED,
+                                        null,
+                                        QuestionBasicInfo(
+                                            newQuestion.type,
+                                            newQuestion.title,
+                                            newQuestion.description,
+                                            newQuestion.isRequired,
+                                            newQuestion.isAllowOther,
+                                            newQuestion.choices,
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+
+            return AISurveyEditResponse(surveyInfoChange, sectionChanges)
         }
 
-        data class SectionDataItem(
-            val section: SurveyMakeInfoResponse.SectionMakeInfoResponse,
-        ) : SurveyData() {
-            companion object {
-                fun from(section: Section): SectionDataItem = SectionDataItem(SurveyMakeInfoResponse.SectionMakeInfoResponse.from(section))
-            }
+        private fun compareSurveyInfo(
+            surveyId: UUID,
+            originalTitle: String,
+            originalDescription: String,
+            originalFinishMessage: String,
+            modifiedTitle: String,
+            modifiedDescription: String,
+            modifiedFinishMessage: String,
+        ): SurveyInfoChangeDTO {
+            val originalInfo = SurveyBasicInfo(originalTitle, originalDescription, originalFinishMessage)
+            val modifiedInfo = SurveyBasicInfo(modifiedTitle, modifiedDescription, modifiedFinishMessage)
+
+            val changeType = if (originalInfo == modifiedInfo) ChangeType.UNCHANGED else ChangeType.MODIFIED
+
+            return SurveyInfoChangeDTO(surveyId, changeType, originalInfo, modifiedInfo)
         }
 
-        data class QuestionDataItem(
-            val question: SurveyMakeInfoResponse.QuestionMakeInfoResponse,
-        ) : SurveyData() {
-            companion object {
-                fun from(question: Question): QuestionDataItem =
-                    QuestionDataItem(SurveyMakeInfoResponse.QuestionMakeInfoResponse.from(question))
-            }
+        private fun compareSections(
+            originalSection: SurveyMakeInfoResponse.SectionMakeInfoResponse,
+            modifiedSection: SurveyMakeInfoResponse.SectionMakeInfoResponse?,
+        ): SectionChangeDTO {
+            val changeType =
+                when {
+                    modifiedSection == null -> ChangeType.DELETED
+                    originalSection.title == modifiedSection.title && originalSection.description == modifiedSection.description
+                    -> ChangeType.UNCHANGED
+                    else -> ChangeType.MODIFIED
+                }
+
+            val originalInfo = SectionBasicInfo(originalSection.title, originalSection.description)
+            val modifiedInfo = modifiedSection?.let { SectionBasicInfo(it.title, it.description) }
+
+            val questionChanges =
+                originalSection.questions.map { originalQuestion ->
+                    val matchingModifiedQuestion =
+                        modifiedSection?.questions?.find { it.questionId == originalQuestion.questionId }
+                    compareQuestions(originalQuestion, matchingModifiedQuestion)
+                } + (
+                    modifiedSection
+                        ?.questions
+                        ?.filter { newQuestion ->
+                            originalSection.questions.none { it.questionId == newQuestion.questionId }
+                        }?.map { newQuestion ->
+                            QuestionChangeDTO(
+                                newQuestion.questionId,
+                                ChangeType.CREATED,
+                                null,
+                                QuestionBasicInfo(
+                                    newQuestion.type,
+                                    newQuestion.title,
+                                    newQuestion.description,
+                                    newQuestion.isRequired,
+                                    newQuestion.isAllowOther,
+                                    newQuestion.choices,
+                                ),
+                            )
+                        }
+                        ?: emptyList()
+                )
+
+            return SectionChangeDTO(
+                originalSection.sectionId,
+                SectionInfoChangeDTO(changeType, originalInfo, modifiedInfo),
+                questionChanges,
+            )
+        }
+
+        private fun compareQuestions(
+            originalQuestion: SurveyMakeInfoResponse.QuestionMakeInfoResponse,
+            modifiedQuestion: SurveyMakeInfoResponse.QuestionMakeInfoResponse?,
+        ): QuestionChangeDTO {
+            val changeType =
+                when {
+                    modifiedQuestion == null -> ChangeType.DELETED
+                    originalQuestion == modifiedQuestion -> ChangeType.UNCHANGED
+                    else -> ChangeType.MODIFIED
+                }
+
+            val originalInfo =
+                QuestionBasicInfo(
+                    originalQuestion.type,
+                    originalQuestion.title,
+                    originalQuestion.description,
+                    originalQuestion.isRequired,
+                    originalQuestion.isAllowOther,
+                    originalQuestion.choices,
+                )
+            val modifiedInfo =
+                modifiedQuestion?.let {
+                    QuestionBasicInfo(it.type, it.title, it.description, it.isRequired, it.isAllowOther, it.choices)
+                }
+
+            return QuestionChangeDTO(originalQuestion.questionId, changeType, originalInfo, modifiedInfo)
         }
     }
 }
