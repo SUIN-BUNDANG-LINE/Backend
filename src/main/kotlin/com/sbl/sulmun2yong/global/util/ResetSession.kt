@@ -8,6 +8,7 @@ object ResetSession {
     fun reset(
         request: HttpServletRequest,
         response: HttpServletResponse,
+        cookieDomain: String,
     ) {
         // 세션 무효화
         request.session.invalidate()
@@ -16,11 +17,17 @@ object ResetSession {
         val expiredJsessionIdCookie = Cookie("JSESSIONID", null)
         expiredJsessionIdCookie.path = "/"
         expiredJsessionIdCookie.maxAge = 0
+        if (cookieDomain != "localhost") {
+            expiredJsessionIdCookie.domain = cookieDomain
+        }
         response.addCookie(expiredJsessionIdCookie)
 
         val expiredUserProfileCookie = Cookie("user-profile", null)
         expiredUserProfileCookie.path = "/"
         expiredUserProfileCookie.maxAge = 0
+        if (cookieDomain != "localhost") {
+            expiredUserProfileCookie.domain = cookieDomain
+        }
         response.addCookie(expiredUserProfileCookie)
     }
 }

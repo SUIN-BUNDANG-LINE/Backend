@@ -16,6 +16,8 @@ class SessionConfig(
     fun servletContextInitializer(): ServletContextInitializer =
         ServletContextInitializer { servletContext: ServletContext ->
             val sessionCookieConfig: SessionCookieConfig = servletContext.sessionCookieConfig
-            sessionCookieConfig.domain = cookieDomain
+            if (cookieDomain != "localhost") {
+                sessionCookieConfig.domain = cookieDomain
+            }
         }
 }
