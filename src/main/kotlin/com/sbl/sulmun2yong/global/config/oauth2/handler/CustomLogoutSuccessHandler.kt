@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 class CustomLogoutSuccessHandler(
     private val frontEndBaseUrl: String,
     private val sessionRegistry: SessionRegistry,
+    private val cookieDomain: String,
 ) : LogoutSuccessHandler {
     override fun onLogoutSuccess(
         request: HttpServletRequest,
@@ -23,7 +24,7 @@ class CustomLogoutSuccessHandler(
             SessionRegistryCleaner.removeSessionByAuthentication(sessionRegistry, authentication)
         }
         // 세션 초기화
-        ResetSession.reset(request, response)
+        ResetSession.reset(request, response, cookieDomain)
 
         // 상태 코드 설정
         response.status = HttpStatus.OK.value()

@@ -124,7 +124,7 @@ class SecurityConfig(
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry())
+                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry(), cookieDomain)
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
