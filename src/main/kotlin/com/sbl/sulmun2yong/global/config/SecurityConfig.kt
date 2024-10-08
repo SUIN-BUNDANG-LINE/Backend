@@ -141,10 +141,10 @@ class SecurityConfig(
                 accessDeniedHandler = deniedHandler
             }
             sessionManagement {
-                invalidSessionStrategy = CustomInvalidSessionStrategy()
+                invalidSessionStrategy = CustomInvalidSessionStrategy(cookieDomain)
                 sessionConcurrency {
-                    expiredSessionStrategy = CustomExpiredSessionStrategy()
-                    invalidSessionStrategy = CustomInvalidSessionStrategy()
+                    expiredSessionStrategy = CustomExpiredSessionStrategy(cookieDomain)
+                    invalidSessionStrategy = CustomInvalidSessionStrategy(cookieDomain)
                     maximumSessions = 1
                     maxSessionsPreventsLogin = false
                     sessionRegistry = sessionRegistry()
