@@ -11,7 +11,7 @@ class PythonFormattedSurvey(
     val finishMessage: String,
     val sections: List<PythonFormattedSection>,
 ) {
-    fun toNewSurvey(): Survey {
+    fun toNewSurvey(originalSurvey: Survey): Survey {
         val sectionIds = List(sections.size) { SectionId.Standard(UUID.randomUUID()) }
         val sectionIdsManger = SectionIds.from(sectionIds)
 
@@ -23,14 +23,13 @@ class PythonFormattedSurvey(
                 )
             }
 
-        val survey = Survey.create(UUID.randomUUID())
-        return survey.updateContent(
+        return originalSurvey.updateContent(
             title = title,
             description = description,
-            thumbnail = survey.thumbnail,
+            thumbnail = originalSurvey.thumbnail,
             finishMessage = finishMessage,
-            rewardSetting = survey.rewardSetting,
-            isVisible = false,
+            rewardSetting = originalSurvey.rewardSetting,
+            isVisible = originalSurvey.isVisible,
             sections = sections,
         )
     }

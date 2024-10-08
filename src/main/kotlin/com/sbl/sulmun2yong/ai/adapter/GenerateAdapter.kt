@@ -7,6 +7,7 @@ import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithTextDocumentRequest
 import com.sbl.sulmun2yong.ai.dto.python.response.GenerateSurveyResponseFromPython
 import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
+import com.sbl.sulmun2yong.survey.domain.Survey
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
@@ -20,6 +21,7 @@ class GenerateAdapter(
         groupName: String,
         fileUrl: String,
         userPrompt: String,
+        originalSurvey: Survey,
     ): AIGeneratedSurvey {
         val generateSurveyResponseFromPython =
             requestWithFileUrl(
@@ -31,7 +33,7 @@ class GenerateAdapter(
                 ),
             )
 
-        return generateSurveyResponseFromPython.toDomain()
+        return generateSurveyResponseFromPython.toDomain(originalSurvey)
     }
 
     fun requestSurveyGenerationWithTextDocument(
@@ -39,6 +41,7 @@ class GenerateAdapter(
         groupName: String,
         textDocument: String,
         userPrompt: String,
+        originalSurvey: Survey,
     ): AIGeneratedSurvey {
         val generateSurveyResponseFromPython =
             requestWithTextDocument(
@@ -50,7 +53,7 @@ class GenerateAdapter(
                 ),
             )
 
-        return generateSurveyResponseFromPython.toDomain()
+        return generateSurveyResponseFromPython.toDomain(originalSurvey)
     }
 
     private fun requestWithFileUrl(
