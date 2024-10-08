@@ -124,7 +124,7 @@ class SecurityConfig(
             logout {
                 logoutUrl = "/user/logout"
                 invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry())
+                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry(), cookieDomain)
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
@@ -141,10 +141,10 @@ class SecurityConfig(
                 accessDeniedHandler = deniedHandler
             }
             sessionManagement {
-                invalidSessionStrategy = CustomInvalidSessionStrategy()
+                invalidSessionStrategy = CustomInvalidSessionStrategy(cookieDomain)
                 sessionConcurrency {
-                    expiredSessionStrategy = CustomExpiredSessionStrategy()
-                    invalidSessionStrategy = CustomInvalidSessionStrategy()
+                    expiredSessionStrategy = CustomExpiredSessionStrategy(cookieDomain)
+                    invalidSessionStrategy = CustomInvalidSessionStrategy(cookieDomain)
                     maximumSessions = 1
                     maxSessionsPreventsLogin = false
                     sessionRegistry = sessionRegistry()
