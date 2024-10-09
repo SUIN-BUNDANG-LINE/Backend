@@ -28,7 +28,6 @@ class ChatService(
                 modificationTargetId = modificationTargetId,
                 chatSessionId = chatSessionId,
                 userPrompt = userPrompt,
-                isEditGeneratedResult = isEditGeneratedResult,
             )
 
         // 오리지널 설문과, AI가 수정한 설문을 비교한 결과를 반환.
@@ -40,20 +39,19 @@ class ChatService(
         modificationTargetId: UUID,
         chatSessionId: UUID,
         userPrompt: String,
-        isEditGeneratedResult: Boolean,
     ): Survey {
         if (this.id == modificationTargetId) {
-            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, this, userPrompt, isEditGeneratedResult)
+            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, this, userPrompt)
             return pythonFormattedSurvey.toUpdatedSurvey(this)
         }
 
         this.findSectionById(modificationTargetId)?.let {
-            val pythonFormattedSection = chatAdapter.requestEditSectionWithChat(chatSessionId, it, userPrompt, isEditGeneratedResult)
+            val pythonFormattedSection = chatAdapter.requestEditSectionWithChat(chatSessionId, it, userPrompt)
             return pythonFormattedSection.toUpdatedSurvey(modificationTargetId, this)
         }
 
         this.findQuestionById(modificationTargetId)?.let {
-            val pythonFormattedSection = chatAdapter.requestEditQuestionWithChat(chatSessionId, it, userPrompt, isEditGeneratedResult)
+            val pythonFormattedSection = chatAdapter.requestEditQuestionWithChat(chatSessionId, it, userPrompt)
             return pythonFormattedSection.toUpdatedSurvey(modificationTargetId, this)
         }
 

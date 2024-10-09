@@ -6,6 +6,5 @@ import java.util.UUID
 data class EditSurveyRequestToPython(
     override val chatSessionId: UUID,
     override val userPrompt: String,
-    override val isEditGeneratedResult: Boolean,
     val survey: PythonFormattedSurvey,
 ) : EditRequestToPython

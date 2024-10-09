@@ -35,7 +35,6 @@ class ChatAdapter(
         chatSessionId: UUID,
         survey: Survey,
         userPrompt: String,
-        isEditGeneratedResult: Boolean,
     ): PythonFormattedSurvey =
         sendRequest(
             url = EDIT_SURVEY_URL,
@@ -44,7 +43,6 @@ class ChatAdapter(
                     chatSessionId = chatSessionId,
                     survey = PythonFormattedSurvey.from(survey),
                     userPrompt = userPrompt,
-                    isEditGeneratedResult = isEditGeneratedResult,
                 ),
             responseType = SurveyResponseFromPython::class.java,
         ).toDomain()
@@ -54,7 +52,6 @@ class ChatAdapter(
         chatSessionId: UUID,
         section: Section,
         userPrompt: String,
-        isEditGeneratedResult: Boolean,
     ): PythonFormattedSection =
         sendRequest(
             url = EDIT_SECTION_URL,
@@ -63,7 +60,6 @@ class ChatAdapter(
                     chatSessionId = chatSessionId,
                     section = PythonFormattedSection.from(section),
                     userPrompt = userPrompt,
-                    isEditGeneratedResult = isEditGeneratedResult,
                 ),
             responseType = SectionResponseFromPython::class.java,
         ).toDomain()
@@ -73,7 +69,6 @@ class ChatAdapter(
         chatSessionId: UUID,
         question: Question,
         userPrompt: String,
-        isEditGeneratedResult: Boolean,
     ): PythonFormattedQuestion =
         sendRequest(
             url = EDIT_QUESTION_URL,
@@ -82,7 +77,6 @@ class ChatAdapter(
                     chatSessionId = chatSessionId,
                     question = PythonFormattedQuestion.from(question),
                     userPrompt = userPrompt,
-                    isEditGeneratedResult = isEditGeneratedResult,
                 ),
             responseType = QuestionResponseFromPython::class.java,
         ).toDomain()
