@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import java.util.UUID
 
+// TODO: 가능하면 도메인 로직으로 옮기기
 data class AISurveyEditResponse(
     val surveyBasicInfo: SurveyInfoChangeDTO,
     val sections: List<SectionChangeDTO>,
@@ -23,12 +24,12 @@ data class AISurveyEditResponse(
     )
 
     data class SectionChangeDTO(
-        val sectionId: UUID,
         val sectionBasicInfo: SectionInfoChangeDTO,
         val questions: List<QuestionChangeDTO>,
     )
 
     data class SectionInfoChangeDTO(
+        val sectionId: UUID,
         val changeType: ChangeType,
         val originalData: SectionBasicInfo?,
         val modifiedData: SectionBasicInfo?,
@@ -92,8 +93,12 @@ data class AISurveyEditResponse(
                             originalSurveyMakeInfoResponse.sections.none { it.sectionId == newSection.sectionId }
                         }.map { newSection ->
                             SectionChangeDTO(
-                                newSection.sectionId,
-                                SectionInfoChangeDTO(ChangeType.CREATED, null, SectionBasicInfo(newSection.title, newSection.description)),
+                                SectionInfoChangeDTO(
+                                    newSection.sectionId,
+                                    ChangeType.CREATED,
+                                    null,
+                                    SectionBasicInfo(newSection.title, newSection.description),
+                                ),
                                 newSection.questions.map { newQuestion ->
                                     QuestionChangeDTO(
                                         questionId = newQuestion.questionId,
@@ -176,8 +181,7 @@ data class AISurveyEditResponse(
                 )
 
             return SectionChangeDTO(
-                originalSection.sectionId,
-                SectionInfoChangeDTO(changeType, originalInfo, modifiedInfo),
+                SectionInfoChangeDTO(originalSection.sectionId, changeType, originalInfo, modifiedInfo),
                 questionChanges,
             )
         }
