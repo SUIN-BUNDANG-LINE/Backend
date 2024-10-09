@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.ai.domain.PythonFormattedQuestion
 import com.sbl.sulmun2yong.ai.domain.PythonFormattedSection
 import com.sbl.sulmun2yong.ai.domain.PythonFormattedSurvey
 import com.sbl.sulmun2yong.ai.dto.python.request.EditQuestionRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.EditRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.EditSectionRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.EditSurveyRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.response.QuestionResponseFromPython
@@ -23,97 +24,81 @@ import java.util.UUID
 class ChatAdapter(
     private val requestToPythonServerTemplate: RestTemplate,
 ) {
+    companion object {
+        private const val EDIT_SURVEY_URL = "/chat/edit/survey"
+        private const val EDIT_SECTION_URL = "/chat/edit/section"
+        private const val EDIT_QUESTION_URL = "/chat/edit/question"
+    }
+
+    /** 설문 전체를 편집 요청하는 메서드 */
     fun requestEditSurveyWithChat(
         chatSessionId: UUID,
         survey: Survey,
         userPrompt: String,
     ): PythonFormattedSurvey =
-        requestEditSurvey(
-            EditSurveyRequestToPython(
-                chatSessionId = chatSessionId,
-                survey = PythonFormattedSurvey.from(survey),
-                userPrompt = userPrompt,
-            ),
+        sendRequest(
+            url = EDIT_SURVEY_URL,
+            requestBody =
+                EditSurveyRequestToPython(
+                    chatSessionId = chatSessionId,
+                    survey = PythonFormattedSurvey.from(survey),
+                    userPrompt = userPrompt,
+                ),
+            responseType = SurveyResponseFromPython::class.java,
         ).toDomain()
 
+    /** 섹션을 편집 요청하는 메서드 */
     fun requestEditSectionWithChat(
         chatSessionId: UUID,
         section: Section,
         userPrompt: String,
-    ) = requestEditSection(
-        EditSectionRequestToPython(
-            chatSessionId = chatSessionId,
-            section = PythonFormattedSection.from(section),
-            userPrompt = userPrompt,
-        ),
-    ).toDomain()
+    ): PythonFormattedSection =
+        sendRequest(
+            url = EDIT_SECTION_URL,
+            requestBody =
+                EditSectionRequestToPython(
+                    chatSessionId = chatSessionId,
+                    section = PythonFormattedSection.from(section),
+                    userPrompt = userPrompt,
+                ),
+            responseType = SectionResponseFromPython::class.java,
+        ).toDomain()
 
+    /** 질문을 편집 요청하는 메서드 */
     fun requestEditQuestionWithChat(
         chatSessionId: UUID,
         question: Question,
         userPrompt: String,
-    ) = requestEditQuestion(
-        EditQuestionRequestToPython(
-            chatSessionId = chatSessionId,
-            question = PythonFormattedQuestion.from(question),
-            userPrompt = userPrompt,
-        ),
-    ).toDomain()
+    ): PythonFormattedQuestion =
+        sendRequest(
+            url = EDIT_QUESTION_URL,
+            requestBody =
+                EditQuestionRequestToPython(
+                    chatSessionId = chatSessionId,
+                    question = PythonFormattedQuestion.from(question),
+                    userPrompt = userPrompt,
+                ),
+            responseType = QuestionResponseFromPython::class.java,
+        ).toDomain()
 
-    private fun requestEditSurvey(editSurveyRequestToPython: EditSurveyRequestToPython): SurveyResponseFromPython =
-        runCatching {
-            requestToPythonServerTemplate
-                .postForEntity(
-                    "/chat/edit/survey",
-                    editSurveyRequestToPython,
-                    SurveyResponseFromPython::class.java,
-                ).body ?: throw SurveyGenerationByAIFailedException()
-        }.fold(
-            onSuccess = { it },
-            onFailure = { throwable ->
-                if (throwable is HttpClientErrorException) {
-                    throw PythonServerExceptionMapper.mapException(throwable)
-                } else {
-                    throw SurveyGenerationByAIFailedException()
-                }
-            },
-        )
-
-    private fun requestEditSection(editSectionRequestToPython: EditSectionRequestToPython): SectionResponseFromPython =
-        runCatching {
-            requestToPythonServerTemplate
-                .postForEntity(
-                    "/chat/edit/section",
-                    editSectionRequestToPython,
-                    SectionResponseFromPython::class.java,
-                ).body ?: throw SurveyGenerationByAIFailedException()
-        }.fold(
-            onSuccess = { it },
-            onFailure = { throwable ->
-                if (throwable is HttpClientErrorException) {
-                    throw PythonServerExceptionMapper.mapException(throwable)
-                } else {
-                    throw SurveyGenerationByAIFailedException()
-                }
-            },
-        )
-
-    private fun requestEditQuestion(editQuestionRequestToPython: EditQuestionRequestToPython): QuestionResponseFromPython =
-        runCatching {
-            requestToPythonServerTemplate
-                .postForEntity(
-                    "/chat/edit/question",
-                    editQuestionRequestToPython,
-                    QuestionResponseFromPython::class.java,
-                ).body ?: throw SurveyGenerationByAIFailedException()
-        }.fold(
-            onSuccess = { it },
-            onFailure = { throwable ->
-                if (throwable is HttpClientErrorException) {
-                    throw PythonServerExceptionMapper.mapException(throwable)
-                } else {
-                    throw SurveyGenerationByAIFailedException()
-                }
-            },
-        )
+    /**
+     * 공통으로 요청을 보내고 응답을 처리하는 메서드
+     * @param url 요청할 URL
+     * @param requestBody 요청 바디 객체
+     * @param responseType 응답 타입 클래스
+     * @return 응답 객체
+     */
+    private fun <T> sendRequest(
+        url: String,
+        requestBody: EditRequestToPython,
+        responseType: Class<T>,
+    ): T =
+        try {
+            val responseEntity = requestToPythonServerTemplate.postForEntity(url, requestBody, responseType)
+            responseEntity.body ?: throw SurveyGenerationByAIFailedException()
+        } catch (exception: HttpClientErrorException) {
+            throw PythonServerExceptionMapper.mapException(exception)
+        } catch (exception: Exception) {
+            throw SurveyGenerationByAIFailedException()
+        }
 }

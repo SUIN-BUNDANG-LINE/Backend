@@ -62,7 +62,7 @@ data class Survey(
                 rewardSetting = NoRewardSetting,
                 isVisible = true,
                 makerId = makerId,
-                sections = listOf(Section.create()),
+                sections = listOf(),
             )
     }
 

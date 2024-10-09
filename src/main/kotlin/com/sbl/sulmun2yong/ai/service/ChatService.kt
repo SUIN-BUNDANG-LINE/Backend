@@ -19,37 +19,40 @@ class ChatService(
         makerId: UUID,
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
     ): AISurveyEditResponse {
-        val surveyId = editSurveyDataWithChatRequest.surveyId
-        val modificationTargetId = editSurveyDataWithChatRequest.modificationTargetId
-        val userPrompt = editSurveyDataWithChatRequest.userPrompt
+        val (surveyId, modificationTargetId, userPrompt) = editSurveyDataWithChatRequest
 
-        val targetSurvey: Survey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
 
-        if (surveyId == modificationTargetId) {
-            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, targetSurvey, userPrompt)
-            val updatedSurvey = pythonFormattedSurvey.toUpdatedSurvey(targetSurvey)
-
-            return AISurveyEditResponse.of(updatedSurvey, targetSurvey, updatedSurvey)
-        }
-
-        val sectionOfTargetSurvey = targetSurvey.findSectionById(modificationTargetId)
-        if (sectionOfTargetSurvey != null) {
-            val pythonFormattedSection = chatAdapter.requestEditSectionWithChat(chatSessionId, sectionOfTargetSurvey, userPrompt)
-            val updatedSurvey = pythonFormattedSection.toUpdatedSurvey(modificationTargetId, targetSurvey)
-
-            return AISurveyEditResponse.of(
-                updatedSurvey,
-                sectionOfTargetSurvey,
-                pythonFormattedSection.toSection(sectionOfTargetSurvey.id, sectionOfTargetSurvey.sectionIds),
+        val updatedSurvey =
+            survey.editSurveyWithAI(
+                modificationTargetId = modificationTargetId,
+                chatSessionId = chatSessionId,
+                userPrompt = userPrompt,
             )
+
+        // 오리지널 설문과, AI가 수정한 설문을 비교한 결과를 반환.
+        return AISurveyEditResponse.compareSurveys(survey, updatedSurvey)
+    }
+
+    /** 설문을 AI를 통해 수정하는 메서드 */
+    private fun Survey.editSurveyWithAI(
+        modificationTargetId: UUID,
+        chatSessionId: UUID,
+        userPrompt: String,
+    ): Survey {
+        if (this.id == modificationTargetId) {
+            val pythonFormattedSurvey = chatAdapter.requestEditSurveyWithChat(chatSessionId, this, userPrompt)
+            return pythonFormattedSurvey.toUpdatedSurvey(this)
         }
 
-        val questionOfTargetSurvey = targetSurvey.findQuestionById(modificationTargetId)
-        if (questionOfTargetSurvey != null) {
-            val pythonFormattedQuestion = chatAdapter.requestEditQuestionWithChat(chatSessionId, questionOfTargetSurvey, userPrompt)
-            val updatedSurvey = pythonFormattedQuestion.toUpdatedSurvey(modificationTargetId, targetSurvey)
+        this.findSectionById(modificationTargetId)?.let {
+            val pythonFormattedSection = chatAdapter.requestEditSectionWithChat(chatSessionId, it, userPrompt)
+            return pythonFormattedSection.toUpdatedSurvey(modificationTargetId, this)
+        }
 
-            return AISurveyEditResponse.of(updatedSurvey, questionOfTargetSurvey, pythonFormattedQuestion.toQuestion(modificationTargetId))
+        this.findQuestionById(modificationTargetId)?.let {
+            val pythonFormattedSection = chatAdapter.requestEditQuestionWithChat(chatSessionId, it, userPrompt)
+            return pythonFormattedSection.toUpdatedSurvey(modificationTargetId, this)
         }
 
         throw InvalidModificationTargetId()
