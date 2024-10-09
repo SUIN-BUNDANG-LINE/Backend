@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.ai.domain.PythonFormattedQuestion
 import com.sbl.sulmun2yong.ai.domain.PythonFormattedSection
 import com.sbl.sulmun2yong.ai.domain.PythonFormattedSurvey
 import com.sbl.sulmun2yong.ai.dto.python.request.EditQuestionRequestToPython
+import com.sbl.sulmun2yong.ai.dto.python.request.EditRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.EditSectionRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.EditSurveyRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.response.QuestionResponseFromPython
@@ -89,7 +90,7 @@ class ChatAdapter(
      */
     private fun <T> sendRequest(
         url: String,
-        requestBody: Any,
+        requestBody: EditRequestToPython,
         responseType: Class<T>,
     ): T =
         try {
