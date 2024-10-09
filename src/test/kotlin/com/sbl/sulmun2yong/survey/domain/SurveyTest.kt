@@ -100,7 +100,7 @@ class SurveyTest {
             assertEquals(NoRewardSetting, this.rewardSetting)
             assertEquals(true, this.isVisible)
             assertEquals(makerId, this.makerId)
-            assertEquals(listOf(this.sections.first()), this.sections)
+            assertEquals(listOf(), this.sections)
         }
     }
 
