@@ -5,4 +5,5 @@ import java.util.UUID
 interface EditRequestToPython {
     val chatSessionId: UUID
     val userPrompt: String
+    val isEditGeneratedResult: Boolean
 }
