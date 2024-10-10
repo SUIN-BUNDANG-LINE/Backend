@@ -6,6 +6,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.util.UUID
 
 class PythonFormattedSurvey(
+    val id: UUID? = null,
     val title: String,
     val description: String,
     val finishMessage: String,
@@ -35,7 +36,25 @@ class PythonFormattedSurvey(
     }
 
     fun toUpdatedSurvey(survey: Survey): Survey {
-        val sectionIds = List(sections.size) { SectionId.Standard(UUID.randomUUID()) }
+        if (sections.isEmpty()) {
+            return survey.updateContent(
+                title = title,
+                description = description,
+                thumbnail = survey.thumbnail,
+                finishMessage = finishMessage,
+                rewardSetting = survey.rewardSetting,
+                isVisible = false,
+                sections = listOf(),
+            )
+        }
+
+        val sectionIds =
+            sections.map { section ->
+                section.id?.let {
+                    SectionId.Standard(it)
+                } ?: SectionId.Standard(UUID.randomUUID())
+            }
+
         val sectionIdsManger = SectionIds.from(sectionIds)
 
         val sections =
@@ -60,6 +79,7 @@ class PythonFormattedSurvey(
     companion object {
         fun from(survey: Survey) =
             PythonFormattedSurvey(
+                id = survey.id,
                 title = survey.title,
                 description = survey.description,
                 finishMessage = survey.finishMessage,

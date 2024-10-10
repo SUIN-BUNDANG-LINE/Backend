@@ -5,7 +5,7 @@ import com.sbl.sulmun2yong.ai.dto.python.request.GenerateRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithFileUrlRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithTextDocumentRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.response.GenerateSurveyResponseFromPython
-import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
+import com.sbl.sulmun2yong.ai.exception.SurveyAIProcessingFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.domain.Survey
 import org.springframework.stereotype.Component
@@ -82,7 +82,7 @@ class GenerateAdapter(
                     requestUrl,
                     requestBody,
                     GenerateSurveyResponseFromPython::class.java,
-                ).body ?: throw SurveyGenerationByAIFailedException()
+                ).body ?: throw SurveyAIProcessingFailedException()
         } catch (e: HttpClientErrorException) {
             throw PythonServerExceptionMapper.mapException(e)
         }

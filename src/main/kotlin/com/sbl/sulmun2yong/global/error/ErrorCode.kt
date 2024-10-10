@@ -70,9 +70,10 @@ enum class ErrorCode(
     INVALID_FILE_URL(HttpStatus.BAD_REQUEST, "FV0007", "유효하지 않은 파일 주소입니다."),
 
     // Python Server (PY)
-    SURVEY_GENERATION_BY_AI_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PY0001", "AI 서버와의 통신에 실패했습니다."),
+    SURVEY_AI_PROCESSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PY0001", "설문 AI 기능 호출에 실패했습니다."),
     TEXT_TOO_LONG(HttpStatus.BAD_REQUEST, "PY0002", "텍스트의 길이가 너무 깁니다"),
     FILE_EXTENSION_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "PY0003", "지원하지 않는 파일 확장자입니다."),
     FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0004", "파일을 찾을 수 없습니다."),
     CHAT_SESSION_ID_COOKIE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0005", "챗봇 세션 ID 쿠키를 찾을 수 없습니다."),
+    AI_EDIT_LOG_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0006", "AI 수정 기록을 찾을 수 없습니다."),
 }
