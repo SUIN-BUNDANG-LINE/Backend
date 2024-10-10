@@ -10,7 +10,7 @@ import com.sbl.sulmun2yong.ai.dto.python.request.EditSurveyRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.response.QuestionResponseFromPython
 import com.sbl.sulmun2yong.ai.dto.python.response.SectionResponseFromPython
 import com.sbl.sulmun2yong.ai.dto.python.response.SurveyResponseFromPython
-import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
+import com.sbl.sulmun2yong.ai.exception.SurveyAIProcessingFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Question
@@ -95,10 +95,10 @@ class ChatAdapter(
     ): T =
         try {
             val responseEntity = requestToPythonServerTemplate.postForEntity(url, requestBody, responseType)
-            responseEntity.body ?: throw SurveyGenerationByAIFailedException()
+            responseEntity.body ?: throw SurveyAIProcessingFailedException()
         } catch (exception: HttpClientErrorException) {
             throw PythonServerExceptionMapper.mapException(exception)
         } catch (exception: Exception) {
-            throw SurveyGenerationByAIFailedException()
+            throw SurveyAIProcessingFailedException()
         }
 }

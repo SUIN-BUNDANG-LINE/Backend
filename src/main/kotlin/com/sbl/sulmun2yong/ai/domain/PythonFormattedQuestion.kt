@@ -11,17 +11,18 @@ import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
 import java.util.UUID
 
 class PythonFormattedQuestion(
+    val id: UUID? = null,
     val questionType: QuestionType,
     val title: String,
     val isRequired: Boolean,
     val choices: List<String>?,
     val isAllowOther: Boolean,
 ) {
-    fun toQuestion(id: UUID) =
+    fun toQuestion() =
         when (questionType) {
             QuestionType.SINGLE_CHOICE ->
                 StandardSingleChoiceQuestion(
-                    id = id,
+                    id = id ?: UUID.randomUUID(),
                     title = this.title,
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
@@ -30,7 +31,7 @@ class PythonFormattedQuestion(
                 )
             QuestionType.MULTIPLE_CHOICE ->
                 StandardMultipleChoiceQuestion(
-                    id = id,
+                    id = id ?: UUID.randomUUID(),
                     title = this.title,
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
@@ -39,7 +40,7 @@ class PythonFormattedQuestion(
                 )
             QuestionType.TEXT_RESPONSE ->
                 StandardTextQuestion(
-                    id = id,
+                    id = id ?: UUID.randomUUID(),
                     title = this.title,
                     description = DEFAULT_DESCRIPTION,
                     isRequired = this.isRequired,
@@ -55,7 +56,7 @@ class PythonFormattedQuestion(
                 val updatedQuestions =
                     section.questions.map { question ->
                         if (question.id == questionId) {
-                            this.toQuestion(questionId)
+                            this.toQuestion()
                         } else {
                             question
                         }
@@ -80,6 +81,7 @@ class PythonFormattedQuestion(
 
         fun from(question: Question) =
             PythonFormattedQuestion(
+                id = question.id,
                 questionType = question.questionType,
                 title = question.title,
                 isRequired = question.isRequired,
