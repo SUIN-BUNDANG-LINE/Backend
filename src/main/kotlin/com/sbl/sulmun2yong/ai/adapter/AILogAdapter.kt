@@ -1,4 +1,28 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-class AILogAdapter {
+import com.sbl.sulmun2yong.ai.domain.AIEditLog
+import com.sbl.sulmun2yong.ai.entity.AIEditLogDocument
+import com.sbl.sulmun2yong.ai.exception.AIEditLogNotFoundException
+import com.sbl.sulmun2yong.ai.repository.AIEditLogRepository
+import org.springframework.stereotype.Component
+import java.util.UUID
+
+@Component
+class AILogAdapter(
+    private val aiEditLogRepository: AIEditLogRepository,
+) {
+    fun saveEditLog(aiEditLog: AIEditLog) =
+        aiEditLogRepository.save(
+            AIEditLogDocument.from(
+                aiEditLog,
+            ),
+        )
+
+    fun getLatestEditLog(
+        surveyId: UUID,
+        makerId: UUID,
+    ) = aiEditLogRepository
+        .findFirstBySurveyIdAndMakerIdOrderByCreatedAtDesc(surveyId, makerId)
+        .orElseThrow { AIEditLogNotFoundException() }
+        .toDomain()
 }

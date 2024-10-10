@@ -1,6 +1,8 @@
 package com.sbl.sulmun2yong.ai.service
 
+import com.sbl.sulmun2yong.ai.adapter.AILogAdapter
 import com.sbl.sulmun2yong.ai.adapter.ChatAdapter
+import com.sbl.sulmun2yong.ai.domain.AIEditLog
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
 import com.sbl.sulmun2yong.ai.dto.response.AISurveyEditResponse
 import com.sbl.sulmun2yong.ai.exception.InvalidModificationTargetId
@@ -13,6 +15,7 @@ import java.util.UUID
 class ChatService(
     private val surveyAdapter: SurveyAdapter,
     private val chatAdapter: ChatAdapter,
+    private val aiLogAdapter: AILogAdapter,
 ) {
     fun editSurveyDataWithChat(
         chatSessionId: UUID,
@@ -21,17 +24,33 @@ class ChatService(
     ): AISurveyEditResponse {
         val (surveyId, modificationTargetId, userPrompt, isEditGeneratedResult) = editSurveyDataWithChatRequest
 
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
+        val targetSurvey =
+            if (isEditGeneratedResult) {
+                aiLogAdapter.getLatestEditLog(surveyId, makerId).editedSurvey
+            } else {
+                surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
+            }
 
         val updatedSurvey =
-            survey.editSurveyWithAI(
+            targetSurvey.editSurveyWithAI(
                 modificationTargetId = modificationTargetId,
                 chatSessionId = chatSessionId,
                 userPrompt = userPrompt,
             )
 
+        aiLogAdapter.saveEditLog(
+            AIEditLog(
+                id = UUID.randomUUID(),
+                surveyId = surveyId,
+                makerId = makerId,
+                userPrompt = userPrompt,
+                originalSurvey = targetSurvey,
+                editedSurvey = updatedSurvey,
+            ),
+        )
+
         // 오리지널 설문과, AI가 수정한 설문을 비교한 결과를 반환.
-        return AISurveyEditResponse.compareSurveys(survey, updatedSurvey)
+        return AISurveyEditResponse.compareSurveys(targetSurvey, updatedSurvey)
     }
 
     /** 설문을 AI를 통해 수정하는 메서드 */

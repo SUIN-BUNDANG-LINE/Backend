@@ -75,4 +75,5 @@ enum class ErrorCode(
     FILE_EXTENSION_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "PY0003", "지원하지 않는 파일 확장자입니다."),
     FILE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0004", "파일을 찾을 수 없습니다."),
     CHAT_SESSION_ID_COOKIE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0005", "챗봇 세션 ID 쿠키를 찾을 수 없습니다."),
+    AI_EDIT_LOG_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0006", "AI 수정 로그를 찾을 수 없습니다."),
 }
