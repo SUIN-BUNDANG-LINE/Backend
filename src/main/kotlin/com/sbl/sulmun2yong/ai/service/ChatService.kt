@@ -24,11 +24,13 @@ class ChatService(
     ): AISurveyEditResponse {
         val (surveyId, modificationTargetId, userPrompt, isEditGeneratedResult) = editSurveyDataWithChatRequest
 
+        val originalSurvey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
+
         val targetSurvey =
             if (isEditGeneratedResult) {
                 aiLogAdapter.getLatestEditLog(surveyId, makerId).editedSurvey
             } else {
-                surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
+                originalSurvey
             }
 
         val updatedSurvey =
@@ -50,7 +52,7 @@ class ChatService(
         )
 
         // 오리지널 설문과, AI가 수정한 설문을 비교한 결과를 반환.
-        return AISurveyEditResponse.compareSurveys(targetSurvey, updatedSurvey)
+        return AISurveyEditResponse.compareSurveys(originalSurvey, updatedSurvey)
     }
 
     /** 설문을 AI를 통해 수정하는 메서드 */
