@@ -36,6 +36,18 @@ class PythonFormattedSurvey(
     }
 
     fun toUpdatedSurvey(survey: Survey): Survey {
+        if (sections.isEmpty()) {
+            return survey.updateContent(
+                title = title,
+                description = description,
+                thumbnail = survey.thumbnail,
+                finishMessage = finishMessage,
+                rewardSetting = survey.rewardSetting,
+                isVisible = false,
+                sections = listOf(),
+            )
+        }
+
         val sectionIds =
             sections.map { section ->
                 section.id?.let {
@@ -44,7 +56,7 @@ class PythonFormattedSurvey(
             }
 
         val sectionIdsManger = SectionIds.from(sectionIds)
-        1
+
         val sections =
             sections.mapIndexed { index, sectionGeneratedByAI ->
                 sectionGeneratedByAI.toSection(
