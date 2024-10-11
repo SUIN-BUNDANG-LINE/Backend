@@ -11,12 +11,14 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
+import java.util.UUID
 
 @Component
 class GenerateAdapter(
     private val requestToPythonServerTemplate: RestTemplate,
 ) {
     fun requestSurveyGenerationWithFileUrl(
+        chatSessionId: UUID,
         job: String,
         groupName: String,
         fileUrl: String,
@@ -26,6 +28,7 @@ class GenerateAdapter(
         val generateSurveyResponseFromPython =
             requestWithFileUrl(
                 GenerateWithFileUrlRequestToPython(
+                    chatSessionId = chatSessionId,
                     job = job,
                     groupName = groupName,
                     userPrompt = userPrompt,
@@ -37,6 +40,7 @@ class GenerateAdapter(
     }
 
     fun requestSurveyGenerationWithTextDocument(
+        chatSessionId: UUID,
         job: String,
         groupName: String,
         textDocument: String,
@@ -46,6 +50,7 @@ class GenerateAdapter(
         val generateSurveyResponseFromPython =
             requestWithTextDocument(
                 GenerateWithTextDocumentRequestToPython(
+                    chatSessionId = chatSessionId,
                     job = job,
                     groupName = groupName,
                     userPrompt = userPrompt,

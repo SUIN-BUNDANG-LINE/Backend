@@ -21,7 +21,7 @@ class GenerateService(
     ): AISurveyGenerationResponse {
         val allowedExtensions = mutableListOf(".txt", ".pdf")
 
-        val job = surveyGenerationWithFileUrlRequest.job
+        val job = surveyGenerationWithFileUrlRequest.target
         val groupName = surveyGenerationWithFileUrlRequest.groupName
         val fileUrl = surveyGenerationWithFileUrlRequest.fileUrl
         val userPrompt = surveyGenerationWithFileUrlRequest.userPrompt
@@ -31,7 +31,7 @@ class GenerateService(
         val survey = surveyAdapter.getSurvey(surveyId)
 
         return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl, userPrompt, survey),
+            generateAdapter.requestSurveyGenerationWithFileUrl(surveyId, job, groupName, fileUrl, userPrompt, survey),
         )
     }
 
@@ -39,7 +39,7 @@ class GenerateService(
         surveyGenerationWithTextDocumentRequest: SurveyGenerationWithTextDocumentRequest,
         surveyId: UUID,
     ): AISurveyGenerationResponse {
-        val job = surveyGenerationWithTextDocumentRequest.job
+        val job = surveyGenerationWithTextDocumentRequest.target
         val groupName = surveyGenerationWithTextDocumentRequest.groupName
         val textDocument = surveyGenerationWithTextDocumentRequest.textDocument
         val userPrompt = surveyGenerationWithTextDocumentRequest.userPrompt
@@ -47,7 +47,7 @@ class GenerateService(
         val survey = surveyAdapter.getSurvey(surveyId)
 
         return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithTextDocument(job, groupName, textDocument, userPrompt, survey),
+            generateAdapter.requestSurveyGenerationWithTextDocument(surveyId, job, groupName, textDocument, userPrompt, survey),
         )
     }
 }

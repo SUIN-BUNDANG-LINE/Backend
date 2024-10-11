@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.ai.controller
 import com.sbl.sulmun2yong.ai.controller.doc.AIChatApiDoc
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
 import com.sbl.sulmun2yong.ai.dto.response.AISurveyEditResponse
-import com.sbl.sulmun2yong.ai.exception.ChatSessionIdCookieNotFoundException
 import com.sbl.sulmun2yong.ai.service.ChatService
 import com.sbl.sulmun2yong.global.annotation.LoginUser
 import jakarta.servlet.http.HttpServletRequest
@@ -23,13 +22,8 @@ class AIChatController(
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
         request: HttpServletRequest,
         @LoginUser id: UUID,
-    ): ResponseEntity<AISurveyEditResponse> {
-        val cookies = request.cookies
-        val chatSessionId =
-            cookies?.firstOrNull { it.name == "chat-session-id" }?.value ?: throw ChatSessionIdCookieNotFoundException()
-
-        return ResponseEntity.ok(
-            chatService.editSurveyDataWithChat(UUID.fromString(chatSessionId), makerId = id, editSurveyDataWithChatRequest),
+    ): ResponseEntity<AISurveyEditResponse> =
+        ResponseEntity.ok(
+            chatService.editSurveyDataWithChat(makerId = id, editSurveyDataWithChatRequest),
         )
-    }
 }

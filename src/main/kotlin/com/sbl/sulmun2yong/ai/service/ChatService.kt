@@ -18,7 +18,6 @@ class ChatService(
     private val aiLogAdapter: AILogAdapter,
 ) {
     fun editSurveyDataWithChat(
-        chatSessionId: UUID,
         makerId: UUID,
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
     ): AISurveyEditResponse {
@@ -36,7 +35,7 @@ class ChatService(
         val updatedSurvey =
             targetSurvey.editSurveyWithAI(
                 modificationTargetId = modificationTargetId,
-                chatSessionId = chatSessionId,
+                chatSessionId = surveyId,
                 userPrompt = userPrompt,
             )
 
