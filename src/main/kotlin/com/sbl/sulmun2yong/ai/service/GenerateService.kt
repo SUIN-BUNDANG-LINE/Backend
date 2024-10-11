@@ -31,7 +31,7 @@ class GenerateService(
         val survey = surveyAdapter.getSurvey(surveyId)
 
         return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithFileUrl(job, groupName, fileUrl, userPrompt, survey),
+            generateAdapter.requestSurveyGenerationWithFileUrl(surveyId, job, groupName, fileUrl, userPrompt, survey),
         )
     }
 
@@ -47,7 +47,7 @@ class GenerateService(
         val survey = surveyAdapter.getSurvey(surveyId)
 
         return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithTextDocument(job, groupName, textDocument, userPrompt, survey),
+            generateAdapter.requestSurveyGenerationWithTextDocument(surveyId, job, groupName, textDocument, userPrompt, survey),
         )
     }
 }

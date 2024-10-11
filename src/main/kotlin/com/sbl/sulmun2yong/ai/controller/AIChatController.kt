@@ -22,13 +22,8 @@ class AIChatController(
         editSurveyDataWithChatRequest: EditSurveyDataWithChatRequest,
         request: HttpServletRequest,
         @LoginUser id: UUID,
-    ): ResponseEntity<AISurveyEditResponse> {
-        val cookies = request.cookies
-        val chatSessionId =
-            cookies?.firstOrNull { it.name == "chat-session-id" }?.value ?: UUID.randomUUID().toString()
-
-        return ResponseEntity.ok(
-            chatService.editSurveyDataWithChat(UUID.fromString(chatSessionId), makerId = id, editSurveyDataWithChatRequest),
+    ): ResponseEntity<AISurveyEditResponse> =
+        ResponseEntity.ok(
+            chatService.editSurveyDataWithChat(makerId = id, editSurveyDataWithChatRequest),
         )
-    }
 }
