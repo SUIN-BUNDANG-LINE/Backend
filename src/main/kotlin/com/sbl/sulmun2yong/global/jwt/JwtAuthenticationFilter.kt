@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.global.jwt
 
+import com.sbl.sulmun2yong.global.jwt.exception.InvalidRefreshTokenException
 import com.sbl.sulmun2yong.global.util.CookieUtils
 import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
 import com.sbl.sulmun2yong.user.adapter.UserAdapter
@@ -46,7 +47,7 @@ class JwtAuthenticationFilter(
                 response.addCookie(jwtTokenProvider.makeAccessTokenCookie(newAccessToken))
             },
             onFailure = {
-                println("인증 실패")
+                logger.warn(it.message)
             },
         )
 
@@ -55,14 +56,15 @@ class JwtAuthenticationFilter(
 
     private fun tryRefreshAccessToken(refreshToken: String?): Result<String> =
         runCatching {
-            if (refreshToken == null || jwtTokenProvider.validateToken(refreshToken)) throw IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.")
+            if (refreshToken == null) throw InvalidRefreshTokenException("리프레시 토큰이 존재하지 않습니다.")
+            if (!jwtTokenProvider.validateToken(refreshToken)) throw InvalidRefreshTokenException("유효하지 않은 리프레시 토큰입니다.")
 
             val userId = jwtTokenProvider.getUserIdFromToken(refreshToken)
             val tokenId = jwtTokenProvider.getTokenIdFromToken(refreshToken)
-            if (userId == null || tokenId == null) throw IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.")
+            if (userId == null || tokenId == null) throw InvalidRefreshTokenException("리프레시 토큰의 형식이 유효하지 않습니다.")
 
             val storedToken = userRefreshTokenAdapter.findByTokenIdAndUserId(tokenId, userId)
-            if (storedToken != null && storedToken.token == refreshToken) throw IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.")
+            if (storedToken != null && storedToken.token == refreshToken) throw InvalidRefreshTokenException("DB에 없는 리프레시 토큰입니다.")
 
             val user = userAdapter.getById(userId)
             val defaultUserProfile =
