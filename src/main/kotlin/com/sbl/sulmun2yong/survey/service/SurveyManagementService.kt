@@ -4,9 +4,11 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
+import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResultRequest
 import com.sbl.sulmun2yong.survey.dto.response.ParticipantsInfoListResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyResultResponse
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -19,11 +21,14 @@ class SurveyManagementService(
 ) {
     fun getSurveyResult(
         surveyId: UUID,
-        makerId: UUID,
+        makerId: UUID?,
         surveyResultRequest: SurveyResultRequest,
         participantId: UUID?,
+        visitorId: String?,
     ): SurveyResultResponse {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // visitorId가 있으면 참가자인지 확인, 없으면 makerId를 확인
+        if (!isValidRequest(survey, makerId, visitorId)) throw InvalidSurveyAccessException()
 
         // DB에서 설문 결과 조회
         val surveyResult = responseAdapter.getSurveyResult(surveyId, participantId)
@@ -46,11 +51,37 @@ class SurveyManagementService(
 
     fun getSurveyParticipants(
         surveyId: UUID,
-        makerId: UUID,
+        makerId: UUID?,
+        visitorId: String?,
     ): ParticipantsInfoListResponse {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // visitorId가 있으면 참가자인지 확인, 없으면 makerId를 확인
+        if (!isValidRequest(survey, makerId, visitorId)) throw InvalidSurveyAccessException()
+
         val participants = participantAdapter.findBySurveyId(surveyId)
-        val drawingHistories = if (survey.isImmediateDraw()) drawingHistoryAdapter.getBySurveyId(surveyId, false) else null
+        // 즉시 추첨이고, visitorId가 없는 경우에만 추첨 이력 조회
+        val drawingHistories =
+            if (survey.isImmediateDraw() &&
+                visitorId == null
+            ) {
+                drawingHistoryAdapter.getBySurveyId(surveyId, false)
+            } else {
+                null
+            }
         return ParticipantsInfoListResponse.of(participants, drawingHistories, survey.rewardSetting.targetParticipantCount)
     }
+
+    private fun isValidRequest(
+        survey: Survey,
+        makerId: UUID?,
+        visitorId: String?,
+    ): Boolean =
+        // visitorId가 있고, 결과 공개가 되어있는 경우 참가자인지 확인
+        if (visitorId != null && survey.isResultOpen) {
+            val participant = participantAdapter.findBySurveyIdAndVisitorId(survey.id, visitorId)
+            participant != null
+        } else {
+            // 아닌 경우 설문 제작자인지 확인
+            makerId != null && survey.makerId == makerId
+        }
 }

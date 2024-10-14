@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.survey.controller.doc
 
-import com.sbl.sulmun2yong.global.annotation.LoginUser
+import com.sbl.sulmun2yong.global.annotation.NullableLoginUser
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResultRequest
 import com.sbl.sulmun2yong.survey.dto.response.ParticipantsInfoListResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyResultResponse
@@ -19,15 +19,17 @@ interface SurveyManagementApiDoc {
     @PostMapping("/result/{survey-id}")
     fun getSurveyResult(
         @PathVariable("survey-id") surveyId: UUID,
-        @LoginUser id: UUID,
+        @NullableLoginUser makerId: UUID?,
         @RequestBody surveyResultRequest: SurveyResultRequest,
         @RequestParam participantId: UUID?,
+        @RequestParam visitorId: String?,
     ): ResponseEntity<SurveyResultResponse>
 
     @Operation(summary = "참가자 목록")
     @PostMapping("/participants/{survey-id}")
     fun getSurveyParticipants(
         @PathVariable("survey-id") surveyId: UUID,
-        @LoginUser id: UUID,
+        @NullableLoginUser makerId: UUID?,
+        @RequestParam visitorId: String?,
     ): ResponseEntity<ParticipantsInfoListResponse>
 }

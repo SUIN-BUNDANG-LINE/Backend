@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.survey.controller
 
-import com.sbl.sulmun2yong.global.annotation.LoginUser
+import com.sbl.sulmun2yong.global.annotation.NullableLoginUser
 import com.sbl.sulmun2yong.survey.controller.doc.SurveyManagementApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResultRequest
 import com.sbl.sulmun2yong.survey.service.SurveyManagementService
@@ -22,14 +22,16 @@ class SurveyManagementController(
     @PostMapping("/result/{survey-id}")
     override fun getSurveyResult(
         @PathVariable("survey-id") surveyId: UUID,
-        @LoginUser id: UUID,
+        @NullableLoginUser makerId: UUID?,
         @RequestBody surveyResultRequest: SurveyResultRequest,
         @RequestParam participantId: UUID?,
-    ) = ResponseEntity.ok(surveyManagementService.getSurveyResult(surveyId, id, surveyResultRequest, participantId))
+        @RequestParam visitorId: String?,
+    ) = ResponseEntity.ok(surveyManagementService.getSurveyResult(surveyId, makerId, surveyResultRequest, participantId, visitorId))
 
     @GetMapping("/participants/{survey-id}")
     override fun getSurveyParticipants(
         @PathVariable("survey-id") surveyId: UUID,
-        @LoginUser userId: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.getSurveyParticipants(surveyId, userId))
+        @NullableLoginUser makerId: UUID?,
+        @RequestParam visitorId: String?,
+    ) = ResponseEntity.ok(surveyManagementService.getSurveyParticipants(surveyId, makerId, visitorId))
 }
