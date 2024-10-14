@@ -31,6 +31,7 @@ class PythonFormattedSurvey(
             finishMessage = finishMessage,
             rewardSetting = originalSurvey.rewardSetting,
             isVisible = originalSurvey.isVisible,
+            isResultOpen = originalSurvey.isResultOpen,
             sections = sections,
         )
     }
@@ -43,7 +44,8 @@ class PythonFormattedSurvey(
                 thumbnail = survey.thumbnail,
                 finishMessage = finishMessage,
                 rewardSetting = survey.rewardSetting,
-                isVisible = false,
+                isVisible = survey.isVisible,
+                isResultOpen = survey.isResultOpen,
                 sections = listOf(),
             )
         }
@@ -71,7 +73,8 @@ class PythonFormattedSurvey(
             thumbnail = survey.thumbnail,
             finishMessage = finishMessage,
             rewardSetting = survey.rewardSetting,
-            isVisible = false,
+            isVisible = survey.isVisible,
+            isResultOpen = survey.isResultOpen,
             sections = sections,
         )
     }

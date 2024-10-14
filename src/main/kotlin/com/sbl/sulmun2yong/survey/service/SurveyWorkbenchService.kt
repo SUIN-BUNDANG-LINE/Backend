@@ -38,6 +38,7 @@ class SurveyWorkbenchService(
                     finishMessage = this.finishMessage,
                     rewardSetting = this.rewardSetting.toDomain(survey.status),
                     isVisible = this.isVisible,
+                    isResultOpen = this.isResultOpen,
                     sections = this.sections.toDomain(),
                 )
             }

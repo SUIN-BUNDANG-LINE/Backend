@@ -52,6 +52,5 @@ interface SurveyInfoApiDoc {
     @GetMapping("/{surveyId}")
     fun getSurveyMakeInfo(
         @PathVariable("surveyId") surveyId: UUID,
-        @LoginUser id: UUID,
     ): ResponseEntity<SurveyMakeInfoResponse>
 }

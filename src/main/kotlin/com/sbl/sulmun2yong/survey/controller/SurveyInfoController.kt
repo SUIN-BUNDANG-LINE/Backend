@@ -54,6 +54,5 @@ class SurveyInfoController(
     @GetMapping("/make-info/{surveyId}")
     override fun getSurveyMakeInfo(
         @PathVariable("surveyId") surveyId: UUID,
-        @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyInfoService.getSurveyMakeInfo(surveyId = surveyId, makerId = id))
+    ) = ResponseEntity.ok(surveyInfoService.getSurveyMakeInfo(surveyId = surveyId))
 }

@@ -20,6 +20,7 @@ data class SurveyMakeInfoResponse(
     val status: SurveyStatus,
     val finishMessage: String,
     val isVisible: Boolean,
+    val isResultOpen: Boolean,
     val sections: List<SectionMakeInfoResponse>,
 ) {
     companion object {
@@ -39,6 +40,7 @@ data class SurveyMakeInfoResponse(
                 status = survey.status,
                 finishMessage = survey.finishMessage,
                 isVisible = survey.isVisible,
+                isResultOpen = survey.isResultOpen,
                 sections = survey.sections.map { SectionMakeInfoResponse.from(it) },
             )
     }

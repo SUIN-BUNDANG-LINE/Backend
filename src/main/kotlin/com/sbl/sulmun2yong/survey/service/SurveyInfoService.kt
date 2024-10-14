@@ -58,11 +58,8 @@ class SurveyInfoService(
         return MyPageSurveysResponse(myPageSurveysInfoResponse)
     }
 
-    fun getSurveyMakeInfo(
-        surveyId: UUID,
-        makerId: UUID,
-    ): SurveyMakeInfoResponse {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+    fun getSurveyMakeInfo(surveyId: UUID): SurveyMakeInfoResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
         return SurveyMakeInfoResponse.of(survey)
     }
 }

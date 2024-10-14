@@ -94,6 +94,7 @@ data class Survey(
         finishMessage: String,
         rewardSetting: RewardSetting,
         isVisible: Boolean,
+        isResultOpen: Boolean,
         sections: List<Section>,
     ): Survey {
         // 설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야한다.
@@ -111,6 +112,7 @@ data class Survey(
             finishMessage = finishMessage,
             rewardSetting = rewardSetting,
             isVisible = isVisible,
+            isResultOpen = isResultOpen,
             sections = sections,
         )
     }
