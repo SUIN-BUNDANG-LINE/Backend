@@ -8,7 +8,6 @@ import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
-import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -43,14 +42,6 @@ class SurveyWorkbenchService(
                 )
             }
         surveyAdapter.save(newSurvey)
-    }
-
-    fun getSurveyMakeInfo(
-        surveyId: UUID,
-        makerId: UUID,
-    ): SurveyMakeInfoResponse {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
-        return SurveyMakeInfoResponse.of(survey)
     }
 
     // TODO: 트랜잭션 적용 필요
