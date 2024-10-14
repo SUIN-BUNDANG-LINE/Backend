@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import java.util.UUID
 
-@Tag(name = "SurveyManagement", description = "설문 관리 관련 API")
-interface SurveyManagementApiDoc {
+@Tag(name = "SurveyWorkbench", description = "설문 Workbench 관련 API")
+interface SurveyWorkbenchApiDoc {
     @Operation(summary = "설문 생성 API")
     @PostMapping("/create")
     fun createSurvey(

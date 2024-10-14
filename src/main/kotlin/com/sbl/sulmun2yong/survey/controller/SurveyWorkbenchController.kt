@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.survey.controller
 
 import com.sbl.sulmun2yong.global.annotation.LoginUser
-import com.sbl.sulmun2yong.survey.controller.doc.SurveyManagementApiDoc
+import com.sbl.sulmun2yong.survey.controller.doc.SurveyWorkbenchApiDoc
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
-import com.sbl.sulmun2yong.survey.service.SurveyManagementService
+import com.sbl.sulmun2yong.survey.service.SurveyWorkbenchService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,13 +18,13 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/surveys/workbench")
-class SurveyManagementController(
-    private val surveyManagementService: SurveyManagementService,
-) : SurveyManagementApiDoc {
+class SurveyWorkbenchController(
+    private val surveyWorkbenchService: SurveyWorkbenchService,
+) : SurveyWorkbenchApiDoc {
     @PostMapping("/create")
     override fun createSurvey(
         @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.createSurvey(makerId = id))
+    ) = ResponseEntity.ok(surveyWorkbenchService.createSurvey(makerId = id))
 
     @PutMapping("/{surveyId}")
     override fun saveSurvey(
@@ -32,7 +32,7 @@ class SurveyManagementController(
         @LoginUser id: UUID,
         @RequestBody surveySaveRequest: SurveySaveRequest,
     ) = ResponseEntity.ok(
-        surveyManagementService.saveSurvey(
+        surveyWorkbenchService.saveSurvey(
             surveySaveRequest = surveySaveRequest,
             makerId = id,
             surveyId = surveyId,
@@ -43,29 +43,29 @@ class SurveyManagementController(
     override fun getSurveyMakeInfo(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.getSurveyMakeInfo(surveyId = surveyId, makerId = id))
+    ) = ResponseEntity.ok(surveyWorkbenchService.getSurveyMakeInfo(surveyId = surveyId, makerId = id))
 
     @PatchMapping("/start/{surveyId}")
     override fun startSurvey(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.startSurvey(surveyId = surveyId, makerId = id))
+    ) = ResponseEntity.ok(surveyWorkbenchService.startSurvey(surveyId = surveyId, makerId = id))
 
     @PatchMapping("/edit/{surveyId}")
     override fun editSurvey(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.editSurvey(surveyId = surveyId, makerId = id))
+    ) = ResponseEntity.ok(surveyWorkbenchService.editSurvey(surveyId = surveyId, makerId = id))
 
     @PatchMapping("/finish/{surveyId}")
     override fun finishSurvey(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.finishSurvey(surveyId = surveyId, makerId = id))
+    ) = ResponseEntity.ok(surveyWorkbenchService.finishSurvey(surveyId = surveyId, makerId = id))
 
     @DeleteMapping("/delete/{surveyId}")
     override fun deleteSurvey(
         @PathVariable("surveyId") surveyId: UUID,
         @LoginUser id: UUID,
-    ) = ResponseEntity.ok(surveyManagementService.deleteSurvey(surveyId = surveyId, makerId = id))
+    ) = ResponseEntity.ok(surveyWorkbenchService.deleteSurvey(surveyId = surveyId, makerId = id))
 }

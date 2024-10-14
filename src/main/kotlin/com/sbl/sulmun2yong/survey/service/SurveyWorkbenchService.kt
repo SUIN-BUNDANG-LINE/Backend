@@ -14,7 +14,7 @@ import java.util.UUID
 
 // TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
 @Service
-class SurveyManagementService(
+class SurveyWorkbenchService(
     private val surveyAdapter: SurveyAdapter,
     private val drawingBoardAdapter: DrawingBoardAdapter,
 ) {
