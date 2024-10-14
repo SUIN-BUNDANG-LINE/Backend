@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.survey.controller.doc
 
 import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResultRequest
+import com.sbl.sulmun2yong.survey.dto.response.ParticipantsInfoListResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyResultResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -12,14 +13,21 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import java.util.UUID
 
-@Tag(name = "SurveyResult", description = "설문 결과 관련 API")
-interface SurveyResultApiDoc {
+@Tag(name = "SurveyManagement", description = "설문 관리 페이지 관련 API")
+interface SurveyManagementApiDoc {
     @Operation(summary = "설문 결과 조회")
-    @PostMapping("/{survey-id}")
+    @PostMapping("/result/{survey-id}")
     fun getSurveyResult(
         @PathVariable("survey-id") surveyId: UUID,
         @LoginUser id: UUID,
         @RequestBody surveyResultRequest: SurveyResultRequest,
         @RequestParam participantId: UUID?,
     ): ResponseEntity<SurveyResultResponse>
+
+    @Operation(summary = "참가자 목록")
+    @PostMapping("/participants/{survey-id}")
+    fun getSurveyParticipants(
+        @PathVariable("survey-id") surveyId: UUID,
+        @LoginUser id: UUID,
+    ): ResponseEntity<ParticipantsInfoListResponse>
 }
