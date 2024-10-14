@@ -31,6 +31,7 @@ data class Survey(
     /** 해당 설문의 설문이용 노출 여부(false면 메인 페이지 노출 X, 링크를 통해서만 접근 가능) */
     val isVisible: Boolean,
     val makerId: UUID,
+    val isResultOpen: Boolean,
     val sections: List<Section>,
 ) {
     init {
@@ -63,6 +64,7 @@ data class Survey(
                 isVisible = true,
                 makerId = makerId,
                 sections = listOf(),
+                isResultOpen = false,
             )
     }
 

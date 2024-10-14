@@ -38,6 +38,7 @@ data class SurveyDocument(
     val rewardSettingType: RewardSettingType,
     val isVisible: Boolean,
     val makerId: UUID,
+    val isResultOpen: Boolean,
     val rewards: List<RewardSubDocument>,
     val sections: List<SectionSubDocument>,
     val isDeleted: Boolean = false,
@@ -55,6 +56,7 @@ data class SurveyDocument(
                 finishMessage = survey.finishMessage,
                 targetParticipantCount = survey.rewardSetting.targetParticipantCount,
                 makerId = survey.makerId,
+                isResultOpen = survey.isResultOpen,
                 rewards = survey.rewardSetting.rewards.map { it.toDocument() },
                 rewardSettingType = survey.rewardSetting.type,
                 isVisible = survey.isVisible,
@@ -170,6 +172,7 @@ data class SurveyDocument(
                     this.status,
                 ),
             isVisible = this.isVisible,
+            isResultOpen = this.isResultOpen,
             makerId = this.makerId,
             sections = this.sections.toDomain(),
         )
