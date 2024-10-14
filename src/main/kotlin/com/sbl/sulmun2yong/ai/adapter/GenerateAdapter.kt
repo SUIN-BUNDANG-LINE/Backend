@@ -19,7 +19,7 @@ class GenerateAdapter(
 ) {
     fun requestSurveyGenerationWithFileUrl(
         chatSessionId: UUID,
-        job: String,
+        target: String,
         groupName: String,
         fileUrl: String,
         userPrompt: String,
@@ -29,7 +29,7 @@ class GenerateAdapter(
             requestWithFileUrl(
                 GenerateWithFileUrlRequestToPython(
                     chatSessionId = chatSessionId,
-                    job = job,
+                    target = target,
                     groupName = groupName,
                     userPrompt = userPrompt,
                     fileUrl = fileUrl,
@@ -41,7 +41,7 @@ class GenerateAdapter(
 
     fun requestSurveyGenerationWithTextDocument(
         chatSessionId: UUID,
-        job: String,
+        target: String,
         groupName: String,
         textDocument: String,
         userPrompt: String,
@@ -51,7 +51,7 @@ class GenerateAdapter(
             requestWithTextDocument(
                 GenerateWithTextDocumentRequestToPython(
                     chatSessionId = chatSessionId,
-                    job = job,
+                    target = target,
                     groupName = groupName,
                     userPrompt = userPrompt,
                     textDocument = textDocument,

@@ -4,7 +4,7 @@ import java.util.UUID
 
 interface GenerateRequestToPython {
     val chatSessionId: UUID
-    val job: String
+    val target: String
     val groupName: String
     val userPrompt: String
 }
