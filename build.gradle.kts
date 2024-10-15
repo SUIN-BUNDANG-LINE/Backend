@@ -42,6 +42,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
+    // JWT
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    implementation("io.jsonwebtoken:jjwt-impl:0.12.6")
+    implementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
     // jpa (RDBMS 사용 전 까지는 비활성화)
     // implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 

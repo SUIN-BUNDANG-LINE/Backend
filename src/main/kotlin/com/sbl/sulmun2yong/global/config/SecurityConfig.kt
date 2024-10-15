@@ -4,20 +4,21 @@ import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
 import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomAuthenticationSuccessHandler
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomLogoutSuccessHandler
-import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomExpiredSessionStrategy
-import com.sbl.sulmun2yong.global.config.oauth2.strategy.CustomInvalidSessionStrategy
+import com.sbl.sulmun2yong.global.jwt.JwtAuthenticationFilter
+import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
+import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.security.servlet.RequestMatcherProvider
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
-import org.springframework.security.core.session.SessionRegistry
-import org.springframework.security.core.session.SessionRegistryImpl
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -26,6 +27,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.AccessDeniedHandler
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.filter.ForwardedHeaderFilter
 
 @Configuration
@@ -34,18 +36,16 @@ class SecurityConfig(
     private val frontendBaseUrl: String,
     @Value("\${backend.base-url}")
     private val backendBaseUrl: String,
-    @Value("\${cookie.domain}")
-    private val cookieDomain: String,
     @Value("\${swagger.username}")
     private val username: String?,
     @Value("\${swagger.password}")
     private val password: String?,
     private val entryPoint: AuthenticationEntryPoint,
     private val deniedHandler: AccessDeniedHandler,
+    private val jwtTokenProvider: JwtTokenProvider,
+    @Lazy private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val refreshTokenAdapter: RefreshTokenAdapter,
 ) {
-    @Bean
-    fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()
-
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
@@ -78,7 +78,7 @@ class SecurityConfig(
     @ConditionalOnProperty(prefix = "swagger", name = ["login"], havingValue = "true")
     @Order(0)
     @Bean
-    fun filterChain(
+    fun formLoginFilterChain(
         http: HttpSecurity,
         requestMatcherProvider: RequestMatcherProvider,
     ): SecurityFilterChain {
@@ -117,14 +117,19 @@ class SecurityConfig(
                     CustomAuthenticationSuccessHandler(
                         frontendBaseUrl,
                         backendBaseUrl,
-                        cookieDomain,
+                        jwtTokenProvider,
                         cookieAuthorizationRequestRepository(),
+                        refreshTokenAdapter,
                     )
             }
             logout {
                 logoutUrl = "/user/logout"
-                invalidateHttpSession = false
-                logoutSuccessHandler = CustomLogoutSuccessHandler(frontendBaseUrl, sessionRegistry(), cookieDomain)
+                logoutSuccessHandler =
+                    CustomLogoutSuccessHandler(
+                        frontendBaseUrl,
+                        jwtTokenProvider,
+                        refreshTokenAdapter,
+                    )
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
@@ -141,15 +146,9 @@ class SecurityConfig(
                 accessDeniedHandler = deniedHandler
             }
             sessionManagement {
-                invalidSessionStrategy = CustomInvalidSessionStrategy(cookieDomain)
-                sessionConcurrency {
-                    expiredSessionStrategy = CustomExpiredSessionStrategy(cookieDomain)
-                    invalidSessionStrategy = CustomInvalidSessionStrategy(cookieDomain)
-                    maximumSessions = 1
-                    maxSessionsPreventsLogin = false
-                    sessionRegistry = sessionRegistry()
-                }
+                sessionCreationPolicy = SessionCreationPolicy.STATELESS
             }
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter)
         }
         return http.build()
     }

@@ -1,33 +1,34 @@
 package com.sbl.sulmun2yong.global.config.oauth2.handler
 
-import com.sbl.sulmun2yong.global.util.ResetSession
-import com.sbl.sulmun2yong.global.util.SessionRegistryCleaner
+import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
+import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider.Companion.REFRESH_TOKEN_COOKIE
+import com.sbl.sulmun2yong.global.util.CookieUtils
+import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
 
 class CustomLogoutSuccessHandler(
     private val frontEndBaseUrl: String,
-    private val sessionRegistry: SessionRegistry,
-    private val cookieDomain: String,
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val refreshTokenAdapter: RefreshTokenAdapter,
 ) : LogoutSuccessHandler {
     override fun onLogoutSuccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
         authentication: Authentication?,
     ) {
-        if (authentication !== null) {
-            // 세션 레지스트리에서 제거
-            SessionRegistryCleaner.removeSessionByAuthentication(sessionRegistry, authentication)
+        // 리프레시 토큰을 DB에서 삭제
+        CookieUtils.findCookie(request, REFRESH_TOKEN_COOKIE)?.let {
+            val tokenId = jwtTokenProvider.getTokenIdFromToken(it.value)
+            val userId = jwtTokenProvider.getUserIdFromToken(it.value)
+            if (tokenId != null && userId != null) refreshTokenAdapter.deleteByTokenIdAndUserId(tokenId, userId)
         }
-        // 세션 초기화
-        ResetSession.reset(request, response, cookieDomain)
 
-        // 상태 코드 설정
-        response.status = HttpStatus.OK.value()
+        // 쿠키에서 토큰 제거
+        response.addCookie(jwtTokenProvider.makeExpiredAccessTokenCookie())
+        response.addCookie(jwtTokenProvider.makeExpiredRefreshTokenCookie())
 
         // 리디렉트
         response.sendRedirect("$frontEndBaseUrl/")
