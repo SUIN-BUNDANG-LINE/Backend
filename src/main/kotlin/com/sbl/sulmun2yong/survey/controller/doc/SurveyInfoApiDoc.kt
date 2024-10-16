@@ -7,6 +7,7 @@ import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveysResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -46,4 +47,10 @@ interface SurveyInfoApiDoc {
         @RequestParam status: SurveyStatus?,
         @RequestParam(defaultValue = "LAST_MODIFIED") sortType: MySurveySortType,
     ): ResponseEntity<MyPageSurveysResponse>
+
+    @Operation(summary = "설문 제작 정보 API")
+    @GetMapping("/{surveyId}")
+    fun getSurveyMakeInfo(
+        @PathVariable("surveyId") surveyId: UUID,
+    ): ResponseEntity<SurveyMakeInfoResponse>
 }

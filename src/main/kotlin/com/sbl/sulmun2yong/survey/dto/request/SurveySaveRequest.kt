@@ -25,6 +25,7 @@ data class SurveySaveRequest(
     val thumbnail: String?,
     val finishMessage: String,
     val isVisible: Boolean,
+    val isResultOpen: Boolean,
     val rewardSetting: RewardSettingResponse,
     val sections: List<SectionCreateRequest>,
 ) {

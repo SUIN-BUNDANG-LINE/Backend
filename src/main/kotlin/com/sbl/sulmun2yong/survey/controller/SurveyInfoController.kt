@@ -50,4 +50,9 @@ class SurveyInfoController(
         @RequestParam status: SurveyStatus?,
         @RequestParam(defaultValue = "LAST_MODIFIED") sortType: MySurveySortType,
     ): ResponseEntity<MyPageSurveysResponse> = ResponseEntity.ok(surveyInfoService.getMyPageSurveys(userId, status, sortType))
+
+    @GetMapping("/make-info/{surveyId}")
+    override fun getSurveyMakeInfo(
+        @PathVariable("surveyId") surveyId: UUID,
+    ) = ResponseEntity.ok(surveyInfoService.getSurveyMakeInfo(surveyId = surveyId))
 }

@@ -72,6 +72,7 @@ class PythonFormattedQuestion(
             finishMessage = survey.finishMessage,
             rewardSetting = survey.rewardSetting,
             isVisible = survey.isVisible,
+            isResultOpen = survey.isResultOpen,
             sections = updatedSections,
         )
     }

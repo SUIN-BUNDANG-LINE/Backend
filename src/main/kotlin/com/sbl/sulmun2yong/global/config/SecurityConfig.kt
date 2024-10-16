@@ -135,7 +135,6 @@ class SecurityConfig(
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
                 authorize("/api/v1/user/**", authenticated)
                 authorize("/api/v1/surveys/my-page", authenticated)
-                authorize("/api/v1/surveys/results/**", authenticated)
                 authorize("/api/v1/s3/**", authenticated)
                 authorize("/api/v1/ai/**", authenticated)
                 authorize("/api/v1/surveys/workbench/**", authenticated)

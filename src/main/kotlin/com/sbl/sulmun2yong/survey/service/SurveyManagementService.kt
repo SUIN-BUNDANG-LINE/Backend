@@ -1,98 +1,87 @@
 package com.sbl.sulmun2yong.survey.service
 
-import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
+import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
+import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
-import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
-import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
-import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
-import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
+import com.sbl.sulmun2yong.survey.dto.request.SurveyResultRequest
+import com.sbl.sulmun2yong.survey.dto.response.ParticipantsInfoListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyResultResponse
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
-// TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
 @Service
 class SurveyManagementService(
+    private val responseAdapter: ResponseAdapter,
     private val surveyAdapter: SurveyAdapter,
-    private val drawingBoardAdapter: DrawingBoardAdapter,
+    private val participantAdapter: ParticipantAdapter,
+    private val drawingHistoryAdapter: DrawingHistoryAdapter,
 ) {
-    fun createSurvey(makerId: UUID): SurveyCreateResponse {
-        val survey = Survey.create(makerId)
-        surveyAdapter.save(survey)
-        return SurveyCreateResponse(surveyId = survey.id)
-    }
-
-    fun saveSurvey(
+    fun getSurveyResult(
         surveyId: UUID,
-        surveySaveRequest: SurveySaveRequest,
-        makerId: UUID,
-    ) {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
-        val newSurvey =
-            with(surveySaveRequest) {
-                survey.updateContent(
-                    title = this.title,
-                    description = this.description,
-                    thumbnail = this.thumbnail,
-                    finishMessage = this.finishMessage,
-                    rewardSetting = this.rewardSetting.toDomain(survey.status),
-                    isVisible = this.isVisible,
-                    sections = this.sections.toDomain(),
-                )
+        makerId: UUID?,
+        surveyResultRequest: SurveyResultRequest,
+        participantId: UUID?,
+        visitorId: String?,
+    ): SurveyResultResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // visitorId가 있으면 참가자인지 확인, 없으면 makerId를 확인
+        if (!isValidRequest(survey, makerId, visitorId)) throw InvalidSurveyAccessException()
+
+        // DB에서 설문 결과 조회
+        val surveyResult = responseAdapter.getSurveyResult(surveyId, participantId)
+
+        // 요청에 따라 설문 결과 필터링
+        val resultFilter = surveyResultRequest.toDomain()
+        val filteredSurveyResult = surveyResult.getFilteredResult(resultFilter)
+
+        val participantCount =
+            if (resultFilter.questionFilters.isEmpty()) {
+                // 필터를 걸지 않은 경우는 Participant Document에서 참가자 수 조회
+                participantAdapter.findBySurveyId(surveyId).size
+            } else {
+                // 필터를 건 경우는 필터링된 결과 수로 참가자 수 조회
+                surveyResult.getParticipantCount()
             }
-        surveyAdapter.save(newSurvey)
+
+        return SurveyResultResponse.of(filteredSurveyResult, survey, participantCount)
     }
 
-    fun getSurveyMakeInfo(
+    fun getSurveyParticipants(
         surveyId: UUID,
-        makerId: UUID,
-    ): SurveyMakeInfoResponse {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
-        return SurveyMakeInfoResponse.of(survey)
+        makerId: UUID?,
+        visitorId: String?,
+    ): ParticipantsInfoListResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // visitorId가 있으면 참가자인지 확인, 없으면 makerId를 확인
+        if (!isValidRequest(survey, makerId, visitorId)) throw InvalidSurveyAccessException()
+
+        val participants = participantAdapter.findBySurveyId(surveyId)
+        // 즉시 추첨이고, visitorId가 없는 경우에만 추첨 이력 조회
+        val drawingHistories =
+            if (survey.isImmediateDraw() &&
+                visitorId == null
+            ) {
+                drawingHistoryAdapter.getBySurveyId(surveyId, false)
+            } else {
+                null
+            }
+        return ParticipantsInfoListResponse.of(participants, drawingHistories, survey.rewardSetting.targetParticipantCount)
     }
 
-    // TODO: 트랜잭션 적용 필요
-    fun startSurvey(
-        surveyId: UUID,
-        makerId: UUID,
-    ) {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
-        val startedSurvey = survey.start()
-        surveyAdapter.save(startedSurvey)
-        // 즉시 추첨이면서 최초 시작 시 추첨 보드 생성
-        if (startedSurvey.rewardSetting is ImmediateDrawSetting && survey.status == SurveyStatus.NOT_STARTED) {
-            val drawingBoard =
-                DrawingBoard.create(
-                    surveyId = startedSurvey.id,
-                    boardSize = startedSurvey.rewardSetting.targetParticipantCount,
-                    rewards = startedSurvey.rewardSetting.rewards,
-                )
-            drawingBoardAdapter.save(drawingBoard)
+    private fun isValidRequest(
+        survey: Survey,
+        makerId: UUID?,
+        visitorId: String?,
+    ): Boolean =
+        // visitorId가 있고, 결과 공개가 되어있는 경우 참가자인지 확인
+        if (visitorId != null && survey.isResultOpen) {
+            val participant = participantAdapter.findBySurveyIdAndVisitorId(survey.id, visitorId)
+            participant != null
+        } else {
+            // 아닌 경우 설문 제작자인지 확인
+            makerId != null && survey.makerId == makerId
         }
-    }
-
-    fun editSurvey(
-        surveyId: UUID,
-        makerId: UUID,
-    ) {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
-        surveyAdapter.save(survey.edit())
-    }
-
-    fun finishSurvey(
-        surveyId: UUID,
-        makerId: UUID,
-    ) {
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
-        surveyAdapter.save(survey.finish())
-    }
-
-    fun deleteSurvey(
-        surveyId: UUID,
-        makerId: UUID,
-    ) {
-        surveyAdapter.delete(surveyId, makerId)
-    }
 }

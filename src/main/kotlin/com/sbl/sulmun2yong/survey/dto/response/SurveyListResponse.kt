@@ -29,6 +29,7 @@ data class SurveyListResponse(
                             rewardCount = it.rewardSetting.getRewardCount(),
                             rewardSettingType = it.rewardSetting.type,
                             rewards = it.rewardSetting.rewards.toRewardInfoResponses(),
+                            isResultOpen = it.isResultOpen,
                         )
                     },
             )
@@ -44,6 +45,7 @@ data class SurveyListResponse(
         val finishedAt: Date?,
         val rewardSettingType: RewardSettingType,
         val rewards: List<RewardInfoResponse>,
+        val isResultOpen: Boolean,
     )
 
     data class RewardInfoResponse(
