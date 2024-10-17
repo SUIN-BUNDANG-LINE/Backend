@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.user.util
+package com.sbl.sulmun2yong.user.util.dummy
 
 import com.sbl.sulmun2yong.global.util.DateUtil
 import java.util.Date

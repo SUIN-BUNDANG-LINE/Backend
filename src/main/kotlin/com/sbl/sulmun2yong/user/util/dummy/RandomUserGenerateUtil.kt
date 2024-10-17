@@ -1,8 +1,9 @@
-package com.sbl.sulmun2yong.user.util
+package com.sbl.sulmun2yong.user.util.dummy
 
 import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
 import com.sbl.sulmun2yong.user.domain.User
 import com.sbl.sulmun2yong.user.domain.UserRole
+import com.sbl.sulmun2yong.user.util.RandomNicknameGenerator
 import java.util.UUID
 
 object RandomUserGenerateUtil {

@@ -5,11 +5,11 @@ import com.sbl.sulmun2yong.survey.entity.ParticipantDocument
 import com.sbl.sulmun2yong.survey.entity.ResponseDocument
 import com.sbl.sulmun2yong.survey.entity.SurveyDocument
 import com.sbl.sulmun2yong.user.entity.UserDocument
-import com.sbl.sulmun2yong.user.util.Probability
-import com.sbl.sulmun2yong.user.util.RandomParticipantGenerateUtil.generateRandomParticipants
-import com.sbl.sulmun2yong.user.util.RandomResponseGenerateUtil.generateSurveyResponseDocuments
-import com.sbl.sulmun2yong.user.util.RandomSurveyGenerateUtil.generateRandomSurvey
-import com.sbl.sulmun2yong.user.util.RandomUserGenerateUtil.generateRandomUser
+import com.sbl.sulmun2yong.user.util.dummy.Probability
+import com.sbl.sulmun2yong.user.util.dummy.RandomParticipantGenerateUtil.generateRandomParticipants
+import com.sbl.sulmun2yong.user.util.dummy.RandomResponseGenerateUtil.generateSurveyResponseDocuments
+import com.sbl.sulmun2yong.user.util.dummy.RandomSurveyGenerateUtil.generateRandomSurvey
+import com.sbl.sulmun2yong.user.util.dummy.RandomUserGenerateUtil.generateRandomUser
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.stereotype.Service
 import kotlin.math.max

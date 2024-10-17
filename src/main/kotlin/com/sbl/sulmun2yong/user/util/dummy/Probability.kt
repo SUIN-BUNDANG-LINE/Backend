@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.user.util
+package com.sbl.sulmun2yong.user.util.dummy
 
 data class Probability(
     private val chance: Double,
