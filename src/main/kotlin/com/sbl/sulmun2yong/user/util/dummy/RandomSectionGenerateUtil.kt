@@ -1,10 +1,10 @@
-package com.sbl.sulmun2yong.user.util
+package com.sbl.sulmun2yong.user.util.dummy
 
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import com.sbl.sulmun2yong.user.util.RandomQuestionGenerateUtil.generateRandomQuestion
+import com.sbl.sulmun2yong.user.util.dummy.RandomQuestionGenerateUtil.generateRandomQuestion
 
 object RandomSectionGenerateUtil {
     private val randomQuestionCountPicker =
