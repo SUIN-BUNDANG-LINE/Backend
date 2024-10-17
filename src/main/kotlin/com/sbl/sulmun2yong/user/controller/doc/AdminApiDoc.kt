@@ -24,4 +24,10 @@ interface AdminApiDoc {
     fun getDrawingHistoryList(
         @RequestParam(defaultValue = "false") isWinnerOnly: Boolean,
     ): ResponseEntity<DrawingHistoryGroupListResponse>
+
+    @Operation(summary = "더미 데이터 생성")
+    @GetMapping("/dummy-data")
+    fun insertDummyData(
+        @RequestParam surveyCount: Int,
+    ): ResponseEntity<Unit>
 }

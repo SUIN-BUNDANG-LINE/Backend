@@ -22,18 +22,10 @@ class SurveyResponseService(
     fun responseToSurvey(
         surveyId: UUID,
         surveyResponseRequest: SurveyResponseRequest,
-        isAdmin: Boolean,
     ): SurveyParticipantResponse {
-        val visitorId =
-            if (!isAdmin) {
-                // Admin이 아닌 경우 visitorId의 유효성을 검증
-                validateIsAlreadyParticipated(surveyId, surveyResponseRequest.visitorId)
-                fingerprintApi.validateVisitorId(surveyResponseRequest.visitorId)
-                surveyResponseRequest.visitorId
-            } else {
-                // Admin인 경우 visitorId를 랜덤으로 생성
-                UUID.randomUUID().toString()
-            }
+        validateIsAlreadyParticipated(surveyId, surveyResponseRequest.visitorId)
+        fingerprintApi.validateVisitorId(surveyResponseRequest.visitorId)
+        val visitorId = surveyResponseRequest.visitorId
         val survey = surveyAdapter.getSurvey(surveyId)
         val surveyResponse = surveyResponseRequest.toDomain(surveyId)
         survey.validateResponse(surveyResponse)
