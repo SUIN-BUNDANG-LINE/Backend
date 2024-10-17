@@ -13,7 +13,7 @@ import java.util.UUID
 
 @Tag(name = "FakeSurveyResponse", description = "테스트용 설문 응답 관련 API")
 interface FakeSurveyResponseApiDoc {
-    @Operation(summary = "설문 응답")
+    @Operation(summary = "Fingerprint Mocking 서버를 사용하는 설문 응답 API")
     @PostMapping
     fun fakeResponseToSurvey(
         @PathVariable("survey-id") surveyId: UUID,
