@@ -101,5 +101,5 @@ jobs:
                 "docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
                 "docker stop ${{ env.CONTAINER_NAME }} || true", 
                 "docker rm ${{ env.CONTAINER_NAME }} || true", 
-                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} -e NEW_RELIC_APP_NAME=${{ env.NEW_RELIC_APP_NAME }} ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
+                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} -e NEW_RELIC_APP_NAME=${{ env.NEW_RELIC_APP_NAME }} -e FINGERPRINT_MOCKING_SERVER_URL=${{ env.FINGERPRINT_MOCKING_SERVER_URL }} ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
                 "docker image prune -af"]}'
