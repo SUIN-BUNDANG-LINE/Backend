@@ -2,8 +2,8 @@ package com.sbl.sulmun2yong.user.domain
 
 import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
 import com.sbl.sulmun2yong.global.data.PhoneNumber
-import com.sbl.sulmun2yong.global.util.RandomNicknameGenerator
 import com.sbl.sulmun2yong.user.exception.InvalidUserException
+import com.sbl.sulmun2yong.user.util.RandomNicknameGenerator
 import java.util.UUID
 
 data class User(

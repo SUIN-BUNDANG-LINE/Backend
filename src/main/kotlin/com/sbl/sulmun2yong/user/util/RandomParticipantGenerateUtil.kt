@@ -4,23 +4,23 @@ import com.sbl.sulmun2yong.survey.domain.Participant
 import java.util.UUID
 
 object RandomParticipantGenerateUtil {
-    // 한 설문 당 평균 111명 참여
+    // 한 설문 당 평균 113명 참여
     private val randomParticipantCountPicker =
         ProbabilityPicker(
             mapOf(
-                0 to 0.05,
-                1 to 0.05,
-                3 to 0.1,
-                5 to 0.3,
-                10 to 0.35,
-                20 to 0.1,
-                50 to 0.025,
-                100 to 0.025,
+                0 to 0.075,
+                10 to 0.1,
+                30 to 0.2,
+                50 to 0.2,
+                100 to 0.25,
+                200 to 0.1,
+                500 to 0.05,
+                1000 to 0.025,
             ),
         )
 
     fun generateRandomParticipants(surveyId: UUID) =
-        (1..randomParticipantCountPicker.pick() * 10).map {
+        (1..randomParticipantCountPicker.pick()).map {
             generateRandomParticipant(surveyId)
         }
 

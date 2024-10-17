@@ -27,11 +27,10 @@ object RandomSurveyGenerateUtil {
         ProbabilityPicker(
             mapOf(
                 1 to 0.15,
-                2 to 0.2,
-                3 to 0.2,
+                2 to 0.25,
+                3 to 0.35,
                 4 to 0.2,
-                5 to 0.15,
-                6 to 0.1,
+                5 to 0.05,
             ),
         )
 
