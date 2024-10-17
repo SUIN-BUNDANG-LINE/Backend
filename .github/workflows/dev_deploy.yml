@@ -80,6 +80,7 @@ jobs:
             FRONTEND_BASE_URL: http://localhost:3000
             BACKEND_BASE_URL: https://dev-api.sulmoon.io
             AI_SERVER_BASE_URL: http://ai.sulmoon.io:8000
+            FINGERPRINT_MOCKING_SERVER_URL: ${{ secrets.FINGERPRINT_MOCKING_SERVER_URL }}
             # New Relic 관련
             NEW_RELIC_APP_NAME: sulmun2yong-development
 
