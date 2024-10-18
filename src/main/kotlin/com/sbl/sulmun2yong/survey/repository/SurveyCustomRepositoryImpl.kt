@@ -108,7 +108,7 @@ class SurveyCustomRepositoryImpl(
 
     private fun getSurveySort(sortType: SurveySortType) =
         when (sortType) {
-            SurveySortType.RECENT -> Sort.by("createdAt").ascending()
-            SurveySortType.OLDEST -> Sort.by("createdAt").descending()
+            SurveySortType.RECENT -> Sort.by("createdAt").descending()
+            SurveySortType.OLDEST -> Sort.by("createdAt").ascending()
         }
 }

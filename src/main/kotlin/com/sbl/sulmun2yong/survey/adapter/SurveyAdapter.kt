@@ -35,7 +35,6 @@ class SurveyAdapter(
                 isRewardExist = isRewardExist,
                 isResultOpen = isResultOpen,
             )
-        println(surveyDocuments.totalPages)
         val surveys = surveyDocuments.content.map { it.toDomain() }
         return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
     }
