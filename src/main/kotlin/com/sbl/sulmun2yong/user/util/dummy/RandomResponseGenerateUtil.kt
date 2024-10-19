@@ -17,10 +17,9 @@ object RandomResponseGenerateUtil {
         ProbabilityPicker(
             mapOf(
                 1 to 0.3,
-                2 to 0.4,
+                2 to 0.3,
                 3 to 0.2,
-                4 to 0.075,
-                5 to 0.025,
+                4 to 0.2,
             ),
         )
 

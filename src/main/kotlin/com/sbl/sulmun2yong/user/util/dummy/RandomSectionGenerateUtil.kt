@@ -11,13 +11,12 @@ object RandomSectionGenerateUtil {
         ProbabilityPicker(
             mapOf(
                 1 to 0.1,
-                2 to 0.1,
+                2 to 0.15,
                 3 to 0.15,
-                4 to 0.15,
+                4 to 0.2,
                 5 to 0.15,
                 6 to 0.15,
                 7 to 0.1,
-                8 to 0.1,
             ),
         )
 
