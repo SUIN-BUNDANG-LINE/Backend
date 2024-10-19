@@ -23,14 +23,16 @@ class SurveyInfoService(
         size: Int,
         page: Int,
         sortType: SurveySortType,
-        isAsc: Boolean,
+        isRewardExist: Boolean?,
+        isResultOpen: Boolean?,
     ): SurveyListResponse {
         val surveys =
             surveyAdapter.findSurveysWithPagination(
                 size = size,
                 page = page,
                 sortType = sortType,
-                isAsc = isAsc,
+                isRewardExist = isRewardExist,
+                isResultOpen = isResultOpen,
             )
         return SurveyListResponse.of(surveys.totalPages, surveys.content)
     }

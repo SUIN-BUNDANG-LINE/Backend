@@ -23,10 +23,18 @@ class SurveyAdapter(
         size: Int,
         page: Int,
         sortType: SurveySortType,
-        isAsc: Boolean,
+        isRewardExist: Boolean?,
+        isResultOpen: Boolean?,
     ): Page<Survey> {
-        val pageRequest = PageRequest.of(page, size, getSurveySort(sortType, isAsc))
-        val surveyDocuments = surveyRepository.findByStatusAndIsVisibleTrueAndIsDeletedFalse(SurveyStatus.IN_PROGRESS, pageRequest)
+        val pageRequest = PageRequest.of(page, size, getSurveySort(sortType))
+        val surveyDocuments =
+            surveyRepository.findSurveysWithPagination(
+                size = size,
+                page = page,
+                sortType = sortType,
+                isRewardExist = isRewardExist,
+                isResultOpen = isResultOpen,
+            )
         val surveys = surveyDocuments.content.map { it.toDomain() }
         return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
     }
@@ -34,18 +42,11 @@ class SurveyAdapter(
     fun getSurvey(surveyId: UUID) =
         surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
 
-    private fun getSurveySort(
-        sortType: SurveySortType,
-        isAsc: Boolean,
-    ) = when (sortType) {
-        SurveySortType.RECENT -> {
-            if (isAsc) {
-                Sort.by("createdAt").ascending()
-            } else {
-                Sort.by("createdAt").descending()
-            }
+    private fun getSurveySort(sortType: SurveySortType) =
+        when (sortType) {
+            SurveySortType.RECENT -> Sort.by("createdAt").ascending()
+            SurveySortType.OLDEST -> Sort.by("createdAt").descending()
         }
-    }
 
     fun save(survey: Survey) {
         val previousSurveyDocument = surveyRepository.findByIdAndIsDeletedFalse(survey.id)

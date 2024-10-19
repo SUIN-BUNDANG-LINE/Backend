@@ -25,7 +25,8 @@ interface SurveyInfoApiDoc {
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "RECENT") sortType: SurveySortType,
-        @RequestParam(defaultValue = "false") isAsc: Boolean,
+        @RequestParam reward: Boolean?,
+        @RequestParam resultOpen: Boolean?,
     ): ResponseEntity<SurveyListResponse>
 
     @Operation(summary = "설문 정보 조회")

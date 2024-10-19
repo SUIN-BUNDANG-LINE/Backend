@@ -26,11 +26,10 @@ object RandomSurveyGenerateUtil {
     private val randomSectionCountPicker =
         ProbabilityPicker(
             mapOf(
-                1 to 0.15,
-                2 to 0.25,
-                3 to 0.35,
+                1 to 0.2,
+                2 to 0.3,
+                3 to 0.3,
                 4 to 0.2,
-                5 to 0.05,
             ),
         )
 
