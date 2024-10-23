@@ -72,7 +72,7 @@ class SurveyTest {
     fun `설문을 생성하면 설문의 정보들이 설정된다`() {
         // given, when
         val makerId: UUID = UUID.randomUUID()
-        val survey = createSurvey(id = id, makerId = makerId)
+        val survey = createSurvey(id = id, makerId = makerId, isResultOpen = true)
         val defaultSurvey = Survey.create(makerId)
 
         // then
@@ -86,6 +86,7 @@ class SurveyTest {
             assertEquals(FINISH_MESSAGE + id, this.finishMessage)
             assertEquals(createRewardSetting(), this.rewardSetting)
             assertEquals(true, this.isVisible)
+            assertEquals(true, this.isResultOpen)
             assertEquals(makerId, this.makerId)
             assertEquals(SECTIONS, this.sections)
         }
@@ -99,8 +100,9 @@ class SurveyTest {
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
             assertEquals(NoRewardSetting, this.rewardSetting)
             assertEquals(true, this.isVisible)
+            assertEquals(false, this.isResultOpen)
             assertEquals(makerId, this.makerId)
-            assertEquals(listOf(this.sections.first()), this.sections)
+            assertEquals(listOf(), this.sections)
         }
     }
 
@@ -312,6 +314,7 @@ class SurveyTest {
                 DateUtil.getCurrentDate(noMin = true),
             )
         val newIsVisible = false
+        val newIsResultOpen = false
         val sectionId = SectionId.Standard(UUID.randomUUID())
         val newSections =
             listOf(
@@ -335,6 +338,7 @@ class SurveyTest {
                 finishMessage = newFinishMessage,
                 rewardSetting = newRewardSetting,
                 isVisible = newIsVisible,
+                isResultOpen = newIsResultOpen,
                 sections =
                     listOf(
                         Section(
@@ -355,7 +359,8 @@ class SurveyTest {
             assertEquals(newThumbnail, this.thumbnail)
             assertEquals(newFinishMessage, this.finishMessage)
             assertEquals(newRewardSetting, this.rewardSetting)
-            assertEquals(isVisible, this.isVisible)
+            assertEquals(newIsVisible, this.isVisible)
+            assertEquals(newIsResultOpen, this.isResultOpen)
             assertEquals(newSections, this.sections)
         }
     }
@@ -377,6 +382,7 @@ class SurveyTest {
                 finishMessage = survey1.finishMessage,
                 rewardSetting = survey1.rewardSetting,
                 isVisible = survey1.isVisible,
+                isResultOpen = survey1.isResultOpen,
                 sections = survey1.sections,
             )
         }
@@ -389,6 +395,7 @@ class SurveyTest {
                 finishMessage = survey2.finishMessage,
                 rewardSetting = survey2.rewardSetting,
                 isVisible = survey2.isVisible,
+                isResultOpen = survey2.isResultOpen,
                 sections = survey2.sections,
             )
         }
@@ -401,6 +408,7 @@ class SurveyTest {
                 finishMessage = survey3.finishMessage,
                 rewardSetting = survey3.rewardSetting,
                 isVisible = survey3.isVisible,
+                isResultOpen = survey3.isResultOpen,
                 sections = survey3.sections,
             )
         }
@@ -413,6 +421,7 @@ class SurveyTest {
                 finishMessage = survey3.finishMessage,
                 rewardSetting = NoRewardSetting,
                 isVisible = survey3.isVisible,
+                isResultOpen = survey3.isResultOpen,
                 sections = survey3.sections,
             )
         }

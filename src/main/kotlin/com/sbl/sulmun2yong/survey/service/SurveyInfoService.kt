@@ -8,6 +8,7 @@ import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveysResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyProgressInfoResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
@@ -55,5 +56,10 @@ class SurveyInfoService(
     ): MyPageSurveysResponse {
         val myPageSurveysInfoResponse = surveyAdapter.getMyPageSurveysInfo(makerId, status, sortType)
         return MyPageSurveysResponse(myPageSurveysInfoResponse)
+    }
+
+    fun getSurveyMakeInfo(surveyId: UUID): SurveyMakeInfoResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        return SurveyMakeInfoResponse.of(survey)
     }
 }

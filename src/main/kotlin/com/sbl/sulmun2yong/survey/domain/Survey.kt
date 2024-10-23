@@ -31,6 +31,7 @@ data class Survey(
     /** 해당 설문의 설문이용 노출 여부(false면 메인 페이지 노출 X, 링크를 통해서만 접근 가능) */
     val isVisible: Boolean,
     val makerId: UUID,
+    val isResultOpen: Boolean,
     val sections: List<Section>,
 ) {
     init {
@@ -62,7 +63,8 @@ data class Survey(
                 rewardSetting = NoRewardSetting,
                 isVisible = true,
                 makerId = makerId,
-                sections = listOf(Section.create()),
+                sections = listOf(),
+                isResultOpen = false,
             )
     }
 
@@ -92,6 +94,7 @@ data class Survey(
         finishMessage: String,
         rewardSetting: RewardSetting,
         isVisible: Boolean,
+        isResultOpen: Boolean,
         sections: List<Section>,
     ): Survey {
         // 설문이 시작 전 상태이거나, 수정 중이면서 리워드 관련 정보가 변경되지 않아야한다.
@@ -109,6 +112,7 @@ data class Survey(
             finishMessage = finishMessage,
             rewardSetting = rewardSetting,
             isVisible = isVisible,
+            isResultOpen = isResultOpen,
             sections = sections,
         )
     }

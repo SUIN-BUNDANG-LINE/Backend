@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.global.util
+package com.sbl.sulmun2yong.user.util
 
 import kotlin.random.Random
 

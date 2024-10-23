@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.survey.controller.doc
 
-import com.sbl.sulmun2yong.global.annotation.IsAdmin
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -19,6 +18,5 @@ interface SurveyResponseApiDoc {
     fun responseToSurvey(
         @PathVariable("survey-id") surveyId: UUID,
         @Valid @RequestBody surveyResponseRequest: SurveyResponseRequest,
-        @IsAdmin isAdmin: Boolean,
     ): ResponseEntity<SurveyParticipantResponse>
 }

@@ -6,4 +6,5 @@ data class EditSurveyDataWithChatRequest(
     val surveyId: UUID,
     val modificationTargetId: UUID,
     val userPrompt: String,
+    val isEditGeneratedResult: Boolean,
 )

@@ -8,6 +8,7 @@ import com.sbl.sulmun2yong.survey.domain.section.SectionIds
 import java.util.UUID
 
 class PythonFormattedSection(
+    val id: UUID? = null,
     val title: String,
     val description: String,
     val questions: List<PythonFormattedQuestion>,
@@ -23,7 +24,7 @@ class PythonFormattedSection(
             title = title,
             description = description,
             routingStrategy = defaultRoutingStrategy,
-            questions = questions.map { it.toQuestion(UUID.randomUUID()) },
+            questions = questions.map { it.toQuestion() },
             sectionIds = sectionIds,
         )
     }
@@ -48,6 +49,7 @@ class PythonFormattedSection(
             finishMessage = survey.finishMessage,
             rewardSetting = survey.rewardSetting,
             isVisible = survey.isVisible,
+            isResultOpen = survey.isResultOpen,
             sections = updatedSections,
         )
     }
@@ -55,6 +57,7 @@ class PythonFormattedSection(
     companion object {
         fun from(section: Section) =
             PythonFormattedSection(
+                id = section.id.value,
                 title = section.title,
                 description = section.description,
                 questions = section.questions.map { PythonFormattedQuestion.from(it) },

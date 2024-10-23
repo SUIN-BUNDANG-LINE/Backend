@@ -5,52 +5,60 @@ import com.sbl.sulmun2yong.ai.dto.python.request.GenerateRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithFileUrlRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithTextDocumentRequestToPython
 import com.sbl.sulmun2yong.ai.dto.python.response.GenerateSurveyResponseFromPython
-import com.sbl.sulmun2yong.ai.exception.SurveyGenerationByAIFailedException
+import com.sbl.sulmun2yong.ai.exception.SurveyAIProcessingFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
+import com.sbl.sulmun2yong.survey.domain.Survey
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
+import java.util.UUID
 
 @Component
 class GenerateAdapter(
     private val requestToPythonServerTemplate: RestTemplate,
 ) {
     fun requestSurveyGenerationWithFileUrl(
-        job: String,
+        chatSessionId: UUID,
+        target: String,
         groupName: String,
         fileUrl: String,
         userPrompt: String,
+        originalSurvey: Survey,
     ): AIGeneratedSurvey {
         val generateSurveyResponseFromPython =
             requestWithFileUrl(
                 GenerateWithFileUrlRequestToPython(
-                    job = job,
+                    chatSessionId = chatSessionId,
+                    target = target,
                     groupName = groupName,
                     userPrompt = userPrompt,
                     fileUrl = fileUrl,
                 ),
             )
 
-        return generateSurveyResponseFromPython.toDomain()
+        return generateSurveyResponseFromPython.toDomain(originalSurvey)
     }
 
     fun requestSurveyGenerationWithTextDocument(
-        job: String,
+        chatSessionId: UUID,
+        target: String,
         groupName: String,
         textDocument: String,
         userPrompt: String,
+        originalSurvey: Survey,
     ): AIGeneratedSurvey {
         val generateSurveyResponseFromPython =
             requestWithTextDocument(
                 GenerateWithTextDocumentRequestToPython(
-                    job = job,
+                    chatSessionId = chatSessionId,
+                    target = target,
                     groupName = groupName,
                     userPrompt = userPrompt,
                     textDocument = textDocument,
                 ),
             )
 
-        return generateSurveyResponseFromPython.toDomain()
+        return generateSurveyResponseFromPython.toDomain(originalSurvey)
     }
 
     private fun requestWithFileUrl(
@@ -79,7 +87,7 @@ class GenerateAdapter(
                     requestUrl,
                     requestBody,
                     GenerateSurveyResponseFromPython::class.java,
-                ).body ?: throw SurveyGenerationByAIFailedException()
+                ).body ?: throw SurveyAIProcessingFailedException()
         } catch (e: HttpClientErrorException) {
             throw PythonServerExceptionMapper.mapException(e)
         }

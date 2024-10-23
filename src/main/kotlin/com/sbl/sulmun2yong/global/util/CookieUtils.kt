@@ -21,8 +21,8 @@ object CookieUtils {
         request: HttpServletRequest,
         name: String,
     ): Cookie? {
-        val cookies: Array<Cookie> = request.cookies
-        return cookies.firstOrNull { it.name == name }
+        val cookies: Array<Cookie>? = request.cookies
+        return cookies?.firstOrNull { it.name == name }
     }
 
     fun addCookie(
