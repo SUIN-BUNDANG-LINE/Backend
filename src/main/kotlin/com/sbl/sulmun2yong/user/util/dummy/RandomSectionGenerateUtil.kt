@@ -1,23 +1,22 @@
-package com.sbl.sulmun2yong.user.util
+package com.sbl.sulmun2yong.user.util.dummy
 
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import com.sbl.sulmun2yong.user.util.RandomQuestionGenerateUtil.generateRandomQuestion
+import com.sbl.sulmun2yong.user.util.dummy.RandomQuestionGenerateUtil.generateRandomQuestion
 
 object RandomSectionGenerateUtil {
     private val randomQuestionCountPicker =
         ProbabilityPicker(
             mapOf(
                 1 to 0.1,
-                2 to 0.1,
+                2 to 0.15,
                 3 to 0.15,
-                4 to 0.15,
+                4 to 0.2,
                 5 to 0.15,
                 6 to 0.15,
                 7 to 0.1,
-                8 to 0.1,
             ),
         )
 
