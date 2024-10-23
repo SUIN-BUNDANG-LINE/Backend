@@ -19,7 +19,7 @@ class GenerateService(
         surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
         surveyId: UUID,
     ): AISurveyGenerationResponse {
-        val allowedExtensions = mutableListOf(".txt", ".pdf")
+        val allowedExtensions = mutableListOf(".txt", ".pdf", ".pptx", ".docx")
 
         val target = surveyGenerationWithFileUrlRequest.target
         val groupName = surveyGenerationWithFileUrlRequest.groupName
