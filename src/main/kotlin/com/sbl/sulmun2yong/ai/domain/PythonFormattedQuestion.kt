@@ -14,6 +14,7 @@ class PythonFormattedQuestion(
     val id: UUID? = null,
     val questionType: QuestionType,
     val title: String,
+    val description: String,
     val isRequired: Boolean,
     val choices: List<String>?,
     val isAllowOther: Boolean,
@@ -24,7 +25,7 @@ class PythonFormattedQuestion(
                 StandardSingleChoiceQuestion(
                     id = id ?: UUID.randomUUID(),
                     title = this.title,
-                    description = DEFAULT_DESCRIPTION,
+                    description = this.description,
                     isRequired = this.isRequired,
                     // TODO: Document를 Domain클래스로 변환 중에 생긴 에러는 여기서 직접 반환하도록 수정
                     choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
@@ -33,7 +34,7 @@ class PythonFormattedQuestion(
                 StandardMultipleChoiceQuestion(
                     id = id ?: UUID.randomUUID(),
                     title = this.title,
-                    description = DEFAULT_DESCRIPTION,
+                    description = this.description,
                     isRequired = this.isRequired,
                     // TODO: Document를 Domain클래스로 변환 중에 생긴 에러는 여기서 직접 반환하도록 수정
                     choices = Choices(this.choices?.map { Choice.Standard(it) } ?: listOf(), isAllowOther),
@@ -42,7 +43,7 @@ class PythonFormattedQuestion(
                 StandardTextQuestion(
                     id = id ?: UUID.randomUUID(),
                     title = this.title,
-                    description = DEFAULT_DESCRIPTION,
+                    description = this.description,
                     isRequired = this.isRequired,
                 )
         }
@@ -78,13 +79,12 @@ class PythonFormattedQuestion(
     }
 
     companion object {
-        private const val DEFAULT_DESCRIPTION = ""
-
         fun from(question: Question) =
             PythonFormattedQuestion(
                 id = question.id,
                 questionType = question.questionType,
                 title = question.title,
+                description = question.description,
                 isRequired = question.isRequired,
                 choices = question.choices?.standardChoices?.map { it.content },
                 isAllowOther = question.choices?.isAllowOther ?: false,
