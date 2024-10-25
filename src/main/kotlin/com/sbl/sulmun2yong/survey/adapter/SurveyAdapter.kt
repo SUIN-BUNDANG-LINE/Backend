@@ -44,8 +44,8 @@ class SurveyAdapter(
 
     private fun getSurveySort(sortType: SurveySortType) =
         when (sortType) {
-            SurveySortType.RECENT -> Sort.by("createdAt").ascending()
-            SurveySortType.OLDEST -> Sort.by("createdAt").descending()
+            SurveySortType.RECENT -> Sort.by("publishedAt").ascending()
+            SurveySortType.OLDEST -> Sort.by("publishedAt").descending()
         }
 
     fun save(survey: Survey) {
