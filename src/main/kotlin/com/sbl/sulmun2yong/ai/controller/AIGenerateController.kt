@@ -2,7 +2,6 @@ package com.sbl.sulmun2yong.ai.controller
 
 import com.sbl.sulmun2yong.ai.controller.doc.AIGenerateApiDoc
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
-import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithTextDocumentRequest
 import com.sbl.sulmun2yong.ai.service.GenerateService
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import jakarta.servlet.http.HttpServletResponse
@@ -19,23 +18,13 @@ import java.util.UUID
 class AIGenerateController(
     private val generateService: GenerateService,
 ) : AIGenerateApiDoc {
-    @PostMapping("/survey/file-url/{survey-id}")
+    @PostMapping("/survey/{survey-id}")
     override fun generateSurveyWithFileUrl(
         @PathVariable("survey-id") surveyId: UUID,
         @RequestBody surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
         response: HttpServletResponse,
     ): ResponseEntity<SurveyMakeInfoResponse> {
         val aiSurveyGenerationResponse = generateService.generateSurveyWithFileUrl(surveyGenerationWithFileUrlRequest, surveyId)
-        return ResponseEntity.ok(aiSurveyGenerationResponse.generatedSurvey)
-    }
-
-    @PostMapping("/survey/text-document/{survey-id}")
-    override fun generateSurveyWithTextDocument(
-        @PathVariable("survey-id") surveyId: UUID,
-        @RequestBody surveyGenerationWithTextDocumentRequest: SurveyGenerationWithTextDocumentRequest,
-        response: HttpServletResponse,
-    ): ResponseEntity<SurveyMakeInfoResponse> {
-        val aiSurveyGenerationResponse = generateService.generateSurveyWithTextDocument(surveyGenerationWithTextDocumentRequest, surveyId)
         return ResponseEntity.ok(aiSurveyGenerationResponse.generatedSurvey)
     }
 }
