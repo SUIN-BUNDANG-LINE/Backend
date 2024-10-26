@@ -21,7 +21,7 @@ class GenerateAdapter(
         chatSessionId: UUID,
         target: String,
         groupName: String,
-        fileUrl: String,
+        fileUrl: String?,
         userPrompt: String,
         originalSurvey: Survey,
     ): AIGeneratedSurvey {
@@ -43,7 +43,7 @@ class GenerateAdapter(
         chatSessionId: UUID,
         target: String,
         groupName: String,
-        textDocument: String,
+        textDocument: String?,
         userPrompt: String,
         originalSurvey: Survey,
     ): AIGeneratedSurvey {

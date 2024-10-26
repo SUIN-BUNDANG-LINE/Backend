@@ -7,5 +7,5 @@ data class GenerateWithFileUrlRequestToPython(
     override val target: String,
     override val groupName: String,
     override val userPrompt: String,
-    val fileUrl: String,
+    val fileUrl: String?,
 ) : GenerateRequestToPython
