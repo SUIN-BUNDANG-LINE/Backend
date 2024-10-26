@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.ai.controller.doc
 
+import com.sbl.sulmun2yong.ai.dto.request.DemoSurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -18,6 +19,13 @@ interface AIGenerateApiDoc {
     fun generateSurveyWithFileUrl(
         @PathVariable("survey-id") surveyId: UUID,
         @RequestBody surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
+        response: HttpServletResponse,
+    ): ResponseEntity<SurveyMakeInfoResponse>
+
+    @Operation(summary = "파일을 통한 AI 설문 생성")
+    @PostMapping("/demo/survey")
+    fun generateDemoSurveyWithFileUrl(
+        @RequestBody demoSurveyGenerationWithFileUrlRequest: DemoSurveyGenerationWithFileUrlRequest,
         response: HttpServletResponse,
     ): ResponseEntity<SurveyMakeInfoResponse>
 }

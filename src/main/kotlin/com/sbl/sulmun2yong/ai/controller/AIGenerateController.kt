@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.ai.controller
 
 import com.sbl.sulmun2yong.ai.controller.doc.AIGenerateApiDoc
+import com.sbl.sulmun2yong.ai.dto.request.DemoSurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.service.GenerateService
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
@@ -26,5 +27,14 @@ class AIGenerateController(
     ): ResponseEntity<SurveyMakeInfoResponse> {
         val aiSurveyGenerationResponse = generateService.generateSurveyWithFileUrl(surveyGenerationWithFileUrlRequest, surveyId)
         return ResponseEntity.ok(aiSurveyGenerationResponse.generatedSurvey)
+    }
+
+    @PostMapping("/demo/survey")
+    override fun generateDemoSurveyWithFileUrl(
+        @RequestBody demoSurveyGenerationWithFileUrlRequest: DemoSurveyGenerationWithFileUrlRequest,
+        response: HttpServletResponse,
+    ): ResponseEntity<SurveyMakeInfoResponse> {
+        val aiDemoSurveyGenerationResponse = generateService.generateDemoSurveyWithFileUrl(demoSurveyGenerationWithFileUrlRequest)
+        return ResponseEntity.ok(aiDemoSurveyGenerationResponse.generatedSurvey)
     }
 }
