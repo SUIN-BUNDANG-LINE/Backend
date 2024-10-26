@@ -14,16 +14,12 @@ class AIDemoCountRedisAdapter(
     }
 
     fun incrementOrCreate(visitorId: String) {
-        val key = makeKey(visitorId)
-
         // 현재 count 값을 확인하고, maxCount 초과할 경우 예외 발생
-        val currentCount = aiDemoCountRedisRepository.findById(key).map { it.count }.orElse(0)
+        val currentCount = aiDemoCountRedisRepository.findById(visitorId).map { it.count }.orElse(0)
         if (currentCount >= MAX_COUNT) throw AIDemoCountLimitException()
 
         // count 증가 또는 새 엔티티 생성
-        val entity = AIDemoCountRedisEntity(key, currentCount + 1)
+        val entity = AIDemoCountRedisEntity(visitorId, currentCount + 1)
         aiDemoCountRedisRepository.save(entity)
     }
-
-    private fun makeKey(visitorId: String) = "demoCount:$visitorId"
 }
