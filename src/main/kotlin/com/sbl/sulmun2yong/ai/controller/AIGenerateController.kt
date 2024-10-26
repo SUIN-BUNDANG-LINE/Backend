@@ -29,12 +29,17 @@ class AIGenerateController(
         return ResponseEntity.ok(aiSurveyGenerationResponse.generatedSurvey)
     }
 
-    @PostMapping("/demo/survey")
+    @PostMapping("/demo/survey/{visitor-id}")
     override fun generateDemoSurveyWithFileUrl(
         @RequestBody demoSurveyGenerationWithFileUrlRequest: DemoSurveyGenerationWithFileUrlRequest,
+        @PathVariable("visitor-id") visitorId: String,
         response: HttpServletResponse,
     ): ResponseEntity<SurveyMakeInfoResponse> {
-        val aiDemoSurveyGenerationResponse = generateService.generateDemoSurveyWithFileUrl(demoSurveyGenerationWithFileUrlRequest)
+        val aiDemoSurveyGenerationResponse =
+            generateService.generateDemoSurveyWithFileUrl(
+                demoSurveyGenerationWithFileUrlRequest,
+                visitorId,
+            )
         return ResponseEntity.ok(aiDemoSurveyGenerationResponse.generatedSurvey)
     }
 }

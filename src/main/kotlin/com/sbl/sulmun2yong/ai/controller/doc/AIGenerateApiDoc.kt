@@ -22,10 +22,11 @@ interface AIGenerateApiDoc {
         response: HttpServletResponse,
     ): ResponseEntity<SurveyMakeInfoResponse>
 
-    @Operation(summary = "파일을 통한 AI 설문 생성")
-    @PostMapping("/demo/survey")
+    @Operation(summary = "데모 AI 설문 생성")
+    @PostMapping("/demo/survey/{visitor-id}")
     fun generateDemoSurveyWithFileUrl(
         @RequestBody demoSurveyGenerationWithFileUrlRequest: DemoSurveyGenerationWithFileUrlRequest,
+        @PathVariable("visitor-id") visitorId: String,
         response: HttpServletResponse,
     ): ResponseEntity<SurveyMakeInfoResponse>
 }
