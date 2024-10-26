@@ -7,5 +7,5 @@ data class GenerateWithTextDocumentRequestToPython(
     override val target: String,
     override val groupName: String,
     override val userPrompt: String,
-    val textDocument: String,
+    val textDocument: String?,
 ) : GenerateRequestToPython

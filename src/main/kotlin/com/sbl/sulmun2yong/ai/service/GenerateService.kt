@@ -26,7 +26,9 @@ class GenerateService(
         val fileUrl = surveyGenerationWithFileUrlRequest.fileUrl
         val userPrompt = surveyGenerationWithFileUrlRequest.userPrompt
 
-        fileUrlValidator.validateFileUrlOf(fileUrl, allowedExtensions)
+        if (fileUrl != null) {
+            fileUrlValidator.validateFileUrlOf(fileUrl, allowedExtensions)
+        }
 
         val survey = surveyAdapter.getSurvey(surveyId)
 
