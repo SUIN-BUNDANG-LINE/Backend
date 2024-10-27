@@ -35,7 +35,14 @@ class GenerateService(
         val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
 
         return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithFileUrl(target, groupName, fileUrl, userPrompt, survey),
+            generateAdapter.requestSurveyGenerationWithFileUrl(
+                surveyId,
+                target,
+                groupName,
+                fileUrl,
+                userPrompt,
+                survey,
+            ),
         )
     }
 
@@ -55,7 +62,7 @@ class GenerateService(
         val survey = Survey.create(UUID.randomUUID())
 
         return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithFileUrl(target, groupName, fileUrl, userPrompt, survey),
+            generateAdapter.requestSurveyGenerationWithFileUrl(null, target, groupName, fileUrl, userPrompt, survey),
         )
     }
 
