@@ -1,25 +1,31 @@
 package com.sbl.sulmun2yong.ai.adapter
 
-import com.sbl.sulmun2yong.ai.entity.redis.AIDemoCountRedisEntity
-import com.sbl.sulmun2yong.ai.exception.AIDemoCountLimitException
-import com.sbl.sulmun2yong.ai.repository.redis.AIDemoCountRedisRepository
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 @Component
 class AIDemoCountRedisAdapter(
-    private val aiDemoCountRedisRepository: AIDemoCountRedisRepository,
+    private val redisTemplate: RedisTemplate<String, Int>,
 ) {
-    companion object {
-        private const val MAX_COUNT = 100
+    fun incrementOrCreate(visitorId: String) {
+        val key = "demoCount:$visitorId"
+
+        val currentCount = redisTemplate.opsForValue().get(key) ?: 0
+
+        redisTemplate.opsForValue().set(key, currentCount + 1)
+
+        val secondsUntilMidnight = calculateTTL()
+        redisTemplate.expire(key, secondsUntilMidnight, TimeUnit.SECONDS)
     }
 
-    fun incrementOrCreate(visitorId: String) {
-        // 현재 count 값을 확인하고, maxCount 초과할 경우 예외 발생
-        val currentCount = aiDemoCountRedisRepository.findById(visitorId).map { it.count }.orElse(0)
-        if (currentCount >= MAX_COUNT) throw AIDemoCountLimitException()
-
-        // count 증가 또는 새 엔티티 생성
-        val entity = AIDemoCountRedisEntity(visitorId, currentCount + 1)
-        aiDemoCountRedisRepository.save(entity)
+    // 자정까지 남은 시간을 계산하는 메서드
+    private fun calculateTTL(): Long {
+        val now = LocalDateTime.now()
+        val midnight = now.toLocalDate().atTime(LocalTime.MIDNIGHT).plusDays(1)
+        return ChronoUnit.SECONDS.between(now, midnight)
     }
 }
