@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.ai.adapter
 
+import com.sbl.sulmun2yong.ai.exception.AIDemoCountLimitException
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -11,10 +12,16 @@ import java.util.concurrent.TimeUnit
 class AIDemoCountRedisAdapter(
     private val redisTemplate: RedisTemplate<String, Int>,
 ) {
+    companion object {
+        private const val DEMO_COUNT_KEY_PREFIX = "demoCount"
+        private const val DEMO_COUNT_LIMIT = 100
+    }
+
     fun incrementOrCreate(visitorId: String) {
-        val key = "demoCount:$visitorId"
+        val key = "$DEMO_COUNT_KEY_PREFIX:$visitorId"
 
         val currentCount = redisTemplate.opsForValue().get(key) ?: 0
+        if (currentCount >= DEMO_COUNT_LIMIT) throw AIDemoCountLimitException()
 
         redisTemplate.opsForValue().set(key, currentCount + 1)
 
