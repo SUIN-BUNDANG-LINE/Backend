@@ -23,6 +23,7 @@ class GenerateService(
     fun generateSurveyWithFileUrl(
         surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
         surveyId: UUID,
+        makerId: UUID,
     ): AISurveyGenerationResponse {
         val target = surveyGenerationWithFileUrlRequest.target
         val groupName = surveyGenerationWithFileUrlRequest.groupName
@@ -31,7 +32,7 @@ class GenerateService(
 
         validateFileUrl(fileUrl)
 
-        val survey = surveyAdapter.getSurvey(surveyId)
+        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
 
         return AISurveyGenerationResponse.from(
             generateAdapter.requestSurveyGenerationWithFileUrl(target, groupName, fileUrl, userPrompt, survey),

@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.ai.controller.doc.AIGenerateApiDoc
 import com.sbl.sulmun2yong.ai.dto.request.DemoSurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.service.GenerateService
+import com.sbl.sulmun2yong.global.annotation.LoginUser
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
@@ -23,9 +24,10 @@ class AIGenerateController(
     override fun generateSurveyWithFileUrl(
         @PathVariable("survey-id") surveyId: UUID,
         @RequestBody surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
+        @LoginUser makerId: UUID,
         response: HttpServletResponse,
     ): ResponseEntity<SurveyMakeInfoResponse> {
-        val aiSurveyGenerationResponse = generateService.generateSurveyWithFileUrl(surveyGenerationWithFileUrlRequest, surveyId)
+        val aiSurveyGenerationResponse = generateService.generateSurveyWithFileUrl(surveyGenerationWithFileUrlRequest, surveyId, makerId)
         return ResponseEntity.ok(aiSurveyGenerationResponse.generatedSurvey)
     }
 
