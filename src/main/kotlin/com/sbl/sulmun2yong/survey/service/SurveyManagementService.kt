@@ -7,6 +7,7 @@ import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResultRequest
 import com.sbl.sulmun2yong.survey.dto.response.ParticipantsInfoListResponse
+import com.sbl.sulmun2yong.survey.dto.response.SurveyRawResultResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyResultResponse
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyAccessException
 import org.springframework.stereotype.Service
@@ -69,6 +70,21 @@ class SurveyManagementService(
                 null
             }
         return ParticipantsInfoListResponse.of(participants, drawingHistories, survey.rewardSetting.targetParticipantCount)
+    }
+
+    fun getSurveyRawResult(
+        surveyId: UUID,
+        makerId: UUID?,
+        visitorId: String?,
+    ): SurveyRawResultResponse {
+        val survey = surveyAdapter.getSurvey(surveyId)
+        // visitorId가 있으면 참가자인지 확인, 없으면 makerId를 확인
+        if (!isValidRequest(survey, makerId, visitorId)) throw InvalidSurveyAccessException()
+
+        val surveyResult = responseAdapter.getSurveyResult(surveyId, null)
+        val participants = participantAdapter.findBySurveyId(surveyId)
+
+        return SurveyRawResultResponse.of(survey, surveyResult, participants)
     }
 
     private fun isValidRequest(
