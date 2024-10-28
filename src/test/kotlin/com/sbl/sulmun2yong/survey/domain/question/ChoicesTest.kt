@@ -5,7 +5,8 @@ import com.sbl.sulmun2yong.fixture.survey.SurveyConstFactory.CONTENTS
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
-import com.sbl.sulmun2yong.survey.exception.InvalidChoiceException
+import com.sbl.sulmun2yong.survey.exception.ChoiceEmptyException
+import com.sbl.sulmun2yong.survey.exception.ChoiceSizeExceedException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
@@ -34,15 +35,15 @@ class ChoicesTest {
 
     @Test
     fun `선택지 목록은 비어있을 수 없다`() {
-        assertThrows<InvalidChoiceException> { Choices(listOf(), true) }
-        assertThrows<InvalidChoiceException> { Choices(listOf(), false) }
+        assertThrows<ChoiceEmptyException> { Choices(listOf(), true) }
+        assertThrows<ChoiceEmptyException> { Choices(listOf(), false) }
     }
 
     @Test
     fun `선택지는 최대 20개 까지만 추가할 수 있다`() {
         val standardChoices = List(Choices.MAX_SIZE + 1) { Choice.Standard(it.toString()) }
-        assertThrows<InvalidChoiceException> { Choices(standardChoices, true) }
-        assertThrows<InvalidChoiceException> { Choices(standardChoices, false) }
+        assertThrows<ChoiceSizeExceedException> { Choices(standardChoices, true) }
+        assertThrows<ChoiceSizeExceedException> { Choices(standardChoices, false) }
     }
 
     @Test

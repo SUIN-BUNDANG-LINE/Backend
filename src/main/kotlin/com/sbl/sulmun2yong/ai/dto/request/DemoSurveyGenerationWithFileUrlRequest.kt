@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.ai.dto.request
 
-data class SurveyGenerationWithTextDocumentRequest(
+data class DemoSurveyGenerationWithFileUrlRequest(
     val target: String,
     val groupName: String,
-    val textDocument: String,
+    val fileUrl: String?,
     val userPrompt: String,
 )

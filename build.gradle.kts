@@ -81,6 +81,9 @@ dependencies {
 
     // New Relic
     implementation("com.newrelic.agent.java:newrelic-agent:8.13.0")
+
+    // Redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 kotlin {
