@@ -23,7 +23,7 @@ enum class ErrorCode(
     INVALID_SECTION_RESPONSE(HttpStatus.BAD_REQUEST, "SV0006", "유효하지 않은 섹션 응답입니다."),
     INVALID_SURVEY(HttpStatus.BAD_REQUEST, "SV0008", "유효하지 않은 설문입니다."),
     INVALID_SURVEY_RESPONSE(HttpStatus.BAD_REQUEST, "SV0009", "유효하지 않은 설문 응답입니다."),
-    INVALID_CHOICE(HttpStatus.BAD_REQUEST, "SV0010", "유효하지 않은 선택지입니다."),
+    CHOICE_SIZE_EXCEED(HttpStatus.BAD_REQUEST, "SV0010", "선택지는 최대 20개까지만 가능합니다."),
     INVALID_REWARD(HttpStatus.BAD_REQUEST, "SV0011", "유효하지 않은 리워드 정보 입니다."),
     INVALID_PARTICIPANT(HttpStatus.BAD_REQUEST, "SV0012", "유효하지 않은 참여자입니다."),
     INVALID_SECTION_IDS(HttpStatus.BAD_REQUEST, "SV0013", "유효하지 않은 섹션 ID입니다."),
@@ -39,6 +39,7 @@ enum class ErrorCode(
     INVALID_PUBLISHED_AT(HttpStatus.BAD_REQUEST, "SV0024", "설문 마감일이 설문 공개일 보다 빠릅니다."),
     INVALID_RESULT_FILTER(HttpStatus.BAD_REQUEST, "SV0025", "필터는 최대 20개 까지만 적용 가능합니다."),
     INVALID_MODIFICATION_TARGET_ID(HttpStatus.BAD_REQUEST, "SV0026", "유효하지 않은 수정 대상 ID입니다."),
+    EMPTY_CHOICE(HttpStatus.BAD_REQUEST, "SV0027", "선택지는 적어도 하나 이상 존재해야 합니다."),
 
     // Drawing (DR)
     INVALID_DRAWING_BOARD(HttpStatus.BAD_REQUEST, "DR0001", "유효하지 않은 추첨 보드입니다."),

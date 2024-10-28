@@ -28,6 +28,13 @@ class SurveyManagementController(
         @RequestParam visitorId: String?,
     ) = ResponseEntity.ok(surveyManagementService.getSurveyResult(surveyId, makerId, surveyResultRequest, participantId, visitorId))
 
+    @GetMapping("/raw-result/{survey-id}")
+    override fun getSurveyRawResult(
+        @PathVariable("survey-id") surveyId: UUID,
+        @NullableLoginUser makerId: UUID?,
+        @RequestParam visitorId: String?,
+    ) = ResponseEntity.ok(surveyManagementService.getSurveyRawResult(surveyId, makerId, visitorId))
+
     @GetMapping("/participants/{survey-id}")
     override fun getSurveyParticipants(
         @PathVariable("survey-id") surveyId: UUID,

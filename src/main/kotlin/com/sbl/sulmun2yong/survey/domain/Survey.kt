@@ -61,7 +61,7 @@ data class Survey(
                 status = SurveyStatus.NOT_STARTED,
                 finishMessage = DEFAULT_FINISH_MESSAGE,
                 rewardSetting = NoRewardSetting,
-                isVisible = true,
+                isVisible = false,
                 makerId = makerId,
                 sections = listOf(),
                 isResultOpen = false,

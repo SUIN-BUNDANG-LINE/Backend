@@ -99,7 +99,7 @@ class SurveyTest {
             assertEquals(SurveyStatus.NOT_STARTED, this.status)
             assertEquals(Survey.DEFAULT_FINISH_MESSAGE, this.finishMessage)
             assertEquals(NoRewardSetting, this.rewardSetting)
-            assertEquals(true, this.isVisible)
+            assertEquals(false, this.isVisible)
             assertEquals(false, this.isResultOpen)
             assertEquals(makerId, this.makerId)
             assertEquals(listOf(), this.sections)
