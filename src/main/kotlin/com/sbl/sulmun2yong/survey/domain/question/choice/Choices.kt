@@ -1,7 +1,8 @@
 package com.sbl.sulmun2yong.survey.domain.question.choice
 
 import com.sbl.sulmun2yong.survey.domain.response.ResponseDetail
-import com.sbl.sulmun2yong.survey.exception.InvalidChoiceException
+import com.sbl.sulmun2yong.survey.exception.ChoiceEmptyException
+import com.sbl.sulmun2yong.survey.exception.ChoiceSizeExceedException
 
 /** 질문에 포함될 선택지 목록 */
 data class Choices(
@@ -14,8 +15,8 @@ data class Choices(
     }
 
     init {
-        if (standardChoices.isEmpty()) throw InvalidChoiceException()
-        if (standardChoices.size > MAX_SIZE) throw InvalidChoiceException()
+        if (standardChoices.isEmpty()) throw ChoiceEmptyException()
+        if (standardChoices.size > MAX_SIZE) throw ChoiceSizeExceedException()
     }
 
     /** 응답이 선택지에 포함되는지 확인 */
