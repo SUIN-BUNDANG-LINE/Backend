@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class AILogAdapter(
+class AIEditLogAdapter(
     private val aiEditLogRepository: AIEditLogRepository,
 ) {
     fun saveEditLog(aiEditLog: AIEditLog) =
