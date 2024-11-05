@@ -5,15 +5,17 @@ import com.sbl.sulmun2yong.drawing.domain.DrawingHistoryGroup
 import com.sbl.sulmun2yong.drawing.entity.DrawingHistoryDocument
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
 import com.sbl.sulmun2yong.global.data.PhoneNumber
+import com.sbl.sulmun2yong.global.util.EncryptionUtils
 import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
 class DrawingHistoryAdapter(
     private val drawingHistoryRepository: DrawingHistoryRepository,
+    private val encryptionUtils: EncryptionUtils,
 ) {
     fun insert(drawingHistory: DrawingHistory) {
-        drawingHistoryRepository.insert(DrawingHistoryDocument.of(drawingHistory))
+        drawingHistoryRepository.insert(drawingHistory.toDocument())
     }
 
     fun findBySurveyIdAndParticipantIdOrPhoneNumber(
@@ -63,4 +65,24 @@ class DrawingHistoryAdapter(
             )
         }
     }
+
+    fun DrawingHistory.toDocument() =
+        DrawingHistoryDocument(
+            id = id,
+            participantId = participantId,
+            phoneNumber = encryptionUtils.encrypt(phoneNumber.value),
+            surveyId = surveyId,
+            selectedTicketIndex = selectedTicketIndex,
+            ticket = ticket,
+        )
+
+    fun DrawingHistoryDocument.toDomain() =
+        DrawingHistory(
+            id = id,
+            participantId = participantId,
+            phoneNumber = PhoneNumber.createWithNonNullable(encryptionUtils.decrypt(phoneNumber)),
+            surveyId = surveyId,
+            selectedTicketIndex = selectedTicketIndex,
+            ticket = ticket,
+        )
 }
