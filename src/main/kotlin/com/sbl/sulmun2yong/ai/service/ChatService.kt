@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.ai.service
 
-import com.sbl.sulmun2yong.ai.adapter.AILogAdapter
+import com.sbl.sulmun2yong.ai.adapter.AIEditLogAdapter
 import com.sbl.sulmun2yong.ai.adapter.ChatAdapter
 import com.sbl.sulmun2yong.ai.domain.AIEditLog
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
@@ -15,7 +15,7 @@ import java.util.UUID
 class ChatService(
     private val surveyAdapter: SurveyAdapter,
     private val chatAdapter: ChatAdapter,
-    private val aiLogAdapter: AILogAdapter,
+    private val aiLogAdapter: AIEditLogAdapter,
 ) {
     fun editSurveyDataWithChat(
         makerId: UUID,
