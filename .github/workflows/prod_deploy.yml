@@ -98,6 +98,7 @@ jobs:
                   host: ${{ env.EC2_HOST }}
                   username: ${{ env.EC2_USER }}
                   key: ${{ env.EC2_KEY }}
+                  port: 22
                   debug: true
                   script: |
                       echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
