@@ -57,49 +57,49 @@ jobs:
             - name: Jib로 Docker 이미지 빌드 및 푸시
               run: ./gradlew jib -Ddocker.id="${{ env.DOCKER_ID }}" -Ddocker.password="${{ env.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ env.DOCKER_IMAGE_NAME }}"
 
-    deploy:
-        name: 개발 서버 배포 작업
-        needs: build
-        runs-on: ubuntu-latest
-
-        env:
-            # AWS 관련
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            EC2_INSTANCE_ID: ${{ secrets.DEVELOP_EC2_INSTANCE_ID }}
-            AWS_REGION: ap-northeast-2
-            # Docker 관련
-            CONTAINER_NAME: sulmun2yong-develop-server
-            DOCKER_ID: ${{ secrets.DOCKER_ID }}
-            DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-            DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:devLatest
-            # MongoDB 관련
-            MONGODB_URL: ${{ secrets.DEVELOP_MONGODB_URL }}
-            MONGODB_DATABASE: ${{ secrets.DEVELOP_MONGODB_DATABASE }}
-            # Spring Boot 관련
-            FRONTEND_BASE_URL: http://localhost:3000
-            BACKEND_BASE_URL: https://dev-api.sulmoon.io
-            AI_SERVER_BASE_URL: http://ai.sulmoon.io:8000
-            FINGERPRINT_MOCKING_SERVER_URL: ${{ secrets.FINGERPRINT_MOCKING_SERVER_URL }}
-            # New Relic 관련
-            NEW_RELIC_APP_NAME: sulmun2yong-development
-
-        steps:
-            - name: AWS 로그인
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-                  aws-region: ${{ env.AWS_REGION }}
-
-            - name: SSM으로 EC2에 배포
-              run: |
-                aws --no-cli-pager  ssm send-command \
-                --document-name "AWS-RunShellScript" \
-                --targets "Key=instanceIds, Values=${{ env.EC2_INSTANCE_ID }}" \
-                --parameters '{"commands" : ["echo \"${{ env.DOCKER_PASSWORD }}\" | docker login -u \"${{ env.DOCKER_ID }}\" --password-stdin", 
-                "docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
-                "docker stop ${{ env.CONTAINER_NAME }} || true", 
-                "docker rm ${{ env.CONTAINER_NAME }} || true", 
-                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} -e NEW_RELIC_APP_NAME=${{ env.NEW_RELIC_APP_NAME }} -e FINGERPRINT_MOCKING_SERVER_URL=${{ env.FINGERPRINT_MOCKING_SERVER_URL }} ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
-                "docker image prune -af"]}'
+#    deploy:
+#        name: 개발 서버 배포 작업
+#        needs: build
+#        runs-on: ubuntu-latest
+#
+#        env:
+#            # AWS 관련
+#            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#            EC2_INSTANCE_ID: ${{ secrets.DEVELOP_EC2_INSTANCE_ID }}
+#            AWS_REGION: ap-northeast-2
+#            # Docker 관련
+#            CONTAINER_NAME: sulmun2yong-develop-server
+#            DOCKER_ID: ${{ secrets.DOCKER_ID }}
+#            DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+#            DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_BACKEND_IMAGE_NAME }}:devLatest
+#            # MongoDB 관련
+#            MONGODB_URL: ${{ secrets.DEVELOP_MONGODB_URL }}
+#            MONGODB_DATABASE: ${{ secrets.DEVELOP_MONGODB_DATABASE }}
+#            # Spring Boot 관련
+#            FRONTEND_BASE_URL: http://localhost:3000
+#            BACKEND_BASE_URL: https://dev-api.sulmoon.io
+#            AI_SERVER_BASE_URL: http://ai.sulmoon.io:8000
+#            FINGERPRINT_MOCKING_SERVER_URL: ${{ secrets.FINGERPRINT_MOCKING_SERVER_URL }}
+#            # New Relic 관련
+#            NEW_RELIC_APP_NAME: sulmun2yong-development
+#
+#        steps:
+#            - name: AWS 로그인
+#              uses: aws-actions/configure-aws-credentials@v4
+#              with:
+#                  aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+#                  aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+#                  aws-region: ${{ env.AWS_REGION }}
+#
+#            - name: SSM으로 EC2에 배포
+#              run: |
+#                aws --no-cli-pager  ssm send-command \
+#                --document-name "AWS-RunShellScript" \
+#                --targets "Key=instanceIds, Values=${{ env.EC2_INSTANCE_ID }}" \
+#                --parameters '{"commands" : ["echo \"${{ env.DOCKER_PASSWORD }}\" | docker login -u \"${{ env.DOCKER_ID }}\" --password-stdin",
+#                "docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}",
+#                "docker stop ${{ env.CONTAINER_NAME }} || true",
+#                "docker rm ${{ env.CONTAINER_NAME }} || true",
+#                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} -e NEW_RELIC_APP_NAME=${{ env.NEW_RELIC_APP_NAME }} -e FINGERPRINT_MOCKING_SERVER_URL=${{ env.FINGERPRINT_MOCKING_SERVER_URL }} ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}",
+#                "docker image prune -af"]}'
