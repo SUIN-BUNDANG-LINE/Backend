@@ -1,11 +1,12 @@
 package com.sbl.sulmun2yong.ai.service
 
 import com.sbl.sulmun2yong.ai.adapter.AIDemoCountRedisAdapter
+import com.sbl.sulmun2yong.ai.adapter.AIGenerateLogAdapter
 import com.sbl.sulmun2yong.ai.adapter.GenerateAdapter
+import com.sbl.sulmun2yong.ai.domain.AIGenerateLog
 import com.sbl.sulmun2yong.ai.dto.request.DemoSurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
-import com.sbl.sulmun2yong.global.fingerprint.FingerprintApi
 import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
@@ -18,7 +19,8 @@ class GenerateService(
     private val generateAdapter: GenerateAdapter,
     private val surveyAdapter: SurveyAdapter,
     private val aiDemoCountRedisAdapter: AIDemoCountRedisAdapter,
-    val fingerprintApi: FingerprintApi,
+    private val aiGenerateLogAdapter: AIGenerateLogAdapter,
+    // val fingerprintApi: FingerprintApi,
 ) {
     fun generateSurveyWithFileUrl(
         surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
@@ -34,7 +36,7 @@ class GenerateService(
 
         val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
 
-        return AISurveyGenerationResponse.from(
+        val generatedSurvey =
             generateAdapter.requestSurveyGenerationWithFileUrl(
                 surveyId,
                 target,
@@ -42,8 +44,23 @@ class GenerateService(
                 fileUrl,
                 userPrompt,
                 survey,
+            )
+
+        aiGenerateLogAdapter.saveGenerateLog(
+            AIGenerateLog(
+                id = UUID.randomUUID(),
+                surveyId = surveyId,
+                makerId = makerId,
+                userPrompt = userPrompt,
+                fileUrl = fileUrl,
+                target = target,
+                groupName = groupName,
+                generatedSurvey = generatedSurvey,
+                visitorId = null,
             ),
         )
+
+        return AISurveyGenerationResponse.from(generatedSurvey)
     }
 
     fun generateDemoSurveyWithFileUrl(
@@ -56,14 +73,29 @@ class GenerateService(
         val userPrompt = demoSurveyGenerationWithFileUrlRequest.userPrompt
 
         validateFileUrl(fileUrl)
-        fingerprintApi.validateVisitorId(visitorId)
+        // fingerprintApi.validateVisitorId(visitorId)
         aiDemoCountRedisAdapter.incrementOrCreate(visitorId)
 
-        val survey = Survey.create(UUID.randomUUID())
+        val surveyId = UUID.randomUUID()
+        val survey = Survey.create(surveyId)
 
-        return AISurveyGenerationResponse.from(
-            generateAdapter.requestSurveyGenerationWithFileUrl(null, target, groupName, fileUrl, userPrompt, survey),
+        val generatedSurvey = generateAdapter.requestSurveyGenerationWithFileUrl(null, target, groupName, fileUrl, userPrompt, survey)
+
+        aiGenerateLogAdapter.saveGenerateLog(
+            AIGenerateLog(
+                id = UUID.randomUUID(),
+                surveyId = surveyId,
+                makerId = null,
+                userPrompt = userPrompt,
+                fileUrl = fileUrl,
+                target = target,
+                groupName = groupName,
+                generatedSurvey = generatedSurvey,
+                visitorId = visitorId,
+            ),
         )
+
+        return AISurveyGenerationResponse.from(generatedSurvey)
     }
 
     private fun validateFileUrl(fileUrl: String?) {

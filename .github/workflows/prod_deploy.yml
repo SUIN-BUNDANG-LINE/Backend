@@ -70,10 +70,14 @@ jobs:
 
         env:
             # AWS 관련
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            EC2_INSTANCE_ID: ${{ secrets.PRODUCTION_EC2_INSTANCE_ID }}
-            AWS_REGION: ap-northeast-2
+            # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            # EC2_INSTANCE_ID: ${{ secrets.PRODUCTION_EC2_INSTANCE_ID }}
+            # AWS_REGION: ap-northeast-2
+            EC2_HOST: ${{ secrets.PRODUCTION_EC2_HOST }}
+            EC2_USER: ${{ secrets.EC2_USER }}
+            EC2_KEY: ${{ secrets.EC2_KEY }}
+
             # Docker 관련
             CONTAINER_NAME: sulmun2yong-production-server
             DOCKER_ID: ${{ secrets.DOCKER_ID }}
@@ -87,23 +91,45 @@ jobs:
             BACKEND_BASE_URL: https://api.sulmoon.io
             AI_SERVER_BASE_URL: http://ai.sulmoon.io:8000
 
-
         steps:
-            - name: AWS 로그인
-              uses: aws-actions/configure-aws-credentials@v4
+            - name: EC2에 배포
+              uses: appleboy/ssh-action@v0.1.7
               with:
-                aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-                aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-                aws-region: ${{ env.AWS_REGION }}
+                  host: ${{ env.EC2_HOST }}
+                  username: ${{ env.EC2_USER }}
+                  key: ${{ env.EC2_KEY }}
+                  debug: true
+                  script: |
+                      echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
+                      docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}
+                      docker stop ${{ env.CONTAINER_NAME }} || true
+                      docker rm ${{ env.CONTAINER_NAME }} || true
+                      docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 \
+                        -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} \
+                        -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} \
+                        -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} \
+                        -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} \
+                        -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} \
+                        -e COOKIE_DOMAIN=${{ env.COOKIE_DOMAIN }} \
+                        ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}
+                      docker image prune -af
 
-            - name: SSM으로 EC2에 배포
-              run: |
-                aws --no-cli-pager  ssm send-command \
-                --document-name "AWS-RunShellScript" \
-                --targets "Key=instanceIds, Values=${{ env.EC2_INSTANCE_ID}}" \
-                --parameters '{"commands" : ["echo \"${{ env.DOCKER_PASSWORD }}\" | docker login -u \"${{ env.DOCKER_ID }}\" --password-stdin", 
-                "docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
-                "docker stop ${{ env.CONTAINER_NAME }} || true", 
-                "docker rm ${{ env.CONTAINER_NAME }} || true", 
-                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} -e COOKIE_DOMAIN=${{ env.COOKIE_DOMAIN }} ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}", 
-                "docker image prune -af"]}'
+#        steps:
+#            - name: AWS 로그인
+#              uses: aws-actions/configure-aws-credentials@v4
+#              with:
+#                aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+#                aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+#                aws-region: ${{ env.AWS_REGION }}
+#
+#            - name: SSM으로 EC2에 배포
+#              run: |
+#                aws --no-cli-pager  ssm send-command \
+#                --document-name "AWS-RunShellScript" \
+#                --targets "Key=instanceIds, Values=${{ env.EC2_INSTANCE_ID}}" \
+#                --parameters '{"commands" : ["echo \"${{ env.DOCKER_PASSWORD }}\" | docker login -u \"${{ env.DOCKER_ID }}\" --password-stdin",
+#                "docker pull ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}",
+#                "docker stop ${{ env.CONTAINER_NAME }} || true",
+#                "docker rm ${{ env.CONTAINER_NAME }} || true",
+#                "docker run -d --name ${{ env.CONTAINER_NAME }} -p 8080:8080 -e SPRING_DATA_MONGODB_URI=${{ env.MONGODB_URL }} -e SPRING_DATA_MONGODB_DATABASE=${{ env.MONGODB_DATABASE }} -e FRONTEND_BASE-URL=${{ env.FRONTEND_BASE_URL }} -e BACKEND_BASE-URL=${{ env.BACKEND_BASE_URL }} -e AI-SERVER_BASE-URL=${{ env.AI_SERVER_BASE_URL }} -e COOKIE_DOMAIN=${{ env.COOKIE_DOMAIN }} ${{ env.DOCKER_ID }}/${{ env.DOCKER_IMAGE_NAME }}",
+#                "docker image prune -af"]}'

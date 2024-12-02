@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.survey.service
 
-import com.sbl.sulmun2yong.global.fingerprint.FingerprintApi
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
@@ -16,7 +15,7 @@ class SurveyResponseService(
     val surveyAdapter: SurveyAdapter,
     val participantAdapter: ParticipantAdapter,
     val responseAdapter: ResponseAdapter,
-    val fingerprintApi: FingerprintApi,
+    // val fingerprintApi: FingerprintApi,
 ) {
     // TODO: 트랜잭션 처리 추가하기
     fun responseToSurvey(
@@ -24,7 +23,7 @@ class SurveyResponseService(
         surveyResponseRequest: SurveyResponseRequest,
     ): SurveyParticipantResponse {
         validateIsAlreadyParticipated(surveyId, surveyResponseRequest.visitorId)
-        fingerprintApi.validateVisitorId(surveyResponseRequest.visitorId)
+        // fingerprintApi.validateVisitorId(surveyResponseRequest.visitorId)
         val visitorId = surveyResponseRequest.visitorId
         val survey = surveyAdapter.getSurvey(surveyId)
         val surveyResponse = surveyResponseRequest.toDomain(surveyId)
