@@ -7,7 +7,6 @@ import com.sbl.sulmun2yong.ai.domain.AIGenerateLog
 import com.sbl.sulmun2yong.ai.dto.request.DemoSurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
-import com.sbl.sulmun2yong.global.fingerprint.FingerprintApi
 import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Survey
@@ -21,7 +20,7 @@ class GenerateService(
     private val surveyAdapter: SurveyAdapter,
     private val aiDemoCountRedisAdapter: AIDemoCountRedisAdapter,
     private val aiGenerateLogAdapter: AIGenerateLogAdapter,
-    val fingerprintApi: FingerprintApi,
+    // val fingerprintApi: FingerprintApi,
 ) {
     fun generateSurveyWithFileUrl(
         surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
@@ -74,7 +73,7 @@ class GenerateService(
         val userPrompt = demoSurveyGenerationWithFileUrlRequest.userPrompt
 
         validateFileUrl(fileUrl)
-        fingerprintApi.validateVisitorId(visitorId)
+        // fingerprintApi.validateVisitorId(visitorId)
         aiDemoCountRedisAdapter.incrementOrCreate(visitorId)
 
         val surveyId = UUID.randomUUID()
