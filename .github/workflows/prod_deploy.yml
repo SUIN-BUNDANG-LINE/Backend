@@ -87,7 +87,7 @@ jobs:
             MONGODB_DATABASE: ${{ secrets.PRODUCTION_MONGODB_DATABASE }}
             # Spring Boot 관련
             COOKIE_DOMAIN: sulmoon.io
-            FRONTEND_BASE_URL: https://www.sulmoon.io
+            FRONTEND_BASE_URL: https://sulmoon.io
             BACKEND_BASE_URL: https://api.sulmoon.io
             AI_SERVER_BASE_URL: http://ai.sulmoon.io:8000
 
