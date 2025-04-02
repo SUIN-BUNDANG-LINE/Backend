@@ -48,3 +48,8 @@ cloudfront:
 mongock:
     enabled: true
     migration-scan-package: com.sbl.sulmun2yong.global.migration
+
+kafka:
+    topics:
+        survey-response: "survey-response"
+        winning: "winning"
