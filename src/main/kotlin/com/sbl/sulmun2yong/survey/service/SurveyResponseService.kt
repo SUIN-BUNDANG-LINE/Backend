@@ -1,13 +1,16 @@
 package com.sbl.sulmun2yong.survey.service
 
+import com.sbl.sulmun2yong.global.kafka.KafkaEventPublisher
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.Participant
+import com.sbl.sulmun2yong.survey.dto.event.SurveyResponseEvent
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import com.sbl.sulmun2yong.survey.exception.AlreadyParticipatedException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
@@ -15,6 +18,7 @@ class SurveyResponseService(
     val surveyAdapter: SurveyAdapter,
     val participantAdapter: ParticipantAdapter,
     val responseAdapter: ResponseAdapter,
+    private val kafkaEventPublisher: KafkaEventPublisher,
     // val fingerprintApi: FingerprintApi,
 ) {
     // TODO: 트랜잭션 처리 추가하기
@@ -32,6 +36,17 @@ class SurveyResponseService(
         val participant = Participant.create(visitorId, surveyId, null)
         participantAdapter.insert(participant)
         responseAdapter.insertSurveyResponse(surveyResponse, participant.id)
+
+        // 설문 응답 이벤트 발행
+        val surveyResponseEvent =
+            SurveyResponseEvent(
+                participantId = participant.id,
+                surveyMakerId = survey.makerId,
+                surveyId = surveyId,
+                timestamp = LocalDateTime.now(),
+            )
+        kafkaEventPublisher.publishSurveyResponse(surveyResponseEvent)
+
         return SurveyParticipantResponse(participant.id, survey.isImmediateDraw())
     }
 

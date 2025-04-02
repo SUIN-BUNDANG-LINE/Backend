@@ -4,17 +4,20 @@ import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.adapter.DrawingHistoryAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
+import com.sbl.sulmun2yong.drawing.dto.event.WinningEvent
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardAccessException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
+import com.sbl.sulmun2yong.global.kafka.KafkaEventPublisher
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import java.util.UUID
 
 // TODO: mongoDB 트랜잭션 테스트 필요
@@ -25,6 +28,7 @@ class DrawingBoardService(
     private val participantAdapter: ParticipantAdapter,
     private val drawingBoardAdapter: DrawingBoardAdapter,
     private val drawingHistoryAdapter: DrawingHistoryAdapter,
+    private val kafkaEventPublisher: KafkaEventPublisher,
 ) {
     fun getDrawingBoard(surveyId: UUID): DrawingBoardResponse {
         val surveyStatus = surveyAdapter.getSurvey(surveyId).status
@@ -49,8 +53,7 @@ class DrawingBoardService(
 
         // 추첨 기록이 있는가
         val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
-        val drawingHistory = drawingHistoryAdapter.findBySurveyIdAndParticipantIdOrPhoneNumber(surveyId, participantId, phoneNumberData)
-        if (drawingHistory != null) {
+        if (drawingHistoryAdapter.findBySurveyIdAndParticipantIdOrPhoneNumber(surveyId, participantId, phoneNumberData) != null) {
             throw AlreadyParticipatedDrawingException()
         }
         // 설문이 종료되었는가
@@ -69,16 +72,17 @@ class DrawingBoardService(
         // 보드 업데이트
         val changedDrawingBoard = drawingResult.changedDrawingBoard
         drawingBoardAdapter.save(drawingResult.changedDrawingBoard)
+
         // 추첨 기록 저장
-        drawingHistoryAdapter.insert(
+        val drawingHistory =
             DrawingHistory.create(
                 participantId = participantId,
                 phoneNumber = phoneNumberData,
                 surveyId = surveyId,
                 selectedTicketIndex = selectedNumber,
                 ticket = changedDrawingBoard.tickets[selectedNumber],
-            ),
-        )
+            )
+        drawingHistoryAdapter.insert(drawingHistory)
         // 추첨 결과 남은 티켓이 0이됨
         if (changedDrawingBoard.tickets.size - changedDrawingBoard.selectedTicketCount <= 0) {
             surveyAdapter.save(survey.finish())
@@ -87,7 +91,20 @@ class DrawingBoardService(
         // dto 반환
         val drawingResultResponse =
             when (drawingResult) {
-                is DrawingResult.Winner -> DrawingResultResponse.Winner(drawingResult.rewardName)
+                is DrawingResult.Winner -> {
+                    // 당첨자 이벤트 발행
+                    val winningEvent =
+                        WinningEvent(
+                            drawingHistoryId = drawingHistory.id,
+                            surveyId = surveyId,
+                            surveyMakerId = survey.makerId,
+                            rewardName = drawingResult.rewardName,
+                            phoneNumber = drawingHistory.phoneNumber.value,
+                            timestamp = LocalDateTime.now(),
+                        )
+                    kafkaEventPublisher.publishWinner(winningEvent)
+                    DrawingResultResponse.Winner(drawingResult.rewardName)
+                }
                 is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
             }
         return drawingResultResponse
