@@ -11,7 +11,7 @@ class HealthCheckAdapter(
 ) {
     fun healthCheck() =
         requestToPythonServerTemplate
-            .getForEntity<Unit>(
+            .getForEntity<String>(
                 "/healthcheck",
             ).body ?: throw AIHealthCheckFailException()
 }
