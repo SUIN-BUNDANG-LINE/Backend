@@ -78,4 +78,5 @@ enum class ErrorCode(
     CHAT_SESSION_ID_COOKIE_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0005", "챗봇 세션 ID 쿠키를 찾을 수 없습니다."),
     AI_EDIT_LOG_NOT_FOUND(HttpStatus.BAD_REQUEST, "PY0006", "AI 수정 기록을 찾을 수 없습니다."),
     AI_DEMO_COUNT_LIMIT(HttpStatus.BAD_REQUEST, "PY0007", "데모 AI 기능은 하루에 100회 까지만 사용 가능합니다."),
+    AI_HEALTH_CHECK_FAIL(HttpStatus.BAD_REQUEST, "PY0008", "ai 서버 health check에 실패했습니다."),
 }
