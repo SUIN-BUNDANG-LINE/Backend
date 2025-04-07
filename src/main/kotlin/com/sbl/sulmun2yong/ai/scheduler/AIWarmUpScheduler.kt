@@ -14,10 +14,10 @@ class AIWarmUpScheduler(
     @Scheduled(cron = "0 */5  * * * *")
     fun aiWarmUp() {
         try {
-            healthCheckAdapter.healthCheck()
-            log.error("AI 서버 Health Check 성공")
+            val response = healthCheckAdapter.healthCheck()
+            log.info("AI 서버 Health Check 성공 : $response")
         } catch (e: Exception) {
-            log.error("AI 서버 Health Check 실패 : ", e)
+            log.error("AI 서버 Health Check 실패 : $e")
         }
     }
 }
