@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.DefaultUriBuilderFactory
@@ -16,6 +17,8 @@ import org.springframework.web.util.DefaultUriBuilderFactory
 class RestTemplateConfig(
     @Value("\${ai-server.base-url}")
     private val aiServerBaseUrl: String,
+    @Value("\${ai-server.api-key}")
+    private val aiServerApiKey: String,
 ) {
     @Bean
     fun requestToPythonServerTemplate(messageConverters: HttpMessageConverters): RestTemplate {
@@ -28,6 +31,12 @@ class RestTemplateConfig(
         return RestTemplate(listOf(MappingJackson2HttpMessageConverter(objectMapper)))
             .apply {
                 uriTemplateHandler = DefaultUriBuilderFactory(aiServerBaseUrl)
+                interceptors.add(
+                    ClientHttpRequestInterceptor { request, body, execution ->
+                        request.headers.add("x-api-key", aiServerApiKey)
+                        execution.execute(request, body)
+                    },
+                )
             }
     }
 }

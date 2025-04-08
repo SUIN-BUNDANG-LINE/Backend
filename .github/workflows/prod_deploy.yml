@@ -89,7 +89,7 @@ jobs:
             COOKIE_DOMAIN: sulmoon.io
             FRONTEND_BASE_URL: https://sulmoon.io
             BACKEND_BASE_URL: https://api.sulmoon.io
-            AI_SERVER_BASE_URL: https://ai.sulmoon.io
+            AI_SERVER_BASE_URL: ${{ secrets.AI_SERVER_BASE_URL }}
 
         steps:
             - name: EC2에 배포
