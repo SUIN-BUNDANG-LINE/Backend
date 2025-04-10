@@ -4,10 +4,12 @@ import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.AuthenticationException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.multipart.MaxUploadSizeExceededException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -55,5 +57,17 @@ class GlobalExceptionHandler {
     protected fun handleMaxUploadSizeExceededException(e: MaxUploadSizeExceededException): ErrorResponse {
         log.warn(e.message, e)
         return ErrorResponse.of(ErrorCode.FILE_SIZE_EXCEEDED)
+    }
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    protected fun handleNoResourceFoundException(e: NoResourceFoundException): ErrorResponse {
+        log.warn(e.message)
+        return ErrorResponse.of(ErrorCode.RESOURCE_NOT_FOUND)
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    protected fun handleHttpRequestMethodNotSupportedException(e: HttpRequestMethodNotSupportedException): ErrorResponse {
+        log.warn(e.message)
+        return ErrorResponse.of(ErrorCode.NOT_SUPPORTED_METHOD)
     }
 }

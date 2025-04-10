@@ -14,6 +14,8 @@ enum class ErrorCode(
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "GL0004", "접근 권한이 없습니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "GL0005", "파일은 최대 5mb까지만 업로드할 수 있습니다."),
     UNCLEAN_VISITOR(HttpStatus.FORBIDDEN, "GL0006", "유효하지 않은 visitorId입니다."),
+    RESOURCE_NOT_FOUND(HttpStatus.FORBIDDEN, "GL0007", "리소스를 찾을 수 없습니다."),
+    NOT_SUPPORTED_METHOD(HttpStatus.FORBIDDEN, "GL0008", "지원하지 않는 메서드입니다."),
 
     // Survey (SV)
     ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "SV0001", "이미 참여한 설문입니다."),
