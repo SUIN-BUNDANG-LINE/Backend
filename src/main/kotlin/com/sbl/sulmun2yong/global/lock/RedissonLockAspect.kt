@@ -7,6 +7,8 @@ import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.redisson.api.RedissonClient
+import org.springframework.beans.factory.BeanFactory
+import org.springframework.beans.factory.BeanFactoryAware
 import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
@@ -17,35 +19,43 @@ import java.util.concurrent.TimeUnit
 @Component
 class RedissonLockAspect(
     private val redissonClient: RedissonClient,
-) {
+) : BeanFactoryAware {
+    private lateinit var beanFactory: BeanFactory
     private val parser = SpelExpressionParser()
-    private val nameDiscoverer = DefaultParameterNameDiscoverer()
+    private val parameterNameDiscoverer = DefaultParameterNameDiscoverer()
 
-    @Around("@annotation(redissonLockAnnotation)")
+    override fun setBeanFactory(beanFactory: BeanFactory) {
+        this.beanFactory = beanFactory
+    }
+
+    @Around("@annotation(redissonLock)")
     fun around(
         joinPoint: ProceedingJoinPoint,
-        redissonLockAnnotation: RedissonLock,
+        redissonLock: RedissonLock,
     ): Any? {
-        // SpEL 평가를 위한 메서드 인자 정보 설정
-        val methodSignature = joinPoint.signature as MethodSignature
-        val parameterNames = nameDiscoverer.getParameterNames(methodSignature.method) ?: emptyArray()
-        val args = joinPoint.args
+        // SpEL 평가 컨텍스트 생성 및 BeanResolver 등록
         val context = StandardEvaluationContext()
-        parameterNames.forEachIndexed { index, name ->
-            context.setVariable(name, args[index])
+        context.setBeanResolver { _: org.springframework.expression.EvaluationContext, beanName: String ->
+            beanFactory.getBean(beanName)
         }
 
-        // SpEL 표현식을 통해 락 키 생성
+        // 메서드 인자 이름 및 값 설정
+        val methodSignature = joinPoint.signature as MethodSignature
+        val parameterNames = parameterNameDiscoverer.getParameterNames(methodSignature.method) ?: emptyArray()
+        parameterNames.forEachIndexed { i, name ->
+            context.setVariable(name, joinPoint.args[i])
+        }
+
+        // SpEL 식을 평가하여 동적 락 키 생성
         val lockKey =
             parser
-                .parseExpression(redissonLockAnnotation.key)
+                .parseExpression(redissonLock.key)
                 .getValue(context, String::class.java)
                 ?: throw InvalidLockKeyExpressionException()
 
+        // Redisson 락 획득
         val lock = redissonClient.getLock(lockKey)
-
-        // 지정한 waitTime 동안 락을 획득 시도 후, leaseTime 동안 유지
-        val acquired = lock.tryLock(redissonLockAnnotation.waitTime, redissonLockAnnotation.leaseTime, TimeUnit.SECONDS)
+        val acquired = lock.tryLock(redissonLock.waitTime, redissonLock.leaseTime, TimeUnit.SECONDS)
         if (!acquired) throw TooManyLockRequestException()
         try {
             return joinPoint.proceed()
