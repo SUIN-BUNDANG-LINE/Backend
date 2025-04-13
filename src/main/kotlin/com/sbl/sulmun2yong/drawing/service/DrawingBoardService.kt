@@ -10,6 +10,7 @@ import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardAccessException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
+import com.sbl.sulmun2yong.global.lock.RedissonLock
 import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
 import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
@@ -17,8 +18,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
-// TODO: mongoDB 트랜잭션 테스트 필요
-// TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
 @Service
 class DrawingBoardService(
     private val surveyAdapter: SurveyAdapter,
@@ -28,7 +27,6 @@ class DrawingBoardService(
 ) {
     fun getDrawingBoard(surveyId: UUID): DrawingBoardResponse {
         val surveyStatus = surveyAdapter.getSurvey(surveyId).status
-        // 설문이 시작되지 않았거나, 종료된 경우 접근 불가
         if (surveyStatus == SurveyStatus.NOT_STARTED || surveyStatus == SurveyStatus.CLOSED) {
             throw InvalidDrawingBoardAccessException()
         }
@@ -36,40 +34,42 @@ class DrawingBoardService(
         return DrawingBoardResponse.of(drawingBoard)
     }
 
+    /**
+     * surveyId를 동적으로 조회한 후 락 키를 생성합니다.
+     */
+    @RedissonLock(key = "@drawingLockKeyResolver.getLockKey(#participantId, #selectedNumber)", leaseTime = 10)
     @Transactional
     fun doDrawing(
         participantId: UUID,
         selectedNumber: Int,
         phoneNumber: String,
     ): DrawingResultResponse {
-        // 유효성 검증
-        // 참가했는가
+        // 참가자 및 설문 정보 확인
         val participant = participantAdapter.getByParticipantId(participantId)
         val surveyId = participant.surveyId
 
-        // 추첨 기록이 있는가
+        // 이미 추첨 참여했는지 검증
         val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
-        val drawingHistory = drawingHistoryAdapter.findBySurveyIdAndParticipantIdOrPhoneNumber(surveyId, participantId, phoneNumberData)
+        val drawingHistory =
+            drawingHistoryAdapter.findBySurveyIdAndParticipantIdOrPhoneNumber(
+                surveyId,
+                participantId,
+                phoneNumberData,
+            )
         if (drawingHistory != null) {
             throw AlreadyParticipatedDrawingException()
         }
-        // 설문이 종료되었는가
+        // 설문 상태 확인
         val survey = surveyAdapter.getSurvey(surveyId)
         if (survey.status == SurveyStatus.CLOSED) {
             throw FinishedDrawingException()
         }
 
-        // 뽑기
-        // 추첨 보드 가져오기
+        // 추첨 처리
         val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
-        // 뽑기
         val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
-
-        // 후속 처리
-        // 보드 업데이트
         val changedDrawingBoard = drawingResult.changedDrawingBoard
-        drawingBoardAdapter.save(drawingResult.changedDrawingBoard)
-        // 추첨 기록 저장
+        drawingBoardAdapter.save(changedDrawingBoard)
         drawingHistoryAdapter.insert(
             DrawingHistory.create(
                 participantId = participantId,
@@ -79,17 +79,14 @@ class DrawingBoardService(
                 ticket = changedDrawingBoard.tickets[selectedNumber],
             ),
         )
-        // 추첨 결과 남은 티켓이 0이됨
+        // 보드에 남은 티켓이 없으면 설문 종료 처리
         if (changedDrawingBoard.tickets.size - changedDrawingBoard.selectedTicketCount <= 0) {
             surveyAdapter.save(survey.finish())
         }
 
-        // dto 반환
-        val drawingResultResponse =
-            when (drawingResult) {
-                is DrawingResult.Winner -> DrawingResultResponse.Winner(drawingResult.rewardName)
-                is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
-            }
-        return drawingResultResponse
+        return when (drawingResult) {
+            is DrawingResult.Winner -> DrawingResultResponse.Winner(drawingResult.rewardName)
+            is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
+        }
     }
 }

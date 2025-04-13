@@ -84,6 +84,10 @@ dependencies {
 
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.redisson:redisson:3.45.1")
+
+    // AOP
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 }
 
 kotlin {

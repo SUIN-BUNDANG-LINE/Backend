@@ -16,6 +16,8 @@ enum class ErrorCode(
     UNCLEAN_VISITOR(HttpStatus.FORBIDDEN, "GL0006", "유효하지 않은 visitorId입니다."),
     RESOURCE_NOT_FOUND(HttpStatus.FORBIDDEN, "GL0007", "리소스를 찾을 수 없습니다."),
     NOT_SUPPORTED_METHOD(HttpStatus.FORBIDDEN, "GL0008", "지원하지 않는 메서드입니다."),
+    INVALID_LOCK_KEY_EXPRESSION(HttpStatus.BAD_REQUEST, "GL0009", "잘못된 Lock Key 표현식 입니다."),
+    TOO_MANY_LOCK_REQUEST(HttpStatus.BAD_REQUEST, "GL0010", "동시 요청이 너무 많습니다. 잠시 후 다시 시도해주세요."),
 
     // Survey (SV)
     ALREADY_PARTICIPATED(HttpStatus.BAD_REQUEST, "SV0001", "이미 참여한 설문입니다."),
