@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class BoardMakingTest {
     @Test
@@ -37,7 +36,6 @@ class BoardMakingTest {
             )
 
         // when, then
-        assertTrue { drawingBoard.id is UUID }
         assertEquals(0, drawingBoard.selectedTicketCount)
         assertEquals(surveyId, drawingBoard.surveyId)
         assertEquals(boardSize, drawingBoard.tickets.size)
