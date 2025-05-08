@@ -25,12 +25,20 @@ services:
             MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        command:
+            - mongod
+            - --replSet
+            - rs0
+            - --keyFile
+            - /data/keyfile/mongo-keyfile
+            - --bind_ip_all
         expose:
             - "27017"
         ports:
             - "27017:27017"
         volumes:
             - sulmun2yong-test-mongodb:/data/db
+            - ./mongo-keyfile:/data/keyfile/mongo-keyfile:ro
 
     sulmun2yong-test-redis:
         image: redis:latest

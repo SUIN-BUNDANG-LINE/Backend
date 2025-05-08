@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
+import org.springframework.data.mongodb.MongoDatabaseFactory
+import org.springframework.data.mongodb.MongoTransactionManager
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration
 import org.springframework.data.mongodb.config.EnableMongoAuditing
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -40,4 +42,8 @@ class MongoConfig(
         converters.add(BinaryToUUIDConverter())
         return MongoCustomConversions(converters)
     }
+
+    @Bean
+    fun mongoTransactionManager(mongoDatabaseFactory: MongoDatabaseFactory): MongoTransactionManager =
+        MongoTransactionManager(mongoDatabaseFactory)
 }
