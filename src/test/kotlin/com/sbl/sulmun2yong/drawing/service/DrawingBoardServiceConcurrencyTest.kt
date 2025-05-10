@@ -2,6 +2,7 @@ package com.sbl.sulmun2yong.drawing.service
 
 import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
@@ -177,6 +178,74 @@ class DrawingBoardServiceConcurrencyTest {
         assertTrue(
             failureResults.all { it.contains("이미 선택된 티켓") },
             "실패한 요청들은 모두 AlreadySelectedTicketException이어야 합니다. 결과: $failureResults",
+        )
+    }
+
+    @Test
+    fun `동일 사용자 동시 요청 테스트 - 단 하나의 추첨만 성공`() {
+        // given
+        val participant =
+            Participant.create(
+                visitorId = UUID.randomUUID().toString(),
+                surveyId = testSurveyId,
+                userId = null,
+            )
+        participantAdapter.insert(participant)
+        testParticipantIds.add(participant.id)
+        val phoneNumber = "010-1234-5678"
+
+        val threadCount = 10
+        val executor = Executors.newFixedThreadPool(threadCount)
+        val startLatch = CountDownLatch(1)
+        val results = mutableListOf<String>()
+
+        // when
+        repeat(threadCount) { index ->
+            executor.submit {
+                startLatch.await()
+                try {
+                    // 각 스레드마다 다른 추첨권 번호 선택 (1~10)
+                    val selectedNumber = index + 1
+                    drawingBoardService.doDrawing(participant.id, selectedNumber, phoneNumber)
+                    synchronized(results) {
+                        results.add("success: ($participant.id, $phoneNumber) - 선택번호: $selectedNumber")
+                    }
+                } catch (e: Exception) {
+                    val threadId = Thread.currentThread().id
+                    synchronized(logLock) {
+                        log.info(
+                            "[Thread-{}] 추첨 실패 - 참가자: {}, 전화번호: {}, 에러: {}",
+                            threadId,
+                            participant.id,
+                            phoneNumber,
+                            e.message,
+                        )
+                    }
+                    synchronized(results) {
+                        results.add("failure: ($participant.id, $phoneNumber): ${e.message}")
+                    }
+
+                    // AlreadyParticipatedDrawingException이 아닌 다른 예외가 발생하면 테스트 실패
+                    if (e !is AlreadyParticipatedDrawingException) {
+                        throw e
+                    }
+                }
+            }
+        }
+
+        startLatch.countDown()
+        executor.shutdown()
+        executor.awaitTermination(10, TimeUnit.SECONDS)
+
+        // then
+        val successCount = results.count { it.startsWith("success") }
+        assertEquals(1, successCount, "동시에 한 요청만 성공해야 합니다. 결과: $results")
+
+        // 실패한 요청들은 모두 AlreadyParticipatedDrawingException이어야 함
+        val failureResults = results.filter { it.startsWith("failure") }
+        assertTrue(
+            failureResults.all { it.contains("이미 참여한 추첨입니다.") },
+            "실패한 요청들은 모두 '이미 참여한 추첨입니다.' 메시지를 포함해야 합니다. 결과: $failureResults",
         )
     }
 }
