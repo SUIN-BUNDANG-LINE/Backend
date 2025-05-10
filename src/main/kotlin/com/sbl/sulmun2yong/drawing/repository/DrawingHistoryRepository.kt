@@ -50,4 +50,6 @@ interface DrawingHistoryRepository : MongoRepository<DrawingHistoryDocument, UUI
         ],
     )
     fun findGroupedBySurveyIdForWinner(): List<DrawingHistoryDTOGroupedBySurveyId>
+
+    fun deleteBySurveyId(surveyId: UUID)
 }

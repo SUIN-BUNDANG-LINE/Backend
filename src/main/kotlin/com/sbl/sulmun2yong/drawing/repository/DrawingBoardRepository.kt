@@ -9,4 +9,6 @@ import java.util.UUID
 @Repository
 interface DrawingBoardRepository : MongoRepository<DrawingBoardDocument, UUID> {
     fun findBySurveyId(surveyId: UUID): Optional<DrawingBoardDocument>
+
+    fun deleteBySurveyId(surveyId: UUID)
 }

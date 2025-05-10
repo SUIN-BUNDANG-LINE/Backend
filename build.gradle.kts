@@ -108,8 +108,16 @@ tasks.withType<Test> {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("concurrency")
+    }
     finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.register<Test>("concurrencyTest") {
+    useJUnitPlatform {
+        includeTags("concurrency")
+    }
 }
 
 tasks.jacocoTestReport {
