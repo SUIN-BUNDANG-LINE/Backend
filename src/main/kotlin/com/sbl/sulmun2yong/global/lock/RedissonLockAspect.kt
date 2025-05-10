@@ -13,6 +13,8 @@ import org.springframework.core.DefaultParameterNameDiscoverer
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.stereotype.Component
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.TimeUnit
 
 @Aspect
@@ -22,46 +24,59 @@ class RedissonLockAspect(
 ) : BeanFactoryAware {
     private lateinit var beanFactory: BeanFactory
     private val parser = SpelExpressionParser()
-    private val parameterNameDiscoverer = DefaultParameterNameDiscoverer()
+    private val paramNameDiscoverer = DefaultParameterNameDiscoverer()
 
     override fun setBeanFactory(beanFactory: BeanFactory) {
         this.beanFactory = beanFactory
     }
 
-    @Around("@annotation(redissonLock)")
+    @Around(value = "@annotation(redissonLock)", argNames = "pjp,redissonLock")
     fun around(
-        joinPoint: ProceedingJoinPoint,
+        pjp: ProceedingJoinPoint,
         redissonLock: RedissonLock,
     ): Any? {
-        // SpEL 평가 컨텍스트 생성 및 BeanResolver 등록
-        val context = StandardEvaluationContext()
-        context.setBeanResolver { _: org.springframework.expression.EvaluationContext, beanName: String ->
-            beanFactory.getBean(beanName)
-        }
-
-        // 메서드 인자 이름 및 값 설정
-        val methodSignature = joinPoint.signature as MethodSignature
-        val parameterNames = parameterNameDiscoverer.getParameterNames(methodSignature.method) ?: emptyArray()
-        parameterNames.forEachIndexed { i, name ->
-            context.setVariable(name, joinPoint.args[i])
-        }
-
-        // SpEL 식을 평가하여 동적 락 키 생성
+        // -------- 1. SpEL 로 Lock Key 계산 --------
+        val method = (pjp.signature as MethodSignature).method
+        val ctx =
+            StandardEvaluationContext().apply {
+                setBeanResolver { _, bn -> beanFactory.getBean(bn) }
+                paramNameDiscoverer.getParameterNames(method)?.forEachIndexed { i, n ->
+                    setVariable(n, pjp.args[i])
+                }
+            }
         val lockKey =
             parser
                 .parseExpression(redissonLock.key)
-                .getValue(context, String::class.java)
+                .getValue(ctx, String::class.java)
                 ?: throw InvalidLockKeyExpressionException()
 
-        // Redisson 락 획득
+        // -------- 2. 분산락 획득 --------
         val lock = redissonClient.getLock(lockKey)
-        val acquired = lock.tryLock(redissonLock.waitTime, redissonLock.leaseTime, TimeUnit.SECONDS)
+        val acquired =
+            lock.tryLock(
+                redissonLock.waitTime,
+                redissonLock.leaseTime,
+                TimeUnit.SECONDS,
+            )
         if (!acquired) throw TooManyLockRequestException()
+
         try {
-            return joinPoint.proceed()
+            // -------- 3. 비즈니스 로직 실행 (기존 트랜잭션에 참여) --------
+            return pjp.proceed()
         } finally {
-            if (lock.isHeldByCurrentThread) {
-                lock.unlock()
+            // -------- 4. 트랜잭션 유무에 따라 unlock 시점 결정 --------
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                // 트랜잭션이 있으면 커밋/롤백 완료 후 해제
+                TransactionSynchronizationManager.registerSynchronization(
+                    object : TransactionSynchronization {
+                        override fun afterCompletion(status: Int) {
+                            if (lock.isHeldByCurrentThread) lock.unlock()
+                        }
+                    },
+                )
+            } else {
+                // 트랜잭션이 없으면 즉시 해제
+                if (lock.isHeldByCurrentThread) lock.unlock()
             }
         }
     }
