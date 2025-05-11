@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.global.config.oauth2.provider.exception.NaverAttribut
 class NaverUserInfo(
     attributes: Map<String, Any>,
 ) : OAuth2UserInfo {
+    @Suppress("UNCHECKED_CAST")
     private val nestedAttributes: Map<String, Any> =
         attributes["response"] as? Map<String, Any>
             ?: throw NaverAttributeCastingFailedException()

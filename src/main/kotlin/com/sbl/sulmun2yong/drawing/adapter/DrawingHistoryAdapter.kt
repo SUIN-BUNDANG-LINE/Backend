@@ -24,8 +24,11 @@ class DrawingHistoryAdapter(
         phoneNumber: PhoneNumber,
     ): DrawingHistory? =
         drawingHistoryRepository
-            .findBySurveyIdAndParticipantIdOrPhoneNumber(surveyId, participantId, phoneNumber.value)
-            .map { it.toDomain() }
+            .findBySurveyIdAndParticipantIdOrPhoneNumber(
+                surveyId,
+                participantId,
+                encryptionUtils.encrypt(phoneNumber.value),
+            ).map { it.toDomain() }
             .orElse(null)
 
     fun getBySurveyId(

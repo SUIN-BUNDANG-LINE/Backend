@@ -23,7 +23,9 @@ class AddSurveyIdAtResponses(
         val questionIdSurveyIdMap =
             surveys
                 .flatMap { survey ->
+                    @Suppress("UNCHECKED_CAST")
                     (survey["sections"] as List<Map<String, Any>>).flatMap { section ->
+                        @Suppress("UNCHECKED_CAST")
                         (section["questions"] as List<Map<String, Any>>).map { question ->
                             question["questionId"] to survey["_id"]
                         }

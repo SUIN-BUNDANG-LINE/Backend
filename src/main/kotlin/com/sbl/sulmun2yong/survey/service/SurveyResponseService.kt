@@ -8,6 +8,7 @@ import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import com.sbl.sulmun2yong.survey.exception.AlreadyParticipatedException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
@@ -17,7 +18,7 @@ class SurveyResponseService(
     val responseAdapter: ResponseAdapter,
     // val fingerprintApi: FingerprintApi,
 ) {
-    // TODO: 트랜잭션 처리 추가하기
+    @Transactional
     fun responseToSurvey(
         surveyId: UUID,
         surveyResponseRequest: SurveyResponseRequest,

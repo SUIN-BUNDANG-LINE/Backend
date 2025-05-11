@@ -9,6 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.dto.request.SurveySaveRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 // TODO: 추후에 패키지 구조를 변경하여 Service가 특정 도메인이 아닌 요청에 종속되도록 하기
@@ -45,7 +46,7 @@ class SurveyWorkbenchService(
         surveyAdapter.save(newSurvey)
     }
 
-    // TODO: 트랜잭션 적용 필요
+    @Transactional
     fun startSurvey(
         surveyId: UUID,
         makerId: UUID,
