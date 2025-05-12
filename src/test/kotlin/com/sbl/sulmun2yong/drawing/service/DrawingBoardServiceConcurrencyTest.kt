@@ -248,4 +248,80 @@ class DrawingBoardServiceConcurrencyTest {
             "실패한 요청들은 모두 '이미 참여한 추첨입니다.' 메시지를 포함해야 합니다. 결과: $failureResults",
         )
     }
+
+    @Test
+    fun `여러 사용자가 서로 다른 번호로 동시 추첨 테스트`() {
+        // given
+        val participantInfos =
+            (1..10).map {
+                val participant =
+                    Participant.create(
+                        visitorId = UUID.randomUUID().toString(),
+                        surveyId = testSurveyId,
+                        userId = null,
+                    )
+                participantAdapter.insert(participant)
+                testParticipantIds.add(participant.id)
+                Triple(
+                    participant.id,
+                    "010-1234-${String.format("%04d", it)}",
+                    it,
+                ) // participantId, phoneNumber, selectedNumber
+            }
+
+        val threadCount = participantInfos.size
+        val executor = Executors.newFixedThreadPool(threadCount)
+        val startLatch = CountDownLatch(1)
+        val results = mutableListOf<String>()
+
+        // when
+        participantInfos.forEach { (participantId, phoneNumber, selectedNumber) ->
+            executor.submit {
+                startLatch.await()
+                try {
+                    drawingBoardService.doDrawing(participantId, selectedNumber, phoneNumber)
+                    val threadId = Thread.currentThread().id
+                    synchronized(logLock) {
+                        log.info(
+                            "[Thread-{}] 추첨 성공 - 참가자: {}, 전화번호: {}, 선택번호: {}",
+                            threadId,
+                            participantId,
+                            phoneNumber,
+                            selectedNumber,
+                        )
+                    }
+                    synchronized(results) {
+                        results.add("success: ($participantId, $phoneNumber) - 선택번호: $selectedNumber")
+                    }
+                } catch (e: Exception) {
+                    val threadId = Thread.currentThread().id
+                    synchronized(logLock) {
+                        log.info(
+                            "[Thread-{}] 추첨 실패 - 참가자: {}, 전화번호: {}, 선택번호: {}, 에러: {}",
+                            threadId,
+                            participantId,
+                            phoneNumber,
+                            selectedNumber,
+                            e.message,
+                        )
+                    }
+                    synchronized(results) {
+                        results.add("failure: ($participantId, $phoneNumber) - 선택번호: $selectedNumber: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        startLatch.countDown()
+        executor.shutdown()
+        executor.awaitTermination(10, TimeUnit.SECONDS)
+
+        // then
+        val successResults = results.filter { it.startsWith("success") }
+        val failureResults = results.filter { it.startsWith("failure") }
+
+        // 모든 요청이 성공해야 함
+        assertEquals(10, successResults.size, "모든 추첨이 성공해야 합니다. 결과: $results")
+        assertEquals(0, failureResults.size, "실패한 추첨이 없어야 합니다. 결과: $results")
+    }
 }

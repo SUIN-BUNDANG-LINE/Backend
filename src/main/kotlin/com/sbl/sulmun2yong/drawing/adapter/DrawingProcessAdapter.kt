@@ -25,6 +25,10 @@ class DrawingProcessAdapter(
         selectedNumber: Int,
         phoneNumber: String,
     ): DrawingResultResponse {
+        // 추첨 가능 여부 조회
+        val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
+        val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
+
         // 이미 추첨 참여했는지 검증
         val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
         val drawingHistory =
@@ -37,10 +41,7 @@ class DrawingProcessAdapter(
             throw AlreadyParticipatedDrawingException()
         }
 
-        // 추첨 처리
-        val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
-
-        val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
+        // 추첨 결과 저장
         val changedDrawingBoard = drawingResult.changedDrawingBoard
         drawingBoardAdapter.save(changedDrawingBoard)
         drawingHistoryAdapter.insert(
