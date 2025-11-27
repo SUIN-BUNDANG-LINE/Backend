@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.fixture.drawing
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import java.util.UUID
@@ -38,7 +38,7 @@ object DrawingBoardFixtureFactory {
         return DrawingBoard(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
-            tickets = createAllSelectedTickets(rewards, SURVEY_PARTICIPANT_COUNT),
+            ticketEntities = createAllSelectedTickets(rewards, SURVEY_PARTICIPANT_COUNT),
         )
     }
 
@@ -49,7 +49,7 @@ object DrawingBoardFixtureFactory {
         return DrawingBoard(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
-            tickets = createTicketsRewardExistsIndex3(rewards, SURVEY_PARTICIPANT_COUNT),
+            ticketEntities = createTicketsRewardExistsIndex3(rewards, SURVEY_PARTICIPANT_COUNT),
         )
     }
 
@@ -60,7 +60,7 @@ object DrawingBoardFixtureFactory {
         return DrawingBoard(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
-            tickets = createTicketsRewardNotExistsIndex3(rewards, SURVEY_PARTICIPANT_COUNT),
+            ticketEntities = createTicketsRewardNotExistsIndex3(rewards, SURVEY_PARTICIPANT_COUNT),
         )
     }
 
@@ -76,87 +76,87 @@ object DrawingBoardFixtureFactory {
     private fun createTicketsRewardNotExistsIndex3(
         rewards: List<Reward>,
         maxTicketCount: Int,
-    ): List<Ticket> {
-        val tickets = mutableListOf<Ticket>()
+    ): List<TicketEntity> {
+        val ticketEntities = mutableListOf<TicketEntity>()
         rewards.map { reward ->
             repeat(reward.count) {
-                tickets.add(
-                    Ticket.Winning.create(
+                ticketEntities.add(
+                    TicketEntity.Winning.create(
                         rewardName = reward.name,
                         rewardCategory = reward.category,
                     ),
                 )
-                require(tickets.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
+                require(ticketEntities.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
             }
         }
 
-        repeat(maxTicketCount - tickets.size) {
-            tickets.add(Ticket.NonWinning(isSelected = true))
+        repeat(maxTicketCount - ticketEntities.size) {
+            ticketEntities.add(TicketEntity.NonWinning(isSelected = true))
         }
-        tickets.shuffle()
+        ticketEntities.shuffle()
 
-        tickets[3] =
-            Ticket.NonWinning.create()
+        ticketEntities[3] =
+            TicketEntity.NonWinning.create()
 
-        return tickets
+        return ticketEntities
     }
 
     // 3번에 당첨 티켓이 있는 티켓 리스트 만들기
     private fun createTicketsRewardExistsIndex3(
         rewards: List<Reward>,
         maxTicketCount: Int,
-    ): List<Ticket> {
-        val tickets = mutableListOf<Ticket>()
+    ): List<TicketEntity> {
+        val ticketEntities = mutableListOf<TicketEntity>()
         rewards.map { reward ->
             repeat(reward.count) {
-                tickets.add(
-                    Ticket.Winning.create(
+                ticketEntities.add(
+                    TicketEntity.Winning.create(
                         rewardName = reward.name,
                         rewardCategory = reward.category,
                     ),
                 )
-                require(tickets.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
+                require(ticketEntities.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
             }
         }
 
-        repeat(maxTicketCount - tickets.size) {
-            tickets.add(Ticket.NonWinning(isSelected = true))
+        repeat(maxTicketCount - ticketEntities.size) {
+            ticketEntities.add(TicketEntity.NonWinning(isSelected = true))
         }
-        tickets.shuffle()
+        ticketEntities.shuffle()
 
-        tickets[3] =
-            Ticket.Winning.create(
+        ticketEntities[3] =
+            TicketEntity.Winning.create(
                 rewardName = REWARD_NAME,
                 rewardCategory = REWARD_CATEGORY,
             )
 
-        return tickets
+        return ticketEntities
     }
 
     // 모두 선택된 티켓 리스트 만들기
     private fun createAllSelectedTickets(
         rewards: List<Reward>,
         maxTicketCount: Int,
-    ): List<Ticket> {
-        val tickets = mutableListOf<Ticket>()
+    ): List<TicketEntity> {
+        val ticketEntities = mutableListOf<TicketEntity>()
         rewards.map { reward ->
             repeat(reward.count) {
-                tickets.add(
-                    Ticket.Winning(
+                ticketEntities.add(
+                    TicketEntity.Winning(
                         rewardName = reward.name,
                         rewardCategory = reward.category,
                         isSelected = true,
                     ),
                 )
-                require(tickets.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
+                require(ticketEntities.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
             }
         }
 
-        repeat(maxTicketCount - tickets.size) {
-            tickets.add(Ticket.NonWinning(isSelected = true))
+        repeat(maxTicketCount - ticketEntities.size) {
+            ticketEntities.add(TicketEntity.NonWinning(isSelected = true))
         }
-        tickets.shuffle()
+        ticketEntities.shuffle()
 
-        return tickets
+        return ticketEntities
     }
 }

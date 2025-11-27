@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.survey.dto.response
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistoryGroup
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.survey.domain.Participant
 import java.util.Date
 import java.util.UUID
@@ -32,10 +32,10 @@ data class ParticipantsInfoListResponse(
                     )
                 }
 
-                if (drawingHistory.ticket is Ticket.Winning) {
+                if (drawingHistory.ticketEntity is TicketEntity.Winning) {
                     return DrawInfoResponse(
                         drawResult = DrawResult.WIN,
-                        reward = drawingHistory.ticket.rewardName,
+                        reward = drawingHistory.ticketEntity.rewardName,
                         phoneNumber = drawingHistory.phoneNumber.value,
                     )
                 }

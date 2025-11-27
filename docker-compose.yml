@@ -11,9 +11,9 @@ services:
             MYSQL_USER: ${MYSQL_USER}
             MYSQL_PASSWORD: ${MYSQL_PASSWORD}
         expose:
-            - "3306"
+            - "3340"
         ports:
-            - "3306:3306"
+            - "3340:3306"
         volumes:
             - sulmun2yong-test-db:/var/lib/mysql
 
@@ -47,9 +47,9 @@ services:
         environment:
             REDIS_PASSWORD: ${REDIS_PASSWORD}
         expose:
-            - "6379"
+            - "6340"
         ports:
-            - "6379:6379"
+            - "6340:6379"
         volumes:
             - sulmun2yong-test-redis:/data
 

@@ -50,12 +50,12 @@ class DrawingProcessAdapter(
                 phoneNumber = phoneNumberData,
                 surveyId = surveyId,
                 selectedTicketIndex = selectedNumber,
-                ticket = changedDrawingBoard.tickets[selectedNumber],
+                ticketEntity = changedDrawingBoard.ticketEntities[selectedNumber],
             ),
         )
 
         // 보드에 남은 티켓이 없으면 설문 종료 처리
-        if (changedDrawingBoard.tickets.size - changedDrawingBoard.selectedTicketCount <= 0) {
+        if (changedDrawingBoard.ticketEntities.size - changedDrawingBoard.selectedTicketCount <= 0) {
             surveyAdapter.save(surveyAdapter.getSurvey(surveyId).finish())
         }
 

@@ -1,3 +1,4 @@
+import org.gradle.internal.impldep.org.h2.engine.Mode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -47,11 +48,11 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-impl:0.12.6")
     implementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
-    // jpa (RDBMS 사용 전 까지는 비활성화)
-    // implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//     jpa (RDBMS 사용 전 까지는 비활성화)
+     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-    // mysql (MySQL 사용 전 까지는 비활성화)
-    // runtimeOnly("com.mysql:mysql-connector-j")
+//     mysql (Mode.ModeEnum.MySQL 사용 전 까지는 비활성화)
+     runtimeOnly("com.mysql:mysql-connector-j")
 
     // mongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")

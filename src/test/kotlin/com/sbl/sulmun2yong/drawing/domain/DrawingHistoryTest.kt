@@ -19,7 +19,7 @@ class DrawingHistoryTest {
             assertEquals(phoneNumber, this.phoneNumber)
             assertEquals(drawingBoardId, this.surveyId)
             assertEquals(selectedTicketIndex, this.selectedTicketIndex)
-            assertEquals(ticket, this.ticket)
+            assertEquals(ticketEntity, this.ticketEntity)
         }
     }
 

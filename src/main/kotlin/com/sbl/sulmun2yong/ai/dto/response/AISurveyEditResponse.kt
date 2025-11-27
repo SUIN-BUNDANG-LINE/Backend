@@ -85,12 +85,18 @@ data class AISurveyEditResponse(
             val sectionChanges =
                 originalSurveyMakeInfoResponse.sections.map { originalSection ->
                     val matchingModifiedSection =
-                        editedSurveyMakeInfoResponse.sections.find { it.sectionId == originalSection.sectionId }
+                        // it 대신 editedSection으로 명명
+                        editedSurveyMakeInfoResponse.sections.find { editedSection ->
+                            editedSection.sectionId == originalSection.sectionId
+                        }
+
                     compareSections(originalSection, matchingModifiedSection)
                 } +
                     editedSurveyMakeInfoResponse.sections
                         .filter { newSection ->
-                            originalSurveyMakeInfoResponse.sections.none { it.sectionId == newSection.sectionId }
+                            originalSurveyMakeInfoResponse.sections.none { existingSection ->
+                                existingSection.sectionId == newSection.sectionId
+                            }
                         }.map { newSection ->
                             SectionChangeDTO(
                                 SectionInfoChangeDTO(

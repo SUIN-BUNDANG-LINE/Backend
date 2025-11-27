@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
@@ -10,31 +10,31 @@ import java.util.UUID
 class DrawingBoard(
     val id: UUID,
     val surveyId: UUID,
-    val tickets: List<Ticket>,
+    val ticketEntities: List<TicketEntity>,
 ) {
     val selectedTicketCount: Int
     val remainingTicketCount: Int
 
     init {
         selectedTicketCount = calcSelectedTicketCount()
-        remainingTicketCount = this.tickets.size - selectedTicketCount
+        remainingTicketCount = this.ticketEntities.size - selectedTicketCount
     }
 
     fun getDrawingResult(selectedIndex: Int): DrawingResult {
         validateOutOfTicket()
 
-        val selectedTicket = this.tickets[selectedIndex]
+        val selectedTicket = this.ticketEntities[selectedIndex]
         validateTicketIsSelected(selectedTicket)
 
         val changedDrawingBoard = getChangedDrawingBoard(selectedIndex)
         return when (selectedTicket) {
-            is Ticket.Winning ->
+            is TicketEntity.Winning ->
                 DrawingResult.Winner(
                     changedDrawingBoard = changedDrawingBoard,
                     rewardName = selectedTicket.rewardName,
                 )
 
-            is Ticket.NonWinning ->
+            is TicketEntity.NonWinning ->
                 DrawingResult.NonWinner(
                     changedDrawingBoard = changedDrawingBoard,
                 )
@@ -47,8 +47,8 @@ class DrawingBoard(
         }
     }
 
-    private fun validateTicketIsSelected(selectedTicket: Ticket) {
-        if (selectedTicket.isSelected) {
+    private fun validateTicketIsSelected(selectedTicketEntity: TicketEntity) {
+        if (selectedTicketEntity.isSelected) {
             throw AlreadySelectedTicketException()
         }
     }
@@ -57,17 +57,17 @@ class DrawingBoard(
         DrawingBoard(
             id = this.id,
             surveyId = this.surveyId,
-            tickets = deepCopyTicketsWithChangeSelectedTrue(selectedIndex),
+            ticketEntities = deepCopyTicketsWithChangeSelectedTrue(selectedIndex),
         )
 
-    private fun deepCopyTicketsWithChangeSelectedTrue(selectedIndex: Int): List<Ticket> {
-        val copiedTickets = mutableListOf<Ticket>()
-        this.tickets.forEachIndexed { index, ticket ->
-            copiedTickets.add(
+    private fun deepCopyTicketsWithChangeSelectedTrue(selectedIndex: Int): List<TicketEntity> {
+        val copiedTicketEntities = mutableListOf<TicketEntity>()
+        this.ticketEntities.forEachIndexed { index, ticket ->
+            copiedTicketEntities.add(
                 if (index == selectedIndex) {
                     when (ticket) {
-                        is Ticket.Winning -> ticket.copy(isSelected = true)
-                        is Ticket.NonWinning,
+                        is TicketEntity.Winning -> ticket.copy(isSelected = true)
+                        is TicketEntity.NonWinning,
                         -> ticket.copy(isSelected = true)
                     }
                 } else {
@@ -76,10 +76,10 @@ class DrawingBoard(
             )
         }
 
-        return copiedTickets.toList()
+        return copiedTicketEntities.toList()
     }
 
-    private fun calcSelectedTicketCount(): Int = this.tickets.count { it.isSelected }
+    private fun calcSelectedTicketCount(): Int = this.ticketEntities.count { it.isSelected }
 
     companion object {
         fun create(
@@ -95,33 +95,33 @@ class DrawingBoard(
             return DrawingBoard(
                 id = UUID.randomUUID(),
                 surveyId = surveyId,
-                tickets = tickets,
+                ticketEntities = tickets,
             )
         }
 
         private fun createTickets(
             rewards: List<Reward>,
             maxTicketCount: Int,
-        ): List<Ticket> {
-            val tickets = mutableListOf<Ticket>()
+        ): List<TicketEntity> {
+            val ticketEntities = mutableListOf<TicketEntity>()
             rewards.map { reward ->
                 repeat(reward.count) {
-                    tickets.add(
-                        Ticket.Winning.create(
+                    ticketEntities.add(
+                        TicketEntity.Winning.create(
                             rewardName = reward.name,
                             rewardCategory = reward.category,
                         ),
                     )
-                    require(tickets.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
+                    require(ticketEntities.size <= maxTicketCount) { throw InvalidDrawingBoardException() }
                 }
             }
 
-            repeat(maxTicketCount - tickets.size) {
-                tickets.add(Ticket.NonWinning.create())
+            repeat(maxTicketCount - ticketEntities.size) {
+                ticketEntities.add(TicketEntity.NonWinning.create())
             }
-            tickets.shuffle()
+            ticketEntities.shuffle()
 
-            return tickets.toList()
+            return ticketEntities.toList()
         }
     }
 }

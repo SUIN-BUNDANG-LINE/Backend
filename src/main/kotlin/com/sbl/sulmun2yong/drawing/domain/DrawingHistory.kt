@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import java.util.UUID
 
@@ -10,7 +10,7 @@ class DrawingHistory(
     val phoneNumber: PhoneNumber,
     val surveyId: UUID,
     val selectedTicketIndex: Int,
-    val ticket: Ticket,
+    val ticketEntity: TicketEntity,
 ) {
     companion object {
         fun create(
@@ -18,7 +18,7 @@ class DrawingHistory(
             phoneNumber: PhoneNumber,
             surveyId: UUID,
             selectedTicketIndex: Int,
-            ticket: Ticket,
+            ticketEntity: TicketEntity,
         ): DrawingHistory =
             DrawingHistory(
                 UUID.randomUUID(),
@@ -26,7 +26,7 @@ class DrawingHistory(
                 phoneNumber,
                 surveyId,
                 selectedTicketIndex,
-                ticket,
+                ticketEntity,
             )
     }
 }

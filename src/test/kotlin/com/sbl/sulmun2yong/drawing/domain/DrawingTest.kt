@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -23,8 +23,8 @@ class DrawingTest {
         // then
         assertTrue { drawingResult is DrawingResult.NonWinner }
         assertEquals(drawingBoard.selectedTicketCount + 1, changedDrawingBoard.selectedTicketCount)
-        assertFalse { drawingBoard.tickets[3].isSelected }
-        assertTrue { changedDrawingBoard.tickets[3].isSelected }
+        assertFalse { drawingBoard.ticketEntities[3].isSelected }
+        assertTrue { changedDrawingBoard.ticketEntities[3].isSelected }
     }
 
     @Test
@@ -39,8 +39,8 @@ class DrawingTest {
         assertTrue { drawingResult is DrawingResult.Winner }
         assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, (drawingResult as DrawingResult.Winner).rewardName)
         assertEquals(drawingBoard.selectedTicketCount + 1, changedDrawingBoard.selectedTicketCount)
-        assertFalse { drawingBoard.tickets[3].isSelected }
-        assertTrue { changedDrawingBoard.tickets[3].isSelected }
+        assertFalse { drawingBoard.ticketEntities[3].isSelected }
+        assertTrue { changedDrawingBoard.ticketEntities[3].isSelected }
     }
 
     @Test
@@ -49,11 +49,11 @@ class DrawingTest {
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardExistsIndex3()
 
         // when
-        val winningTicket = drawingBoard.tickets[3] as Ticket.Winning
+        val winningTicketEntity = drawingBoard.ticketEntities[3] as TicketEntity.Winning
 
         // then
-        assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, winningTicket.rewardName)
-        assertEquals(DrawingBoardFixtureFactory.REWARD_CATEGORY, winningTicket.rewardCategory)
+        assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, winningTicketEntity.rewardName)
+        assertEquals(DrawingBoardFixtureFactory.REWARD_CATEGORY, winningTicketEntity.rewardCategory)
     }
 
     @Test

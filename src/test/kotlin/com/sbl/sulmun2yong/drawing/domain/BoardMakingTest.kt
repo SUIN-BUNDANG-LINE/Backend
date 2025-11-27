@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain
 
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createDrawingBoard
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
@@ -38,7 +38,7 @@ class BoardMakingTest {
         // when, then
         assertEquals(0, drawingBoard.selectedTicketCount)
         assertEquals(surveyId, drawingBoard.surveyId)
-        assertEquals(boardSize, drawingBoard.tickets.size)
+        assertEquals(boardSize, drawingBoard.ticketEntities.size)
         assertEquals(boardSize, drawingBoard.remainingTicketCount)
     }
 
@@ -66,9 +66,9 @@ class BoardMakingTest {
     }
 
     private fun printDrawingBoard(drawingBoard: DrawingBoard): String {
-        val tickets = drawingBoard.tickets
+        val tickets = drawingBoard.ticketEntities
         val maxLength =
-            tickets.maxOfOrNull { (if (it is Ticket.Winning) it.rewardName else "꽝").length } ?: 0
+            tickets.maxOfOrNull { (if (it is TicketEntity.Winning) it.rewardName else "꽝").length } ?: 0
 
         val builder = StringBuilder()
 

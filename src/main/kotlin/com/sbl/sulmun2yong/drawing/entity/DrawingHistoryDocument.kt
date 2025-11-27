@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.entity
 
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import com.sbl.sulmun2yong.global.entity.BaseTimeDocument
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
@@ -14,5 +14,5 @@ data class DrawingHistoryDocument(
     val phoneNumber: String,
     val surveyId: UUID,
     val selectedTicketIndex: Int,
-    val ticket: Ticket,
+    val ticketEntity: TicketEntity,
 ) : BaseTimeDocument()

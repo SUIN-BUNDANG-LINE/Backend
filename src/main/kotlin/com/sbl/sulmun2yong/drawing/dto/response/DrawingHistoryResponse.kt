@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.dto.response
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity
 import java.util.UUID
 
 class DrawingHistoryResponse(
@@ -9,7 +9,7 @@ class DrawingHistoryResponse(
     val participantId: UUID,
     val phoneNumber: String,
     val selectedTicketIndex: Int,
-    val ticket: Ticket,
+    val ticketEntity: TicketEntity,
 ) {
     companion object {
         fun of(drawingHistory: DrawingHistory) =
@@ -18,7 +18,7 @@ class DrawingHistoryResponse(
                 participantId = drawingHistory.participantId,
                 phoneNumber = drawingHistory.phoneNumber.value,
                 selectedTicketIndex = drawingHistory.selectedTicketIndex,
-                ticket = drawingHistory.ticket,
+                ticketEntity = drawingHistory.ticketEntity,
             )
     }
 }

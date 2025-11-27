@@ -9,8 +9,8 @@ object DrawingHistoryFixtureFactory {
     val phoneNumber = PhoneNumber("010-1234-5678")
     val drawingBoardId = UUID.randomUUID()
     val selectedTicketIndex = 0
-    val ticket =
-        com.sbl.sulmun2yong.drawing.domain.ticket.Ticket.Winning(
+    val ticketEntity =
+        com.sbl.sulmun2yong.drawing.domain.ticket.TicketEntity.Winning(
             "테스트 아메리카노",
             "테스트",
             true,
@@ -22,6 +22,6 @@ object DrawingHistoryFixtureFactory {
             phoneNumber,
             drawingBoardId,
             selectedTicketIndex,
-            ticket,
+            ticketEntity,
         )
 }

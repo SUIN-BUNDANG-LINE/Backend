@@ -15,7 +15,7 @@ class DrawingBoardResponse(
                 id = drawingBoard.id,
                 surveyId = drawingBoard.surveyId,
                 selectedTicketCount = drawingBoard.selectedTicketCount,
-                tickets = drawingBoard.tickets.map { it.isSelected }.toTypedArray(),
+                tickets = drawingBoard.ticketEntities.map { it.isSelected }.toTypedArray(),
             )
     }
 }

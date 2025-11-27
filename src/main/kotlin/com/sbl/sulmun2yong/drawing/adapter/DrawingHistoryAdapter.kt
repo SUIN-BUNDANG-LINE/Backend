@@ -76,7 +76,7 @@ class DrawingHistoryAdapter(
             phoneNumber = encryptionUtils.encrypt(phoneNumber.value),
             surveyId = surveyId,
             selectedTicketIndex = selectedTicketIndex,
-            ticket = ticket,
+            ticketEntity = ticketEntity,
         )
 
     fun DrawingHistoryDocument.toDomain() =
@@ -86,6 +86,6 @@ class DrawingHistoryAdapter(
             phoneNumber = PhoneNumber.createWithNonNullable(encryptionUtils.decrypt(phoneNumber)),
             surveyId = surveyId,
             selectedTicketIndex = selectedTicketIndex,
-            ticket = ticket,
+            ticketEntity = ticketEntity,
         )
 }
