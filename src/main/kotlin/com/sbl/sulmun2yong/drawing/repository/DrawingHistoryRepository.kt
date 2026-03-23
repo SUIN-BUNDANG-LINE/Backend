@@ -1,55 +1,34 @@
 package com.sbl.sulmun2yong.drawing.repository
 
-import com.sbl.sulmun2yong.drawing.dto.DrawingHistoryDTOGroupedBySurveyId
-import com.sbl.sulmun2yong.drawing.entity.DrawingHistoryDocument
-import org.springframework.data.mongodb.repository.Aggregation
-import org.springframework.data.mongodb.repository.MongoRepository
-import org.springframework.data.mongodb.repository.Query
+import com.sbl.sulmun2yong.drawing.entity.DrawingHistoryEntity
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.util.Optional
 import java.util.UUID
 
 @Repository
-interface DrawingHistoryRepository : MongoRepository<DrawingHistoryDocument, UUID> {
+interface DrawingHistoryRepository : JpaRepository<DrawingHistoryEntity, UUID> {
     @Query(
-        value = "{ '\$and': [ { 'surveyId': ?0 }, { '\$or': [ { 'participantId': ?1 }, { 'phoneNumber': ?2 } ] } ] }",
+        "SELECT h FROM DrawingHistoryEntity h WHERE h.surveyId = :surveyId " +
+            "AND (h.participantId = :participantId OR h.phoneNumber = :phoneNumber)",
     )
     fun findBySurveyIdAndParticipantIdOrPhoneNumber(
-        surveyId: UUID,
-        participantId: UUID,
-        phoneNumber: String,
-    ): Optional<DrawingHistoryDocument>
+        @Param("surveyId") surveyId: UUID,
+        @Param("participantId") participantId: UUID,
+        @Param("phoneNumber") phoneNumber: String,
+    ): Optional<DrawingHistoryEntity>
 
-    @Aggregation(
-        pipeline = [
-            "{ '\$match': { 'surveyId': ?0 } }",
-            "{ '\$group': { '_id': '\$surveyId', 'count': { '\$sum': 1 }, 'items': { '\$push': '\$\$ROOT' } } }",
-        ],
-    )
-    fun findBySurveyId(surveyId: UUID): Optional<DrawingHistoryDTOGroupedBySurveyId>
+    fun findBySurveyId(surveyId: UUID): List<DrawingHistoryEntity>
 
-    @Aggregation(
-        pipeline = [
-            "{ '\$match': { 'ticket._class': 'com.sbl.sulmun2yong.drawing.domain.ticket.Ticket\$Winning', 'surveyId': ?0 } }",
-            "{ '\$group': { '_id': '\$surveyId', 'count': { '\$sum': 1 }, 'items': { '\$push': '\$\$ROOT' } } }",
-        ],
-    )
-    fun findBySurveyIdForWinner(surveyId: UUID): Optional<DrawingHistoryDTOGroupedBySurveyId>
+    @Query("SELECT h FROM DrawingHistoryEntity h WHERE h.surveyId = :surveyId AND h.ticketType = 'WINNING'")
+    fun findBySurveyIdForWinner(
+        @Param("surveyId") surveyId: UUID,
+    ): List<DrawingHistoryEntity>
 
-    @Aggregation(
-        pipeline = [
-            "{ '\$group': { '_id': '\$surveyId', 'count': { '\$sum': 1 }, 'items': { '\$push': '$\$ROOT' } } }",
-        ],
-    )
-    fun findGroupedSurveyId(): List<DrawingHistoryDTOGroupedBySurveyId>
-
-    @Aggregation(
-        pipeline = [
-            "{ '\$match': { 'ticket._class': 'com.sbl.sulmun2yong.drawing.domain.ticket.Ticket\$Winning' } }",
-            "{ '\$group': { '_id': '\$surveyId', 'count': { '\$sum': 1 }, 'items': { '\$push': '\$\$ROOT' } } }",
-        ],
-    )
-    fun findGroupedBySurveyIdForWinner(): List<DrawingHistoryDTOGroupedBySurveyId>
+    @Query("SELECT h FROM DrawingHistoryEntity h WHERE h.ticketType = 'WINNING'")
+    fun findAllWinners(): List<DrawingHistoryEntity>
 
     fun deleteBySurveyId(surveyId: UUID)
 }

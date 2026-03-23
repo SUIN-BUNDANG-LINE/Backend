@@ -1,0 +1,24 @@
+#!/bin/bash
+# 브랜치명에서 JIRA 티켓 번호를 추출하여 커밋 메시지에 접두사로 추가한다.
+# 예: feature/SBL-123-some-feature → [SBL-123] 커밋 메시지
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# merge, squash, amend 커밋은 건너뛴다
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ] || [ "$COMMIT_SOURCE" = "commit" ]; then
+  exit 0
+fi
+
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# 브랜치명에서 JIRA 티켓 패턴 추출 (예: SBL-123, ICC-456)
+TICKET=$(echo "$BRANCH_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+
+if [ -n "$TICKET" ]; then
+  COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+  # 이미 티켓 번호가 포함되어 있으면 건너뛴다
+  if ! echo "$COMMIT_MSG" | grep -qF "[$TICKET]"; then
+    echo "[$TICKET] $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+  fi
+fi

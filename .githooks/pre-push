@@ -1,0 +1,20 @@
+#!/bin/bash
+# pre-push: ktlint 포맷 검사 (안전망)
+# rebase, merge, cherry-pick 등으로 pre-commit을 우회한 커밋이 push되는 것을 방지한다.
+
+echo "🔍 push 전 ktlint 포맷 검사 중..."
+
+./gradlew ktlintCheck -q 2>/dev/null
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo ""
+  echo "❌ ktlint 포맷 위반이 발견되었습니다. push가 차단됩니다."
+  echo "   다음 명령으로 자동 수정하세요:"
+  echo ""
+  echo "   ./gradlew ktlintFormat"
+  echo ""
+  exit 1
+fi
+
+echo "✅ ktlint 검사 통과"

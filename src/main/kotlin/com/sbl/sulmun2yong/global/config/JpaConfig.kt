@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.global.config
 
-import io.mongock.runner.springboot.EnableMongock
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 
 @Configuration
-@EnableMongock
-class MongockConfig
+@EnableJpaAuditing
+class JpaConfig

@@ -52,7 +52,7 @@ class CustomAuthenticationSuccessHandler(
         val refreshToken = jwtTokenProvider.createRefreshToken(defaultUserProfile.id, tokenId)
 
         // 리프레시 토큰을 DB에 저장
-        val userRefreshToken = jwtTokenProvider.makeRefreshTokenDocument(defaultUserProfile.id, tokenId, refreshToken)
+        val userRefreshToken = jwtTokenProvider.makeRefreshTokenEntity(defaultUserProfile.id, tokenId, refreshToken)
         refreshTokenAdapter.save(userRefreshToken)
 
         // 쿠키에 토큰 저장

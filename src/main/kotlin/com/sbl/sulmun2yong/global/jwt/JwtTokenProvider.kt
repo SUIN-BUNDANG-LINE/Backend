@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.global.jwt
 import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2User
 import com.sbl.sulmun2yong.user.domain.UserRole
 import com.sbl.sulmun2yong.user.dto.DefaultUserProfile
-import com.sbl.sulmun2yong.user.entity.RefreshToken
+import com.sbl.sulmun2yong.user.entity.RefreshTokenEntity
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
@@ -87,11 +87,11 @@ class JwtTokenProvider(
 
     fun makeExpiredRefreshTokenCookie(): Cookie = makeCookie(REFRESH_TOKEN_COOKIE, "", 0)
 
-    fun makeRefreshTokenDocument(
+    fun makeRefreshTokenEntity(
         tokenId: UUID,
         userId: UUID,
         refreshToken: String,
-    ) = RefreshToken.of(tokenId, userId, refreshToken, refreshTokenExpiration)
+    ) = RefreshTokenEntity.of(tokenId, userId, refreshToken, refreshTokenExpiration)
 
     private fun makeCookie(
         name: String,

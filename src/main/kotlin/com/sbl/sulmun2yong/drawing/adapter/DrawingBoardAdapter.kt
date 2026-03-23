@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.adapter
 
 import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
-import com.sbl.sulmun2yong.drawing.entity.DrawingBoardDocument
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoardEntity
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import org.springframework.stereotype.Component
@@ -18,10 +18,6 @@ class DrawingBoardAdapter(
             .toDomain()
 
     fun save(drawingBoard: DrawingBoard) {
-        val previousDrawingBoardDocument = drawingBoardRepository.findById(drawingBoard.id)
-        val drawingBoardDocument = DrawingBoardDocument.of(drawingBoard)
-        // 기존 추첨 보드를 업데이트하는 경우, createdAt을 유지
-        if (previousDrawingBoardDocument.isPresent) drawingBoardDocument.createdAt = previousDrawingBoardDocument.get().createdAt
-        drawingBoardRepository.save(drawingBoardDocument)
+        drawingBoardRepository.save(DrawingBoardEntity.of(drawingBoard))
     }
 }

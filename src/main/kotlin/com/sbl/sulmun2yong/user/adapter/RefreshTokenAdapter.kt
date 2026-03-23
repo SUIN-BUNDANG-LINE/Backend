@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.user.adapter
 
-import com.sbl.sulmun2yong.user.entity.RefreshToken
+import com.sbl.sulmun2yong.user.entity.RefreshTokenEntity
 import com.sbl.sulmun2yong.user.repository.RefreshTokenRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -10,14 +10,14 @@ import kotlin.jvm.optionals.getOrNull
 class RefreshTokenAdapter(
     private val refreshTokenRepository: RefreshTokenRepository,
 ) {
-    fun save(userRefreshToken: RefreshToken) {
+    fun save(userRefreshToken: RefreshTokenEntity) {
         refreshTokenRepository.save(userRefreshToken)
     }
 
     fun findByTokenIdAndUserId(
         tokenId: UUID,
         userId: UUID,
-    ): RefreshToken? = refreshTokenRepository.findByIdAndUserId(tokenId, userId).getOrNull()
+    ): RefreshTokenEntity? = refreshTokenRepository.findByIdAndUserId(tokenId, userId).getOrNull()
 
     fun deleteByTokenIdAndUserId(
         tokenId: UUID,

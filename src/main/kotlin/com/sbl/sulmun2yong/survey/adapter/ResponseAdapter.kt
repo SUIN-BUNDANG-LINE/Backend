@@ -4,7 +4,7 @@ import com.sbl.sulmun2yong.survey.domain.response.SurveyResponse
 import com.sbl.sulmun2yong.survey.domain.result.QuestionResult
 import com.sbl.sulmun2yong.survey.domain.result.ResultDetails
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
-import com.sbl.sulmun2yong.survey.entity.ResponseDocument
+import com.sbl.sulmun2yong.survey.entity.ResponseEntity
 import com.sbl.sulmun2yong.survey.repository.ResponseRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -17,14 +17,14 @@ class ResponseAdapter(
         surveyResponse: SurveyResponse,
         participantId: UUID,
     ) {
-        responseRepository.insert(surveyResponse.toDocuments(participantId))
+        responseRepository.saveAll(surveyResponse.toEntities(participantId))
     }
 
-    private fun SurveyResponse.toDocuments(participantId: UUID): List<ResponseDocument> =
+    private fun SurveyResponse.toEntities(participantId: UUID): List<ResponseEntity> =
         this.flatMap { sectionResponse ->
             sectionResponse.flatMap { questionResponse ->
                 questionResponse.map {
-                    ResponseDocument(
+                    ResponseEntity(
                         id = UUID.randomUUID(),
                         participantId = participantId,
                         surveyId = this.surveyId,
@@ -45,19 +45,18 @@ class ResponseAdapter(
             } else {
                 responseRepository.findBySurveyId(surveyId)
             }
-        // TODO: 추후 DB Level에서 처리하도록 변경 + 필터링을 동적쿼리로 하도록 변경
         val groupingResponses = responses.groupBy { it.questionId }.values
         return SurveyResult(questionResults = groupingResponses.map { it.toDomain() })
     }
 
-    private fun List<ResponseDocument>.toDomain() =
+    private fun List<ResponseEntity>.toDomain() =
         QuestionResult(
             questionId = first().questionId,
             resultDetails =
                 this.groupBy { it.participantId }.map {
                     ResultDetails(
                         participantId = it.key,
-                        contents = it.value.map { responseDocument -> responseDocument.content },
+                        contents = it.value.map { entity -> entity.content },
                     )
                 },
             contents = this.map { it.content }.toSortedSet(),

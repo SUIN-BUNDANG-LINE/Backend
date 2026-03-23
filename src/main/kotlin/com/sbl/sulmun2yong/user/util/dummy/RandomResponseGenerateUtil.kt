@@ -6,7 +6,7 @@ import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
-import com.sbl.sulmun2yong.survey.entity.ResponseDocument
+import com.sbl.sulmun2yong.survey.entity.ResponseEntity
 import java.util.UUID
 import kotlin.math.min
 
@@ -24,17 +24,17 @@ object RandomResponseGenerateUtil {
         )
 
     /** 각 참가자별로 설문의 응답을 랜덤하게 생성하여 반환하는 메서드. */
-    fun generateSurveyResponseDocuments(
+    fun generateSurveyResponseEntities(
         survey: Survey,
         participants: List<Participant>,
-    ): List<ResponseDocument> {
+    ): List<ResponseEntity> {
         val questions = survey.sections.flatMap { it.questions }
         return questions.flatMap { question ->
             participants.flatMap { participant ->
                 if (question.isRequired || isResponded.isWinning()) {
                     val contents = getRandomContents(question, participant.visitorId)
                     contents.map { content ->
-                        ResponseDocument(
+                        ResponseEntity(
                             id = UUID.randomUUID(),
                             participantId = participant.id,
                             surveyId = survey.id,

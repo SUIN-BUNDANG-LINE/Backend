@@ -2,7 +2,7 @@ package com.sbl.sulmun2yong.user.adapter
 
 import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
 import com.sbl.sulmun2yong.user.domain.User
-import com.sbl.sulmun2yong.user.entity.UserDocument
+import com.sbl.sulmun2yong.user.entity.UserEntity
 import com.sbl.sulmun2yong.user.exception.UserNotFoundException
 import com.sbl.sulmun2yong.user.repository.UserRepository
 import org.springframework.stereotype.Component
@@ -13,11 +13,7 @@ class UserAdapter(
     private val userRepository: UserRepository,
 ) {
     fun save(user: User) {
-        val previousUserDocument = userRepository.findById(user.id)
-        val userDocument = UserDocument.of(user)
-        // 기존 유저를 업데이트하는 경우, createdAt을 유지
-        if (previousUserDocument.isPresent) userDocument.createdAt = previousUserDocument.get().createdAt
-        userRepository.save(userDocument)
+        userRepository.save(UserEntity.of(user))
     }
 
     fun getById(id: UUID): User =

@@ -4,7 +4,7 @@ import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.MySurveySortType
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
-import com.sbl.sulmun2yong.survey.entity.SurveyDocument
+import com.sbl.sulmun2yong.survey.entity.SurveyEntity
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.data.domain.Page
@@ -27,7 +27,7 @@ class SurveyAdapter(
         isResultOpen: Boolean?,
     ): Page<Survey> {
         val pageRequest = PageRequest.of(page, size, getSurveySort(sortType))
-        val surveyDocuments =
+        val surveyEntities =
             surveyRepository.findSurveysWithPagination(
                 size = size,
                 page = page,
@@ -35,8 +35,8 @@ class SurveyAdapter(
                 isRewardExist = isRewardExist,
                 isResultOpen = isResultOpen,
             )
-        val surveys = surveyDocuments.content.map { it.toDomain() }
-        return PageImpl(surveys, pageRequest, surveyDocuments.totalElements)
+        val surveys = surveyEntities.content.map { it.toDomain() }
+        return PageImpl(surveys, pageRequest, surveyEntities.totalElements)
     }
 
     fun getSurvey(surveyId: UUID) =
@@ -49,11 +49,7 @@ class SurveyAdapter(
         }
 
     fun save(survey: Survey) {
-        val previousSurveyDocument = surveyRepository.findByIdAndIsDeletedFalse(survey.id)
-        val surveyDocument = SurveyDocument.from(survey)
-        // 기존 설문을 업데이트하는 경우, createdAt을 유지
-        if (previousSurveyDocument.isPresent) surveyDocument.createdAt = previousSurveyDocument.get().createdAt
-        surveyRepository.save(surveyDocument)
+        surveyRepository.save(SurveyEntity.from(survey))
     }
 
     fun getByIdAndMakerId(
@@ -78,6 +74,6 @@ class SurveyAdapter(
     fun findFinishTargets(now: Date) = surveyRepository.findFinishTargets(now).map { it.toDomain() }
 
     fun saveAll(surveys: List<Survey>) {
-        surveyRepository.saveAll(surveys.map { SurveyDocument.from(it) })
+        surveyRepository.saveAll(surveys.map { SurveyEntity.from(it) })
     }
 }

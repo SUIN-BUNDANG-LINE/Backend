@@ -1,0 +1,20 @@
+#!/bin/bash
+# pre-commit: ktlint 포맷 검사
+# 위반 시 커밋을 차단하고 수정 명령을 안내한다.
+
+echo "🔍 ktlint 포맷 검사 중..."
+
+./gradlew ktlintCheck -q 2>/dev/null
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo ""
+  echo "❌ ktlint 포맷 위반이 발견되었습니다."
+  echo "   다음 명령으로 자동 수정하세요:"
+  echo ""
+  echo "   ./gradlew ktlintFormat"
+  echo ""
+  exit 1
+fi
+
+echo "✅ ktlint 검사 통과"
