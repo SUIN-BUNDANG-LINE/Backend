@@ -40,7 +40,16 @@ class SurveyAdapter(
     }
 
     fun getSurvey(surveyId: UUID) =
-        surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }.toDomain()
+        surveyRepository
+            .findByIdAndIsDeletedFalse(surveyId)
+            .orElseThrow { SurveyNotFoundException() }
+            .toDomain()
+
+    fun getSurveyWithLock(surveyId: UUID) =
+        surveyRepository
+            .findByIdAndIsDeletedFalseWithLock(surveyId)
+            .orElseThrow { SurveyNotFoundException() }
+            .toDomain()
 
     private fun getSurveySort(sortType: SurveySortType) =
         when (sortType) {
@@ -55,7 +64,10 @@ class SurveyAdapter(
     fun getByIdAndMakerId(
         surveyId: UUID,
         makerId: UUID,
-    ) = surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }.toDomain()
+    ) = surveyRepository
+        .findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId)
+        .orElseThrow { SurveyNotFoundException() }
+        .toDomain()
 
     fun getMyPageSurveysInfo(
         makerId: UUID,

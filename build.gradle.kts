@@ -35,9 +35,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-
-    // fingerprint
-    // implementation("com.github.fingerprintjs:fingerprint-pro-server-api-java-sdk:v6.0.0")
+    implementation("org.springframework.kafka:spring-kafka")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -79,11 +77,9 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.awaitility:awaitility:4.2.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.h2database:h2")
-
-    // New Relic
-    implementation("com.newrelic.agent.java:newrelic-agent:8.13.0")
 
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

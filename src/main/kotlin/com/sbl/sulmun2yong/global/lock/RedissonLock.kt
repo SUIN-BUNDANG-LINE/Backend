@@ -4,8 +4,8 @@ package com.sbl.sulmun2yong.global.lock
 @Retention(AnnotationRetention.RUNTIME)
 annotation class RedissonLock(
     /**
-     * SpEL 표현식을 이용하여 동적 락 키 생성
-     * 예: "'drawingLock:' + #participantId + ':' + #selectedNumber"
+     * 락 키 템플릿. {파라미터명}을 메서드 인자값으로 치환
+     * 예: "drawingLock:{surveyId}"
      */
     val key: String,
     /** 락이 자동 해제되는 시간(초) */

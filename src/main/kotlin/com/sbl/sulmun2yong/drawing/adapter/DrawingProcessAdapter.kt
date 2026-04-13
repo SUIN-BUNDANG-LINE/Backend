@@ -1,23 +1,32 @@
 package com.sbl.sulmun2yong.drawing.adapter
 
+import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
+import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.global.data.PhoneNumber
+import com.sbl.sulmun2yong.global.kafka.outbox.OutboxEventFactory
+import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
+import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.lock.RedissonLock
-import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 import java.util.UUID
 
 @Component
 class DrawingProcessAdapter(
     private val drawingBoardAdapter: DrawingBoardAdapter,
     private val drawingHistoryAdapter: DrawingHistoryAdapter,
-    private val surveyAdapter: SurveyAdapter,
+    private val outboxEventFactory: OutboxEventFactory,
+    private val outboxEventRepository: OutboxEventRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
-    @RedissonLock(key = "'drawingLock:' + #surveyId", leaseTime = 10, waitTime = 5)
+    @RedissonLock(key = "drawingLock:{surveyId}", leaseTime = 10, waitTime = 5)
     @Transactional
     fun processDrawing(
         surveyId: UUID,
@@ -54,14 +63,63 @@ class DrawingProcessAdapter(
             ),
         )
 
-        // 보드에 남은 티켓이 없으면 설문 종료 처리
-        if (changedDrawingBoard.tickets.size - changedDrawingBoard.selectedTicketCount <= 0) {
-            surveyAdapter.save(surveyAdapter.getSurvey(surveyId).finish())
-        }
+        publishDrawingCompletedEvent(
+            surveyId = surveyId,
+            participantId = participantId,
+            selectedNumber = selectedNumber,
+            changedDrawingBoard = changedDrawingBoard,
+        )
 
         return when (drawingResult) {
             is DrawingResult.Winner -> DrawingResultResponse.Winner(drawingResult.rewardName)
             is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
         }
+    }
+
+    private fun publishDrawingCompletedEvent(
+        surveyId: UUID,
+        participantId: UUID,
+        selectedNumber: Int,
+        changedDrawingBoard: DrawingBoard,
+    ) {
+        val selectedTicket = changedDrawingBoard.tickets[selectedNumber]
+        val (rewardName, rewardCategory) =
+            when (selectedTicket) {
+                is Ticket.Winning -> selectedTicket.rewardName to selectedTicket.rewardCategory
+                is Ticket.NonWinning -> null to null
+            }
+
+        val drawingCompletedEvent =
+            DrawingCompletedEvent(
+                eventId = UUID.randomUUID().toString(),
+                surveyId = surveyId.toString(),
+                participantId = participantId.toString(),
+                selectedNumber = selectedNumber,
+                isWinner = selectedTicket is Ticket.Winning,
+                rewardName = rewardName,
+                rewardCategory = rewardCategory,
+                remainingTickets = changedDrawingBoard.remainingTicketCount,
+                timestamp = Instant.now(),
+            )
+
+        val outboxEvent =
+            outboxEventFactory.create(
+                aggregateType = "Drawing",
+                aggregateId = surveyId.toString(),
+                eventType = "DrawingCompleted",
+                kafkaTopic = "drawing-completed",
+                event = drawingCompletedEvent,
+            )
+
+        outboxEventRepository.save(outboxEvent)
+
+        applicationEventPublisher.publishEvent(
+            OutboxPublishEvent(
+                outboxId = outboxEvent.id,
+                topic = outboxEvent.kafkaTopic,
+                key = outboxEvent.kafkaKey,
+                payload = outboxEvent.kafkaPayload,
+            ),
+        )
     }
 }

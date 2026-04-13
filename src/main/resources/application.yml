@@ -1,8 +1,6 @@
-
-
 spring:
     profiles.include:
-    - secret
+        - secret
     jpa:
         hibernate:
             ddl-auto: update
@@ -15,16 +13,21 @@ spring:
         enabled: true
         baseline-on-migrate: true
 
-springdoc:
-  packages-to-scan: com.sbl.sulmun2yong
-  default-consumes-media-type: application/json;charset=UTF-8
-  default-produces-media-type: application/json;charset=UTF-8
+sms:
+    mock:
+        failure-rate: 0.0  # 0.0 ~ 1.0 (기본: 실패 없음)
+        delay-ms: 0        # 지연 밀리초 (기본: 즉시)
 
-  swagger-ui:
-    path: /
-    disable-swagger-default-url: true
-    display-request-duration: true
-    operations-sorter: alpha
+springdoc:
+    packages-to-scan: com.sbl.sulmun2yong
+    default-consumes-media-type: application/json;charset=UTF-8
+    default-produces-media-type: application/json;charset=UTF-8
+
+    swagger-ui:
+        path: /
+        disable-swagger-default-url: true
+        display-request-duration: true
+        operations-sorter: alpha
 
 management:
     endpoints:
