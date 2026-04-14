@@ -1,24 +1,21 @@
 package com.sbl.sulmun2yong.drawing
 
-import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
-import com.sbl.sulmun2yong.drawing.adapter.DrawingProcessAdapter
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
+import com.sbl.sulmun2yong.drawing.service.DrawingProcessService
 import com.sbl.sulmun2yong.global.kafka.outbox.entity.OutboxStatus
 import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.notification.entity.SmsJobStatus
 import com.sbl.sulmun2yong.notification.repository.SmsNotificationJobRepository
-import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
-import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Participant
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.FinishedAt
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.entity.Participant
+import com.sbl.sulmun2yong.survey.entity.Survey
 import com.sbl.sulmun2yong.survey.repository.ParticipantRepository
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.awaitility.Awaitility
@@ -61,22 +58,7 @@ class DrawingKafkaIntegrationTest {
     }
 
     @Autowired
-    private lateinit var drawingProcessAdapter: DrawingProcessAdapter
-
-    @Autowired
-    private lateinit var surveyAdapter: SurveyAdapter
-
-    @Autowired
-    private lateinit var participantAdapter: ParticipantAdapter
-
-    @Autowired
-    private lateinit var drawingBoardAdapter: DrawingBoardAdapter
-
-    @Autowired
-    private lateinit var drawingBoardRepository: DrawingBoardRepository
-
-    @Autowired
-    private lateinit var drawingHistoryRepository: DrawingHistoryRepository
+    private lateinit var drawingProcessService: DrawingProcessService
 
     @Autowired
     private lateinit var surveyRepository: SurveyRepository
@@ -85,10 +67,19 @@ class DrawingKafkaIntegrationTest {
     private lateinit var participantRepository: ParticipantRepository
 
     @Autowired
+    private lateinit var drawingBoardRepository: DrawingBoardRepository
+
+    @Autowired
+    private lateinit var drawingHistoryRepository: DrawingHistoryRepository
+
+    @Autowired
     private lateinit var outboxEventRepository: OutboxEventRepository
 
     @Autowired
     private lateinit var smsNotificationJobRepository: SmsNotificationJobRepository
+
+    @Autowired
+    private lateinit var transactionTemplate: org.springframework.transaction.support.TransactionTemplate
 
     private lateinit var testSurveyId: UUID
     private val testParticipantIds = mutableSetOf<UUID>()
@@ -96,7 +87,7 @@ class DrawingKafkaIntegrationTest {
     @BeforeEach
     fun setup() {
         val survey = createSurvey()
-        surveyAdapter.save(survey)
+        surveyRepository.save(survey)
         testSurveyId = survey.id
 
         val drawingBoard =
@@ -105,28 +96,29 @@ class DrawingKafkaIntegrationTest {
                 boardSize = BOARD_SIZE,
                 rewards = survey.rewardSetting.rewards,
             )
-        drawingBoardAdapter.save(drawingBoard)
+        drawingBoardRepository.save(drawingBoard)
 
         log.info("테스트 셋업 완료: surveyId={}, boardSize={}, winningCount={}", testSurveyId, BOARD_SIZE, WINNING_COUNT)
     }
 
     @AfterEach
-    @org.springframework.transaction.annotation.Transactional
     fun cleanup() {
-        drawingBoardRepository.deleteBySurveyId(testSurveyId)
-        drawingHistoryRepository.deleteBySurveyId(testSurveyId)
-        testParticipantIds.forEach { participantRepository.deleteById(it) }
-        surveyRepository.deleteById(testSurveyId)
+        transactionTemplate.execute {
+            drawingBoardRepository.deleteBySurveyId(testSurveyId)
+            drawingHistoryRepository.deleteBySurveyId(testSurveyId)
+            testParticipantIds.forEach { participantRepository.deleteById(it) }
+            surveyRepository.deleteById(testSurveyId)
 
-        // Outbox 정리
-        outboxEventRepository.findAll()
-            .filter { it.aggregateType == "Drawing" && it.aggregateId == testSurveyId.toString() }
-            .forEach { outboxEventRepository.deleteById(it.id) }
+            // Outbox 정리
+            outboxEventRepository.findAll()
+                .filter { it.aggregateType == "Drawing" && it.aggregateId == testSurveyId.toString() }
+                .forEach { outboxEventRepository.deleteById(it.id) }
 
-        // sms_notification_jobs 정리 (testSurveyId 관련 이벤트만)
-        smsNotificationJobRepository.findAll()
-            .filter { it.notificationType == "DRAWING_SMS" && it.payload.contains(testSurveyId.toString()) }
-            .forEach { smsNotificationJobRepository.deleteById(it.id) }
+            // sms_notification_jobs 정리 (testSurveyId 관련 이벤트만)
+            smsNotificationJobRepository.findAll()
+                .filter { it.notificationType == "DRAWING_SMS" && it.payload.contains(testSurveyId.toString()) }
+                .forEach { smsNotificationJobRepository.deleteById(it.id) }
+        }
     }
 
     @Test
@@ -146,7 +138,7 @@ class DrawingKafkaIntegrationTest {
                 try {
                     startLatch.await()
                     try {
-                        drawingProcessAdapter.processDrawing(
+                        drawingProcessService.processDrawing(
                             surveyId = testSurveyId,
                             participantId = participantId,
                             selectedNumber = index % BOARD_SIZE,
@@ -265,7 +257,7 @@ class DrawingKafkaIntegrationTest {
                     surveyId = testSurveyId,
                     userId = null,
                 )
-            participantAdapter.insert(participant)
+            participantRepository.save(participant)
             testParticipantIds.add(participant.id)
             Pair(participant.id, "010-9000-${String.format("%04d", idx)}")
         }

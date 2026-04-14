@@ -6,7 +6,7 @@ import com.sbl.sulmun2yong.ai.dto.python.request.GenerateWithFileUrlRequestToPyt
 import com.sbl.sulmun2yong.ai.dto.python.response.GenerateSurveyResponseFromPython
 import com.sbl.sulmun2yong.ai.exception.SurveyAIProcessingFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
-import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.entity.Survey
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate

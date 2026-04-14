@@ -4,7 +4,7 @@ import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.MySurveySortType
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveyInfoResponse
-import com.sbl.sulmun2yong.survey.entity.SurveyEntity
+import com.sbl.sulmun2yong.survey.entity.Survey
 import org.springframework.data.domain.Page
 import java.util.UUID
 
@@ -26,5 +26,5 @@ interface SurveyCustomRepository {
         sortType: SurveySortType,
         isRewardExist: Boolean?,
         isResultOpen: Boolean?,
-    ): Page<SurveyEntity>
+    ): Page<Survey>
 }

@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.fixture.drawing
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import java.util.UUID
@@ -35,7 +35,7 @@ object DrawingBoardFixtureFactory {
     fun createAllSelectedDrawingBoard(): DrawingBoard {
         val rewards = rewards
 
-        return DrawingBoard(
+        return DrawingBoard.fromTickets(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             tickets = createAllSelectedTickets(rewards, SURVEY_PARTICIPANT_COUNT),
@@ -46,7 +46,7 @@ object DrawingBoardFixtureFactory {
     fun createDrawingBoardRewardExistsIndex3(): DrawingBoard {
         val rewards = rewards
 
-        return DrawingBoard(
+        return DrawingBoard.fromTickets(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             tickets = createTicketsRewardExistsIndex3(rewards, SURVEY_PARTICIPANT_COUNT),
@@ -57,7 +57,7 @@ object DrawingBoardFixtureFactory {
     fun createDrawingBoardRewardNotExistsIndex3(): DrawingBoard {
         val rewards = rewards
 
-        return DrawingBoard(
+        return DrawingBoard.fromTickets(
             id = UUID.randomUUID(),
             surveyId = UUID.randomUUID(),
             tickets = createTicketsRewardNotExistsIndex3(rewards, SURVEY_PARTICIPANT_COUNT),

@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.user.util.dummy
 
-import com.sbl.sulmun2yong.survey.domain.Participant
+import com.sbl.sulmun2yong.survey.entity.Participant
 import java.util.UUID
 
 object RandomParticipantGenerateUtil {

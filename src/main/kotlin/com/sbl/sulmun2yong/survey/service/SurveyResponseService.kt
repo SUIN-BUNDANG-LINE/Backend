@@ -3,15 +3,17 @@ package com.sbl.sulmun2yong.survey.service
 import com.sbl.sulmun2yong.global.kafka.outbox.OutboxEventFactory
 import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
 import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
-import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
-import com.sbl.sulmun2yong.survey.adapter.ResponseAdapter
-import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Participant
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.dto.event.SurveyResponseSubmittedEvent
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
+import com.sbl.sulmun2yong.survey.entity.Participant
+import com.sbl.sulmun2yong.survey.entity.ResponseEntity
+import com.sbl.sulmun2yong.survey.entity.Survey
 import com.sbl.sulmun2yong.survey.exception.AlreadyParticipatedException
+import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
+import com.sbl.sulmun2yong.survey.repository.ParticipantRepository
+import com.sbl.sulmun2yong.survey.repository.ResponseRepository
+import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,9 +22,9 @@ import java.util.UUID
 
 @Service
 class SurveyResponseService(
-    private val surveyAdapter: SurveyAdapter,
-    private val participantAdapter: ParticipantAdapter,
-    private val responseAdapter: ResponseAdapter,
+    private val surveyRepository: SurveyRepository,
+    private val participantRepository: ParticipantRepository,
+    private val responseRepository: ResponseRepository,
     private val outboxEventFactory: OutboxEventFactory,
     private val outboxEventRepository: OutboxEventRepository,
     private val applicationEventPublisher: ApplicationEventPublisher,
@@ -34,12 +36,28 @@ class SurveyResponseService(
     ): SurveyParticipantResponse {
         validateIsAlreadyParticipated(surveyId, surveyResponseRequest.visitorId)
         val visitorId = surveyResponseRequest.visitorId
-        val survey = surveyAdapter.getSurvey(surveyId)
+        val survey = surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }
         val surveyResponse = surveyResponseRequest.toDomain(surveyId)
         survey.validateResponse(surveyResponse)
         val participant = Participant.create(visitorId, surveyId, null)
-        participantAdapter.insert(participant)
-        responseAdapter.insertSurveyResponse(surveyResponse, participant.id)
+        participantRepository.save(participant)
+
+        // 설문 응답을 ResponseEntity로 변환하여 저장
+        val responseEntities =
+            surveyResponse.flatMap { sectionResponse ->
+                sectionResponse.flatMap { questionResponse ->
+                    questionResponse.map {
+                        ResponseEntity(
+                            id = UUID.randomUUID(),
+                            participantId = participant.id,
+                            surveyId = surveyResponse.surveyId,
+                            questionId = questionResponse.questionId,
+                            content = it.content,
+                        )
+                    }
+                }
+            }
+        responseRepository.saveAll(responseEntities)
 
         publishResponseSubmittedEvent(surveyId, participant.id, survey)
 
@@ -51,9 +69,7 @@ class SurveyResponseService(
         participantId: UUID,
         survey: Survey,
     ) {
-        // 1. 현재 참여자 수 조회
-        val participants = participantAdapter.findBySurveyId(surveyId)
-        // 2. 이벤트 DTO 생성
+        val participants = participantRepository.findBySurveyId(surveyId)
         val surveyResponseSubmittedEvent =
             SurveyResponseSubmittedEvent(
                 eventId = UUID.randomUUID().toString(),
@@ -63,7 +79,6 @@ class SurveyResponseService(
                 targetParticipantCount = survey.rewardSetting.targetParticipantCount,
                 timestamp = Instant.now(),
             )
-        // 3. OutboxEventFactory로 Outbox 엔티티 생성
         val outboxEvent =
             outboxEventFactory.create(
                 aggregateType = "Survey",
@@ -72,9 +87,7 @@ class SurveyResponseService(
                 kafkaTopic = "survey-response-submitted",
                 event = surveyResponseSubmittedEvent,
             )
-        // 4. Repository 저장
         outboxEventRepository.save(outboxEvent)
-        // 5. ApplicationEventPublisher로 OutboxPublishEvent 발행
         applicationEventPublisher.publishEvent(
             OutboxPublishEvent(
                 outboxId = outboxEvent.id,
@@ -89,7 +102,7 @@ class SurveyResponseService(
         surveyId: UUID,
         visitorId: String,
     ) {
-        val participant = participantAdapter.findBySurveyIdAndVisitorId(surveyId, visitorId)
+        val participant = participantRepository.findBySurveyIdAndVisitorId(surveyId, visitorId).orElse(null)
         participant?.let {
             throw AlreadyParticipatedException()
         }

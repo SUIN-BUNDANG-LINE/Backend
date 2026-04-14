@@ -26,7 +26,7 @@ abstract class TicketEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drawing_board_id", nullable = false)
-    open var drawingBoard: DrawingBoardEntity? = null
+    open var drawingBoard: DrawingBoard? = null
 
     @Column(nullable = false)
     open var ticketIndex: Int = 0
@@ -40,7 +40,7 @@ abstract class TicketEntity {
         fun from(
             ticket: Ticket,
             index: Int,
-            drawingBoard: DrawingBoardEntity,
+            drawingBoard: DrawingBoard,
         ): TicketEntity =
             when (ticket) {
                 is Ticket.Winning ->

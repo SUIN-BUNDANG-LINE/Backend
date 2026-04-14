@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.survey.repository
 
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.entity.SurveyEntity
+import com.sbl.sulmun2yong.survey.entity.Survey
 import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -16,31 +16,31 @@ import java.util.UUID
 
 @Repository
 interface SurveyRepository :
-    JpaRepository<SurveyEntity, UUID>,
+    JpaRepository<Survey, UUID>,
     SurveyCustomRepository {
     fun findByStatusAndIsVisibleTrueAndIsDeletedFalse(
         status: SurveyStatus,
         pageable: Pageable,
-    ): Page<SurveyEntity>
+    ): Page<Survey>
 
     fun findByIdAndMakerIdAndIsDeletedFalse(
         id: UUID,
         makerId: UUID,
-    ): Optional<SurveyEntity>
+    ): Optional<Survey>
 
-    fun findByIdAndIsDeletedFalse(id: UUID): Optional<SurveyEntity>
+    fun findByIdAndIsDeletedFalse(id: UUID): Optional<Survey>
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT s FROM SurveyEntity s WHERE s.id = :id AND s.isDeleted = false")
+    @Query("SELECT s FROM Survey s WHERE s.id = :id AND s.isDeleted = false")
     fun findByIdAndIsDeletedFalseWithLock(
         @Param("id") id: UUID,
-    ): Optional<SurveyEntity>
+    ): Optional<Survey>
 
     @Query(
-        "SELECT s FROM SurveyEntity s WHERE s.finishedAt < :now " +
+        "SELECT s FROM Survey s WHERE s.finishedAt < :now " +
             "AND s.status IN ('IN_PROGRESS', 'IN_MODIFICATION') AND s.isDeleted = false",
     )
     fun findFinishTargets(
         @Param("now") now: Date,
-    ): List<SurveyEntity>
+    ): List<Survey>
 }

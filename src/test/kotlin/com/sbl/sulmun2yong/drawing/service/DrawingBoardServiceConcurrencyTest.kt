@@ -1,20 +1,17 @@
 package com.sbl.sulmun2yong.drawing.service
 
-import com.sbl.sulmun2yong.drawing.adapter.DrawingBoardAdapter
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
 import com.sbl.sulmun2yong.global.util.DateUtil
-import com.sbl.sulmun2yong.survey.adapter.ParticipantAdapter
-import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Participant
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.reward.FinishedAt
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.entity.Participant
+import com.sbl.sulmun2yong.survey.entity.Survey
 import com.sbl.sulmun2yong.survey.repository.ParticipantRepository
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.junit.jupiter.api.AfterEach
@@ -41,13 +38,10 @@ class DrawingBoardServiceConcurrencyTest {
     private lateinit var drawingBoardService: DrawingBoardService
 
     @Autowired
-    private lateinit var surveyAdapter: SurveyAdapter
+    private lateinit var surveyRepository: SurveyRepository
 
     @Autowired
-    private lateinit var participantAdapter: ParticipantAdapter
-
-    @Autowired
-    private lateinit var drawingBoardAdapter: DrawingBoardAdapter
+    private lateinit var participantRepository: ParticipantRepository
 
     @Autowired
     private lateinit var drawingBoardRepository: DrawingBoardRepository
@@ -56,10 +50,7 @@ class DrawingBoardServiceConcurrencyTest {
     private lateinit var drawingHistoryRepository: DrawingHistoryRepository
 
     @Autowired
-    private lateinit var surveyRepository: SurveyRepository
-
-    @Autowired
-    private lateinit var participantRepository: ParticipantRepository
+    private lateinit var transactionTemplate: org.springframework.transaction.support.TransactionTemplate
 
     private var testSurveyId: UUID = UUID.randomUUID()
     private val testParticipantIds = mutableSetOf<UUID>()
@@ -90,7 +81,7 @@ class DrawingBoardServiceConcurrencyTest {
     @BeforeEach
     fun setup() {
         val newSurvey = getNewSurvey()
-        surveyAdapter.save(newSurvey)
+        surveyRepository.save(newSurvey)
 
         val drawingBoard =
             DrawingBoard.create(
@@ -98,17 +89,19 @@ class DrawingBoardServiceConcurrencyTest {
                 boardSize = newSurvey.rewardSetting.targetParticipantCount!!,
                 rewards = newSurvey.rewardSetting.rewards,
             )
-        drawingBoardAdapter.save(drawingBoard)
+        drawingBoardRepository.save(drawingBoard)
     }
 
     @AfterEach
     fun cleanup() {
-        drawingBoardRepository.deleteBySurveyId(testSurveyId)
-        surveyRepository.deleteById(testSurveyId)
-        testParticipantIds.forEach { participantId ->
-            participantRepository.deleteById(participantId)
+        transactionTemplate.execute {
+            drawingBoardRepository.deleteBySurveyId(testSurveyId)
+            surveyRepository.deleteById(testSurveyId)
+            testParticipantIds.forEach { participantId ->
+                participantRepository.deleteById(participantId)
+            }
+            drawingHistoryRepository.deleteBySurveyId(testSurveyId)
         }
-        drawingHistoryRepository.deleteBySurveyId(testSurveyId)
     }
 
     @Test
@@ -123,7 +116,7 @@ class DrawingBoardServiceConcurrencyTest {
                         surveyId = testSurveyId,
                         userId = null,
                     )
-                participantAdapter.insert(participant)
+                participantRepository.save(participant)
                 testParticipantIds.add(participant.id)
                 Pair(participant.id, "010-1234-${String.format("%04d", it)}")
             }
@@ -190,7 +183,7 @@ class DrawingBoardServiceConcurrencyTest {
                 surveyId = testSurveyId,
                 userId = null,
             )
-        participantAdapter.insert(participant)
+        participantRepository.save(participant)
         testParticipantIds.add(participant.id)
         val phoneNumber = "010-1234-5678"
 
@@ -260,7 +253,7 @@ class DrawingBoardServiceConcurrencyTest {
                         surveyId = testSurveyId,
                         userId = null,
                     )
-                participantAdapter.insert(participant)
+                participantRepository.save(participant)
                 testParticipantIds.add(participant.id)
                 Triple(
                     participant.id,

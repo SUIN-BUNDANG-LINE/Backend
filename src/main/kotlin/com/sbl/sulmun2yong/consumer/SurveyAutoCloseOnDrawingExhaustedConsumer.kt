@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.consumer.payload.DrawingCompletedPayload
 import com.sbl.sulmun2yong.consumer.repository.SurveyConsumerRepository
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.entity.SurveyEntity
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
@@ -39,11 +38,10 @@ class SurveyAutoCloseOnDrawingExhaustedConsumer(
             return
         }
 
-        val surveyEntity =
+        val survey =
             surveyConsumerRepository
                 .findByIdAndIsDeletedFalseWithLock(UUID.fromString(event.surveyId))
                 .orElseThrow { SurveyNotFoundException() }
-        val survey = surveyEntity.toDomain()
 
         if (survey.status == SurveyStatus.CLOSED) {
             log.info("이미 종료된 설문, surveyId: {}", survey.id)
@@ -51,7 +49,7 @@ class SurveyAutoCloseOnDrawingExhaustedConsumer(
             return
         }
 
-        surveyConsumerRepository.save(SurveyEntity.from(survey.finish()))
+        surveyConsumerRepository.save(survey.finish())
         log.info("티켓 소진으로 종료, surveyId: {}", survey.id)
 
         ack.acknowledge()

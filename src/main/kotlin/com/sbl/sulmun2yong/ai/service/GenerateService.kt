@@ -1,15 +1,16 @@
 package com.sbl.sulmun2yong.ai.service
 
 import com.sbl.sulmun2yong.ai.adapter.AIDemoCountRedisAdapter
-import com.sbl.sulmun2yong.ai.adapter.AIGenerateLogAdapter
 import com.sbl.sulmun2yong.ai.adapter.GenerateAdapter
-import com.sbl.sulmun2yong.ai.domain.AIGenerateLog
 import com.sbl.sulmun2yong.ai.dto.request.DemoSurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.request.SurveyGenerationWithFileUrlRequest
 import com.sbl.sulmun2yong.ai.dto.response.AISurveyGenerationResponse
+import com.sbl.sulmun2yong.ai.entity.AIGenerateLog
+import com.sbl.sulmun2yong.ai.repository.AIGenerateLogRepository
 import com.sbl.sulmun2yong.global.util.validator.FileUrlValidator
-import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.survey.entity.Survey
+import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
+import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -17,10 +18,9 @@ import java.util.UUID
 class GenerateService(
     private val fileUrlValidator: FileUrlValidator,
     private val generateAdapter: GenerateAdapter,
-    private val surveyAdapter: SurveyAdapter,
+    private val surveyRepository: SurveyRepository,
     private val aiDemoCountRedisAdapter: AIDemoCountRedisAdapter,
-    private val aiGenerateLogAdapter: AIGenerateLogAdapter,
-    // val fingerprintApi: FingerprintApi,
+    private val aiGenerateLogRepository: AIGenerateLogRepository,
 ) {
     fun generateSurveyWithFileUrl(
         surveyGenerationWithFileUrlRequest: SurveyGenerationWithFileUrlRequest,
@@ -34,7 +34,8 @@ class GenerateService(
 
         validateFileUrl(fileUrl)
 
-        val survey = surveyAdapter.getByIdAndMakerId(surveyId, makerId)
+        val survey =
+            surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }
 
         val generatedSurvey =
             generateAdapter.requestSurveyGenerationWithFileUrl(
@@ -46,8 +47,8 @@ class GenerateService(
                 survey,
             )
 
-        aiGenerateLogAdapter.saveGenerateLog(
-            AIGenerateLog(
+        aiGenerateLogRepository.save(
+            AIGenerateLog.create(
                 id = UUID.randomUUID(),
                 surveyId = surveyId,
                 makerId = makerId,
@@ -73,7 +74,6 @@ class GenerateService(
         val userPrompt = demoSurveyGenerationWithFileUrlRequest.userPrompt
 
         validateFileUrl(fileUrl)
-        // fingerprintApi.validateVisitorId(visitorId)
         aiDemoCountRedisAdapter.incrementOrCreate(visitorId)
 
         val surveyId = UUID.randomUUID()
@@ -81,8 +81,8 @@ class GenerateService(
 
         val generatedSurvey = generateAdapter.requestSurveyGenerationWithFileUrl(null, target, groupName, fileUrl, userPrompt, survey)
 
-        aiGenerateLogAdapter.saveGenerateLog(
-            AIGenerateLog(
+        aiGenerateLogRepository.save(
+            AIGenerateLog.create(
                 id = UUID.randomUUID(),
                 surveyId = surveyId,
                 makerId = null,

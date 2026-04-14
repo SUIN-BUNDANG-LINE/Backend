@@ -1,7 +1,7 @@
 package com.sbl.sulmun2yong.drawing.dto.response
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.entity.DrawingHistory
 import java.util.UUID
 
 class DrawingHistoryResponse(

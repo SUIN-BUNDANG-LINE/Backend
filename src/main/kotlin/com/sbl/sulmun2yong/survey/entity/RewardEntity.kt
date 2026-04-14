@@ -19,7 +19,7 @@ class RewardEntity(
     val id: Long = 0,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "survey_id", nullable = false)
-    val survey: SurveyEntity,
+    val survey: Survey,
     @Column(nullable = false)
     val orderIndex: Int,
     @Column(nullable = false)
@@ -32,7 +32,7 @@ class RewardEntity(
     companion object {
         fun from(
             reward: Reward,
-            survey: SurveyEntity,
+            survey: Survey,
             orderIndex: Int,
         ) = RewardEntity(
             survey = survey,

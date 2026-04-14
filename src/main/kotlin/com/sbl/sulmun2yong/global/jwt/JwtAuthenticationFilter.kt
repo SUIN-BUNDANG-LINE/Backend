@@ -2,9 +2,10 @@ package com.sbl.sulmun2yong.global.jwt
 
 import com.sbl.sulmun2yong.global.jwt.exception.InvalidRefreshTokenException
 import com.sbl.sulmun2yong.global.util.CookieUtils
-import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
-import com.sbl.sulmun2yong.user.adapter.UserAdapter
 import com.sbl.sulmun2yong.user.dto.DefaultUserProfile
+import com.sbl.sulmun2yong.user.exception.UserNotFoundException
+import com.sbl.sulmun2yong.user.repository.RefreshTokenRepository
+import com.sbl.sulmun2yong.user.repository.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -17,8 +18,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthenticationFilter(
     private val jwtTokenProvider: JwtTokenProvider,
-    private val userAdapter: UserAdapter,
-    private val userRefreshTokenAdapter: RefreshTokenAdapter,
+    private val userRepository: UserRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
 ) : OncePerRequestFilter() {
     companion object {
         private const val ACCESS_TOKEN_COOKIE = "access-token"
@@ -63,10 +64,10 @@ class JwtAuthenticationFilter(
             val tokenId = jwtTokenProvider.getTokenIdFromToken(refreshToken)
             if (userId == null || tokenId == null) throw InvalidRefreshTokenException("리프레시 토큰의 형식이 유효하지 않습니다.")
 
-            val storedToken = userRefreshTokenAdapter.findByTokenIdAndUserId(tokenId, userId)
+            val storedToken = refreshTokenRepository.findByIdAndUserId(tokenId, userId).orElse(null)
             if (storedToken != null && storedToken.token == refreshToken) throw InvalidRefreshTokenException("DB에 없는 리프레시 토큰입니다.")
 
-            val user = userAdapter.getById(userId)
+            val user = userRepository.findById(userId).orElseThrow { UserNotFoundException() }
             val defaultUserProfile =
                 DefaultUserProfile(
                     id = user.id,

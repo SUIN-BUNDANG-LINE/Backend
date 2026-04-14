@@ -1,12 +1,12 @@
 package com.sbl.sulmun2yong.user.util.dummy
 
-import com.sbl.sulmun2yong.survey.domain.Participant
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.MultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.SingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
+import com.sbl.sulmun2yong.survey.entity.Participant
 import com.sbl.sulmun2yong.survey.entity.ResponseEntity
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.UUID
 import kotlin.math.min
 

@@ -1,12 +1,12 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.ChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.result.QuestionResult
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
 import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.UUID
 
 data class SurveyResultResponse(

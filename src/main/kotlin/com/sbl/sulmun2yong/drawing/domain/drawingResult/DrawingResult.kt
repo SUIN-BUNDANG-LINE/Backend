@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.domain.drawingResult
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 
 sealed class DrawingResult {
     abstract val changedDrawingBoard: DrawingBoard

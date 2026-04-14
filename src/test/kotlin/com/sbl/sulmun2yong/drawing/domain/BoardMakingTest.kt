@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.drawing.domain
 
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory.createDrawingBoard
 import com.sbl.sulmun2yong.survey.domain.reward.Reward

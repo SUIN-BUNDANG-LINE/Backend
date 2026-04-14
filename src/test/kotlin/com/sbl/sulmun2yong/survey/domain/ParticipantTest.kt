@@ -1,10 +1,11 @@
 package com.sbl.sulmun2yong.survey.domain
 
+import com.sbl.sulmun2yong.survey.entity.Participant
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class ParticipantTest {
     @Test
@@ -14,7 +15,6 @@ class ParticipantTest {
         val surveyId = UUID.randomUUID()
         val visitorId = "abcdefg"
         val userId = UUID.randomUUID()
-        val createdAt = Date()
 
         Mockito.mockStatic(UUID::class.java).use { mockedUUID ->
             mockedUUID.`when`<UUID> { UUID.randomUUID() }.thenReturn(participantId)
@@ -31,6 +31,7 @@ class ParticipantTest {
             }
         }
 
-        assertEquals(createdAt, Participant(participantId, visitorId, surveyId, userId, createdAt).createdAt)
+        // createdAt은 BaseTimeEntity에서 자동 관리되므로 엔티티 생성 후 존재 여부만 확인
+        assertNotNull(Participant(participantId, visitorId, surveyId, userId))
     }
 }

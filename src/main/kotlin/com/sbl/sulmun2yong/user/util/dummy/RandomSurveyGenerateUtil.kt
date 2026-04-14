@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.user.util.dummy
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.FinishedAt
 import com.sbl.sulmun2yong.survey.domain.reward.NoRewardSetting
@@ -10,6 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.reward.SelfManagementSetting
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.UUID
 
 object RandomSurveyGenerateUtil {
@@ -89,11 +89,10 @@ object RandomSurveyGenerateUtil {
                 else -> throw IllegalArgumentException("즉시 추첨 방식은 지원되지 않습니다.")
             }
 
-        return Survey(
+        return Survey.fromComponents(
             id = id,
             title = title,
             description = description,
-            // 편의상 null로 고정
             thumbnail = null,
             publishedAt = publishedAt,
             status = surveyStatus,

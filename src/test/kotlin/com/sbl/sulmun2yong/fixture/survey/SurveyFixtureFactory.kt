@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.fixture.survey
 
 import com.sbl.sulmun2yong.global.util.DateUtil
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSetting
@@ -10,6 +9,7 @@ import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.Date
 import java.util.UUID
 
@@ -59,7 +59,7 @@ object SurveyFixtureFactory {
         rewards: List<Reward> = REWARDS,
         isVisible: Boolean = true,
         sections: List<Section> = SECTIONS,
-    ) = Survey(
+    ) = Survey.fromComponents(
         id = id,
         title = title + id,
         description = description + id,

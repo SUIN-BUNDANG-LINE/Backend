@@ -1,21 +1,23 @@
 package com.sbl.sulmun2yong.ai.service
 
-import com.sbl.sulmun2yong.ai.adapter.AIEditLogAdapter
 import com.sbl.sulmun2yong.ai.adapter.ChatAdapter
-import com.sbl.sulmun2yong.ai.domain.AIEditLog
 import com.sbl.sulmun2yong.ai.dto.request.EditSurveyDataWithChatRequest
 import com.sbl.sulmun2yong.ai.dto.response.AISurveyEditResponse
+import com.sbl.sulmun2yong.ai.entity.AIEditLog
+import com.sbl.sulmun2yong.ai.exception.AIEditLogNotFoundException
 import com.sbl.sulmun2yong.ai.exception.InvalidModificationTargetId
-import com.sbl.sulmun2yong.survey.adapter.SurveyAdapter
-import com.sbl.sulmun2yong.survey.domain.Survey
+import com.sbl.sulmun2yong.ai.repository.AIEditLogRepository
+import com.sbl.sulmun2yong.survey.entity.Survey
+import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
+import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
 class ChatService(
-    private val surveyAdapter: SurveyAdapter,
+    private val surveyRepository: SurveyRepository,
     private val chatAdapter: ChatAdapter,
-    private val aiLogAdapter: AIEditLogAdapter,
+    private val aiEditLogRepository: AIEditLogRepository,
 ) {
     fun editSurveyDataWithChat(
         makerId: UUID,
@@ -23,11 +25,15 @@ class ChatService(
     ): AISurveyEditResponse {
         val (surveyId, modificationTargetId, userPrompt, isEditGeneratedResult) = editSurveyDataWithChatRequest
 
-        val originalSurvey = surveyAdapter.getByIdAndMakerId(surveyId = surveyId, makerId = makerId)
+        val originalSurvey =
+            surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }
 
         val targetSurvey =
             if (isEditGeneratedResult) {
-                aiLogAdapter.getLatestEditLog(surveyId, makerId).editedSurvey
+                aiEditLogRepository
+                    .findFirstBySurveyIdAndMakerIdOrderByCreatedAtDesc(surveyId, makerId)
+                    .orElseThrow { AIEditLogNotFoundException() }
+                    .editedSurvey
             } else {
                 originalSurvey
             }
@@ -39,8 +45,8 @@ class ChatService(
                 userPrompt = userPrompt,
             )
 
-        aiLogAdapter.saveEditLog(
-            AIEditLog(
+        aiEditLogRepository.save(
+            AIEditLog.create(
                 id = UUID.randomUUID(),
                 surveyId = surveyId,
                 makerId = makerId,
@@ -50,7 +56,6 @@ class ChatService(
             ),
         )
 
-        // 오리지널 설문과, AI가 수정한 설문을 비교한 결과를 반환.
         return AISurveyEditResponse.compareSurveys(originalSurvey, updatedSurvey)
     }
 

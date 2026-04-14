@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.fixture.drawing
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
+import com.sbl.sulmun2yong.drawing.entity.DrawingHistory
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import java.util.UUID
 

@@ -28,7 +28,7 @@ class SectionEntity(
     val id: UUID,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "survey_id", nullable = false)
-    val survey: SurveyEntity,
+    val survey: Survey,
     @Column(nullable = false)
     val orderIndex: Int,
     @Column(nullable = false)
@@ -54,7 +54,7 @@ class SectionEntity(
     companion object {
         fun from(
             section: Section,
-            survey: SurveyEntity,
+            survey: Survey,
             orderIndex: Int,
         ): SectionEntity {
             val entity =

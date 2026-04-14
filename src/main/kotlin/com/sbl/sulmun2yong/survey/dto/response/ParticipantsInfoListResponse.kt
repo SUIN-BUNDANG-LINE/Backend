@@ -1,10 +1,10 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.DrawingHistoryGroup
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
-import com.sbl.sulmun2yong.survey.domain.Participant
-import java.util.Date
+import com.sbl.sulmun2yong.drawing.entity.DrawingHistory
+import com.sbl.sulmun2yong.survey.entity.Participant
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class ParticipantsInfoListResponse(
@@ -13,7 +13,7 @@ data class ParticipantsInfoListResponse(
 ) {
     data class ParticipantInfoResponse(
         val participantId: UUID,
-        val participatedAt: Date,
+        val participatedAt: LocalDateTime,
         val drawInfo: DrawInfoResponse?,
     )
 
@@ -32,10 +32,11 @@ data class ParticipantsInfoListResponse(
                     )
                 }
 
-                if (drawingHistory.ticket is Ticket.Winning) {
+                val ticket = drawingHistory.ticket
+                if (ticket is Ticket.Winning) {
                     return DrawInfoResponse(
                         drawResult = DrawResult.WIN,
-                        reward = drawingHistory.ticket.rewardName,
+                        reward = ticket.rewardName,
                         phoneNumber = drawingHistory.phoneNumber.value,
                     )
                 }

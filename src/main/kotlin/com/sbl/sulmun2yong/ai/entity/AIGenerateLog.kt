@@ -1,18 +1,18 @@
 package com.sbl.sulmun2yong.ai.entity
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.sbl.sulmun2yong.ai.domain.AIGenerateLog
 import com.sbl.sulmun2yong.ai.domain.AIGeneratedSurvey
 import com.sbl.sulmun2yong.global.entity.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
 import java.util.UUID
 
 @Entity
 @Table(name = "ai_generate_logs")
-class AIGenerateLogEntity(
+class AIGenerateLog(
     @Id
     @Column(columnDefinition = "BINARY(16)")
     val id: UUID,
@@ -30,28 +30,27 @@ class AIGenerateLogEntity(
     val groupName: String,
     // AI 생성 결과를 JSON 문자열로 저장
     @Column(nullable = false, columnDefinition = "TEXT")
-    val generatedSurvey: String,
+    val generatedSurveyJson: String,
     val visitorId: String?,
 ) : BaseTimeEntity() {
+    @get:Transient
+    val generatedSurvey: AIGeneratedSurvey
+        get() = objectMapper.readValue(generatedSurveyJson, AIGeneratedSurvey::class.java)
+
     companion object {
         private val objectMapper = ObjectMapper().findAndRegisterModules()
 
-        fun from(aiGenerateLog: AIGenerateLog) =
-            AIGenerateLogEntity(
-                id = aiGenerateLog.id,
-                surveyId = aiGenerateLog.surveyId,
-                makerId = aiGenerateLog.makerId,
-                userPrompt = aiGenerateLog.userPrompt,
-                fileUrl = aiGenerateLog.fileUrl,
-                target = aiGenerateLog.target,
-                groupName = aiGenerateLog.groupName,
-                generatedSurvey = objectMapper.writeValueAsString(aiGenerateLog.generatedSurvey),
-                visitorId = aiGenerateLog.visitorId,
-            )
-    }
-
-    fun toDomain() =
-        AIGenerateLog(
+        fun create(
+            id: UUID,
+            surveyId: UUID,
+            makerId: UUID?,
+            userPrompt: String,
+            fileUrl: String?,
+            target: String,
+            groupName: String,
+            generatedSurvey: AIGeneratedSurvey,
+            visitorId: String?,
+        ) = AIGenerateLog(
             id = id,
             surveyId = surveyId,
             makerId = makerId,
@@ -59,7 +58,8 @@ class AIGenerateLogEntity(
             fileUrl = fileUrl,
             target = target,
             groupName = groupName,
-            generatedSurvey = objectMapper.readValue(generatedSurvey, AIGeneratedSurvey::class.java),
+            generatedSurveyJson = objectMapper.writeValueAsString(generatedSurvey),
             visitorId = visitorId,
         )
+    }
 }

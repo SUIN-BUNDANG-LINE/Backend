@@ -3,7 +3,7 @@ package com.sbl.sulmun2yong.global.config.oauth2.handler
 import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
 import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider.Companion.REFRESH_TOKEN_COOKIE
 import com.sbl.sulmun2yong.global.util.CookieUtils
-import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
+import com.sbl.sulmun2yong.user.repository.RefreshTokenRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.Authentication
@@ -12,7 +12,7 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 class CustomLogoutSuccessHandler(
     private val frontEndBaseUrl: String,
     private val jwtTokenProvider: JwtTokenProvider,
-    private val refreshTokenAdapter: RefreshTokenAdapter,
+    private val refreshTokenRepository: RefreshTokenRepository,
 ) : LogoutSuccessHandler {
     override fun onLogoutSuccess(
         request: HttpServletRequest,
@@ -23,7 +23,7 @@ class CustomLogoutSuccessHandler(
         CookieUtils.findCookie(request, REFRESH_TOKEN_COOKIE)?.let {
             val tokenId = jwtTokenProvider.getTokenIdFromToken(it.value)
             val userId = jwtTokenProvider.getUserIdFromToken(it.value)
-            if (tokenId != null && userId != null) refreshTokenAdapter.deleteByTokenIdAndUserId(tokenId, userId)
+            if (tokenId != null && userId != null) refreshTokenRepository.deleteByIdAndUserId(tokenId, userId)
         }
 
         // 쿠키에서 토큰 제거

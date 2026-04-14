@@ -4,7 +4,7 @@ import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.dto.request.MySurveySortType
 import com.sbl.sulmun2yong.survey.dto.request.SurveySortType
 import com.sbl.sulmun2yong.survey.dto.response.MyPageSurveyInfoResponse
-import com.sbl.sulmun2yong.survey.entity.SurveyEntity
+import com.sbl.sulmun2yong.survey.entity.Survey
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.data.domain.Page
@@ -29,9 +29,9 @@ class SurveyCustomRepositoryImpl(
             """
             SELECT new com.sbl.sulmun2yong.survey.dto.response.MyPageSurveyInfoResponse(
                 s.id, s.title, s.thumbnail, s.updatedAt, s.status, s.finishedAt,
-                CAST((SELECT COUNT(p) FROM ParticipantEntity p WHERE p.surveyId = s.id) AS int)
+                CAST((SELECT COUNT(p) FROM Participant p WHERE p.surveyId = s.id) AS int)
             )
-            FROM SurveyEntity s
+            FROM Survey s
             WHERE s.makerId = :makerId AND s.isDeleted = false $statusCondition
             ORDER BY $orderBy
             """.trimIndent()
@@ -47,7 +47,7 @@ class SurveyCustomRepositoryImpl(
         surveyId: UUID,
         makerId: UUID,
     ): Boolean {
-        val jpql = "UPDATE SurveyEntity s SET s.isDeleted = true WHERE s.id = :surveyId AND s.makerId = :makerId"
+        val jpql = "UPDATE Survey s SET s.isDeleted = true WHERE s.id = :surveyId AND s.makerId = :makerId"
         val updatedCount =
             entityManager
                 .createQuery(jpql)
@@ -63,7 +63,7 @@ class SurveyCustomRepositoryImpl(
         sortType: SurveySortType,
         isRewardExist: Boolean?,
         isResultOpen: Boolean?,
-    ): Page<SurveyEntity> {
+    ): Page<Survey> {
         val pageRequest = PageRequest.of(page, size, getSurveySort(sortType))
 
         val conditions = mutableListOf("s.status = 'IN_PROGRESS'", "s.isVisible = true", "s.isDeleted = false")
@@ -73,10 +73,10 @@ class SurveyCustomRepositoryImpl(
         val whereClause = conditions.joinToString(" AND ")
         val orderBy = getSurveySortString(sortType)
 
-        val jpql = "SELECT s FROM SurveyEntity s WHERE $whereClause ORDER BY $orderBy"
-        val countJpql = "SELECT COUNT(s) FROM SurveyEntity s WHERE $whereClause"
+        val jpql = "SELECT s FROM Survey s WHERE $whereClause ORDER BY $orderBy"
+        val countJpql = "SELECT COUNT(s) FROM Survey s WHERE $whereClause"
 
-        val query = entityManager.createQuery(jpql, SurveyEntity::class.java)
+        val query = entityManager.createQuery(jpql, Survey::class.java)
         query.firstResult = page * size
         query.maxResults = size
 

@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
 import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.Date
 
 data class SurveyInfoResponse(

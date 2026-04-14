@@ -1,16 +1,21 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Participant
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.result.SurveyResult
-import java.text.SimpleDateFormat
+import com.sbl.sulmun2yong.survey.entity.Participant
+import com.sbl.sulmun2yong.survey.entity.Survey
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.TimeZone
 
 data class SurveyRawResultResponse(
     val rawResults: List<List<String>>,
 ) {
     companion object {
+        private val dateFormatter =
+            DateTimeFormatter
+                .ofPattern("yyyy. M. d a h:mm:ss", Locale.KOREAN)
+                .withZone(ZoneId.of("Asia/Seoul"))
+
         fun of(
             survey: Survey,
             surveyResult: SurveyResult,
@@ -27,9 +32,7 @@ data class SurveyRawResultResponse(
             rawResults.add(titles)
 
             participants.forEach { participant ->
-                val dateFormat = SimpleDateFormat("yyyy. M. d a h:mm:ss", Locale.KOREAN)
-                dateFormat.timeZone = TimeZone.getTimeZone("Asia/Seoul")
-                val formattedDate = dateFormat.format(participant.createdAt)
+                val formattedDate = participant.createdAt.format(dateFormatter)
                 val response = mutableListOf(formattedDate)
                 survey.sections
                     .flatMap { section ->

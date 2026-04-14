@@ -1,27 +1,32 @@
-package com.sbl.sulmun2yong.drawing.adapter
+package com.sbl.sulmun2yong.drawing.service
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
-import com.sbl.sulmun2yong.drawing.domain.DrawingHistory
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
+import com.sbl.sulmun2yong.drawing.entity.DrawingHistory
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
+import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
+import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
+import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
 import com.sbl.sulmun2yong.global.data.PhoneNumber
 import com.sbl.sulmun2yong.global.kafka.outbox.OutboxEventFactory
 import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
 import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.lock.RedissonLock
+import com.sbl.sulmun2yong.global.util.EncryptionUtils
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
 
-@Component
-class DrawingProcessAdapter(
-    private val drawingBoardAdapter: DrawingBoardAdapter,
-    private val drawingHistoryAdapter: DrawingHistoryAdapter,
+@Service
+class DrawingProcessService(
+    private val drawingBoardRepository: DrawingBoardRepository,
+    private val drawingHistoryRepository: DrawingHistoryRepository,
+    private val encryptionUtils: EncryptionUtils,
     private val outboxEventFactory: OutboxEventFactory,
     private val outboxEventRepository: OutboxEventRepository,
     private val applicationEventPublisher: ApplicationEventPublisher,
@@ -35,25 +40,27 @@ class DrawingProcessAdapter(
         phoneNumber: String,
     ): DrawingResultResponse {
         // 추첨 가능 여부 조회
-        val drawingBoard = drawingBoardAdapter.getBySurveyId(surveyId)
+        val drawingBoard =
+            drawingBoardRepository.findBySurveyId(surveyId).orElseThrow { InvalidDrawingBoardException() }
         val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
 
         // 이미 추첨 참여했는지 검증
         val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
-        val drawingHistory =
-            drawingHistoryAdapter.findBySurveyIdAndParticipantIdOrPhoneNumber(
-                surveyId,
-                participantId,
-                phoneNumberData,
-            )
-        if (drawingHistory != null) {
+        val existingHistory =
+            drawingHistoryRepository
+                .findBySurveyIdAndParticipantIdOrPhoneNumber(
+                    surveyId,
+                    participantId,
+                    encryptionUtils.encrypt(phoneNumberData.value),
+                ).orElse(null)
+        if (existingHistory != null) {
             throw AlreadyParticipatedDrawingException()
         }
 
         // 추첨 결과 저장
         val changedDrawingBoard = drawingResult.changedDrawingBoard
-        drawingBoardAdapter.save(changedDrawingBoard)
-        drawingHistoryAdapter.insert(
+        drawingBoardRepository.save(changedDrawingBoard)
+        drawingHistoryRepository.save(
             DrawingHistory.create(
                 participantId = participantId,
                 phoneNumber = phoneNumberData,

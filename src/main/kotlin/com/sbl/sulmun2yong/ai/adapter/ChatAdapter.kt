@@ -12,9 +12,9 @@ import com.sbl.sulmun2yong.ai.dto.python.response.SectionResponseFromPython
 import com.sbl.sulmun2yong.ai.dto.python.response.SurveyResponseFromPython
 import com.sbl.sulmun2yong.ai.exception.SurveyAIProcessingFailedException
 import com.sbl.sulmun2yong.global.error.PythonServerExceptionMapper
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.entity.Survey
 import org.springframework.stereotype.Component
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate

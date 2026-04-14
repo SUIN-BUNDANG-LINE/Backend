@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.consumer.payload.SurveyResponsePayload
 import com.sbl.sulmun2yong.consumer.repository.SurveyConsumerRepository
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.entity.SurveyEntity
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
@@ -39,11 +38,10 @@ class SurveyAutoCloseOnTargetReachedConsumer(
             return
         }
 
-        val surveyEntity =
+        val survey =
             surveyConsumerRepository
                 .findByIdAndIsDeletedFalseWithLock(UUID.fromString(event.surveyId))
                 .orElseThrow { SurveyNotFoundException() }
-        val survey = surveyEntity.toDomain()
 
         if (survey.status == SurveyStatus.CLOSED) {
             log.info("이미 종료된 설문, surveyId: {}", survey.id)
@@ -51,7 +49,7 @@ class SurveyAutoCloseOnTargetReachedConsumer(
             return
         }
 
-        surveyConsumerRepository.save(SurveyEntity.from(survey.finish()))
+        surveyConsumerRepository.save(survey.finish())
         log.info(
             "targetParticipantCount에 도달하여 설문을 종료합니다, 목표 참여자 수: {}, surveyId: {}",
             event.targetParticipantCount,

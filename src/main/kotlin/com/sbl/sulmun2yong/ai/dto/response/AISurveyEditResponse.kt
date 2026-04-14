@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.ai.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.dto.response.SurveyMakeInfoResponse
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.UUID
 
 // TODO: 가능하면 도메인 로직으로 옮기기

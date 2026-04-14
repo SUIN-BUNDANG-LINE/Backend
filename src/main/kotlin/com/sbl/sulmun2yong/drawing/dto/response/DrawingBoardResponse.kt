@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.drawing.dto.response
 
-import com.sbl.sulmun2yong.drawing.domain.DrawingBoard
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import java.util.UUID
 
 class DrawingBoardResponse(

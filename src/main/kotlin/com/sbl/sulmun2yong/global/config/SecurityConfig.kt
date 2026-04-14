@@ -6,7 +6,7 @@ import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomAuthenticationSucc
 import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomLogoutSuccessHandler
 import com.sbl.sulmun2yong.global.jwt.JwtAuthenticationFilter
 import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
-import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
+import com.sbl.sulmun2yong.user.repository.RefreshTokenRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.security.servlet.RequestMatcherProvider
@@ -44,7 +44,7 @@ class SecurityConfig(
     private val deniedHandler: AccessDeniedHandler,
     private val jwtTokenProvider: JwtTokenProvider,
     @Lazy private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    private val refreshTokenAdapter: RefreshTokenAdapter,
+    private val refreshTokenRepository: RefreshTokenRepository,
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
@@ -119,7 +119,7 @@ class SecurityConfig(
                         backendBaseUrl,
                         jwtTokenProvider,
                         cookieAuthorizationRequestRepository(),
-                        refreshTokenAdapter,
+                        refreshTokenRepository,
                     )
             }
             logout {
@@ -128,7 +128,7 @@ class SecurityConfig(
                     CustomLogoutSuccessHandler(
                         frontendBaseUrl,
                         jwtTokenProvider,
-                        refreshTokenAdapter,
+                        refreshTokenRepository,
                     )
             }
             authorizeHttpRequests {

@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.ai.domain
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
 import com.sbl.sulmun2yong.survey.domain.question.choice.Choice
@@ -8,6 +7,7 @@ import com.sbl.sulmun2yong.survey.domain.question.choice.Choices
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardMultipleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardSingleChoiceQuestion
 import com.sbl.sulmun2yong.survey.domain.question.impl.StandardTextQuestion
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.UUID
 
 class PythonFormattedQuestion(

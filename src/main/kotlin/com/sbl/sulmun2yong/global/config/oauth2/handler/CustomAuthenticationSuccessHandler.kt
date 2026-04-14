@@ -5,8 +5,8 @@ import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationReq
 import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.Companion.REDIRECT_URI_PARAM_COOKIE_NAME
 import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
 import com.sbl.sulmun2yong.global.util.CookieUtils
-import com.sbl.sulmun2yong.user.adapter.RefreshTokenAdapter
 import com.sbl.sulmun2yong.user.domain.UserRole
+import com.sbl.sulmun2yong.user.repository.RefreshTokenRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.Authentication
@@ -18,7 +18,7 @@ class CustomAuthenticationSuccessHandler(
     private val backendBaseUrl: String,
     private val jwtTokenProvider: JwtTokenProvider,
     private val httpCookieOAuth2AuthorizationRequestRepository: HttpCookieOAuth2AuthorizationRequestRepository,
-    private val refreshTokenAdapter: RefreshTokenAdapter,
+    private val refreshTokenRepository: RefreshTokenRepository,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
@@ -53,7 +53,7 @@ class CustomAuthenticationSuccessHandler(
 
         // 리프레시 토큰을 DB에 저장
         val userRefreshToken = jwtTokenProvider.makeRefreshTokenEntity(defaultUserProfile.id, tokenId, refreshToken)
-        refreshTokenAdapter.save(userRefreshToken)
+        refreshTokenRepository.save(userRefreshToken)
 
         // 쿠키에 토큰 저장
         response.addCookie(jwtTokenProvider.makeAccessTokenCookie(accessToken))

@@ -1,8 +1,8 @@
 package com.sbl.sulmun2yong.ai.domain
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.UUID
 
 class PythonFormattedSurvey(

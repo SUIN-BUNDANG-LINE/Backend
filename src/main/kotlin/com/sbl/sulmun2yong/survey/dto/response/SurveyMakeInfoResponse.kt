@@ -1,6 +1,5 @@
 package com.sbl.sulmun2yong.survey.dto.response
 
-import com.sbl.sulmun2yong.survey.domain.Survey
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.question.Question
 import com.sbl.sulmun2yong.survey.domain.question.QuestionType
@@ -8,6 +7,7 @@ import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.routing.RoutingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
+import com.sbl.sulmun2yong.survey.entity.Survey
 import java.util.Date
 import java.util.UUID
 
