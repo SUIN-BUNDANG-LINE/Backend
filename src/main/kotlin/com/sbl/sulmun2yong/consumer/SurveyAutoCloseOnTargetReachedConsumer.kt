@@ -1,11 +1,13 @@
 package com.sbl.sulmun2yong.consumer
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.sbl.sulmun2yong.consumer.event.KafkaAckEvent
 import com.sbl.sulmun2yong.consumer.payload.SurveyResponsePayload
 import com.sbl.sulmun2yong.consumer.repository.SurveyConsumerRepository
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Component
@@ -16,6 +18,7 @@ import java.util.UUID
 class SurveyAutoCloseOnTargetReachedConsumer(
     private val surveyConsumerRepository: SurveyConsumerRepository,
     private val objectMapper: ObjectMapper,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     companion object {
         private val log =
@@ -34,7 +37,7 @@ class SurveyAutoCloseOnTargetReachedConsumer(
         val event = objectMapper.readValue(payload, SurveyResponsePayload::class.java)
 
         if (event.targetParticipantCount == null || event.currentParticipantCount < event.targetParticipantCount) {
-            ack.acknowledge()
+            applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
             return
         }
 
@@ -45,7 +48,7 @@ class SurveyAutoCloseOnTargetReachedConsumer(
 
         if (survey.status == SurveyStatus.CLOSED) {
             log.info("이미 종료된 설문, surveyId: {}", survey.id)
-            ack.acknowledge()
+            applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
             return
         }
 
@@ -56,6 +59,6 @@ class SurveyAutoCloseOnTargetReachedConsumer(
             survey.id,
         )
 
-        ack.acknowledge()
+        applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
     }
 }

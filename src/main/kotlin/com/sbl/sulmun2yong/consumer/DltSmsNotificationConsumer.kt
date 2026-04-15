@@ -1,24 +1,29 @@
 package com.sbl.sulmun2yong.consumer
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.sbl.sulmun2yong.consumer.event.KafkaAckEvent
 import com.sbl.sulmun2yong.notification.dto.event.DltSmsNotificationEvent
 import com.sbl.sulmun2yong.notification.entity.DltMessageEntity
 import com.sbl.sulmun2yong.notification.repository.DltMessageRepository
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class DltSmsNotificationConsumer(
     private val dltMessageRepository: DltMessageRepository,
     private val objectMapper: ObjectMapper,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(DltSmsNotificationConsumer::class.java)
     }
 
     @KafkaListener(topics = ["drawing-notification.DLT"], groupId = "dlt-sms-notification")
+    @Transactional
     fun handle(
         payload: String,
         ack: Acknowledgment,
@@ -40,6 +45,6 @@ class DltSmsNotificationConsumer(
         log.info("DLT 메시지 저장 완료, eventId:{}", event.eventId)
 
         // TODO 4: ack
-        ack.acknowledge()
+        applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
     }
 }

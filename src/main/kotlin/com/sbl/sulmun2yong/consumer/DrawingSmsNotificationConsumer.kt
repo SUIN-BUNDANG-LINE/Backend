@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.consumer
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.sbl.sulmun2yong.consumer.event.KafkaAckEvent
 import com.sbl.sulmun2yong.consumer.event.SmsJobCreatedEvent
 import com.sbl.sulmun2yong.consumer.payload.DrawingCompletedPayload
 import com.sbl.sulmun2yong.consumer.repository.SmsJobConsumerRepository
@@ -36,7 +37,7 @@ class DrawingSmsNotificationConsumer(
         val event = objectMapper.readValue(payload, DrawingCompletedPayload::class.java)
 
         if (!event.isWinner) {
-            ack.acknowledge()
+            applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
             return
         }
 
@@ -52,10 +53,10 @@ class DrawingSmsNotificationConsumer(
             applicationEventPublisher.publishEvent(SmsJobCreatedEvent(job.id))
         } catch (e: DataIntegrityViolationException) {
             log.info("이미 등록된 작업입니다, eventId:{}, eventType:{}", event.eventId, NOTIFICATION_TYPE)
-            ack.acknowledge()
+            applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
             return
         }
 
-        ack.acknowledge()
+        applicationEventPublisher.publishEvent(KafkaAckEvent(ack))
     }
 }
