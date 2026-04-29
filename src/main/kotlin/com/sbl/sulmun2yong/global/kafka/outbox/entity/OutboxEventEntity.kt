@@ -44,6 +44,8 @@ class OutboxEventEntity(
     val createdAt: Instant,
     // Kafka 발행 성공 시각. PUBLISHED 마킹 시 기록
     var publishedAt: Instant? = null,
+    @Column(nullable = false)
+    var retryCount: Int = 0,
 ) {
     fun markPublished() {
         this.status = OutboxStatus.PUBLISHED
@@ -52,5 +54,18 @@ class OutboxEventEntity(
 
     fun markFailed() {
         this.status = OutboxStatus.FAILED
+    }
+
+    companion object {
+        const val MAX_RETRY_COUNT = 5
+    }
+
+    fun incrementRetry(): Boolean {
+        retryCount++
+        if (retryCount >= MAX_RETRY_COUNT) {
+            markFailed()
+            return true
+        }
+        return false
     }
 }

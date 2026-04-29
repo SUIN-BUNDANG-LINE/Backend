@@ -21,9 +21,9 @@ class OutboxEventListener(
             ).whenComplete { _, ex ->
                 if (ex == null) {
                     outboxService.markPublishedAsync(event.outboxId)
+                } else {
+                    outboxService.incrementRetryAsync(event.outboxId)
                 }
-                // 실패 시: PENDING 유지 → Relay가 재발행
-                // FAILED 마킹은 Phase 2에서 DLQ 연동 시 최종 실패에만 사용
             }
     }
 }
