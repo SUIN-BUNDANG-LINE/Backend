@@ -12,6 +12,8 @@ import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
+import com.sbl.sulmun2yong.survey.exception.InvalidPublishedAtException
+import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
 import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
 import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
@@ -75,18 +77,13 @@ class Survey(
                 rewardEntities.map { it.toDomain() },
                 targetParticipantCount,
                 finishedAt,
-                status,
             )
 
     @get:Transient
     val sections: List<Section>
         get() {
-            val sectionIds =
-                if (sectionEntities.isEmpty()) {
-                    SectionIds.from(emptyList())
-                } else {
-                    SectionIds.from(sectionEntities.map { SectionId.Standard(it.id) })
-                }
+            if (sectionEntities.isEmpty()) return emptyList()
+            val sectionIds = SectionIds.from(sectionEntities.map { SectionId.Standard(it.id) })
             return sectionEntities.map { it.toDomain(sectionIds) }
         }
 
@@ -256,6 +253,7 @@ class Survey(
             isResultOpen: Boolean,
             sections: List<Section>,
         ): Survey {
+            validate(publishedAt, status, rewardSetting, sections)
             val entity =
                 Survey(
                     id = id,
@@ -279,6 +277,34 @@ class Survey(
                 entity.sectionEntities.add(SectionEntity.from(section, entity, index))
             }
             return entity
+        }
+
+        private fun validate(
+            publishedAt: Date?,
+            status: SurveyStatus,
+            rewardSetting: RewardSetting,
+            sections: List<Section>,
+        ) {
+            // 섹션 ID 중복 금지
+            require(sections.size == sections.distinctBy { it.id }.size) { throw InvalidSurveyException() }
+            // publishedAt이 null이면 NOT_STARTED만 허용
+            require(publishedAt != null || status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyException() }
+            // finishedAt은 publishedAt 이후여야 함
+            val finishedAtValue = rewardSetting.finishedAt?.value
+            require(publishedAt == null || finishedAtValue == null || finishedAtValue.after(publishedAt)) {
+                throw InvalidPublishedAtException()
+            }
+            // 모든 섹션의 sectionIds는 실제 섹션 ID 집합과 일치해야 함
+            if (sections.isNotEmpty()) {
+                val expectedSectionIds = SectionIds.from(sections.map { it.id })
+                require(sections.all { it.sectionIds == expectedSectionIds }) { throw InvalidSurveyException() }
+            }
+            // 진행 중인 설문은 섹션이 비어 있을 수 없고, 모든 선택지가 유일해야 함
+            if (status == SurveyStatus.IN_PROGRESS) {
+                require(sections.isNotEmpty()) { throw InvalidSurveyException() }
+                val isAllChoicesUnique = sections.all { section -> section.questions.all { it.choices?.isUnique() ?: true } }
+                require(isAllChoicesUnique) { throw InvalidSurveyException() }
+            }
         }
     }
 }

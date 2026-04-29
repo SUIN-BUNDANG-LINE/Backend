@@ -5,9 +5,6 @@ import com.sbl.sulmun2yong.survey.domain.routing.RoutingStrategy
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import org.mockito.Mockito.`when`
-import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
 import java.util.UUID
 
 object SectionFixtureFactory {
@@ -30,17 +27,20 @@ object SectionFixtureFactory {
         sectionIds = SectionIds.from(sectionIds.map { SectionId.Standard(it) }),
     )
 
+    @Suppress("UNUSED_PARAMETER")
     fun createMockSection(
         id: UUID,
         nextSectionId: SectionId,
         sectionIds: List<UUID>,
-    ): Section {
-        val section = mock<Section>()
-        `when`(section.id).thenReturn(SectionId.Standard(id))
-        `when`(section.findNextSectionId(any())).thenReturn(nextSectionId)
-        `when`(section.sectionIds).thenReturn(SectionIds.from(sectionIds.map { SectionId.Standard(it) }))
-        return section
-    }
+    ): Section =
+        Section(
+            id = SectionId.Standard(id),
+            title = "",
+            description = "",
+            routingStrategy = RoutingStrategy.NumericalOrder,
+            questions = emptyList(),
+            sectionIds = SectionIds.from(sectionIds.map { SectionId.Standard(it) }),
+        )
 
     fun createSectionIds(sectionIds: List<UUID>) = SectionIds.from(sectionIds.map { SectionId.Standard(it) })
 }
