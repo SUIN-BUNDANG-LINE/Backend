@@ -34,7 +34,7 @@ jobs:
 
             - name: application-secret.yml 등록
               run: |
-                  echo "${SECRET_YML_CONTENT}" > src/main/resources/application-secret.yml
+                  echo "${SECRET_YML_CONTENT}" > common/src/main/resources/application-secret.yml
 
             - name: 환경 변수 설정
               run: |
@@ -50,5 +50,5 @@ jobs:
             - name: Docker Hub에 로그인
               run: echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
 
-            - name: Jib로 Docker 이미지 빌드 및 푸시
-              run: ./gradlew jib -Ddocker.id="${{ env.DOCKER_ID }}" -Ddocker.password="${{ env.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ env.DOCKER_IMAGE_NAME }}"
+            - name: Web/Consumer Docker 이미지 빌드 및 푸시 (JIB)
+              run: ./gradlew :web:jib :consumer:jib -Ddocker.id="${{ env.DOCKER_ID }}" -Ddocker.password="${{ env.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ env.DOCKER_IMAGE_NAME }}"
