@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.outbox
 
+import com.sbl.sulmun2yong.IntegrationTest
 import com.sbl.sulmun2yong.global.kafka.outbox.OutboxEventListener
 import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
 import com.sbl.sulmun2yong.global.kafka.outbox.entity.OutboxStatus
@@ -29,7 +30,6 @@ import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.whenever
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit
  * 실행 전제:
  * - 3-broker Kafka 클러스터 온라인
  */
-@SpringBootTest
+@IntegrationTest
 @Tag("concurrency")
 class OutboxRelayIntegrationTest {
     companion object {

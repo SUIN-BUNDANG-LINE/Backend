@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.survey
 
+import com.sbl.sulmun2yong.IntegrationTest
 import com.sbl.sulmun2yong.global.kafka.outbox.entity.OutboxStatus
 import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.util.DateUtil
@@ -23,7 +24,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit
  * 실행 전제:
  * - 3-broker Kafka 클러스터 온라인
  */
-@SpringBootTest
+@IntegrationTest
 @Tag("concurrency")
 class SurveyResponseKafkaIntegrationTest {
     companion object {

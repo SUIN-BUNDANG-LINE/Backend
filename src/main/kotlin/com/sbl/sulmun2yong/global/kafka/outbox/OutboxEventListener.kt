@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.global.kafka.outbox
 
+import com.sbl.sulmun2yong.global.kafka.outbox.metrics.OutboxMetrics
 import com.sbl.sulmun2yong.global.kafka.outbox.service.OutboxService
 import com.sbl.sulmun2yong.global.kafka.publisher.KafkaEventPublisher
 import org.springframework.stereotype.Component
@@ -10,9 +11,12 @@ import org.springframework.transaction.event.TransactionalEventListener
 class OutboxEventListener(
     private val kafkaEventPublisher: KafkaEventPublisher,
     private val outboxService: OutboxService,
+    private val outboxMetrics: OutboxMetrics,
 ) {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun handle(event: OutboxPublishEvent) {
+        val sample = outboxMetrics.startSample()
+
         kafkaEventPublisher
             .publish(
                 topic = event.topic,
@@ -21,8 +25,10 @@ class OutboxEventListener(
             ).whenComplete { _, ex ->
                 if (ex == null) {
                     outboxService.markPublishedAsync(event.outboxId)
+                    outboxMetrics.recordPublish(event.topic, "success", sample)
                 } else {
                     outboxService.incrementRetryAsync(event.outboxId)
+                    outboxMetrics.recordPublish(event.topic, "failure", sample)
                 }
             }
     }

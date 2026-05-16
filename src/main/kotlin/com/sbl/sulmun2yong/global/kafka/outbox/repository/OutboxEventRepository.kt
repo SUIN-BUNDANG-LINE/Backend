@@ -16,6 +16,13 @@ import java.util.UUID
 
 @Repository
 interface OutboxEventRepository : JpaRepository<OutboxEventEntity, UUID> {
+    fun countByStatus(status: OutboxStatus): Long
+
+    fun countByStatusAndAggregateType(
+        status: OutboxStatus,
+        aggregateType: String,
+    ): Long
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     // -2 = Hibernate LockOptions.SKIP_LOCKED
     @QueryHints(QueryHint(name = "jakarta.persistence.lock.timeout", value = "-2"))

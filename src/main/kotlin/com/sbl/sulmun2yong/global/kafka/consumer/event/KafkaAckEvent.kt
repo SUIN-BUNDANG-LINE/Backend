@@ -1,4 +1,4 @@
-package com.sbl.sulmun2yong.consumer.event
+package com.sbl.sulmun2yong.global.kafka.consumer.event
 
 import org.springframework.kafka.support.Acknowledgment
 

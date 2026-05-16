@@ -12,6 +12,10 @@ spring:
     flyway:
         enabled: true
         baseline-on-migrate: true
+    task:
+        scheduling:
+            pool:
+                size: 4
 
 sms:
     mock:
@@ -33,8 +37,14 @@ management:
     endpoints:
         web:
             base-path: /management
+            exposure:
+                include: health, info, prometheus
             path-mapping:
                 health: health
+
+    metrics:
+        tags:
+            application: ${spring.application.name:sulmun2yong}
 
 frontend:
     base-url: http://localhost:3000

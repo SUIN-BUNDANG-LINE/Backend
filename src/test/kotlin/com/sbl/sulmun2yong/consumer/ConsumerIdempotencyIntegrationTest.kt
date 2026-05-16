@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.consumer
 
+import com.sbl.sulmun2yong.IntegrationTest
 import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit
  * - 3-broker Kafka 클러스터 온라인
  * - MySQL, Redis 온라인
  */
-@SpringBootTest
+@IntegrationTest
 @Tag("concurrency")
 class ConsumerIdempotencyIntegrationTest {
     companion object {

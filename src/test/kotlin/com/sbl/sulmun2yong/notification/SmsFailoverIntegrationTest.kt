@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.notification
 
+import com.sbl.sulmun2yong.IntegrationTest
 import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit
  * - forcedFailCount = N (>0): N회까지 실패, 이후 성공
  * - forcedFailCount = -1: 기본 동작 (프로퍼티 기반)
  */
-@SpringBootTest
+@IntegrationTest
 @Tag("concurrency")
 class SmsFailoverIntegrationTest {
     companion object {

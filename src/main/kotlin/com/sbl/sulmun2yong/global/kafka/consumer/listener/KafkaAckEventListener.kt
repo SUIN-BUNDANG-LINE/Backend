@@ -1,6 +1,6 @@
-package com.sbl.sulmun2yong.consumer.listener
+package com.sbl.sulmun2yong.global.kafka.consumer.listener
 
-import com.sbl.sulmun2yong.consumer.event.KafkaAckEvent
+import com.sbl.sulmun2yong.global.kafka.consumer.event.KafkaAckEvent
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener

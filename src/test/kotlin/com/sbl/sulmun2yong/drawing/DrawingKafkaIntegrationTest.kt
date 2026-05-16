@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.drawing
 
+import com.sbl.sulmun2yong.IntegrationTest
 import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit
  * - 3-broker Kafka 클러스터 온라인
  * - 다른 Spring Boot 인스턴스가 Consumer Group에 조인하지 않은 상태
  */
-@SpringBootTest
+@IntegrationTest
 @Tag("concurrency")
 class DrawingKafkaIntegrationTest {
     companion object {

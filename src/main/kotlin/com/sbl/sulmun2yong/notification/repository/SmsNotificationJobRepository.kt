@@ -8,6 +8,8 @@ import java.time.Instant
 
 @Repository
 interface SmsNotificationJobRepository : JpaRepository<SmsNotificationJobEntity, Long> {
+    fun countByStatus(status: SmsJobStatus): Long
+
     fun findByStatusAndNextAttemptAtLessThanEqual(
         status: SmsJobStatus,
         now: Instant,

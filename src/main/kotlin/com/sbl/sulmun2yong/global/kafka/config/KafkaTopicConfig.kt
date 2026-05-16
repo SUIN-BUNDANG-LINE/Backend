@@ -12,7 +12,7 @@ class KafkaTopicConfig {
     fun surveyResponseSubmittedTopic(): NewTopic =
         TopicBuilder
             .name("survey-response-submitted")
-            .partitions(3)
+            .partitions(6)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
             .build()
@@ -21,7 +21,7 @@ class KafkaTopicConfig {
     fun drawingCompletedTopic(): NewTopic =
         TopicBuilder
             .name("drawing-completed")
-            .partitions(3)
+            .partitions(6)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
             .build()

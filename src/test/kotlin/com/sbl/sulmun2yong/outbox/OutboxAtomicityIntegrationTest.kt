@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.outbox
 
+import com.sbl.sulmun2yong.IntegrationTest
 import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.util.DateUtil
 import com.sbl.sulmun2yong.survey.domain.reward.FinishedAt
@@ -21,7 +22,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
 
@@ -34,7 +34,7 @@ import java.util.UUID
  * 3. 동일 visitorId로 두 번째 응답 제출 → AlreadyParticipatedException
  * 4. 검증: Outbox 여전히 1건 (팬텀 이벤트 방지), 참여자 1명
  */
-@SpringBootTest
+@IntegrationTest
 @Tag("concurrency")
 class OutboxAtomicityIntegrationTest {
     companion object {

@@ -1,10 +1,10 @@
 package com.sbl.sulmun2yong.notification.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.sbl.sulmun2yong.consumer.event.SmsJobCreatedEvent
 import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.global.kafka.publisher.KafkaEventPublisher
 import com.sbl.sulmun2yong.notification.dto.event.DltSmsNotificationEvent
+import com.sbl.sulmun2yong.notification.dto.event.SmsJobCreatedEvent
 import com.sbl.sulmun2yong.notification.repository.SmsNotificationJobRepository
 import com.sbl.sulmun2yong.notification.service.SmsNotificationJobService
 import com.sbl.sulmun2yong.notification.service.SmsSender
