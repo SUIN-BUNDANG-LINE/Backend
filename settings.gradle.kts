@@ -6,3 +6,7 @@ plugins {
 rootProject.name = "sulmun2yong"
 
 include("common", "web", "consumer")
+
+// web/consumer는 modules/ 아래에 위치 (모듈 이름은 :web, :consumer 유지)
+project(":web").projectDir = file("modules/web")
+project(":consumer").projectDir = file("modules/consumer")
