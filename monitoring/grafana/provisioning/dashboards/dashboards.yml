@@ -1,0 +1,18 @@
+# Grafana dashboard provider — JSON 파일 자동 로드
+#
+# /var/lib/grafana/dashboards 경로의 *.json 파일을 자동 스캔하여 등록한다.
+# T6에서 outbox.json / consumer-fanout.json / sms-failover.json / drawing-lock.json 4개를 추가한다.
+
+apiVersion: 1
+
+providers:
+    - name: sulmun2yong-dashboards
+      orgId: 1
+      folder: sulmun2yong
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 30
+      allowUiUpdates: true
+      options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: false

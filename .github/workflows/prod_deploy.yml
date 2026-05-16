@@ -15,7 +15,6 @@ jobs:
 
         env:
             SECRET_YML_CONTENT: ${{ secrets.SECRET_YML_CONTENT }}
-            NEW_RELIC_YML: ${{ secrets.NEW_RELIC_YML }}
             JVM_XMS: ${{ secrets.PRODUCTION_MIN_MEMORY }}
             JVM_XMX: ${{ secrets.PRODUCTION_MAX_MEMORY }}
             DOCKER_ID: ${{ secrets.DOCKER_ID }}
@@ -39,10 +38,6 @@ jobs:
             - name: application-secret.yml 등록
               run: |
                   echo "${SECRET_YML_CONTENT}" > src/main/resources/application-secret.yml
-
-            - name: Set up newrelic.yml
-              run: |
-                  echo "${{ env.NEW_RELIC_YML }}" > newrelic/newrelic.yml
 
             - name: 환경 변수 설정
               run: |

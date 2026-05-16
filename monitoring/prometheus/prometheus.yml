@@ -1,0 +1,55 @@
+# Prometheus 스크레이프 설정 — sulmun2yong cluster (P:2 + C:3)
+#
+# 스크레이프 대상:
+#   - Spring Boot Actuator (web-1, web-2, consumer-1, consumer-2, consumer-3) → /management/prometheus
+#   - Kafka Exporter → /metrics
+#
+# 호스트명은 docker-compose.cluster.yml의 container_name을 따른다.
+
+global:
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    evaluation_interval: 15s
+    external_labels:
+        cluster: sulmun2yong-local
+
+scrape_configs:
+    # ────────── Spring Boot 인스턴스 5개 ──────────
+    - job_name: spring-apps
+      metrics_path: /management/prometheus
+      scrape_interval: 15s
+      static_configs:
+          - targets: [sulmun2yong-web-1:8080]
+            labels:
+                application: sulmun2yong-web
+                instance: web-1
+          - targets: [sulmun2yong-web-2:8080]
+            labels:
+                application: sulmun2yong-web
+                instance: web-2
+          - targets: [sulmun2yong-consumer-1:8080]
+            labels:
+                application: sulmun2yong-consumer
+                instance: consumer-1
+          - targets: [sulmun2yong-consumer-2:8080]
+            labels:
+                application: sulmun2yong-consumer
+                instance: consumer-2
+          - targets: [sulmun2yong-consumer-3:8080]
+            labels:
+                application: sulmun2yong-consumer
+                instance: consumer-3
+
+    # ────────── Kafka Exporter (외부 브로커 lag/offset) ──────────
+    - job_name: kafka-exporter
+      metrics_path: /metrics
+      scrape_interval: 15s
+      static_configs:
+          - targets: [kafka-exporter:9308]
+            labels:
+                exporter: kafka-exporter
+
+    # ────────── Prometheus 자체 메트릭 (디버깅용) ──────────
+    - job_name: prometheus
+      static_configs:
+          - targets: [localhost:9090]

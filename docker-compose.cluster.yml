@@ -1,0 +1,205 @@
+# P:2, C:3 클러스터 실행용 컴포즈
+#
+# 구성:
+#   - MySQL, Redis: 로컬 컨테이너
+#   - Kafka: 외부 브로커 (application-secret.yml 참조)
+#   - Web (Producer + Outbox Relay): 2 인스턴스 (web-1, web-2)
+#   - Consumer (Kafka 리스너 + SMS Worker): 3 인스턴스 (consumer-1~3)
+#
+# 사전 빌드:
+#   ./gradlew bootJar bootJarConsumer
+#
+# 실행:
+#   docker compose -f docker-compose.cluster.yml --env-file .env up -d
+#
+# 종료:
+#   docker compose -f docker-compose.cluster.yml down
+
+version: '3.8'
+
+x-app-base: &app-base
+    image: eclipse-temurin:17-jre
+    depends_on:
+        mysql:
+            condition: service_healthy
+        redis:
+            condition: service_started
+    networks:
+        - sulmun2yong-cluster
+    # application-secret.yml 의 localhost 기반 설정을 컨테이너 네트워크 호스트명으로 오버라이드
+    environment:
+        SERVER_PORT: 8080  # application.yml은 로컬 dev용 8081, 컨테이너 내부는 기본값 8080으로 통일
+        SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+        SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+        SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+        SPRING_DATA_REDIS_HOST: redis
+        SPRING_DATA_REDIS_PORT: 6379
+        SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+        JAVA_TOOL_OPTIONS: -Xms256m -Xmx512m
+    # application-secret.yml 을 이미지에 포함시키지 않고 마운트로 주입
+    volumes:
+        - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+
+services:
+    # ────────────── 인프라 ──────────────
+    mysql:
+        image: mysql:8.0.35
+        container_name: sulmun2yong-cluster-mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        ports:
+            - "13306:3306"  # 1+default 규칙 (3306 → 13306)
+        volumes:
+            - sulmun2yong-cluster-mysql:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        networks:
+            - sulmun2yong-cluster
+
+    redis:
+        image: redis:7-alpine
+        container_name: sulmun2yong-cluster-redis
+        restart: unless-stopped
+        command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+        ports:
+            - "16379:6379"  # 1+default 규칙 (6379 → 16379)
+        volumes:
+            - sulmun2yong-cluster-redis:/data
+        networks:
+            - sulmun2yong-cluster
+
+    # ────────────── Web (Producer + Outbox Relay) × 2 ──────────────
+    web-1:
+        <<: *app-base
+        container_name: sulmun2yong-web-1
+        ports:
+            - "18080:8080"  # 1+default 규칙 (8080 → 18080)
+        volumes:
+            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -jar /app/app.jar
+
+    web-2:
+        <<: *app-base
+        container_name: sulmun2yong-web-2
+        ports:
+            - "18081:8080"  # web-1(18080) + 1 (호스트 포트 충돌 회피)
+        volumes:
+            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -jar /app/app.jar
+
+    # ────────────── Consumer × 3 ──────────────
+    consumer-1:
+        <<: *app-base
+        container_name: sulmun2yong-consumer-1
+        volumes:
+            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT-consumer.jar:/app/app.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -jar /app/app.jar
+
+    consumer-2:
+        <<: *app-base
+        container_name: sulmun2yong-consumer-2
+        volumes:
+            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT-consumer.jar:/app/app.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -jar /app/app.jar
+
+    consumer-3:
+        <<: *app-base
+        container_name: sulmun2yong-consumer-3
+        volumes:
+            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT-consumer.jar:/app/app.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -jar /app/app.jar
+
+    # ────────────── 옵저버빌리티 스택 ──────────────
+    prometheus:
+        image: prom/prometheus:v2.54.1
+        container_name: sulmun2yong-cluster-prometheus
+        restart: unless-stopped
+        command:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=7d
+            - --web.enable-lifecycle
+        volumes:
+            - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - sulmun2yong-cluster-prometheus:/prometheus
+        ports:
+            - "19090:9090"  # 1+default 규칙 (9090 → 19090)
+        depends_on:
+            - web-1
+            - web-2
+            - consumer-1
+            - consumer-2
+            - consumer-3
+        networks:
+            - sulmun2yong-cluster
+
+    kafka-exporter:
+        image: danielqsj/kafka-exporter:v1.8.0
+        container_name: sulmun2yong-cluster-kafka-exporter
+        restart: unless-stopped
+        command:
+            - --kafka.server=kafka-b1.q-asker.com:9092
+            - --kafka.server=kafka-b2.q-asker.com:9093
+            - --kafka.server=kafka-b3.q-asker.com:9092
+        ports:
+            - "19308:9308"  # 1+default 규칙 (9308 → 19308)
+        networks:
+            - sulmun2yong-cluster
+
+    grafana:
+        image: grafana/grafana:11.2.0
+        container_name: sulmun2yong-cluster-grafana
+        restart: unless-stopped
+        environment:
+            GF_AUTH_ANONYMOUS_ENABLED: "true"
+            GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
+            GF_AUTH_DISABLE_LOGIN_FORM: "false"
+            GF_SECURITY_ADMIN_USER: admin
+            GF_SECURITY_ADMIN_PASSWORD: admin
+        volumes:
+            - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+            - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+            - sulmun2yong-cluster-grafana:/var/lib/grafana
+        ports:
+            - "13000:3000"  # 1+default 규칙 (3000 → 13000)
+        depends_on:
+            - prometheus
+        networks:
+            - sulmun2yong-cluster
+
+networks:
+    sulmun2yong-cluster:
+        driver: bridge
+
+volumes:
+    sulmun2yong-cluster-mysql:
+    sulmun2yong-cluster-redis:
+    sulmun2yong-cluster-prometheus:
+    sulmun2yong-cluster-grafana:

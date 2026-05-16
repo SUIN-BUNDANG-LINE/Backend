@@ -1,0 +1,18 @@
+# Grafana datasource provisioning — Prometheus 자동 등록
+#
+# 컨테이너 기동 시 datasource 등록을 자동화한다.
+# URL은 동일 docker network 내부 서비스명을 사용.
+
+apiVersion: 1
+
+datasources:
+    - name: Prometheus
+      uid: prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus:9090
+      isDefault: true
+      editable: false
+      jsonData:
+          timeInterval: 15s
+          httpMethod: POST

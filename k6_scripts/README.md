@@ -1,24 +1,33 @@
-# k6 부하 테스트 스크립트
+# k6 부하·E2E 테스트 스크립트
 
 ## 개요
 
-Kotlin 통합/동시성 테스트를 k6 HTTP 부하 테스트로 전환한 스크립트 모음.
+Phase 1 전체 이벤트 파이프라인(정상 + 장애/복구)을 k6로 검증한다.
+HTTP 트래픽은 k6 표준 모듈로, DB 검증은 **xk6-sql** 확장으로 수행한다.
 
 ## 디렉토리 구조
 
 ```
 k6_scripts/
 ├── lib/
-│   ├── config.js               # 공통 설정 (BASE_URL, 인증)
-│   └── helpers.js              # API 호출 헬퍼 (설문 생성, 응답 제출, 추첨 등)
-├── drawing-concurrency.js      # 추첨 동시성 테스트
-├── drawing-kafka-fanout.js     # 추첨 Fan-out + 설문 자동 종료 테스트
-├── survey-response-load.js     # 응답 제출 부하 + auto-close 테스트
-├── outbox-atomicity.js         # Outbox 원자성 (중복 응답 방어) 테스트
+│   ├── config.js                  # 공통 설정 (BASE_URL, 인증)
+│   ├── helpers.js                 # API 호출 헬퍼
+│   └── db.js                      # MySQL 직접 검증 헬퍼 (xk6-sql)
+├── drawing-concurrency.js         # 정상 — 추첨 동시성
+├── drawing-kafka-fanout.js        # 정상 — 추첨 Fan-out + 자동 종료
+├── survey-response-load.js        # 정상 — 응답 부하 + auto-close
+├── outbox-atomicity.js            # 정상 — Outbox 원자성 (중복 방어)
+├── outbox-relay-recovery.js       # 복구 — Outbox Relay (SKIP LOCKED + age filter)
+├── outbox-producer-dlq.js         # 페일오버 — Producer DLQ (5회 재시도 → FAILED)
+├── skip-locked-concurrency.js     # 복구 — SKIP LOCKED 정합성 (200건 일괄 발행)
+├── sms-failover.js                # 페일오버 — SMS Inbox 재시도 + DLT 라우팅
+├── run-all-scenarios.sh           # 통합 러너 (happy/failover/all 모드)
 └── README.md
 ```
 
-## 원본 테스트 매핑
+## 시나리오 매핑
+
+### 정상 (Happy Path) — 4종
 
 | k6 스크립트 | 원본 Kotlin 테스트 | 핵심 검증 |
 |---|---|---|
@@ -27,17 +36,18 @@ k6_scripts/
 | `survey-response-load.js` | `SurveyResponseKafkaIntegrationTest` | 100명 응답 → target 도달 → 설문 CLOSED |
 | `outbox-atomicity.js` | `OutboxAtomicityIntegrationTest` | 중복 visitorId → 1건만 성공 |
 
-### 전환 불가 테스트
+### 장애/복구 (Failover) — 4종 (xk6-sql 필요)
 
-| 원본 테스트 | 미전환 사유 |
-|---|---|
-| `OutboxRelayIntegrationTest` | `@SpyBean`으로 서버 내부 Listener 차단 필요 |
-| `ConsumerIdempotencyIntegrationTest` | Kafka Consumer 내부 멱등성 → DB 직접 조회 필요 |
-| `SmsFailoverIntegrationTest` | `LoggingSmsSender.forcedFailCount` 서버 상태 제어 필요 |
+| k6 스크립트 | 검증 대상 | 원본 Kotlin 테스트 |
+|---|---|---|
+| `outbox-relay-recovery.js` | Phase 1-8 — Relay가 PENDING 100건을 SKIP LOCKED로 발행 | `OutboxRelayIntegrationTest` |
+| `outbox-producer-dlq.js` | Phase 1-10 — 5회 재시도 후 status=FAILED, retry_count=5 | (신규 — Phase 1-10) |
+| `skip-locked-concurrency.js` | Phase 1-10 — 200건 일괄 INSERT 후 retry_count=0 정합 | (신규 — Phase 1-10) |
+| `sms-failover.js` | Phase 1-7 확장 — SMS 5회 실패 → dlt_messages 적재 | `SmsFailoverIntegrationTest` |
 
 ## 사전 준비
 
-### 1. k6 설치
+### 1. k6 설치 (정상 시나리오만 실행할 경우)
 
 ```bash
 # macOS
@@ -46,6 +56,32 @@ brew install k6
 # Docker
 docker pull grafana/k6
 ```
+
+### 1-bis. 커스텀 k6 바이너리 빌드 (장애/복구 시나리오 실행 시 필수)
+
+장애/복구 4종 스크립트는 MySQL 직접 검증을 위해 **xk6-sql** 확장이 필요합니다.
+
+```bash
+# Go 1.21+ 필요
+go install go.k6.io/xk6/cmd/xk6@latest
+
+xk6 build \
+  --with github.com/grafana/xk6-sql@latest \
+  --with github.com/grafana/xk6-sql-driver-mysql@latest
+
+mv ./k6 k6_scripts/k6-custom        # k6_scripts 디렉토리로 이동
+```
+
+이후 `./k6_scripts/k6-custom run <script>.js` 형태로 실행합니다.
+표준 `k6` 바이너리로 장애/복구 스크립트를 실행하면 `import 'k6/x/sql'`에서 실패합니다.
+
+### 1-ter. 환경변수 — DB DSN
+
+```bash
+export DB_DSN="user:password@tcp(localhost:3307)/test?parseTime=true"
+```
+
+`docker-compose.yml`의 `${MYSQL_USER}:${MYSQL_PASSWORD}` 값과 일치해야 합니다.
 
 ### 2. JWT 토큰 획득
 
@@ -68,22 +104,40 @@ docker-compose up -d
 
 ## 실행 방법
 
-### 기본 실행
+### 통합 러너 (권장)
 
 ```bash
 cd k6_scripts
+chmod +x run-all-scenarios.sh
 
-# 추첨 동시성 테스트
+./run-all-scenarios.sh           # 정상 + 장애/복구 전체 실행
+./run-all-scenarios.sh happy     # 정상 시나리오만 (4종)
+./run-all-scenarios.sh failover  # 장애/복구 시나리오만 (4종, xk6-sql 필요)
+
+# SMS 시나리오 건너뛰기 (forcedFailCount 설정 안 한 경우)
+SKIP_SMS=1 ./run-all-scenarios.sh failover
+```
+
+### 개별 실행 (정상 시나리오, 표준 k6)
+
+```bash
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN drawing-concurrency.js
-
-# 추첨 Fan-out 테스트
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN drawing-kafka-fanout.js
-
-# 응답 제출 부하 테스트
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN survey-response-load.js
-
-# Outbox 원자성 테스트
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN outbox-atomicity.js
+```
+
+### 개별 실행 (장애/복구 시나리오, 커스텀 k6)
+
+```bash
+./k6-custom run --env DB_DSN="$DB_DSN" outbox-relay-recovery.js
+./k6-custom run --env DB_DSN="$DB_DSN" outbox-producer-dlq.js
+./k6-custom run --env DB_DSN="$DB_DSN" skip-locked-concurrency.js
+
+# SMS Failover: 사전에 application-secret.yml 수정 + 서버 재기동 필요
+#   loggingSmsSender:
+#     forcedFailCount: 0   # 0 = 항상 실패
+./k6-custom run --env ACCESS_TOKEN=$ACCESS_TOKEN --env DB_DSN="$DB_DSN" sms-failover.js
 ```
 
 ### 환경변수 커스터마이징
@@ -164,3 +218,26 @@ docker run --rm -i \
 
 - 기본 시나리오: 첫 응답 성공, 두 번째 응답 실패 (4xx)
 - 동시 중복: `duplicate_submit_success` = 1 (나머지 실패)
+
+### outbox-relay-recovery.js
+
+- 주입한 `INJECT_COUNT`(기본 100)건이 60초 내 모두 PUBLISHED
+- `outbox_events.aggregate_type='TEST_K6'` 행은 teardown에서 cleanup
+
+### outbox-producer-dlq.js
+
+- 잘못된 토픽으로 PENDING 1건 주입
+- 6분 내 `status='FAILED'` + `retry_count=5` 도달
+- Kafka 클러스터의 `auto.create.topics.enable=false`가 권장 (없으면 토픽 자동 생성으로 시나리오 무력화 가능)
+
+### skip-locked-concurrency.js
+
+- 200건 일괄 주입 후 모두 PUBLISHED
+- `retry_count > 0`인 행이 0개 → SKIP LOCKED가 락 충돌 없이 한 번에 처리했음을 의미
+- PENDING/FAILED 잔량 모두 0
+
+### sms-failover.js
+
+- 추첨 1건 100% 당첨 (boardSize=1)
+- 90초 내 `sms_notification_jobs.status='FAILED'` (retry_count=5) + `dlt_messages` 1건 추가
+- 실행 전 `application-secret.yml`에 `loggingSmsSender.forcedFailCount: 0` 설정 후 서버 재기동 필수

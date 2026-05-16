@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+import org.springframework.boot.gradle.tasks.run.BootRun
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -21,6 +23,9 @@ version = "0.0.1-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 repositories {
@@ -36,6 +41,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.kafka:spring-kafka")
+
+    // metric
+    implementation("io.micrometer:micrometer-registry-prometheus")
 
     // security
     implementation("org.springframework.boot:spring-boot-starter-security")
@@ -119,6 +127,30 @@ tasks.register<Test>("concurrencyTest") {
     }
 }
 
+// 두 진입점 — Web/Consumer 분리 실행을 위한 설정.
+// 기본 bootJar / bootRun은 web 진입점을 사용한다.
+springBoot {
+    mainClass.set("com.sbl.sulmun2yong.Sulmun2yongApplicationKt")
+}
+
+// Consumer 진입점 로컬 실행
+tasks.register<BootRun>("bootRunConsumer") {
+    group = "application"
+    description = "Run the Kafka consumer entry point (Sulmun2yongConsumerApplication)"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.sbl.sulmun2yong.Sulmun2yongConsumerApplicationKt")
+}
+
+// Consumer 진입점 패키징 (별도 JAR — classifier=consumer)
+tasks.register<BootJar>("bootJarConsumer") {
+    group = "build"
+    description = "Build a fat JAR for the consumer entry point"
+    archiveClassifier.set("consumer")
+    mainClass.set("com.sbl.sulmun2yong.Sulmun2yongConsumerApplicationKt")
+    classpath = sourceSets.main.get().runtimeClasspath
+    targetJavaVersion.set(JavaVersion.VERSION_17)
+}
+
 tasks.jacocoTestReport {
     reports {
         html.required.set(true)
@@ -159,26 +191,5 @@ jib {
                 "-Xms${project.findProperty("JVM_XMS")}",
                 "-Xmx${project.findProperty("JVM_XMX")}",
             )
-        // New Relic 설정
-        val newRelicConfig = project.file("newrelic/newrelic.yml")
-        val newRelicJar = project.file("newrelic/newrelic.jar")
-        if (newRelicConfig.exists() && newRelicJar.exists()) {
-            jvmFlags =
-                listOf(
-                    "-Xms${project.findProperty("JVM_XMS")}",
-                    "-Xmx${project.findProperty("JVM_XMX")}",
-                    "-Dnewrelic.config.file=/app/config/newrelic.yml",
-                    "-javaagent:/app/config/newrelic.jar",
-                )
-        }
-    }
-    // New Relic 설정
-    extraDirectories {
-        paths {
-            path {
-                setFrom(file("newrelic").toPath())
-                into = "/app/config"
-            }
-        }
     }
 }
