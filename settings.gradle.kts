@@ -5,4 +5,4 @@ plugins {
 
 rootProject.name = "sulmun2yong"
 
-include("app")
+include("common", "web", "consumer")
