@@ -1,20 +1,3 @@
-# P:2, C:3 클러스터 실행용 컴포즈
-#
-# 구성:
-#   - MySQL, Redis: 로컬 컨테이너
-#   - Kafka: 외부 브로커 (application-secret.yml 참조)
-#   - Web (Producer + Outbox Relay): 2 인스턴스 (web-1, web-2)
-#   - Consumer (Kafka 리스너 + SMS Worker): 3 인스턴스 (consumer-1~3)
-#
-# 사전 빌드:
-#   ./gradlew bootJar bootJarConsumer
-#
-# 실행:
-#   docker compose -f docker-compose.cluster.yml --env-file .env up -d
-#
-# 종료:
-#   docker compose -f docker-compose.cluster.yml down
-
 version: '3.8'
 
 x-app-base: &app-base
@@ -56,7 +39,7 @@ services:
         volumes:
             - sulmun2yong-cluster-mysql:/var/lib/mysql
         healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+            test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
             interval: 5s
             timeout: 5s
             retries: 20
@@ -67,7 +50,7 @@ services:
         image: redis:7-alpine
         container_name: sulmun2yong-cluster-redis
         restart: unless-stopped
-        command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+        command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
         ports:
             - "16379:6379"  # 1+default 규칙 (6379 → 16379)
         volumes:
@@ -82,8 +65,8 @@ services:
         ports:
             - "18080:8080"  # 1+default 규칙 (8080 → 18080)
         volumes:
-            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
@@ -95,8 +78,8 @@ services:
         ports:
             - "18081:8080"  # web-1(18080) + 1 (호스트 포트 충돌 회피)
         volumes:
-            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
@@ -107,8 +90,8 @@ services:
         <<: *app-base
         container_name: sulmun2yong-consumer-1
         volumes:
-            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT-consumer.jar:/app/app.jar:ro
+            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
@@ -118,8 +101,8 @@ services:
         <<: *app-base
         container_name: sulmun2yong-consumer-2
         volumes:
-            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT-consumer.jar:/app/app.jar:ro
+            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
@@ -129,8 +112,8 @@ services:
         <<: *app-base
         container_name: sulmun2yong-consumer-3
         volumes:
-            - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./build/libs/sulmun2yong-0.0.1-SNAPSHOT-consumer.jar:/app/app.jar:ro
+            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/

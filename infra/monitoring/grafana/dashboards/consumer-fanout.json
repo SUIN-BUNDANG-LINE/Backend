@@ -1,0 +1,169 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "description": "T6d Consumer Fan-out — Layer 1(Kafka Exporter, 브로커 시점 lag) vs Layer 2(Spring Kafka, 어플리케이션 시점 처리) 책임 분리. 대상 시나리오: drawing-kafka-fanout, survey-response-load. 파티션 할당·offset 리셋은 Kafka UI 책임.",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "type": "text",
+            "id": 100,
+            "title": "Layer 1 vs Layer 2 책임 분리",
+            "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
+            "options": {
+                "mode": "markdown",
+                "content": "**📌 이 대시보드의 책임**: Consumer Fan-out 시계열 — Layer 1(브로커 시점 lag) + Layer 2(인스턴스별 처리 TPS/latency).\n\n**Layer 1 (Kafka Exporter)**: `kafka_consumergroup_lag` — 브로커가 보는 lag. consumer가 죽어도 측정됨. 진실의 원천.  •  **Layer 2 (Spring Kafka)**: `spring_kafka_listener_seconds_*` — 어플리케이션이 실제로 처리한 TPS/latency. 인스턴스별 부하 분산 확인.\n\n파티션 할당·offset 리셋·rebalance 이벤트 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  베이스라인 헬스 → **Cluster Overview 대시보드**"
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 1,
+            "title": "Consumer Lag — Layer 1 (Kafka Exporter, by group & topic)",
+            "description": "브로커 시점 lag. consumer가 죽거나 멈춰도 측정됨. 일시 폭증은 정상, 회복 곡선이 보여야 함. 지속 증가하면 fan-out 처리 지연 또는 consumer 다운 의심.",
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 3},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (consumergroup, topic) (kafka_consumergroup_lag{consumergroup=~\"$consumergroup\", topic=~\"$topic\"})",
+                    "legendFormat": "{{consumergroup}} / {{topic}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
+                }
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 2,
+            "title": "Listener TPS — Layer 2 (Spring Kafka, by instance)",
+            "description": "인스턴스별 실제 처리량. fan-out이 consumer-1/2/3에 분산되는지 검증. 한 인스턴스에 쏠리면 파티션 할당 불균형 의심 → Kafka UI에서 파티션 분포 확인.",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (instance) (rate(spring_kafka_listener_seconds_count{application=~\"$application\", instance=~\"$instance\"}[1m]))",
+                    "legendFormat": "{{instance}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
+                }
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 3,
+            "title": "Listener p95 Latency — Layer 2 (Spring Kafka, by instance)",
+            "description": "인스턴스별 listener 처리 latency p95. 1초를 넘으면 DB·외부 API 지연 또는 GC 의심. 인스턴스 간 격차가 크면 부하 불균형.",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum by (le, instance) (rate(spring_kafka_listener_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+                    "legendFormat": "p95 / {{instance}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 5, "showPoints": "never"}
+                }
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 39,
+    "tags": ["sulmun2yong", "kafka", "consumer"],
+    "templating": {
+        "list": [
+            {
+                "name": "application",
+                "label": "Application",
+                "type": "query",
+                "datasource": {"type": "prometheus", "uid": "prometheus"},
+                "query": {"query": "label_values(spring_kafka_listener_seconds_count, application)", "refId": "Application"},
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "current": {"selected": false, "text": "All", "value": "$__all"}
+            },
+            {
+                "name": "instance",
+                "label": "Instance",
+                "type": "query",
+                "datasource": {"type": "prometheus", "uid": "prometheus"},
+                "query": {"query": "label_values(spring_kafka_listener_seconds_count{application=~\"$application\"}, instance)", "refId": "Instance"},
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "current": {"selected": false, "text": "All", "value": "$__all"}
+            },
+            {
+                "name": "consumergroup",
+                "label": "Consumer Group",
+                "type": "query",
+                "datasource": {"type": "prometheus", "uid": "prometheus"},
+                "query": {"query": "label_values(kafka_consumergroup_lag, consumergroup)", "refId": "ConsumerGroup"},
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "current": {"selected": false, "text": "All", "value": "$__all"}
+            },
+            {
+                "name": "topic",
+                "label": "Topic",
+                "type": "query",
+                "datasource": {"type": "prometheus", "uid": "prometheus"},
+                "query": {"query": "label_values(kafka_consumergroup_lag{consumergroup=~\"$consumergroup\"}, topic)", "refId": "Topic"},
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "current": {"selected": false, "text": "All", "value": "$__all"}
+            }
+        ]
+    },
+    "time": {"from": "now-15m", "to": "now"},
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Consumer Fan-out",
+    "uid": "consumer-fanout",
+    "version": 1,
+    "weekStart": ""
+}

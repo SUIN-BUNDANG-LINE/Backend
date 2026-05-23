@@ -1,7 +1,7 @@
 // API 호출 헬퍼 함수
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { BASE_URL, authParams, jsonParams } from './config.js';
+import { pickBaseUrl, authParams, jsonParams } from './config.js';
 
 // UUID v4 생성
 export function uuidv4() {
@@ -16,7 +16,7 @@ export function uuidv4() {
 
 // 설문 생성 → surveyId 반환
 export function createSurvey() {
-    const res = http.post(`${BASE_URL}/api/v1/surveys/workbench/create`, null, authParams());
+    const res = http.post(`${pickBaseUrl()}/api/v1/surveys/workbench/create`, null, authParams());
     check(res, { '설문 생성 성공': (r) => r.status === 200 });
     return res.json();
 }
@@ -27,8 +27,10 @@ export function saveSurveyWithImmediateDraw(surveyId, opts = {}) {
     const targetParticipantCount = opts.targetParticipantCount || 100;
     const rewardCount = opts.rewardCount || 10;
 
+    // FinishedAt 도메인 규칙 — 분/초/밀리초가 모두 0이어야 함 (정시 단위)
     const finishedAt = new Date();
     finishedAt.setDate(finishedAt.getDate() + 30);
+    finishedAt.setMinutes(0, 0, 0);
 
     const payload = JSON.stringify({
         title: opts.title || 'k6 부하 테스트 설문',
@@ -59,20 +61,20 @@ export function saveSurveyWithImmediateDraw(surveyId, opts = {}) {
         ],
     });
 
-    const res = http.put(`${BASE_URL}/api/v1/surveys/workbench/${surveyId}`, payload, authParams());
+    const res = http.put(`${pickBaseUrl()}/api/v1/surveys/workbench/${surveyId}`, payload, authParams());
     check(res, { '설문 저장 성공': (r) => r.status === 200 });
     return sectionId;
 }
 
 // 설문 시작 (ImmediateDraw면 DrawingBoard 자동 생성)
 export function startSurvey(surveyId) {
-    const res = http.patch(`${BASE_URL}/api/v1/surveys/workbench/start/${surveyId}`, null, authParams());
+    const res = http.patch(`${pickBaseUrl()}/api/v1/surveys/workbench/start/${surveyId}`, null, authParams());
     check(res, { '설문 시작 성공': (r) => r.status === 200 });
 }
 
 // 설문 삭제
 export function deleteSurvey(surveyId) {
-    const res = http.del(`${BASE_URL}/api/v1/surveys/workbench/delete/${surveyId}`, null, authParams());
+    const res = http.del(`${pickBaseUrl()}/api/v1/surveys/workbench/delete/${surveyId}`, null, authParams());
     return res;
 }
 
@@ -90,7 +92,7 @@ export function submitResponse(surveyId, sectionId, visitorId) {
         visitorId: visitorId,
     });
 
-    return http.post(`${BASE_URL}/api/v1/surveys/response/${surveyId}`, payload, jsonParams());
+    return http.post(`${pickBaseUrl()}/api/v1/surveys/response/${surveyId}`, payload, jsonParams());
 }
 
 // 추첨 실행
@@ -101,17 +103,17 @@ export function doDrawing(participantId, selectedNumber, phoneNumber) {
         phoneNumber: phoneNumber,
     });
 
-    return http.post(`${BASE_URL}/api/v1/drawing-board/draw`, payload, jsonParams());
+    return http.post(`${pickBaseUrl()}/api/v1/drawing-board/draw`, payload, jsonParams());
 }
 
 // 추첨판 정보 조회
 export function getDrawingBoardInfo(surveyId) {
-    return http.get(`${BASE_URL}/api/v1/drawing-board/info/${surveyId}`, jsonParams());
+    return http.get(`${pickBaseUrl()}/api/v1/drawing-board/info/${surveyId}`, jsonParams());
 }
 
 // 설문 정보 조회
 export function getSurveyInfo(surveyId) {
-    return http.get(`${BASE_URL}/api/v1/surveys/info/${surveyId}`, jsonParams());
+    return http.get(`${pickBaseUrl()}/api/v1/surveys/info/${surveyId}`, jsonParams());
 }
 
 // ── 설문 + 추첨 전체 셋업 (setup 함수에서 호출) ──

@@ -56,5 +56,5 @@ shrimp_data
 docs
 
 # k6 custom binary (43MB Mach-O executable, do not commit)
-k6-custom
+infra/k6-custom
 

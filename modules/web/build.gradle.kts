@@ -90,7 +90,7 @@ tasks.jacocoTestReport {
 
 jib {
     from {
-        image = "openjdk:17-slim"
+        image = "eclipse-temurin:17-jre"
         auth {
             username = project.findProperty("DOCKER_ID") as String?
             password = project.findProperty("DOCKER_PASSWORD") as String?
