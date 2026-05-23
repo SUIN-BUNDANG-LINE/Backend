@@ -31,7 +31,9 @@ class SurveyWorkbenchService(
         makerId: UUID,
     ) {
         val survey =
-            surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }
+            surveyRepository
+                .findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId)
+                .orElseThrow { SurveyNotFoundException() }
         val newSurvey =
             with(surveySaveRequest) {
                 survey.updateContent(
@@ -54,19 +56,23 @@ class SurveyWorkbenchService(
         makerId: UUID,
     ) {
         val survey =
-            surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }
-        val startedSurvey = survey.start()
-        surveyRepository.save(startedSurvey)
+            surveyRepository
+                .findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId)
+                .orElseThrow { SurveyNotFoundException() }
+
         // 즉시 추첨이면서 최초 시작 시 추첨 보드 생성
-        if (startedSurvey.rewardSetting is ImmediateDrawSetting && survey.status == SurveyStatus.NOT_STARTED) {
+        if (survey.rewardSetting is ImmediateDrawSetting && survey.status == SurveyStatus.NOT_STARTED) {
             val drawingBoard =
                 DrawingBoard.create(
-                    surveyId = startedSurvey.id,
-                    boardSize = startedSurvey.rewardSetting.targetParticipantCount!!,
-                    rewards = startedSurvey.rewardSetting.rewards,
+                    surveyId = survey.id,
+                    boardSize = survey.rewardSetting.targetParticipantCount!!,
+                    rewards = survey.rewardSetting.rewards,
                 )
             drawingBoardRepository.save(drawingBoard)
         }
+
+        val startedSurvey = survey.start()
+        surveyRepository.save(startedSurvey)
     }
 
     fun editSurvey(
@@ -74,7 +80,9 @@ class SurveyWorkbenchService(
         makerId: UUID,
     ) {
         val survey =
-            surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }
+            surveyRepository
+                .findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId)
+                .orElseThrow { SurveyNotFoundException() }
         surveyRepository.save(survey.edit())
     }
 
@@ -83,7 +91,9 @@ class SurveyWorkbenchService(
         makerId: UUID,
     ) {
         val survey =
-            surveyRepository.findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId).orElseThrow { SurveyNotFoundException() }
+            surveyRepository
+                .findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId)
+                .orElseThrow { SurveyNotFoundException() }
         surveyRepository.save(survey.finish())
     }
 
