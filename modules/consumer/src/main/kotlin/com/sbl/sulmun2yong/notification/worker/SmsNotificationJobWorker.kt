@@ -3,7 +3,6 @@ package com.sbl.sulmun2yong.notification.worker
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.global.kafka.publisher.KafkaEventPublisher
-import com.sbl.sulmun2yong.global.lock.RedissonLock
 import com.sbl.sulmun2yong.notification.dto.event.DltSmsNotificationEvent
 import com.sbl.sulmun2yong.notification.entity.SmsNotificationJobEntity
 import com.sbl.sulmun2yong.notification.service.SmsNotificationJobService
@@ -24,12 +23,12 @@ class SmsNotificationJobWorker(
         private val log = LoggerFactory.getLogger(SmsNotificationJobWorker::class.java)
         private const val MAX_RETRY = 5
         private const val STALE_SECONDS = 30L
+        private const val BATCH_SIZE = 10
     }
 
     @Scheduled(fixedDelay = 30000)
-    @RedissonLock(key = "smsJobWorker", leaseTime = 60, waitTime = 0)
     fun processJobs() {
-        val staleJobs = smsNotificationJobService.findStaleJobs(STALE_SECONDS)
+        val staleJobs = smsNotificationJobService.claimStaleJobs(STALE_SECONDS, BATCH_SIZE)
         staleJobs.forEach { job -> processSingleJob(job) }
     }
 
