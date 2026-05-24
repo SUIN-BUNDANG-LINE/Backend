@@ -16,6 +16,7 @@ import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
@@ -42,6 +43,10 @@ class SurveyInfoService(
         return SurveyListResponse.of(surveyEntities.totalPages, surveyEntities.content)
     }
 
+    // OSIV=false 환경에서 rewardSetting(@Transient → rewardEntities lazy)·
+    // drawingBoard.selectedTicketCount(ticketEntities lazy) 접근이 LazyInitializationException을 던지므로
+    // 단일 read 트랜잭션으로 묶어 세션을 유지한다.
+    @Transactional(readOnly = true)
     fun getSurveyInfo(surveyId: UUID): SurveyInfoResponse {
         val survey = surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }
         if (survey.status == SurveyStatus.NOT_STARTED) throw InvalidSurveyAccessException()
