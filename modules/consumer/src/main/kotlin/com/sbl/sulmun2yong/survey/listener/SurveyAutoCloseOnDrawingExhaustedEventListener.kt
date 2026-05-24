@@ -9,7 +9,7 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import java.util.UUID
 
-// drawing-completed 토픽의 auto-close groupId 메시지를 받아 티켓 소진 시 설문을 종료한다.
+// drawing-completed 토픽의 drawing-auto-close groupId 메시지를 받아 티켓 소진 시 설문을 종료한다.
 // Consumer 어댑터가 보유한 트랜잭션을 그대로 전파(REQUIRED) 받아 동일 트랜잭션 내에서 PESSIMISTIC 락을 사용한다.
 @Component
 class SurveyAutoCloseOnDrawingExhaustedEventListener(

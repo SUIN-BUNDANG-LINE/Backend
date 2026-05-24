@@ -6,7 +6,6 @@ import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
 import com.sbl.sulmun2yong.global.kafka.outbox.entity.OutboxStatus
 import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.util.DateUtil
-import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.FinishedAt
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
 import com.sbl.sulmun2yong.survey.domain.reward.Reward
@@ -43,7 +42,7 @@ import java.util.concurrent.TimeUnit
  * 2. 설문 (ImmediateDrawSetting, targetParticipantCount=5) 생성 + start
  * 3. 5건 응답 제출 → Outbox 전량 PENDING 확인
  * 4. Spy 복구 → OutboxRelayScheduler(5초 폴링, 30초 age threshold)가 보상 발행
- * 5. auto-close Consumer가 설문을 CLOSED로 변경하는 전체 흐름 검증
+ * 5. Outbox 전량 PENDING → PUBLISHED 전이로 Relay 보상 발행 동작 검증
  *
  * 실행 전제:
  * - 3-broker Kafka 클러스터 온라인
@@ -109,7 +108,7 @@ class OutboxRelayIntegrationTest {
     }
 
     @Test
-    fun `정상 경로 차단 시 Outbox PENDING 유지 후 Relay가 보상 발행하여 설문 자동 종료`() {
+    fun `정상 경로 차단 시 Outbox PENDING 유지 후 Relay가 보상 발행하여 PUBLISHED 전이`() {
         // given: 정상 경로(AFTER_COMMIT) 차단
         doNothing().whenever(outboxEventListener).handle(any<OutboxPublishEvent>())
         log.info("OutboxEventListener 정상 경로 차단 완료")
@@ -136,24 +135,11 @@ class OutboxRelayIntegrationTest {
         reset(outboxEventListener)
         log.info("OutboxEventListener 정상 경로 복구 완료 - Relay 보상 발행 대기 시작")
 
-        // then 2: auto-close Consumer → 설문 CLOSED (최대 120초 대기: 30초 age + 5초 polling + 여유)
+        // then 2: Outbox 전량 PUBLISHED 전이 확인 (Relay 보상 발행 검증)
+        // 최대 120초 대기: 30초 age threshold + 5초 polling + 여유
         Awaitility.await()
             .atMost(120, TimeUnit.SECONDS)
             .pollInterval(2, TimeUnit.SECONDS)
-            .untilAsserted {
-                val currentStatus = surveyRepository.findById(testSurveyId).orElseThrow().status
-                assertEquals(
-                    SurveyStatus.CLOSED,
-                    currentStatus,
-                    "Relay 보상 발행 후 auto-close Consumer가 설문을 CLOSED로 변경해야 함",
-                )
-            }
-        log.info("검증 통과: Relay 보상 발행 → auto-close Consumer → 설문 자동 종료")
-
-        // then 3: Outbox 전량 PUBLISHED 확인
-        Awaitility.await()
-            .atMost(30, TimeUnit.SECONDS)
-            .pollInterval(1, TimeUnit.SECONDS)
             .untilAsserted {
                 val publishedCount =
                     outboxEventRepository.findAll()
@@ -162,10 +148,10 @@ class OutboxRelayIntegrationTest {
                 assertEquals(
                     TARGET_PARTICIPANT_COUNT,
                     publishedCount,
-                    "Outbox 이벤트 전량이 PUBLISHED 상태여야 함",
+                    "Relay 보상 발행으로 Outbox 전량이 PUBLISHED 상태로 전이해야 함",
                 )
             }
-        log.info("검증 통과: Outbox 전량 PUBLISHED")
+        log.info("검증 통과: Relay 보상 발행 → Outbox 전량 PUBLISHED")
     }
 
     private fun createSurvey(): Survey =

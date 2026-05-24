@@ -15,7 +15,6 @@ k6_scripts/
 │   └── db.js                      # MySQL 직접 검증 헬퍼 (xk6-sql)
 ├── drawing-concurrency.js         # 정상 — 추첨 동시성
 ├── drawing-kafka-fanout.js        # 정상 — 추첨 Fan-out + 자동 종료
-├── survey-response-load.js        # 정상 — 응답 부하 + auto-close
 ├── outbox-atomicity.js            # 정상 — Outbox 원자성 (중복 방어)
 ├── outbox-relay-recovery.js       # 복구 — Outbox Relay (SKIP LOCKED + age filter)
 ├── outbox-producer-dlq.js         # 페일오버 — Producer DLQ (5회 재시도 → FAILED)
@@ -27,13 +26,12 @@ k6_scripts/
 
 ## 시나리오 매핑
 
-### 정상 (Happy Path) — 4종
+### 정상 (Happy Path) — 3종
 
 | k6 스크립트 | 원본 Kotlin 테스트 | 핵심 검증 |
 |---|---|---|
 | `drawing-concurrency.js` | `DrawingBoardServiceConcurrencyTest` | 분산락 동시성 (같은 티켓/같은 사용자/다른 번호) |
 | `drawing-kafka-fanout.js` | `DrawingKafkaIntegrationTest` | 100명 추첨 → 티켓 소진 → 설문 CLOSED |
-| `survey-response-load.js` | `SurveyResponseKafkaIntegrationTest` | 100명 응답 → target 도달 → 설문 CLOSED |
 | `outbox-atomicity.js` | `OutboxAtomicityIntegrationTest` | 중복 visitorId → 1건만 성공 |
 
 ### 장애/복구 (Failover) — 4종 (xk6-sql 필요)
@@ -123,7 +121,6 @@ SKIP_SMS=1 ./run-all-scenarios.sh failover
 ```bash
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN drawing-concurrency.js
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN drawing-kafka-fanout.js
-k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN survey-response-load.js
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN outbox-atomicity.js
 ```
 
@@ -150,15 +147,8 @@ k6 run --env BASE_URL=http://staging.example.com --env ACCESS_TOKEN=$ACCESS_TOKE
 k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN \
        --env BOARD_SIZE=100 \
        --env WINNING_COUNT=20 \
-       --env PARTICIPANT_COUNT=200 \
+       --env PARTICIPANT_COUNT=100 \
        drawing-kafka-fanout.js
-
-# 응답 제출 VU 수 조정
-k6 run --env ACCESS_TOKEN=$ACCESS_TOKEN \
-       --env TARGET_COUNT=100 \
-       --env SUBMISSION_COUNT=500 \
-       --env VUS=50 \
-       survey-response-load.js
 ```
 
 ### Docker로 실행
@@ -190,8 +180,6 @@ docker run --rm -i \
 | `drawing-concurrency` | `drawing_success_rate` | 추첨 성공률 |
 | `drawing-kafka-fanout` | `drawing_win_total` | 당첨 수 |
 | `drawing-kafka-fanout` | `drawing_lose_total` | 낙첨 수 |
-| `survey-response-load` | `submit_success_total` | 응답 성공 수 |
-| `survey-response-load` | `submit_success_rate` | 응답 성공률 |
 | `outbox-atomicity` | `duplicate_submit_success` | 중복 요청 성공 수 (기대: 1) |
 | `outbox-atomicity` | `duplicate_submit_fail` | 중복 요청 실패 수 |
 
@@ -205,14 +193,9 @@ docker run --rm -i \
 
 ### drawing-kafka-fanout.js
 
-- `drawing_success_total` = BOARD_SIZE (50)
-- `drawing_win_total` = WINNING_COUNT (10)
-- 설문 상태: CLOSED (Fan-out Consumer에 의한 자동 종료)
-
-### survey-response-load.js
-
-- `submit_success_total` >= TARGET_COUNT (50)
-- 설문 상태: CLOSED (auto-close Consumer에 의한 자동 종료)
+- `drawing_success_total` = BOARD_SIZE (100)
+- `drawing_win_total` = WINNING_COUNT (20)
+- 설문 상태: CLOSED (drawing-auto-close Consumer에 의한 추첨 소진 종료)
 
 ### outbox-atomicity.js
 

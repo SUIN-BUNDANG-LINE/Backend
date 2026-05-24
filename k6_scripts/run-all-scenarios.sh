@@ -59,7 +59,6 @@ run_scenario() {
 run_happy_path() {
     run_scenario "정상 — 추첨 동시성"          drawing-concurrency.js
     run_scenario "정상 — 추첨 Fan-out + 자동 종료" drawing-kafka-fanout.js
-    run_scenario "정상 — 응답 부하 + 자동 종료"   survey-response-load.js
     run_scenario "정상 — Outbox 원자성"          outbox-atomicity.js
 }
 
