@@ -130,7 +130,7 @@ services:
             - --storage.tsdb.retention.time=7d
             - --web.enable-lifecycle
         volumes:
-            - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
             - sulmun2yong-cluster-prometheus:/prometheus
         ports:
             - "19090:9090"  # 1+default 규칙 (9090 → 19090)
@@ -167,8 +167,8 @@ services:
             GF_SECURITY_ADMIN_USER: admin
             GF_SECURITY_ADMIN_PASSWORD: admin
         volumes:
-            - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-            - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+            - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+            - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
             - sulmun2yong-cluster-grafana:/var/lib/grafana
         ports:
             - "13000:3000"  # 1+default 규칙 (3000 → 13000)
