@@ -1,0 +1,206 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "description": "T3 SmsNotificationMetrics 시각화 — SMS Notification Job 상태 분포, FAILED 알람, DLT 누적량(notification_type별), DLT 컨슈머 lag. 대상 시나리오: sms-failover. 메시지 인스펙션·offset 리셋은 Kafka UI 책임.",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "type": "text",
+            "id": 100,
+            "title": "도구별 책임 분리",
+            "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
+            "options": {
+                "mode": "markdown",
+                "content": "**📌 이 대시보드의 책임**: SMS Notification + DLT 도메인 시계열 — Job 상태별 게이지, FAILED 알람, DLT 누적/처리 추이.\n\nDLT 메시지 본문 인스펙션·재처리·수동 ack → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  실패 row 디버깅 → **MySQL** (`SELECT * FROM sms_notification_jobs WHERE status='FAILED'`, `dlt_messages`)  •  베이스라인 헬스 → **Cluster Overview**  •  컨슈머 fan-out 전반 → **Consumer Fan-out 대시보드**\n\n_참고: `sms_notification_attempts_total{result}` Counter는 정의만 되어 있고 wire-up 예정(SmsNotificationJobWorker 발송 분기에서 recordAttempt 호출 시 활성화)._"
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 1,
+            "title": "SMS Notification Jobs — by Status",
+            "description": "sms_notification_jobs 테이블의 status별 row 수. 30초 주기 폴링으로 갱신. PENDING/EXECUTING은 진행 중, COMPLETED는 누적 성공, FAILED는 재시도 초과 → DLT 라우팅 완료 상태. PENDING이 지속 증가하면 Worker 처리 지연 의심.",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 3},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (status) (sms_notification_jobs_count{application=~\"$application\", instance=~\"$instance\"})",
+                    "legendFormat": "{{status}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
+                },
+                "overrides": [
+                    {
+                        "matcher": {"id": "byRegexp", "options": ".*COMPLETED.*"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+                    },
+                    {
+                        "matcher": {"id": "byRegexp", "options": ".*FAILED.*"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+                    },
+                    {
+                        "matcher": {"id": "byRegexp", "options": ".*PENDING.*"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]
+                    },
+                    {
+                        "matcher": {"id": "byRegexp", "options": ".*EXECUTING.*"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
+                    }
+                ]
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 2,
+            "title": "SMS Notification Jobs — FAILED Alert",
+            "description": "재시도 초과로 최종 실패 처리된 SMS job. 0이 정상, 1 이상이면 DLT 토픽으로 라우팅됨 — Kafka UI에서 drawing-notification.DLT 검사 필요. 5 이상이면 외부 SMS API 장애 가능성.",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 3},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (instance) (sms_notification_jobs_count{status=\"FAILED\", application=~\"$application\", instance=~\"$instance\"})",
+                    "legendFormat": "{{instance}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "showPoints": "always"},
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {"color": "green", "value": null},
+                            {"color": "orange", "value": 1},
+                            {"color": "red", "value": 5}
+                        ]
+                    }
+                }
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 3,
+            "title": "DLT Messages — by Notification Type",
+            "description": "dlt_messages 테이블의 notification_type별 row 수. 30초 주기 폴링으로 갱신. SMS_NOTIFICATION 외 다른 type이 등장하면 새 도메인 DLT 경로 추가됨. 누적 게이지라 단조 증가 — 비우려면 수동 처리 후 DELETE 필요.",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (notification_type) (dlt_messages_total{application=~\"$application\", instance=~\"$instance\"})",
+                    "legendFormat": "{{notification_type}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"},
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {"color": "green", "value": null},
+                            {"color": "orange", "value": 1}
+                        ]
+                    }
+                }
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 4,
+            "title": "DLT Consumer Lag (drawing-notification.DLT)",
+            "description": "Kafka Exporter 기준 dlt-sms-notification 그룹의 lag. DLT 메시지가 토픽에 쌓이는 즉시 DltSmsNotificationKafkaListener가 dlt_messages 테이블로 영속화한다. lag이 0이 아니면 consumer가 못 따라가는 상황 — 영속화 로직 또는 DB 지연 의심.",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (topic) (kafka_consumergroup_lag{consumergroup=\"dlt-sms-notification\", topic=~\".*\\\\.DLT\"})",
+                    "legendFormat": "{{topic}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
+                }
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 39,
+    "tags": ["sulmun2yong", "notification", "sms", "dlt"],
+    "templating": {
+        "list": [
+            {
+                "name": "application",
+                "label": "Application",
+                "type": "query",
+                "datasource": {"type": "prometheus", "uid": "prometheus"},
+                "query": {"query": "label_values(sms_notification_jobs_count, application)", "refId": "Application"},
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "current": {"selected": false, "text": "All", "value": "$__all"}
+            },
+            {
+                "name": "instance",
+                "label": "Instance",
+                "type": "query",
+                "datasource": {"type": "prometheus", "uid": "prometheus"},
+                "query": {"query": "label_values(sms_notification_jobs_count{application=~\"$application\"}, instance)", "refId": "Instance"},
+                "refresh": 2,
+                "includeAll": true,
+                "multi": true,
+                "current": {"selected": false, "text": "All", "value": "$__all"}
+            }
+        ]
+    },
+    "time": {"from": "now-15m", "to": "now"},
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "SMS Notification & DLT",
+    "uid": "sms-failover",
+    "version": 1,
+    "weekStart": ""
+}
