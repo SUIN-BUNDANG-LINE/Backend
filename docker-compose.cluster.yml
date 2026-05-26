@@ -18,7 +18,11 @@ x-app-base: &app-base
         SPRING_DATA_REDIS_HOST: redis
         SPRING_DATA_REDIS_PORT: 6379
         SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
-        JAVA_TOOL_OPTIONS: -Xms256m -Xmx512m
+        JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1024m -javaagent:/app/otel-javaagent.jar"
+        OTEL_TRACES_EXPORTER: logging
+        OTEL_METRICS_EXPORTER: none
+        OTEL_LOGS_EXPORTER: none
+        OTEL_PROPAGATORS: tracecontext,baggage
     # application-secret.yml 을 이미지에 포함시키지 않고 마운트로 주입
     volumes:
         - ./src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
@@ -67,9 +71,11 @@ services:
         volumes:
             - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
             - ./modules/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-web
             -jar /app/app.jar
 
     web-2:
@@ -80,9 +86,11 @@ services:
         volumes:
             - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
             - ./modules/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-web
             -jar /app/app.jar
 
     # ────────────── Consumer × 3 ──────────────
@@ -92,9 +100,11 @@ services:
         volumes:
             - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
             - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-consumer
             -jar /app/app.jar
 
     consumer-2:
@@ -103,9 +113,11 @@ services:
         volumes:
             - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
             - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-consumer
             -jar /app/app.jar
 
     consumer-3:
@@ -114,9 +126,11 @@ services:
         volumes:
             - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
             - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-consumer
             -jar /app/app.jar
 
     # ────────────── 옵저버빌리티 스택 ──────────────
