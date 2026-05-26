@@ -9,15 +9,16 @@
  *   3. diff_tickets  — 10명이 각각 다른 번호로 동시 추첨 → 전부 성공
  *
  * 실행:
- *   k6 run --env BASE_URL=http://localhost:8080 \
- *          --env ACCESS_TOKEN=<jwt> \
- *          drawing-concurrency.js
+ *   cd k6_scripts && k6 run drawing-concurrency.js
+ *   (BASE_URL/ACCESS_TOKEN 자동 — config.js가 클러스터 라운드로빈 + JWT 자동 발급)
  *
  * 환경변수 (선택):
  *   SURVEY_ID   — 미리 생성된 설문 ID (생략 시 setup에서 자동 생성)
  *   SECTION_ID  — 미리 생성된 섹션 ID
+ *   BASE_URLS   — 호스트 오버라이드 (기본: localhost:18080,localhost:18081 라운드로빈)
  */
 import { check, group, sleep } from 'k6';
+import exec from 'k6/execution';
 import { Counter, Rate } from 'k6/metrics';
 import {
     setupSurveyWithDrawing,
@@ -35,19 +36,20 @@ const drawingSuccessRate = new Rate('drawing_success_rate');
 export const options = {
     scenarios: {
         // 시나리오 1: 같은 티켓 번호에 10명 동시 요청 → 1명만 성공
+        // per-vu-iterations: 각 VU가 정확히 1회 → ramp-up 직후 동시 발사 보장 (락 경합 강제)
         same_ticket: {
-            executor: 'shared-iterations',
+            executor: 'per-vu-iterations',
             vus: 10,
-            iterations: 10,
+            iterations: 1,
             maxDuration: '60s',
             exec: 'sameTicketTest',
             tags: { scenario: 'same_ticket' },
         },
         // 시나리오 2: 동일 사용자가 다른 번호로 10번 동시 요청 → 1번만 성공
         same_user: {
-            executor: 'shared-iterations',
+            executor: 'per-vu-iterations',
             vus: 10,
-            iterations: 10,
+            iterations: 1,
             maxDuration: '60s',
             exec: 'sameUserTest',
             startTime: '65s',
@@ -55,9 +57,9 @@ export const options = {
         },
         // 시나리오 3: 10명이 각각 다른 번호로 동시 추첨 → 전부 성공
         diff_tickets: {
-            executor: 'shared-iterations',
+            executor: 'per-vu-iterations',
             vus: 10,
-            iterations: 10,
+            iterations: 1,
             maxDuration: '60s',
             exec: 'differentTicketsTest',
             startTime: '130s',
@@ -133,11 +135,12 @@ export function setup() {
 // 기대: 1명만 성공, 나머지 AlreadySelectedTicketException (409 또는 400)
 export function sameTicketTest(data) {
     const { participants, targetNumber } = data.scenario1;
-    const vuIndex = __VU - 1;
+    // __VU는 전역 카운터라 시나리오 2/3에서 11+로 시작할 수 있음 → 시나리오 전역 유니크 카운터로 매핑
+    const idx = exec.scenario.iterationInTest;
 
-    if (vuIndex >= participants.length) return;
+    if (idx >= participants.length) return;
 
-    const p = participants[vuIndex];
+    const p = participants[idx];
     group('같은 티켓 동시 추첨', () => {
         const res = doDrawing(p.participantId, targetNumber, p.phoneNumber);
 
@@ -161,10 +164,10 @@ export function sameUserTest(data) {
     const { participant } = data.scenario2;
     if (!participant) return;
 
-    const vuIndex = __VU - 1;
+    const idx = exec.scenario.iterationInTest;
 
     group('동일 사용자 동시 추첨', () => {
-        const selectedNumber = vuIndex; // 각 VU가 다른 번호 선택
+        const selectedNumber = idx; // 각 iteration이 다른 번호 선택
         const res = doDrawing(participant.participantId, selectedNumber, '010-1234-5678');
 
         if (res.status === 200) {
@@ -184,11 +187,11 @@ export function sameUserTest(data) {
 // 기대: 전부 성공
 export function differentTicketsTest(data) {
     const { participants } = data.scenario3;
-    const vuIndex = __VU - 1;
+    const idx = exec.scenario.iterationInTest;
 
-    if (vuIndex >= participants.length) return;
+    if (idx >= participants.length) return;
 
-    const p = participants[vuIndex];
+    const p = participants[idx];
     group('다른 번호 동시 추첨', () => {
         const res = doDrawing(p.participantId, p.selectedNumber, p.phoneNumber);
 
