@@ -23,6 +23,7 @@
 | 포맷터 | ktlint 12.1.1 (Gradle 플러그인: org.jlleitschuh.gradle.ktlint) |
 | 컨테이너 | JIB (Google Cloud Tools) |
 | AOP | Spring Boot AOP |
+| 관찰가능성 | Prometheus + Grafana 11.2 + Tempo 2.6 + OpenTelemetry Java Agent (자동 instrumentation, W3C tracecontext) |
 
 ## 명령어 (Scripts)
 
@@ -208,6 +209,35 @@ Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴
 | `drawing-completed` | `sms-cost-calculator` | `DrawingCompletedSmsCostKafkaListener` (`ConsumerSeekAware` 리플레이) | `drawing.SmsCostEventListener` |
 | `survey-response-submitted` | `response-stats` | `SurveyResponseSubmittedStatsKafkaListener` | `survey.SurveyResponseStatsEventListener` |
 | `drawing-notification.DLT` | `dlt-sms-notification` | `DltSmsNotificationKafkaListener` | `notification.DltMessageEventListener` |
+
+### 관찰가능성 (Observability) 스택
+
+LGTM 중 **G(Grafana) + M(Metrics) + T(Tracing)** 활성. Logs(Loki)는 후속 단계.
+
+```
+infra/
+├── otel/
+│   └── opentelemetry-javaagent.jar   # JVM 부착용 OTel Java Agent (-javaagent 옵션)
+└── monitoring/
+    ├── prometheus/prometheus.yml      # spring-apps(5 인스턴스) + kafka-exporter 스크레이프
+    ├── tempo/tempo.yml                # OTLP receivers(4317/4318), 로컬 storage, 14일 retention
+    └── grafana/
+        ├── provisioning/
+        │   ├── datasources/
+        │   │   ├── prometheus.yml     # uid=prometheus
+        │   │   └── tempo.yml          # uid=tempo (serviceMap → prometheus 연결)
+        │   └── dashboards/            # 대시보드 자동 로드
+        └── dashboards/                # outbox/sms-failover/drawing-lock/consumer-fanout/cluster-overview
+```
+
+| 컴포넌트 | 컨테이너 | 호스트 포트 | 역할 |
+|---|---|---|---|
+| Prometheus | `sulmun2yong-cluster-prometheus` | `19090` | 메트릭 수집 (15s scrape, 7d retention) |
+| Grafana | `sulmun2yong-cluster-grafana` | `13000` | 대시보드 + Explore (datasource provisioning) |
+| Tempo | `sulmun2yong-cluster-tempo` | `13200` (query), `14317` (OTLP gRPC) | 분산 trace 저장·질의 |
+| Kafka Exporter | `sulmun2yong-cluster-kafka-exporter` | `19308` | Kafka consumer lag 메트릭 |
+
+OTel Java Agent는 web/consumer 5개 JVM 모두에 `-javaagent` 옵션으로 부착되어 Spring MVC, JDBC, Spring Kafka, Redisson, Hibernate, HikariCP 등을 **코드 수정 없이 자동 instrument**. trace는 OTLP gRPC로 Tempo에 push되고 W3C tracecontext 헤더(`traceparent`)로 Kafka 메시지 경계를 자동 전파.
 
 ## 환경 변수
 

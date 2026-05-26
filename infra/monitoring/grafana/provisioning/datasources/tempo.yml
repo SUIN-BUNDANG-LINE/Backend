@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+    -   name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://tempo:3200
+        isDefault: false
+        editable: false
+        jsonData:
+            serviceMap:
+                datasourceUid: prometheus
+            nodeGraph:
+                enabled: true               # ← 노드 그래프 시각화
+            search:
+                hide: false
+            tracesToMetrics:
+                datasourceUid: prometheus

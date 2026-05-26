@@ -19,7 +19,9 @@ x-app-base: &app-base
         SPRING_DATA_REDIS_PORT: 6379
         SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
         JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1024m -javaagent:/app/otel-javaagent.jar"
-        OTEL_TRACES_EXPORTER: logging
+        OTEL_TRACES_EXPORTER: otlp
+        OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+        OTEL_EXPORTER_OTLP_PROTOCOL: grpc
         OTEL_METRICS_EXPORTER: none
         OTEL_LOGS_EXPORTER: none
         OTEL_PROPAGATORS: tracecontext,baggage
