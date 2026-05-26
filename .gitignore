@@ -48,7 +48,6 @@ out/
 .DS_Store
 
 # Claude Code
-CLAUDE.md
 shrimp-rules.md
 .mcp.json
 .claude
