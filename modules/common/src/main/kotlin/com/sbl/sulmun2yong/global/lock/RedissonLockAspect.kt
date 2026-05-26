@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.global.lock
 
 import com.sbl.sulmun2yong.global.lock.exception.TooManyLockRequestException
+import com.sbl.sulmun2yong.global.lock.metrics.DrawingLockMetrics
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit
 @Component
 class RedissonLockAspect(
     private val redissonClient: RedissonClient,
+    private val metrics: DrawingLockMetrics,
 ) {
     private val paramNameDiscoverer = DefaultParameterNameDiscoverer()
 
@@ -46,6 +48,8 @@ class RedissonLockAspect(
         }
 
         // -------- 2. 분산락 획득 --------
+        val lockKeyType = redissonLock.key
+        val sample = metrics.startSample()
         // lockKey(예: "drawingLock:abc-123")에 해당하는 Redis 분산 락 객체 조회
         val lock = redissonClient.getLock(lockKey)
         // waitTime(5초) 동안 락 획득 시도, 성공 시 leaseTime(10초) 후 자동 해제
@@ -57,7 +61,11 @@ class RedissonLockAspect(
                 TimeUnit.SECONDS,
             )
         // 락 획득 실패 시 429 응답으로 요청 거부
-        if (!acquired) throw TooManyLockRequestException()
+        if (!acquired) {
+            metrics.recordAcquire("failure", lockKeyType, sample)
+            throw TooManyLockRequestException()
+        }
+        metrics.recordAcquire("success", lockKeyType, sample)
 
         try {
             // -------- 3. 비즈니스 로직 실행 (기존 트랜잭션에 참여) --------

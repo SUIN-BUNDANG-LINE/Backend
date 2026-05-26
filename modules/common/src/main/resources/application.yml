@@ -46,10 +46,9 @@ management:
         tags:
             application: ${spring.application.name:sulmun2yong}
         distribution:
-            # Spring Kafka Timer는 기본적으로 _count/_sum만 노출 — histogram bucket을 켜야
-            # consumer-fanout 대시보드의 histogram_quantile(p95/p99)이 동작한다.
             percentiles-histogram:
                 spring.kafka.listener: true
+                drawing_lock_wait_seconds: true
 
 frontend:
     base-url: http://localhost:3000
