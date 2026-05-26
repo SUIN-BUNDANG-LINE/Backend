@@ -21,7 +21,7 @@ done
 
 echo "→ docker compose restart ${ARGS[*]:-(전체)}"
 # bash 3.x(macOS)에서 set -u + 빈 배열 expansion 호환 idiom
-docker compose -f "$COMPOSE_FILE" restart ${ARGS[@]+"${ARGS[@]}"}
+docker compose -f "$COMPOSE_FILE" up -d --force-recreate ${ARGS[@]+"${ARGS[@]}"}
 
 if [ "$SKIP_RESET" -eq 1 ]; then
     echo "→ --no-reset 옵션 — 데이터 초기화 건너뜀"
