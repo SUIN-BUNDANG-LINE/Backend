@@ -16,6 +16,7 @@ class AsyncConfig {
         executor.maxPoolSize = 5
         executor.queueCapacity = 100
         executor.setThreadNamePrefix("outbox-async-")
+        executor.setTaskDecorator(MdcTaskDecorator())
         executor.initialize()
         return executor
     }
@@ -27,6 +28,7 @@ class AsyncConfig {
         executor.maxPoolSize = 5
         executor.queueCapacity = 100
         executor.setThreadNamePrefix("sms-job-")
+        executor.setTaskDecorator(MdcTaskDecorator())
         executor.initialize()
         return executor
     }
