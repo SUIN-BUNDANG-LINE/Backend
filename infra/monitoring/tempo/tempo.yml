@@ -1,0 +1,39 @@
+# Tempo 설정 — sulmun2yong cluster trace 백엔드
+#
+# 역할: web/consumer JVM에 부착된 OpenTelemetry Java Agent가 OTLP로 보낸 span 을
+#       수신·저장·질의하는 분산 트레이싱 저장소.
+#
+# 구성:
+#   - distributor: OTLP gRPC(4317) / HTTP(4318) 수신
+#   - ingester: 메모리에서 WAL → 로컬 블록으로 flush
+#   - storage: 로컬 파일시스템(/var/tempo) — 학습/개발용
+#   - compactor: 14일(336h) retention 후 자동 정리
+#
+# Grafana 연결: docker network 내부 DNS 로 http://tempo:3200 질의 (T13에서 datasource 등록).
+
+server:
+    http_listen_port: 3200
+
+distributor:
+    receivers:
+        otlp:
+            protocols:
+                grpc:
+                    endpoint: 0.0.0.0:4317
+                http:
+                    endpoint: 0.0.0.0:4318
+
+ingester:
+    max_block_duration: 5m
+
+compactor:
+    compaction:
+        block_retention: 336h  # 14일 — 학습/개발용. 운영은 더 길게.
+
+storage:
+    trace:
+        backend: local
+        wal:
+            path: /var/tempo/wal
+        local:
+            path: /var/tempo/blocks

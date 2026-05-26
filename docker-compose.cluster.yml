@@ -191,6 +191,20 @@ services:
         networks:
             - sulmun2yong-cluster
 
+    tempo:
+        image: grafana/tempo:2.6.0
+        container_name: sulmun2yong-cluster-tempo
+        restart: unless-stopped
+        command: -config.file=/etc/tempo/tempo.yml
+        volumes:
+            - ./infra/monitoring/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+            - sulmun2yong-cluster-tempo:/var/tempo
+        ports:
+            - "13200:3200"   # Tempo query (Grafana datasource)
+            - "14317:4317"   # OTLP gRPC (OTel Agent → Tempo)
+        networks:
+            - sulmun2yong-cluster
+
 networks:
     sulmun2yong-cluster:
         driver: bridge
@@ -200,3 +214,4 @@ volumes:
     sulmun2yong-cluster-redis:
     sulmun2yong-cluster-prometheus:
     sulmun2yong-cluster-grafana:
+    sulmun2yong-cluster-tempo:
