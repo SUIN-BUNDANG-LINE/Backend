@@ -5,6 +5,7 @@ import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.global.kafka.publisher.KafkaEventPublisher
 import com.sbl.sulmun2yong.notification.dto.event.DltSmsNotificationEvent
 import com.sbl.sulmun2yong.notification.entity.SmsNotificationJobEntity
+import com.sbl.sulmun2yong.notification.metrics.SmsNotificationMetrics
 import com.sbl.sulmun2yong.notification.service.SmsNotificationJobService
 import com.sbl.sulmun2yong.notification.service.SmsSender
 import org.slf4j.LoggerFactory
@@ -18,6 +19,7 @@ class SmsNotificationJobWorker(
     private val kafkaEventPublisher: KafkaEventPublisher,
     private val smsSender: SmsSender,
     private val objectMapper: ObjectMapper,
+    private val metrics: SmsNotificationMetrics,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(SmsNotificationJobWorker::class.java)
@@ -37,6 +39,7 @@ class SmsNotificationJobWorker(
             val event = objectMapper.readValue(job.payload, DrawingCompletedEvent::class.java)
             smsSender.sendWinnerNotification(event)
             smsNotificationJobService.markCompleted(job.id)
+            metrics.recordAttempt("success")
         } catch (e: Exception) {
             val isFinalFailure =
                 smsNotificationJobService.markFailedOrRetry(
@@ -60,8 +63,10 @@ class SmsNotificationJobWorker(
                     objectMapper.writeValueAsString(dltEvent),
                 )
                 log.error("SMS 최종 실패, DLT 발행: eventId={}", job.eventId, e)
+                metrics.recordAttempt("dlt")
             } else {
                 log.warn("SMS 발송 실패, 재시도 대기: eventId={}", job.eventId, e)
+                metrics.recordAttempt("retry")
             }
         }
     }

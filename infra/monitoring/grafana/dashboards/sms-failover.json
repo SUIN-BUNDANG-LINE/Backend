@@ -26,7 +26,7 @@
             "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
             "options": {
                 "mode": "markdown",
-                "content": "**📌 이 대시보드의 책임**: SMS Notification + DLT 도메인 시계열 — Job 상태별 게이지, FAILED 알람, DLT 누적/처리 추이.\n\nDLT 메시지 본문 인스펙션·재처리·수동 ack → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  실패 row 디버깅 → **MySQL** (`SELECT * FROM sms_notification_jobs WHERE status='FAILED'`, `dlt_messages`)  •  베이스라인 헬스 → **Cluster Overview**  •  컨슈머 fan-out 전반 → **Consumer Fan-out 대시보드**\n\n_참고: `sms_notification_attempts_total{result}` Counter는 정의만 되어 있고 wire-up 예정(SmsNotificationJobWorker 발송 분기에서 recordAttempt 호출 시 활성화)._"
+                "content": "**📌 이 대시보드의 책임**: SMS Notification + DLT 도메인 시계열 — Job 상태별 게이지, FAILED 알람, DLT 누적/처리 추이, 발송 시도 결과 분포.\n\nDLT 메시지 본문 인스펙션·재처리·수동 ack → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  실패 row 디버깅 → **MySQL** (`SELECT * FROM sms_notification_jobs WHERE status='FAILED'`, `dlt_messages`)  •  베이스라인 헬스 → **Cluster Overview**  •  컨슈머 fan-out 전반 → **Consumer Fan-out 대시보드**"
             }
         },
         {
@@ -163,6 +163,46 @@
             },
             "options": {
                 "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+                "tooltip": {"mode": "multi", "sort": "desc"}
+            }
+        },
+        {
+            "type": "timeseries",
+            "id": 5,
+            "title": "SMS Attempts Rate — by Result",
+            "description": "SmsNotificationJobWorker의 시도 결과별 분당 rate. success는 정상 발송 완료, retry는 일시 실패(재시도 대기), dlt는 MAX_RETRY 초과 후 DLT 발행. retry가 지속적으로 발생하면 SMS API 일시 장애, dlt가 발생하면 외부 장애 장기화 또는 페이로드 자체 오류.",
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 19},
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "targets": [
+                {
+                    "expr": "sum by (result) (rate(sms_notification_attempts_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
+                    "legendFormat": "{{result}}",
+                    "refId": "A"
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "min": 0,
+                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 15, "showPoints": "never", "stacking": {"mode": "normal"}}
+                },
+                "overrides": [
+                    {
+                        "matcher": {"id": "byName", "options": "success"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+                    },
+                    {
+                        "matcher": {"id": "byName", "options": "retry"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]
+                    },
+                    {
+                        "matcher": {"id": "byName", "options": "dlt"},
+                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+                    }
+                ]
+            },
+            "options": {
+                "legend": {"calcs": ["last", "max", "mean"], "displayMode": "table", "placement": "right", "showLegend": true},
                 "tooltip": {"mode": "multi", "sort": "desc"}
             }
         }
