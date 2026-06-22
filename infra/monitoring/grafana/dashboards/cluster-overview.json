@@ -1,248 +1,478 @@
 {
-    "annotations": {
-        "list": [
-            {
-                "builtIn": 1,
-                "datasource": {"type": "grafana", "uid": "-- Grafana --"},
-                "enable": true,
-                "hide": true,
-                "iconColor": "rgba(0, 211, 255, 1)",
-                "name": "Annotations & Alerts",
-                "type": "dashboard"
-            }
-        ]
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "k6 Scenarios",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "type": "tags",
+        "tags": [
+          "k6"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "description": "T1에서 자동 노출된 베이스라인 메트릭(JVM, HTTP, Spring Kafka, CPU)을 5개 인스턴스(web-1/2, consumer-1/2/3) 비교 시각화. 클러스터 전체 헬스 첫 화면.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "text",
+      "id": 100,
+      "title": "도구별 책임 분리",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**📌 이 대시보드의 책임**: 5개 인스턴스의 인프라/베이스라인 헬스 시계열.\n\n메시지 인스펙션·offset 리셋·파티션 할당 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  도메인 메트릭 추이 → **Outbox/SMS/Lock/Consumer Fan-out 대시보드**"
+      }
     },
-    "description": "T1에서 자동 노출된 베이스라인 메트릭(JVM, HTTP, Spring Kafka, CPU)을 5개 인스턴스(web-1/2, consumer-1/2/3) 비교 시각화. 클러스터 전체 헬스 첫 화면.",
-    "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 1,
-    "id": null,
-    "links": [],
-    "panels": [
+    {
+      "type": "stat",
+      "id": 1,
+      "title": "인스턴스 가용성 (UP)",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
         {
-            "type": "text",
-            "id": 100,
-            "title": "도구별 책임 분리",
-            "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
-            "options": {
-                "mode": "markdown",
-                "content": "**📌 이 대시보드의 책임**: 5개 인스턴스의 인프라/베이스라인 헬스 시계열.\n\n메시지 인스펙션·offset 리셋·파티션 할당 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  도메인 메트릭 추이 → **Outbox/SMS/Lock/Consumer Fan-out 대시보드**"
-            }
-        },
-        {
-            "type": "stat",
-            "id": 1,
-            "title": "인스턴스 가용성 (UP)",
-            "gridPos": {"h": 5, "w": 24, "x": 0, "y": 3},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "up{job=\"spring-apps\", application=~\"$application\", instance=~\"$instance\"}",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "options": {
-                "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-                "textMode": "value_and_name",
-                "colorMode": "background",
-                "orientation": "horizontal",
-                "graphMode": "none"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "mappings": [
-                        {"options": {"0": {"color": "red", "text": "DOWN"}}, "type": "value"},
-                        {"options": {"1": {"color": "green", "text": "UP"}}, "type": "value"}
-                    ],
-                    "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
-                }
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 2,
-            "title": "JVM Heap Memory Used",
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum(jvm_memory_used_bytes{area=\"heap\", application=~\"$application\", instance=~\"$instance\"}) by (instance)",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "bytes",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 3,
-            "title": "Process CPU Usage (%)",
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "process_cpu_usage{application=~\"$application\", instance=~\"$instance\"} * 100",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "percent",
-                    "min": 0,
-                    "max": 100,
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 4,
-            "title": "HTTP Request Rate (per sec)",
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
-            "description": "web 인스턴스만 응답 (consumer는 HTTP 서버 없음)",
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$application\", instance=~\"$instance\"}[1m])) by (instance)",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "reqps",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 5,
-            "title": "Spring Kafka Listener TPS",
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
-            "description": "consumer 인스턴스에서 주로 발생 (Layer 2 — Spring Kafka)",
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum(rate(spring_kafka_listener_seconds_count{application=~\"$application\", instance=~\"$instance\"}[1m])) by (instance)",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "ops",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 6,
-            "title": "GC Pause Time (sec/sec)",
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
-            "description": "초당 GC 일시정지 시간. 값이 0.1을 넘으면 부하 의심.",
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum(rate(jvm_gc_pause_seconds_sum{application=~\"$application\", instance=~\"$instance\"}[1m])) by (instance)",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "s",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 7,
-            "title": "JVM Threads Live",
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "jvm_threads_live_threads{application=~\"$application\", instance=~\"$instance\"}",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "short",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
+          "expr": "up{job=\"spring-apps\", application=~\"$application\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
         }
-    ],
-    "refresh": "10s",
-    "schemaVersion": 39,
-    "tags": ["sulmun2yong", "cluster", "baseline"],
-    "templating": {
-        "list": [
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "orientation": "horizontal",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
             {
-                "name": "application",
-                "label": "Application",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(up{job=\"spring-apps\"}, application)", "refId": "Application"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "DOWN"
+                }
+              },
+              "type": "value"
             },
             {
-                "name": "instance",
-                "label": "Instance",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(up{job=\"spring-apps\", application=~\"$application\"}, instance)", "refId": "Instance"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
+              "options": {
+                "1": {
+                  "color": "green",
+                  "text": "UP"
+                }
+              },
+              "type": "value"
             }
-        ]
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
     },
-    "time": {"from": "now-15m", "to": "now"},
-    "timepicker": {},
-    "timezone": "browser",
-    "title": "Cluster Overview — Baseline Health",
-    "uid": "cluster-overview",
-    "version": 1,
-    "weekStart": ""
+    {
+      "type": "timeseries",
+      "id": 2,
+      "title": "JVM Heap Memory Used",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\", application=~\"$application\", instance=~\"$instance\"}) by (instance)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 3,
+      "title": "Process CPU Usage (%)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "process_cpu_usage{application=~\"$application\", instance=~\"$instance\"} * 100",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 4,
+      "title": "HTTP Request Rate (per sec)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "description": "web 인스턴스만 응답 (consumer는 HTTP 서버 없음)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$application\", instance=~\"$instance\"}[1m])) by (instance)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 5,
+      "title": "Spring Kafka Listener TPS",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "description": "consumer 인스턴스에서 주로 발생 (Layer 2 — Spring Kafka)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(spring_kafka_listener_seconds_count{application=~\"$application\", instance=~\"$instance\"}[1m])) by (instance)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 6,
+      "title": "GC Pause Time (sec/sec)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "description": "초당 GC 일시정지 시간. 값이 0.1을 넘으면 부하 의심.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(jvm_gc_pause_seconds_sum{application=~\"$application\", instance=~\"$instance\"}[1m])) by (instance)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 7,
+      "title": "JVM Threads Live",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads{application=~\"$application\", instance=~\"$instance\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "sulmun2yong",
+    "cluster",
+    "baseline"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "application",
+        "label": "Application",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(up{job=\"spring-apps\"}, application)",
+          "refId": "Application"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(up{job=\"spring-apps\", application=~\"$application\"}, instance)",
+          "refId": "Instance"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Cluster Overview — Baseline Health",
+  "uid": "cluster-overview",
+  "version": 1,
+  "weekStart": ""
 }

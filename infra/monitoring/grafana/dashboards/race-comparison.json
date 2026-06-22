@@ -1,0 +1,579 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "k6 Scenarios",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "type": "tags",
+        "tags": [
+          "k6"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "description": "T8 Race Condition 비교 — LOCK_MODE=on/off 두 실험 결과를 나란히 비교. k6 메트릭의 lock_mode 라벨로 분리. F015 측정 자료 + F016 STAR narrative 핵심.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "text",
+      "id": 100,
+      "title": "실험 설계",
+      "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+      "options": {
+        "mode": "markdown",
+        "content": "**📌 비교 실험**: 동일 k6 시나리오를 두 endpoint로 실행해 분산락 효과 정량 측정.\n\n- **LOCK_MODE=off** → `POST /api/v1/drawing-board/draw-no-lock` — 분산락 미적용, race condition 재현\n- **LOCK_MODE=on** → `POST /api/v1/drawing-board/draw` — Redisson 분산락 적용, race 차단\n\n**핵심 검증**: same_ticket 시나리오에서 success 카운트 변화. 락 OFF → 10 (race), 락 ON → 1 (mutex). diff_tickets는 동일 (10 → 10) — 락 무관."
+      }
+    },
+    {
+      "type": "barchart",
+      "id": 1,
+      "title": "k6 Drawing Success — by Scenario × Lock Mode",
+      "description": "락 OFF/ON 비교의 핵심 패널. same_ticket·same_user에서 OFF는 10, ON은 1이 정상. diff_tickets는 둘 다 10.",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (scenario, lock_mode) (last_over_time(k6_drawing_success_total_total[6h]))",
+          "legendFormat": "{{scenario}} / {{lock_mode}}",
+          "refId": "A",
+          "format": "time_series",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "xField": "scenario",
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "type": "barchart",
+      "id": 2,
+      "title": "k6 Drawing Fail — by Scenario × Lock Mode",
+      "description": "락 ON에서 fail이 9 가까이 = 락이 9건 거부 = race 9건 차단. 락 OFF에서는 fail 0 (모두 통과).",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (scenario, lock_mode) (last_over_time(k6_drawing_fail_total_total[6h]))",
+          "legendFormat": "{{scenario}} / {{lock_mode}}",
+          "refId": "A",
+          "format": "time_series",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "xField": "scenario",
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 3,
+      "title": "Drawing Winner Persistence Rate (App Side)",
+      "description": "application 측 drawing_history_persisted_total{result=\"winner\"}의 분당 증가율. k6 시나리오 실행 시점에 스파이크. 락 OFF 구간은 스파이크 높음, ON 구간은 낮음(차단됨).",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(rate(drawing_history_persisted_total{result=\"winner\"}[1m]))",
+          "legendFormat": "winner persistence/s",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(drawing_history_persisted_total{result=\"non_winner\"}[1m]))",
+          "legendFormat": "non_winner persistence/s",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 4,
+      "title": "Lock Acquire Rate — by Result (Lock ON 구간만 데이터)",
+      "description": "@RedissonLock AOP 메트릭. lock_mode=off 구간은 endpoint 자체가 락을 거치지 않으므로 데이터 없음(=락이 실제 호출되지 않은 증거). ON 구간만 success/fail 분포 표시.",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 13},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (result) (rate(drawing_lock_acquire_total[1m]))",
+          "legendFormat": "{{result}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "success"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "fail"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+          }
+        ]
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "Race Detection — same_ticket Success Count",
+      "description": "same_ticket 시나리오는 정상이라면 success=1. 값이 2 이상이면 race condition 발생 = 분산락 효과 없음.",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 21},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (lock_mode) (last_over_time(k6_drawing_success_total_total{scenario=\"same_ticket\"}[6h]))",
+          "legendFormat": "lock_mode={{lock_mode}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 2},
+              {"color": "red", "value": 5}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 6,
+      "title": "Race Detection — same_user Success Count",
+      "description": "same_user 시나리오는 정상이라면 success=1 (AlreadyParticipatedDrawingException). 값이 2 이상이면 race.",
+      "gridPos": {"h": 6, "w": 8, "x": 8, "y": 21},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (lock_mode) (last_over_time(k6_drawing_success_total_total{scenario=\"same_user\"}[6h]))",
+          "legendFormat": "lock_mode={{lock_mode}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 2},
+              {"color": "red", "value": 5}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 7,
+      "title": "Baseline — diff_tickets Success (Lock 무관)",
+      "description": "diff_tickets는 락 ON/OFF 둘 다 10이어야 함 (서로 다른 ticket이므로 경합 없음). 비교 baseline.",
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 21},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (lock_mode) (last_over_time(k6_drawing_success_total_total{scenario=\"diff_tickets\"}[6h]))",
+          "legendFormat": "lock_mode={{lock_mode}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "fixed", "fixedColor": "blue"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 9,
+      "title": "MySQL Deadlock Count (누적)",
+      "description": "db_deadlock_total — 분산락 효과의 결정타 지표. 락 OFF 구간에서 deadlock 다수 발생, ON 구간에서 0 유지.",
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 27},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(db_deadlock_total)",
+          "legendFormat": "총 deadlock 수",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 5}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 10,
+      "title": "MySQL Deadlock Rate (시간축)",
+      "description": "deadlock 발생 시점 — k6 시나리오 annotation과 맞물려 보면 어느 시나리오에서 발생했는지 확인 가능.",
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 27},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(rate(db_deadlock_total[1m]))",
+          "legendFormat": "deadlock/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 30,
+            "spanNulls": true,
+            "lineWidth": 2
+          },
+          "color": {"mode": "fixed", "fixedColor": "red"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "type": "stat",
+      "id": 11,
+      "title": "[Range] Deadlock 증가량",
+      "description": "현재 dashboard time range 동안의 db_deadlock_total 증가량. Lock OFF 구간만 잡으면 OFF 측정값, Lock ON만 잡으면 ON 측정값.",
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 41},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(increase(db_deadlock_total[$__range]))",
+          "legendFormat": "deadlock",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 5}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 12,
+      "title": "[Range] Winner Persistence 증가량",
+      "description": "현재 dashboard time range 동안의 drawing_history_persisted_total{result=winner} 증가량.",
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 41},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum(increase(drawing_history_persisted_total{result=\"winner\"}[$__range]))",
+          "legendFormat": "winner",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {"mode": "fixed", "fixedColor": "blue"}
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 13,
+      "title": "[Range] Lock Acquire Success/Fail 증가량",
+      "description": "현재 time range 동안의 drawing_lock_acquire_total 증가량. result=fail 카운트 = 락이 차단한 race 횟수.",
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 41},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "sum by (result) (increase(drawing_lock_acquire_total[$__range]))",
+          "legendFormat": "{{result}}",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": {"mode": "palette-classic"}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "success"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "fail"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "stat",
+      "id": 14,
+      "title": "[Range] Lock Wait p95",
+      "description": "현재 time range 동안의 락 획득 대기 p95 latency.",
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 41},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(drawing_lock_wait_seconds_bucket[$__range])))",
+          "legendFormat": "p95",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "color": {"mode": "fixed", "fixedColor": "purple"}
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value"
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 8,
+      "title": "k6 HTTP Request Duration p95 — by Lock Mode",
+      "description": "락 ON은 락 획득 대기 시간만큼 latency 추가. p95 비교로 락 부담 정량화.",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 33},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {
+          "expr": "max by (lock_mode) (k6_http_req_duration_p95)",
+          "legendFormat": "lock_mode={{lock_mode}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {"showLegend": true, "displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "sulmun2yong",
+    "drawing",
+    "race-condition",
+    "t8"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Asia/Seoul",
+  "title": "Race Condition Comparison (Lock ON vs OFF)",
+  "uid": "race-comparison",
+  "version": 1,
+  "weekStart": ""
+}

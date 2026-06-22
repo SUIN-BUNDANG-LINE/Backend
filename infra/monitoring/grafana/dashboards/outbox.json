@@ -1,210 +1,396 @@
 {
-    "annotations": {
-        "list": [
-            {
-                "builtIn": 1,
-                "datasource": {"type": "grafana", "uid": "-- Grafana --"},
-                "enable": true,
-                "hide": true,
-                "iconColor": "rgba(0, 211, 255, 1)",
-                "name": "Annotations & Alerts",
-                "type": "dashboard"
-            }
-        ]
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "k6 Scenarios",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "type": "tags",
+        "tags": [
+          "k6"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "description": "T2 OutboxMetrics 시각화 — PENDING/FAILED Gauge, Relay 발행 TPS(status별), Publish Latency p95. 대상 시나리오: skip-locked-concurrency, outbox-relay-recovery, outbox-producer-dlq. 메시지 인스펙션은 Kafka UI 책임.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "text",
+      "id": 100,
+      "title": "도구별 책임 분리",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**📌 이 대시보드의 책임**: Outbox 도메인 시계열 메트릭 — PENDING/FAILED 추이, Relay 발행 TPS, Publish Latency 분포.\n\n메시지 인스펙션·offset 리셋·파티션 할당 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  개별 row 디버깅 → **MySQL 직접 조회** (`SELECT * FROM outbox_events WHERE ...`)  •  베이스라인 헬스 → **Cluster Overview 대시보드**"
+      }
     },
-    "description": "T2 OutboxMetrics 시각화 — PENDING/FAILED Gauge, Relay 발행 TPS(status별), Publish Latency p95. 대상 시나리오: skip-locked-concurrency, outbox-relay-recovery, outbox-producer-dlq. 메시지 인스펙션은 Kafka UI 책임.",
-    "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 1,
-    "id": null,
-    "links": [],
-    "panels": [
+    {
+      "type": "timeseries",
+      "id": 1,
+      "title": "Outbox Events — PENDING (by aggregate_type & instance)",
+      "description": "PENDING 상태로 남아있는 outbox row 개수. 30초 주기 폴링으로 갱신. 부하 시 일시적 증가는 정상, 지속 증가하면 Relay 처리 지연 의심.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
         {
-            "type": "text",
-            "id": 100,
-            "title": "도구별 책임 분리",
-            "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
-            "options": {
-                "mode": "markdown",
-                "content": "**📌 이 대시보드의 책임**: Outbox 도메인 시계열 메트릭 — PENDING/FAILED 추이, Relay 발행 TPS, Publish Latency 분포.\n\n메시지 인스펙션·offset 리셋·파티션 할당 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  개별 row 디버깅 → **MySQL 직접 조회** (`SELECT * FROM outbox_events WHERE ...`)  •  베이스라인 헬스 → **Cluster Overview 대시보드**"
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 1,
-            "title": "Outbox Events — PENDING (by aggregate_type & instance)",
-            "description": "PENDING 상태로 남아있는 outbox row 개수. 30초 주기 폴링으로 갱신. 부하 시 일시적 증가는 정상, 지속 증가하면 Relay 처리 지연 의심.",
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 3},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum by (aggregate_type, instance) (outbox_events_pending{application=~\"$application\", instance=~\"$instance\"})",
-                    "legendFormat": "{{aggregate_type}} / {{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "short",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 2,
-            "title": "Outbox Events — FAILED (by instance)",
-            "description": "재시도 5회 초과로 최종 실패 처리된 outbox row. 0이 정상, 1 이상은 즉시 알람 대상.",
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 3},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum by (instance) (outbox_events_failed{application=~\"$application\", instance=~\"$instance\"})",
-                    "legendFormat": "{{instance}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "short",
-                    "min": 0,
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "showPoints": "always"},
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {"color": "green", "value": null},
-                            {"color": "orange", "value": 1},
-                            {"color": "red", "value": 5}
-                        ]
-                    }
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 3,
-            "title": "Outbox Relay Publish Rate (by instance & status)",
-            "description": "5초 주기 Relay + AFTER_COMMIT 즉시 발행 두 경로 합산. instance별 시리즈로 web-1/web-2 부하 분산 확인. status=success/failure 분리.",
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum by (instance, status) (rate(outbox_relay_publish_total{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m]))",
-                    "legendFormat": "{{instance}} / {{status}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "reqps",
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
-                },
-                "overrides": [
-                    {
-                        "matcher": {"id": "byRegexp", "options": ".*failure.*"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
-                    },
-                    {
-                        "matcher": {"id": "byRegexp", "options": ".*success.*"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
-                    }
-                ]
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 4,
-            "title": "Outbox Relay Publish Latency (p50/p95/p99 by topic)",
-            "description": "Kafka 발행 latency 분포. p99가 1초 넘으면 Kafka 브로커 또는 네트워크 의심. 토픽별 분리 — drawing-completed vs survey-response-submitted 비교.",
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "histogram_quantile(0.50, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m])))",
-                    "legendFormat": "p50 / {{topic}}",
-                    "refId": "A"
-                },
-                {
-                    "expr": "histogram_quantile(0.95, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m])))",
-                    "legendFormat": "p95 / {{topic}}",
-                    "refId": "B"
-                },
-                {
-                    "expr": "histogram_quantile(0.99, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m])))",
-                    "legendFormat": "p99 / {{topic}}",
-                    "refId": "C"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "s",
-                    "min": 0,
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 5, "showPoints": "never"}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
+          "expr": "sum by (aggregate_type, instance) (outbox_events_pending{application=~\"$application\", instance=~\"$instance\"})",
+          "legendFormat": "{{aggregate_type}} / {{instance}}",
+          "refId": "A"
         }
-    ],
-    "refresh": "10s",
-    "schemaVersion": 39,
-    "tags": ["sulmun2yong", "outbox", "kafka"],
-    "templating": {
-        "list": [
-            {
-                "name": "application",
-                "label": "Application",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(outbox_events_pending, application)", "refId": "Application"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
-            },
-            {
-                "name": "instance",
-                "label": "Instance",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(outbox_events_pending{application=~\"$application\"}, instance)", "refId": "Instance"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
-            },
-            {
-                "name": "topic",
-                "label": "Topic",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(outbox_relay_publish_total, topic)", "refId": "Topic"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
-            }
-        ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     },
-    "time": {"from": "now-15m", "to": "now"},
-    "timepicker": {},
-    "timezone": "browser",
-    "title": "Outbox Pipeline",
-    "uid": "outbox-pipeline",
-    "version": 1,
-    "weekStart": ""
+    {
+      "type": "timeseries",
+      "id": 2,
+      "title": "Outbox Events — FAILED (by instance)",
+      "description": "재시도 5회 초과로 최종 실패 처리된 outbox row. 0이 정상, 1 이상은 즉시 알람 대상.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance) (outbox_events_failed{application=~\"$application\", instance=~\"$instance\"})",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "always"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 3,
+      "title": "Outbox Relay Publish Rate (by instance & status)",
+      "description": "5초 주기 Relay + AFTER_COMMIT 즉시 발행 두 경로 합산. instance별 시리즈로 web-1/web-2 부하 분산 확인. status=success/failure 분리.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance, status) (rate(outbox_relay_publish_total{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m]))",
+          "legendFormat": "{{instance}} / {{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*failure.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*success.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 4,
+      "title": "Outbox Relay Publish Latency (p50/p95/p99 by topic)",
+      "description": "Kafka 발행 latency 분포. p99가 1초 넘으면 Kafka 브로커 또는 네트워크 의심. 토픽별 분리 — drawing-completed vs survey-response-submitted 비교.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m])))",
+          "legendFormat": "p50 / {{topic}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m])))",
+          "legendFormat": "p95 / {{topic}}",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket{application=~\"$application\", instance=~\"$instance\", topic=~\"$topic\"}[1m])))",
+          "legendFormat": "p99 / {{topic}}",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "sulmun2yong",
+    "outbox",
+    "kafka"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "application",
+        "label": "Application",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(outbox_events_pending, application)",
+          "refId": "Application"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(outbox_events_pending{application=~\"$application\"}, instance)",
+          "refId": "Instance"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "topic",
+        "label": "Topic",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(outbox_relay_publish_total, topic)",
+          "refId": "Topic"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Outbox Pipeline",
+  "uid": "outbox-pipeline",
+  "version": 1,
+  "weekStart": ""
 }

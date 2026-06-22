@@ -1,226 +1,685 @@
 {
-    "annotations": {
-        "list": [
-            {
-                "builtIn": 1,
-                "datasource": {"type": "grafana", "uid": "-- Grafana --"},
-                "enable": true,
-                "hide": true,
-                "iconColor": "rgba(0, 211, 255, 1)",
-                "name": "Annotations & Alerts",
-                "type": "dashboard"
-            }
-        ]
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "k6 Scenarios",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "type": "tags",
+        "tags": [
+          "k6"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "description": "T4 DrawingLockMetrics 시각화 — Redisson 분산락 획득 분포(success/failure), 대기 latency 분위수, 성공률 SLO, 락 키 타입별 시도량. 대상 시나리오: drawing-concurrency. 락 보유 분석은 Redis CLI, 처리량 분석은 도메인 대시보드 책임.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "text",
+      "id": 100,
+      "title": "도구별 책임 분리",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**📌 이 대시보드의 책임**: Redisson 분산락 AOP 메트릭 시계열 — 획득 분포(success/failure), 대기 latency 분위수(p50/p95/p99), 성공률 SLO, 락 키 타입별 시도량.\n\n락 보유 클라이언트·대기열 분석 → **Redis CLI** (`CLIENT LIST`, `DEBUG OBJECT <lock-key>`)  •  비즈니스 throughput → **도메인 대시보드**  •  베이스라인 헬스 → **Cluster Overview**  •  락 호출 트레이스 → **(Phase 2) Tempo + OTel**\n\n_p95/p99가 `waitTime` 한계치(현재 5s)에 근접하면 다른 스레드가 락 보유 중인 경합 발생 시그널. `failure` 비율↑면 동시 추첨 요청 폭주 또는 leaseTime 내 비즈니스 로직 미완료._"
+      }
     },
-    "description": "T4 DrawingLockMetrics 시각화 — Redisson 분산락 획득 분포(success/failure), 대기 latency 분위수, 성공률 SLO, 락 키 타입별 시도량. 대상 시나리오: drawing-concurrency. 락 보유 분석은 Redis CLI, 처리량 분석은 도메인 대시보드 책임.",
-    "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 1,
-    "id": null,
-    "links": [],
-    "panels": [
+    {
+      "type": "timeseries",
+      "id": 1,
+      "title": "Lock Acquire Rate — by Result",
+      "description": "@RedissonLock AOP에서 tryLock 결과별 분당 rate. success는 락 획득 성공 후 비즈니스 로직 진입, failure는 waitTime 초과로 TooManyLockRequestException 발생(HTTP 429). failure가 지속 발생하면 동시 요청 폭주 또는 락 보유 시간(leaseTime) 내 비즈니스 미완료 의심.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
         {
-            "type": "text",
-            "id": 100,
-            "title": "도구별 책임 분리",
-            "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
-            "options": {
-                "mode": "markdown",
-                "content": "**📌 이 대시보드의 책임**: Redisson 분산락 AOP 메트릭 시계열 — 획득 분포(success/failure), 대기 latency 분위수(p50/p95/p99), 성공률 SLO, 락 키 타입별 시도량.\n\n락 보유 클라이언트·대기열 분석 → **Redis CLI** (`CLIENT LIST`, `DEBUG OBJECT <lock-key>`)  •  비즈니스 throughput → **도메인 대시보드**  •  베이스라인 헬스 → **Cluster Overview**  •  락 호출 트레이스 → **(Phase 2) Tempo + OTel**\n\n_p95/p99가 `waitTime` 한계치(현재 5s)에 근접하면 다른 스레드가 락 보유 중인 경합 발생 시그널. `failure` 비율↑면 동시 추첨 요청 폭주 또는 leaseTime 내 비즈니스 로직 미완료._"
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 1,
-            "title": "Lock Acquire Rate — by Result",
-            "description": "@RedissonLock AOP에서 tryLock 결과별 분당 rate. success는 락 획득 성공 후 비즈니스 로직 진입, failure는 waitTime 초과로 TooManyLockRequestException 발생(HTTP 429). failure가 지속 발생하면 동시 요청 폭주 또는 락 보유 시간(leaseTime) 내 비즈니스 미완료 의심.",
-            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 3},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum by (result) (rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[1m]))",
-                    "legendFormat": "{{result}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "ops",
-                    "min": 0,
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 15, "showPoints": "never", "stacking": {"mode": "normal"}}
-                },
-                "overrides": [
-                    {
-                        "matcher": {"id": "byName", "options": "success"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
-                    },
-                    {
-                        "matcher": {"id": "byName", "options": "failure"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
-                    }
-                ]
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max", "mean"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 2,
-            "title": "Lock Wait Latency — p50 / p95 / p99",
-            "description": "drawing_lock_wait_seconds Histogram 기반 분위수. tryLock 호출 직전 ~ 반환 직후의 대기 시간을 측정(성공/실패 모두 포함). p95/p99가 waitTime(5s) 한계에 근접하면 다른 스레드와 경합 중. Histogram 정확도를 위해 application.yml에서 percentiles-histogram: drawing_lock_wait_seconds=true 활성화.",
-            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 3},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "histogram_quantile(0.50, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
-                    "legendFormat": "p50",
-                    "refId": "A"
-                },
-                {
-                    "expr": "histogram_quantile(0.95, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
-                    "legendFormat": "p95",
-                    "refId": "B"
-                },
-                {
-                    "expr": "histogram_quantile(0.99, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
-                    "legendFormat": "p99",
-                    "refId": "C"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "s",
-                    "min": 0,
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 5, "showPoints": "never"},
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {"color": "green", "value": null},
-                            {"color": "orange", "value": 1},
-                            {"color": "red", "value": 4}
-                        ]
-                    }
-                },
-                "overrides": [
-                    {
-                        "matcher": {"id": "byName", "options": "p50"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
-                    },
-                    {
-                        "matcher": {"id": "byName", "options": "p95"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}]
-                    },
-                    {
-                        "matcher": {"id": "byName", "options": "p99"},
-                        "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]
-                    }
-                ]
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max", "mean"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
-        },
-        {
-            "type": "stat",
-            "id": 3,
-            "title": "Lock Success Ratio (5m)",
-            "description": "최근 5분 윈도우의 락 획득 성공률. 0.95 미만이면 경합 또는 폭주, 0.5 미만이면 시스템 포화 — 추첨 동시 호출 폭증 또는 비즈니스 로직 leaseTime 초과 가능성. 분모가 0인 경우(시도 없음) NaN 출력 정상.",
-            "gridPos": {"h": 6, "w": 6, "x": 0, "y": 11},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum(rate(drawing_lock_acquire_total{result=\"success\", application=~\"$application\", instance=~\"$instance\"}[5m])) / sum(rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
-                    "legendFormat": "success ratio",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "percentunit",
-                    "min": 0,
-                    "max": 1,
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {"color": "red", "value": null},
-                            {"color": "orange", "value": 0.5},
-                            {"color": "green", "value": 0.95}
-                        ]
-                    }
-                }
-            },
-            "options": {
-                "colorMode": "background",
-                "graphMode": "area",
-                "justifyMode": "center",
-                "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-                "textMode": "value_and_name"
-            }
-        },
-        {
-            "type": "timeseries",
-            "id": 4,
-            "title": "Lock Acquire Rate — by Lock Key Type",
-            "description": "lock_key_type 라벨별(annotation key 원본, 예: drawingLock:{surveyId}) 시도량. 카디널리티 폭발 방지를 위해 치환 전 템플릿 문자열을 라벨로 사용. 현재는 drawingLock 1종이지만 새 도메인 락 추가 시 자동 분리.",
-            "gridPos": {"h": 6, "w": 18, "x": 6, "y": 11},
-            "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "targets": [
-                {
-                    "expr": "sum by (lock_key_type) (rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
-                    "legendFormat": "{{lock_key_type}}",
-                    "refId": "A"
-                }
-            ],
-            "fieldConfig": {
-                "defaults": {
-                    "unit": "ops",
-                    "min": 0,
-                    "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "never"}
-                }
-            },
-            "options": {
-                "legend": {"calcs": ["last", "max", "mean"], "displayMode": "table", "placement": "right", "showLegend": true},
-                "tooltip": {"mode": "multi", "sort": "desc"}
-            }
+          "expr": "sum by (result) (rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[1m]))",
+          "legendFormat": "{{result}}",
+          "refId": "A"
         }
-    ],
-    "refresh": "10s",
-    "schemaVersion": 39,
-    "tags": ["sulmun2yong", "drawing", "lock", "redisson"],
-    "templating": {
-        "list": [
-            {
-                "name": "application",
-                "label": "Application",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(drawing_lock_acquire_total, application)", "refId": "Application"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
-            },
-            {
-                "name": "instance",
-                "label": "Instance",
-                "type": "query",
-                "datasource": {"type": "prometheus", "uid": "prometheus"},
-                "query": {"query": "label_values(drawing_lock_acquire_total{application=~\"$application\"}, instance)", "refId": "Instance"},
-                "refresh": 2,
-                "includeAll": true,
-                "multi": true,
-                "current": {"selected": false, "text": "All", "value": "$__all"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
             }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "success"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failure"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
         ]
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     },
-    "time": {"from": "now-15m", "to": "now"},
-    "timepicker": {},
-    "timezone": "browser",
-    "title": "Drawing Lock",
-    "uid": "drawing-lock",
-    "version": 1,
-    "weekStart": ""
+    {
+      "type": "timeseries",
+      "id": 2,
+      "title": "Lock Wait Latency — p50 / p95 / p99",
+      "description": "drawing_lock_wait_seconds Histogram 기반 분위수. tryLock 호출 직전 ~ 반환 직후의 대기 시간을 측정(성공/실패 모두 포함). p95/p99가 waitTime(5s) 한계에 근접하면 다른 스레드와 경합 중. Histogram 정확도를 위해 application.yml에서 percentiles-histogram: drawing_lock_wait_seconds=true 활성화.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 4
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p99"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "Lock Success Ratio (5m)",
+      "description": "최근 5분 윈도우의 락 획득 성공률. 0.95 미만이면 경합 또는 폭주, 0.5 미만이면 시스템 포화 — 추첨 동시 호출 폭증 또는 비즈니스 로직 leaseTime 초과 가능성. 분모가 0인 경우(시도 없음) NaN 출력 정상.",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(drawing_lock_acquire_total{result=\"success\", application=~\"$application\", instance=~\"$instance\"}[5m])) / sum(rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
+          "legendFormat": "success ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "green",
+                "value": 0.95
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 4,
+      "title": "Lock Acquire Rate — by Lock Key Type",
+      "description": "lock_key_type 라벨별(annotation key 원본, 예: drawingLock:{surveyId}) 시도량. 카디널리티 폭발 방지를 위해 치환 전 템플릿 문자열을 라벨로 사용. 현재는 drawingLock 1종이지만 새 도메인 락 추가 시 자동 분리.",
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (lock_key_type) (rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
+          "legendFormat": "{{lock_key_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 5,
+      "title": "Lock Contention — Wait Time Distribution (4-tier SLO)",
+      "description": "락 대기 시간 분포를 4단 SLO bucket으로 stacked 시각화 + 우측 축에 Contention Pressure(포화도) overlay.\n\n[Stacked 5층 — 좌측 축, ops/s]\n• 즉시 (≤10ms): 락 경합 없이 1회 EVAL로 획득. Redisson lua 스크립트 성공 케이스.\n• 짧은 (10~50ms): 앞에 1명 대기 후 획득. 정상 트래픽 범위.\n• 중간 (50~100ms): 다중 대기자. 사용자 체감 임계값 진입.\n• 긴 (100~500ms): 부하 집중. p99 위험 신호.\n• 심각 (>500ms): SLO 위반 후보. 알람 트리거 권장 (leaseTime 30s 대비 1.7% 도달).\n\n[Contention Pressure — 우측 축, wait seconds/s]\nrate(drawing_lock_wait_seconds_sum[1m]). 1초당 누적 락 대기 시간.\n1.0 이상 = 시스템이 락 대기에 실시간보다 많은 시간 사용(포화).\n\n[해석법]\n• stacked 영역의 형태 = 분포 모양. 즉시(초록) 비중이 클수록 시스템 건강.\n• 빨강·진빨강 영역 출현 = 경합이 long tail로 진입. 알람 임계값 가까움.\n• Pressure 곡선이 stacked 영역 정점과 동조하면 측정 자기 일관성 ✓.",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.01\"}[$__rate_interval]))",
+          "legendFormat": "즉시 (≤10ms)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.05\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.01\"}[$__rate_interval]))",
+          "legendFormat": "짧은 (10~50ms)",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.1\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.05\"}[$__rate_interval]))",
+          "legendFormat": "중간 (50~100ms)",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.5\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.1\"}[$__rate_interval]))",
+          "legendFormat": "긴 (100~500ms)",
+          "refId": "D"
+        },
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_count{application=~\"$application\", instance=~\"$instance\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.5\"}[$__rate_interval]))",
+          "legendFormat": "심각 (>500ms)",
+          "refId": "E"
+        },
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_sum{application=~\"$application\", instance=~\"$instance\"}[$__rate_interval]))",
+          "legendFormat": "Contention Pressure",
+          "refId": "F"
+        },
+        {
+          "expr": "sum(increase(drawing_lock_wait_seconds_count{application=~\"$application\", instance=~\"$instance\"}[$__rate_interval]))",
+          "legendFormat": "📊 Total (전체 락 호출)",
+          "refId": "G"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal",
+              "group": "distribution"
+            },
+            "axisPlacement": "left"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "즉시 (≤10ms)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "짧은 (10~50ms)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "중간 (50~100ms)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "긴 (100~500ms)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "심각 (>500ms)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "dark-red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Contention Pressure"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    5
+                  ]
+                }
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "wait seconds/s (포화 = 1.0+)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "📊 Total (전체 락 호출)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "white"
+                }
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "tooltip": false,
+                  "viz": true,
+                  "legend": false
+                }
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "sulmun2yong",
+    "drawing",
+    "lock",
+    "redisson"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "application",
+        "label": "Application",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(drawing_lock_acquire_total, application)",
+          "refId": "Application"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "instance",
+        "label": "Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(drawing_lock_acquire_total{application=~\"$application\"}, instance)",
+          "refId": "Instance"
+        },
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Drawing Lock",
+  "uid": "drawing-lock",
+  "version": 1,
+  "weekStart": ""
 }
