@@ -1,23 +1,17 @@
 package com.sbl.sulmun2yong.survey.service
 
-import com.sbl.sulmun2yong.global.kafka.outbox.OutboxEventFactory
-import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
-import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
-import com.sbl.sulmun2yong.survey.dto.event.SurveyResponseSubmittedEvent
 import com.sbl.sulmun2yong.survey.dto.request.SurveyResponseRequest
 import com.sbl.sulmun2yong.survey.dto.response.SurveyParticipantResponse
 import com.sbl.sulmun2yong.survey.entity.Participant
 import com.sbl.sulmun2yong.survey.entity.ResponseEntity
-import com.sbl.sulmun2yong.survey.entity.Survey
 import com.sbl.sulmun2yong.survey.exception.AlreadyParticipatedException
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
+import com.sbl.sulmun2yong.survey.publisher.SurveyResponseEventPublisher
 import com.sbl.sulmun2yong.survey.repository.ParticipantRepository
 import com.sbl.sulmun2yong.survey.repository.ResponseRepository
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -25,9 +19,7 @@ class SurveyResponseService(
     private val surveyRepository: SurveyRepository,
     private val participantRepository: ParticipantRepository,
     private val responseRepository: ResponseRepository,
-    private val outboxEventFactory: OutboxEventFactory,
-    private val outboxEventRepository: OutboxEventRepository,
-    private val applicationEventPublisher: ApplicationEventPublisher,
+    private val surveyResponseEventPublisher: SurveyResponseEventPublisher,
 ) {
     @Transactional
     fun responseToSurvey(
@@ -59,43 +51,15 @@ class SurveyResponseService(
             }
         responseRepository.saveAll(responseEntities)
 
-        publishResponseSubmittedEvent(surveyId, participant.id, survey)
+        val currentParticipantCount = participantRepository.findBySurveyId(surveyId).size
+        surveyResponseEventPublisher.publishSubmitted(
+            surveyId = surveyId,
+            participantId = participant.id,
+            currentParticipantCount = currentParticipantCount,
+            targetParticipantCount = survey.rewardSetting.targetParticipantCount,
+        )
 
         return SurveyParticipantResponse(participant.id, survey.isImmediateDraw())
-    }
-
-    private fun publishResponseSubmittedEvent(
-        surveyId: UUID,
-        participantId: UUID,
-        survey: Survey,
-    ) {
-        val participants = participantRepository.findBySurveyId(surveyId)
-        val surveyResponseSubmittedEvent =
-            SurveyResponseSubmittedEvent(
-                eventId = UUID.randomUUID().toString(),
-                surveyId = surveyId.toString(),
-                participantId = participantId.toString(),
-                currentParticipantCount = participants.size,
-                targetParticipantCount = survey.rewardSetting.targetParticipantCount,
-                timestamp = Instant.now(),
-            )
-        val outboxEvent =
-            outboxEventFactory.create(
-                aggregateType = "Survey",
-                aggregateId = surveyResponseSubmittedEvent.surveyId,
-                eventType = "SurveyResponseSubmitted",
-                kafkaTopic = "survey-response-submitted",
-                event = surveyResponseSubmittedEvent,
-            )
-        outboxEventRepository.save(outboxEvent)
-        applicationEventPublisher.publishEvent(
-            OutboxPublishEvent(
-                outboxId = outboxEvent.id,
-                topic = outboxEvent.kafkaTopic,
-                key = outboxEvent.kafkaKey,
-                payload = outboxEvent.kafkaPayload,
-            ),
-        )
     }
 
     private fun validateIsAlreadyParticipated(

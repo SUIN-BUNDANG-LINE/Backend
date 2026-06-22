@@ -1,38 +1,39 @@
 package com.sbl.sulmun2yong.drawing.service
 
 import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
-import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
-import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.entity.DrawingHistory
 import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.drawing.metrics.DrawingProcessMetrics
+import com.sbl.sulmun2yong.drawing.publisher.DrawingEventPublisher
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
 import com.sbl.sulmun2yong.global.data.PhoneNumber
-import com.sbl.sulmun2yong.global.kafka.outbox.OutboxEventFactory
-import com.sbl.sulmun2yong.global.kafka.outbox.OutboxPublishEvent
-import com.sbl.sulmun2yong.global.kafka.outbox.repository.OutboxEventRepository
 import com.sbl.sulmun2yong.global.lock.RedissonLock
 import com.sbl.sulmun2yong.global.util.EncryptionUtils
-import org.springframework.context.ApplicationEventPublisher
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
+import com.sbl.sulmun2yong.survey.repository.SurveyRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
 import java.util.UUID
 
 @Service
 class DrawingProcessService(
     private val drawingBoardRepository: DrawingBoardRepository,
     private val drawingHistoryRepository: DrawingHistoryRepository,
+    private val surveyRepository: SurveyRepository,
     private val encryptionUtils: EncryptionUtils,
-    private val outboxEventFactory: OutboxEventFactory,
-    private val outboxEventRepository: OutboxEventRepository,
-    private val applicationEventPublisher: ApplicationEventPublisher,
     private val drawingProcessMetrics: DrawingProcessMetrics,
+    private val drawingEventPublisher: DrawingEventPublisher,
 ) {
+    companion object {
+        private val log = LoggerFactory.getLogger(DrawingProcessService::class.java)
+    }
+
     @RedissonLock(key = "drawingLock:{surveyId}", leaseTime = 10, waitTime = 5)
     @Transactional
     fun processDrawing(
@@ -77,7 +78,9 @@ class DrawingProcessService(
             isWinner = drawingResult is DrawingResult.Winner,
         )
 
-        publishDrawingCompletedEvent(
+        closeSurveyIfTicketsExhausted(surveyId, changedDrawingBoard)
+
+        drawingEventPublisher.publishCompleted(
             surveyId = surveyId,
             participantId = participantId,
             selectedNumber = selectedNumber,
@@ -132,7 +135,9 @@ class DrawingProcessService(
             isWinner = drawingResult is DrawingResult.Winner,
         )
 
-        publishDrawingCompletedEvent(
+        closeSurveyIfTicketsExhausted(surveyId, changedDrawingBoard)
+
+        drawingEventPublisher.publishCompleted(
             surveyId = surveyId,
             participantId = participantId,
             selectedNumber = selectedNumber,
@@ -145,50 +150,25 @@ class DrawingProcessService(
         }
     }
 
-    private fun publishDrawingCompletedEvent(
+    // 잔여 티켓이 0이 된 시점에 추첨 트랜잭션 안에서 설문을 즉시 종료한다.
+    // 동일 트랜잭션이라 추첨 결과와 설문 종료가 원자적으로 커밋된다.
+    private fun closeSurveyIfTicketsExhausted(
         surveyId: UUID,
-        participantId: UUID,
-        selectedNumber: Int,
         changedDrawingBoard: DrawingBoard,
     ) {
-        val selectedTicket = changedDrawingBoard.tickets[selectedNumber]
-        val (rewardName, rewardCategory) =
-            when (selectedTicket) {
-                is Ticket.Winning -> selectedTicket.rewardName to selectedTicket.rewardCategory
-                is Ticket.NonWinning -> null to null
-            }
+        if (changedDrawingBoard.remainingTicketCount > 0) return
 
-        val drawingCompletedEvent =
-            DrawingCompletedEvent(
-                eventId = UUID.randomUUID().toString(),
-                surveyId = surveyId.toString(),
-                participantId = participantId.toString(),
-                selectedNumber = selectedNumber,
-                isWinner = selectedTicket is Ticket.Winning,
-                rewardName = rewardName,
-                rewardCategory = rewardCategory,
-                remainingTickets = changedDrawingBoard.remainingTicketCount,
-                timestamp = Instant.now(),
-            )
+        val survey =
+            surveyRepository
+                .findByIdAndIsDeletedFalseWithLock(surveyId)
+                .orElseThrow { SurveyNotFoundException() }
 
-        val outboxEvent =
-            outboxEventFactory.create(
-                aggregateType = "Drawing",
-                aggregateId = surveyId.toString(),
-                eventType = "DrawingCompleted",
-                kafkaTopic = "drawing-completed",
-                event = drawingCompletedEvent,
-            )
+        if (survey.status == SurveyStatus.CLOSED) {
+            log.info("이미 종료된 설문, surveyId: {}", survey.id)
+            return
+        }
 
-        outboxEventRepository.save(outboxEvent)
-
-        applicationEventPublisher.publishEvent(
-            OutboxPublishEvent(
-                outboxId = outboxEvent.id,
-                topic = outboxEvent.kafkaTopic,
-                key = outboxEvent.kafkaKey,
-                payload = outboxEvent.kafkaPayload,
-            ),
-        )
+        surveyRepository.save(survey.finish())
+        log.info("티켓 소진으로 종료, surveyId: {}", survey.id)
     }
 }

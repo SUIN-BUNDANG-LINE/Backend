@@ -11,7 +11,7 @@ class KafkaTopicConfig {
     @Bean
     fun surveyResponseSubmittedTopic(): NewTopic =
         TopicBuilder
-            .name("survey-response-submitted")
+            .name(KafkaTopics.SURVEY_RESPONSE_SUBMITTED)
             .partitions(6)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
@@ -20,7 +20,7 @@ class KafkaTopicConfig {
     @Bean
     fun drawingCompletedTopic(): NewTopic =
         TopicBuilder
-            .name("drawing-completed")
+            .name(KafkaTopics.DRAWING_COMPLETED)
             .partitions(6)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
@@ -29,7 +29,7 @@ class KafkaTopicConfig {
     @Bean
     fun drawingNotificationDltTopic(): NewTopic =
         TopicBuilder
-            .name("drawing-notification.DLT")
+            .name(KafkaTopics.DRAWING_NOTIFICATION_DLT)
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
