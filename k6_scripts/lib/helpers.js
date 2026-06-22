@@ -96,6 +96,8 @@ export function submitResponse(surveyId, sectionId, visitorId) {
 }
 
 // 추첨 실행
+// LOCK_MODE=off → /draw-no-lock (실험용, 분산락 미적용)
+// LOCK_MODE=on (default) → /draw (운영, 분산락 적용)
 export function doDrawing(participantId, selectedNumber, phoneNumber) {
     const payload = JSON.stringify({
         participantId: participantId,
@@ -103,7 +105,11 @@ export function doDrawing(participantId, selectedNumber, phoneNumber) {
         phoneNumber: phoneNumber,
     });
 
-    return http.post(`${pickBaseUrl()}/api/v1/drawing-board/draw`, payload, jsonParams());
+    const path = __ENV.LOCK_MODE === 'off'
+        ? '/api/v1/drawing-board/draw-no-lock'
+        : '/api/v1/drawing-board/draw';
+
+    return http.post(`${pickBaseUrl()}${path}`, payload, jsonParams());
 }
 
 // 추첨판 정보 조회

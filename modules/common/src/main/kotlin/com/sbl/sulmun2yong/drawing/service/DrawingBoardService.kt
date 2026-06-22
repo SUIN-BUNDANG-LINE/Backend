@@ -46,4 +46,21 @@ class DrawingBoardService(
 
         return drawingProcessAdapter.processDrawing(surveyId, participantId, selectedNumber, phoneNumber)
     }
+
+    // 실험용 — 분산락 미적용. T8 race condition 비교 측정 전용.
+    fun doDrawingWithoutLock(
+        participantId: UUID,
+        selectedNumber: Int,
+        phoneNumber: String,
+    ): DrawingResultResponse {
+        val participant = participantRepository.findById(participantId).orElseThrow { InvalidParticipantException() }
+        val surveyId = participant.surveyId
+
+        val survey = surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }
+        if (survey.status == SurveyStatus.CLOSED) {
+            throw FinishedDrawingException()
+        }
+
+        return drawingProcessAdapter.processDrawingWithoutLock(surveyId, participantId, selectedNumber, phoneNumber)
+    }
 }

@@ -27,11 +27,14 @@ import {
     makeVisitorId,
     makePhoneNumber,
 } from './lib/helpers.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 // ── 커스텀 메트릭 ──
 const drawingSuccess = new Counter('drawing_success_total');
 const drawingFail = new Counter('drawing_fail_total');
 const drawingSuccessRate = new Rate('drawing_success_rate');
+
+const LOCK_MODE = __ENV.LOCK_MODE === 'off' ? 'off' : 'on';
 
 export const options = {
     scenarios: {
@@ -43,7 +46,7 @@ export const options = {
             iterations: 1,
             maxDuration: '60s',
             exec: 'sameTicketTest',
-            tags: { scenario: 'same_ticket' },
+            tags: { scenario: 'same_ticket', lock_mode: LOCK_MODE },
         },
         // 시나리오 2: 동일 사용자가 다른 번호로 10번 동시 요청 → 1번만 성공
         same_user: {
@@ -52,8 +55,8 @@ export const options = {
             iterations: 1,
             maxDuration: '60s',
             exec: 'sameUserTest',
-            startTime: '65s',
-            tags: { scenario: 'same_user' },
+            startTime: '10s',
+            tags: { scenario: 'same_user', lock_mode: LOCK_MODE },
         },
         // 시나리오 3: 10명이 각각 다른 번호로 동시 추첨 → 전부 성공
         diff_tickets: {
@@ -62,8 +65,8 @@ export const options = {
             iterations: 1,
             maxDuration: '60s',
             exec: 'differentTicketsTest',
-            startTime: '130s',
-            tags: { scenario: 'diff_tickets' },
+            startTime: '20s',
+            tags: { scenario: 'diff_tickets', lock_mode: LOCK_MODE },
         },
     },
     thresholds: {
@@ -124,11 +127,19 @@ export function setup() {
         }
     }
 
+    const annotationId = startAnnotation('drawing-concurrency', ['lock']);
+
     return {
         scenario1: { surveyId: survey1.surveyId, participants: s1Participants, targetNumber: 5 },
         scenario2: { surveyId: survey2.surveyId, participant: s2Participant },
         scenario3: { surveyId: survey3.surveyId, participants: s3Participants },
+        annotationId,
     };
+}
+
+// ── teardown: Grafana annotation 종료 마킹 ──
+export function teardown(data) {
+    endAnnotation(data?.annotationId);
 }
 
 // ── 시나리오 1: 같은 티켓 번호에 10명 동시 요청 ──

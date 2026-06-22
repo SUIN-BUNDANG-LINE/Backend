@@ -38,7 +38,7 @@ management:
         web:
             base-path: /management
             exposure:
-                include: health, info, prometheus
+                include: health, info, prometheus, kafkaReplay
             path-mapping:
                 health: health
 

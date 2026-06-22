@@ -39,4 +39,19 @@ class DrawingBoardController(
             )
         return ResponseEntity.ok(drawingResultResponse)
     }
+
+    // 실험용 — 분산락 미적용. T8 race condition 비교 측정 전용.
+    // 운영 사용 금지. 측정 종료 후 제거 가능.
+    @PostMapping("/draw-no-lock")
+    fun doDrawingWithoutLock(
+        @RequestBody request: DrawingRequest,
+    ): ResponseEntity<DrawingResultResponse> {
+        val drawingResultResponse =
+            drawingBoardService.doDrawingWithoutLock(
+                participantId = request.participantId,
+                selectedNumber = request.selectedNumber,
+                phoneNumber = request.phoneNumber,
+            )
+        return ResponseEntity.ok(drawingResultResponse)
+    }
 }

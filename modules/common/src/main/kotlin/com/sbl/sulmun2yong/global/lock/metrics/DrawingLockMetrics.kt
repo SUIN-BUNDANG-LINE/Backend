@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 @Component
 class DrawingLockMetrics(
@@ -27,7 +28,12 @@ class DrawingLockMetrics(
             Timer
                 .builder("drawing_lock_wait_seconds")
                 .tag("lock_key_type", lockKeyType)
-                .register(registry),
+                .serviceLevelObjectives(
+                    Duration.ofMillis(10),
+                    Duration.ofMillis(50),
+                    Duration.ofMillis(100),
+                    Duration.ofMillis(500),
+                ).register(registry),
         )
     }
 }

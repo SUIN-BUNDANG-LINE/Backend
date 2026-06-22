@@ -1,7 +1,9 @@
 package com.sbl.sulmun2yong.global.error
 
+import com.sbl.sulmun2yong.global.metrics.DeadlockMetrics
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
+import org.springframework.dao.CannotAcquireLockException
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.AuthenticationException
 import org.springframework.web.HttpRequestMethodNotSupportedException
@@ -12,12 +14,22 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
-class GlobalExceptionHandler {
+class GlobalExceptionHandler(
+    private val deadlockMetrics: DeadlockMetrics,
+) {
     private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(Exception::class)
     protected fun handleException(e: Exception): ErrorResponse {
         log.error(e.message, e)
+        return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR)
+    }
+
+    // MySQL InnoDB deadlock 검출 — 분산락 효과 측정 지표 (db_deadlock_total)
+    @ExceptionHandler(CannotAcquireLockException::class)
+    protected fun handleDeadlock(e: CannotAcquireLockException): ErrorResponse {
+        deadlockMetrics.recordDeadlock()
+        log.error("DB deadlock 발생: ${e.message}", e)
         return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR)
     }
 
