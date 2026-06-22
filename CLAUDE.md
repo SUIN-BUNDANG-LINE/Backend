@@ -19,7 +19,7 @@
 | 인증 | Spring Security + OAuth2 + JWT (jjwt 0.12.6) |
 | API 문서 | SpringDoc OpenAPI 2.3.0 (Swagger UI) |
 | 파일 저장 | AWS S3 (AWS SDK 2.27.24) + CloudFront CDN |
-| 테스트 | JUnit 5 + Mockito + Jacoco + Awaitility 4.2.2 (비동기 검증) |
+| 테스트 | JUnit 5 + Mockito + Jacoco |
 | 포맷터 | ktlint 12.1.1 (Gradle 플러그인: org.jlleitschuh.gradle.ktlint) |
 | 컨테이너 | JIB (Google Cloud Tools) |
 | AOP | Spring Boot AOP |
@@ -30,68 +30,56 @@
 | 명령어 | 설명 |
 |---|---|
 | `./gradlew build` | 전체 모듈 빌드 + 테스트 실행 |
-| `./gradlew test` | 전체 단위 테스트 실행 (concurrency 태그 제외) |
+| `./gradlew test` | 전체 단위 테스트 실행 |
 | `./gradlew :web:test` | web 모듈 테스트만 실행 |
-| `./gradlew concurrencyTest` | 동시성 테스트 실행 |
 | `./gradlew ktlintCheck` | 코드 스타일 검사 (전체 모듈) |
 | `./gradlew ktlintFormat` | 코드 스타일 자동 수정 (전체 모듈) |
 | `./gradlew jacocoTestReport` | 테스트 커버리지 리포트 생성 |
 | `./gradlew :web:bootRun` | Web 진입점 로컬 실행 |
-| `./gradlew :consumer:bootRun` | Consumer 진입점 로컬 실행 |
 | `./gradlew :web:bootJar` | Web JAR 패키징 (`web/build/libs/*-SNAPSHOT.jar`) |
-| `./gradlew :consumer:bootJar` | Consumer JAR 패키징 (`consumer/build/libs/*-SNAPSHOT.jar`) |
-| `./gradlew :web:jib :consumer:jib` | Web/Consumer Docker 이미지 빌드 및 푸시 |
+| `./gradlew :web:jib` | Web Docker 이미지 빌드 및 푸시 |
 
 ## 실행 단위 (Entry Points)
 
-Gradle 멀티 프로젝트로 web/consumer 모듈을 분리해, **컴파일 타임 격리**로 빈 분리를 보장한다.
-런타임 `@ComponentScan` 필터 대신 모듈 의존성(`web → common`, `consumer → common`, `web ↛ consumer`, `consumer ↛ web`)으로 분리된다.
+Gradle 멀티 프로젝트(`:common`, `:web`)로 빈 경계를 보장한다.
+`:consumer` 모듈은 별도 레포지토리(`sulmoon2yong-consumer`)로 분리되어 독립적으로 빌드·배포된다.
 
 | 진입점 | 모듈 | 클래스 | 책임 |
 |---|---|---|---|
 | Web | `:web` | `Sulmun2yongApplication` | REST API 서버, Outbox Producer relay, Spring Security/JWT, OAuth2, Swagger, ai 헬스체크 스케줄러 |
-| Consumer | `:consumer` | `Sulmun2yongConsumerApplication` | Kafka 어댑터, 도메인 listener, SMS 보상 워커, 시간 기반 자동 마감 스케줄러, Notification/DLT 메트릭 |
 
-`Sulmun2yongConsumerApplication`은 management-only Tomcat을 띄운다 (컨트롤러가 consumer 모듈에 없음 → Actuator/Prometheus만 노출).
+Consumer 진입점(`Sulmun2yongConsumerApplication`, Kafka 어댑터, 도메인 listener, SMS 보상 워커, 시간 기반 자동 마감 스케줄러, Notification/DLT 메트릭)은 `sulmoon2yong-consumer` 레포에서 관리한다.
 
 ### 실행 방법
 
 | 환경 | 실행 명령 |
 |---|---|
 | 로컬 — Web | `./gradlew :web:bootRun` |
-| 로컬 — Consumer | `./gradlew :consumer:bootRun` |
 | 패키징 — Web | `./gradlew :web:bootJar` → `web/build/libs/web-*-SNAPSHOT.jar` |
-| 패키징 — Consumer | `./gradlew :consumer:bootJar` → `consumer/build/libs/consumer-*-SNAPSHOT.jar` |
 | 운영 — Web | `java -jar web-*.jar` |
-| 운영 — Consumer | `java -jar consumer-*.jar` |
 
-배포 시 두 JAR을 별도 이미지로 만들어 두 Deployment로 운영한다 (`{DOCKER_IMAGE_NAME}-web`, `{DOCKER_IMAGE_NAME}-consumer`). 양쪽 진입점 모두 Actuator 엔드포인트(`/management/health`, `/management/prometheus`)를 노출하므로 K8s HTTP probe로 헬스체크 가능.
+배포 시 Web JAR을 이미지로 만들어 Deployment로 운영한다 (`{DOCKER_IMAGE_NAME}-web`). Consumer 이미지·배포는 분리된 레포에서 관리한다. Actuator 엔드포인트(`/management/health`, `/management/prometheus`)는 양쪽 모두 동일하게 노출되어 K8s HTTP probe로 헬스체크 가능.
 
 ### 통합 테스트
 
-`@SpringBootTest` 대신 `@IntegrationTest` 메타 애너테이션을 사용한다. 양쪽 진입점 빈을 모두 로딩한다.
-현재 `web/src/test`에 위치하며, web 모듈은 `testImplementation(project(":consumer"))`로 consumer 클래스를 testCompile 시점에 참조한다.
-
-```kotlin
-@IntegrationTest
-class FooIntegrationTest { ... }
-```
+Spring 런타임을 띄우는 JVM 통합 테스트는 제거되었고, 런타임 검증은 `k6_scripts/`의 시나리오로 대체한다 (drawing concurrency, outbox atomicity/relay/producer-dlq, skip-locked, sms-failover, drawing-kafka-fanout).
+Consumer end-to-end 흐름(Kafka listener 처리 검증)이 필요한 테스트는 `sulmoon2yong-consumer` 레포에서 작성한다 — 이 레포의 기존 Kafka E2E 테스트는 `@Disabled`로 보존되어 있다.
 
 ### 모듈에 새 코드 추가 시 주의
 
 - 새 **컨트롤러**: `web/src/main/kotlin/.../{도메인}/controller/`
-- 새 **KafkaListener / 도메인 listener / @Scheduled worker**: `consumer/src/main/kotlin/.../{도메인}/listener/` 또는 `worker/`
+- 새 **KafkaListener / 도메인 listener / @Scheduled worker**: `sulmoon2yong-consumer` 레포에서 작성
 - 새 **service / repository / entity / dto / domain**: `common/src/main/kotlin/.../{도메인}/`
-- web에서 consumer 코드를 참조하려고 하면 컴파일 에러 → 모듈 경계 위반 시그널
+- consumer 측에서 사용되는 공통 인프라(이벤트 DTO, Outbox, Kafka config 등)는 `:common`에서 관리 — 두 레포가 같은 `:common` 코드를 공유한다 (현재는 sulmoon2yong-consumer가 `:common`을 자체 복사 보유, 코드 변경 시 양쪽 동기화 필요)
 
 ## 아키텍처
 
-Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴파일 타임 격리.
+Gradle 멀티 프로젝트 — `:common`, `:web` 2개 모듈로 컴파일 타임 격리.
+`:consumer`는 별도 레포(`sulmoon2yong-consumer`)로 분리됨.
 
 ```
 {module}/src/main/kotlin/com/sbl/sulmun2yong/
 ├── Sulmun2yongApplication.kt          # :web 진입점
-├── Sulmun2yongConsumerApplication.kt  # :consumer 진입점
 ├── ai/                          # AI 설문 생성 도메인
 ├── ai/                          # AI 설문 생성 도메인
 │   ├── adapter/                 # 외부 시스템 어댑터 (AI 서버 통신)
@@ -119,9 +107,10 @@ Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴
 │   │   └── event/               # 도메인 이벤트 DTO (DrawingCompletedEvent, *ConsumedEvent 등)
 │   ├── entity/                  # JPA 엔티티 + 도메인 로직 통합
 │   ├── exception/
-│   ├── listener/                # @EventListener (SMS 알림 잡 생성, SMS 비용 집계)
+│   ├── metrics/                 # 도메인 메트릭 (DrawingProcessMetrics — winner/non_winner persistence)
 │   ├── repository/
 │   └── service/
+│                                # ※ listener/ 는 sulmoon2yong-consumer 레포에 위치
 ├── global/                      # 공통 모듈
 │   ├── annotation/              # 커스텀 어노테이션
 │   ├── config/                  # 설정 클래스
@@ -141,20 +130,18 @@ Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴
 │   ├── filter/                  # HTTP Filter (CorrelationIdFilter — X-Correlation-Id 헤더 + MDC 발급)
 │   ├── lock/                    # 분산 락 (Redisson)
 │   │   └── metrics/             # Lock 획득/대기 Histogram (DrawingLockMetrics)
+│   ├── metrics/                 # 전역 메트릭 (DeadlockMetrics — MySQL deadlock 카운터)
 │   ├── migration/               # Flyway 마이그레이션 (src/main/resources/db/migration/)
 │   ├── resolver/                # 아규먼트 리졸버
 │   ├── util/                    # 유틸리티
 │   └── validator/               # 검증 로직
-├── consumer/                    # Kafka 어댑터 — 얇은 진입점 (역직렬화 + ApplicationEvent 발행 + Ack 위임)
-│   └── payload/                 # Consumer 역직렬화 DTO (Kafka 페이로드 ↔ 자바 객체)
 ├── notification/                # 알림 도메인 (Inbox 패턴 + DLT)
 │   ├── dto/event/               # 도메인 이벤트 DTO (DltSmsNotificationEvent, *ConsumedEvent, SmsJobCreatedEvent)
 │   ├── entity/                  # sms_notification_jobs, dlt_messages 엔티티
-│   ├── listener/                # @EventListener + @TransactionalEventListener (DLT 저장, SMS 잡 처리)
 │   ├── metrics/                 # SMS Job/DLT/Attempts 메트릭 (SmsNotificationMetrics)
 │   ├── repository/              # SmsNotificationJobRepository, DltMessageRepository
-│   ├── service/                 # SmsSender + SmsNotificationJobService
-│   └── worker/                  # @Scheduled 보상 Worker (30초 폴링)
+│   └── service/                 # SmsSender + SmsNotificationJobService
+│                                # ※ listener/, worker/ 는 sulmoon2yong-consumer 레포에 위치
 ├── survey/                      # 설문조사 도메인 (핵심)
 │   ├── controller/
 │   ├── domain/
@@ -168,10 +155,10 @@ Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴
 │   │   └── event/               # 도메인 이벤트 DTO (*ConsumedEvent 등)
 │   ├── entity/
 │   ├── exception/
-│   ├── listener/                # @EventListener (자동 마감, 응답 통계)
 │   ├── repository/
 │   ├── scheduler/
 │   └── service/
+│                                # ※ listener/ 는 sulmoon2yong-consumer 레포에 위치
 └── user/                        # 사용자 도메인
     ├── controller/
     ├── domain/
@@ -189,8 +176,6 @@ Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴
 |---|---|
 | `controller/` | REST API 엔드포인트 정의 |
 | `controller/doc/` | Swagger 문서용 인터페이스 |
-| `consumer/` | Kafka 어댑터 — `@KafkaListener` 진입점 (역직렬화 + ApplicationEvent 발행 + Ack 위임만 수행, 도메인 로직 금지) |
-| `{도메인}/listener/` | Spring `ApplicationEvent` 핸들러 — Consumer 어댑터에서 발행된 `*ConsumedEvent` 처리, 도메인 분기·락·저장 |
 | `domain/` | 도메인 모델 (enum, sealed class, 값 객체, 라우팅 전략 등) |
 | `dto/` | 요청/응답 데이터 전송 객체 |
 | `dto/event/` | 이벤트 DTO (Kafka 토픽 payload + 도메인 ApplicationEvent payload `*ConsumedEvent`) |
@@ -202,7 +187,10 @@ Gradle 멀티 프로젝트 — `:common`, `:web`, `:consumer` 3개 모듈로 컴
 
 ### Kafka 컨슈머 구조 (ApplicationEvent 기반)
 
-| 토픽 | groupId | Consumer 어댑터 (`consumer/`) | 도메인 리스너 (`{도메인}/listener/`) |
+Web 측에서는 Producer / Outbox Relay만 동작하며, Kafka Consumer는 `sulmoon2yong-consumer` 레포에서 관리한다.
+다음 토픽 → groupId → Consumer 어댑터 → 도메인 리스너 매핑은 새 레포 기준이며 참고용으로 유지한다.
+
+| 토픽 | groupId | Consumer 어댑터 (sulmoon2yong-consumer) | 도메인 리스너 (sulmoon2yong-consumer) |
 |---|---|---|---|
 | `drawing-completed` | `drawing-notification` | `DrawingCompletedNotificationKafkaListener` | `drawing.DrawingSmsNotificationEventListener` |
 | `drawing-completed` | `drawing-auto-close` | `DrawingCompletedAutoCloseKafkaListener` | `survey.SurveyAutoCloseOnDrawingExhaustedEventListener` |
@@ -219,7 +207,7 @@ infra/
 ├── otel/
 │   └── opentelemetry-javaagent.jar   # JVM 부착용 OTel Java Agent (-javaagent 옵션)
 └── monitoring/
-    ├── prometheus/prometheus.yml      # spring-apps(5 인스턴스) + kafka-exporter 스크레이프
+    ├── prometheus/prometheus.yml      # spring-apps(web 2 인스턴스) + kafka-exporter 스크레이프
     ├── tempo/tempo.yml                # OTLP receivers(4317/4318), 로컬 storage, 14일 retention
     └── grafana/
         ├── provisioning/
@@ -227,7 +215,7 @@ infra/
         │   │   ├── prometheus.yml     # uid=prometheus
         │   │   └── tempo.yml          # uid=tempo (serviceMap → prometheus 연결)
         │   └── dashboards/            # 대시보드 자동 로드
-        └── dashboards/                # outbox/sms-failover/drawing-lock/consumer-fanout/cluster-overview
+        └── dashboards/                # outbox/sms-failover/drawing-lock/consumer-fanout/cluster-overview/race-comparison
 ```
 
 | 컴포넌트 | 컨테이너 | 호스트 포트 | 역할 |
@@ -237,7 +225,21 @@ infra/
 | Tempo | `sulmun2yong-cluster-tempo` | `13200` (query), `14317` (OTLP gRPC) | 분산 trace 저장·질의 |
 | Kafka Exporter | `sulmun2yong-cluster-kafka-exporter` | `19308` | Kafka consumer lag 메트릭 |
 
-OTel Java Agent는 web/consumer 5개 JVM 모두에 `-javaagent` 옵션으로 부착되어 Spring MVC, JDBC, Spring Kafka, Redisson, Hibernate, HikariCP 등을 **코드 수정 없이 자동 instrument**. trace는 OTLP gRPC로 Tempo에 push되고 W3C tracecontext 헤더(`traceparent`)로 Kafka 메시지 경계를 자동 전파.
+OTel Java Agent는 web 2개 JVM에 `-javaagent` 옵션으로 부착되어 Spring MVC, JDBC, Spring Kafka, Redisson, Hibernate, HikariCP 등을 **코드 수정 없이 자동 instrument**. trace는 OTLP gRPC로 Tempo에 push되고 W3C tracecontext 헤더(`traceparent`)로 Kafka 메시지 경계를 자동 전파. consumer 측 trace는 sulmoon2yong-consumer 레포에서 동일하게 Tempo로 push 가능 (동일 클러스터 공유).
+
+### 프로젝트 문서
+
+```
+docs/
+├── PRD.md                              # 기능 명세, 데이터 모델
+├── roadmaps/ROADMAP_v*.md              # Phase/Task 계획, 진행 상태
+├── kafka-distribute-lock/
+│   ├── PRD.md                          # 도메인 PRD
+│   ├── MONITORING-PRD.md               # F001~F016 옵저버빌리티 명세
+│   └── MONITORING-RESULTS.md           # F015 측정 결과 (Lock OFF vs ON, p95/3회 평균)
+└── portfolio/
+    └── RESUME-BULLETS.md               # F016 STAR 6 + 면접 Q&A 18 페어 (학습 모드 자료)
+```
 
 ## 환경 변수
 

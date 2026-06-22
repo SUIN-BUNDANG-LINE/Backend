@@ -33,17 +33,13 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi:2.3.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
-    // Test — @IntegrationTest가 양쪽 진입점 빈을 로딩하므로 consumer 코드도 testCompile 시점에 필요
-    testImplementation(project(":consumer"))
-
+    // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.mockito:mockito-core:4.0.0")
     testImplementation("org.mockito:mockito-inline:4.0.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.awaitility:awaitility:4.2.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testRuntimeOnly("com.h2database:h2")
 }
 
 kotlin {
@@ -64,16 +60,8 @@ tasks.withType<Test> {
 }
 
 tasks.test {
-    useJUnitPlatform {
-        excludeTags("concurrency")
-    }
+    useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
-}
-
-tasks.register<Test>("concurrencyTest") {
-    useJUnitPlatform {
-        includeTags("concurrency")
-    }
 }
 
 springBoot {

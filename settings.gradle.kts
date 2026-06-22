@@ -5,9 +5,9 @@ plugins {
 
 rootProject.name = "sulmun2yong"
 
-include("common", "web", "consumer")
+include("common", "web")
 
-// 세 모듈 모두 modules/ 아래에 위치 (모듈 이름은 :common, :web, :consumer 유지)
+// 두 모듈 모두 modules/ 아래에 위치 (모듈 이름은 :common, :web 유지)
+// :consumer 는 별도 레포지토리(sulmoon2yong-consumer)로 분리됨
 project(":common").projectDir = file("modules/common")
 project(":web").projectDir = file("modules/web")
-project(":consumer").projectDir = file("modules/consumer")

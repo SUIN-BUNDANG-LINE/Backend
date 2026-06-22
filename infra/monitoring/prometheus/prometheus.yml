@@ -1,10 +1,12 @@
-# Prometheus 스크레이프 설정 — sulmun2yong cluster (P:2 + C:3)
+# Prometheus 스크레이프 설정 — sulmun2yong cluster (P:2)
 #
 # 스크레이프 대상:
-#   - Spring Boot Actuator (web-1, web-2, consumer-1, consumer-2, consumer-3) → /management/prometheus
+#   - Spring Boot Actuator (web-1, web-2) → /management/prometheus
 #   - Kafka Exporter → /metrics
 #
 # 호스트명은 docker-compose.cluster.yml의 container_name을 따른다.
+# :consumer 모듈은 sulmoon2yong-consumer 레포로 분리됨 — 해당 인스턴스는
+# 별도 Prometheus 설정에서 스크레이프하거나 동일 Prometheus에 federation 한다.
 
 global:
     scrape_interval: 15s
@@ -27,18 +29,6 @@ scrape_configs:
             labels:
                 application: sulmun2yong-web
                 instance: web-2
-          - targets: [sulmun2yong-consumer-1:8080]
-            labels:
-                application: sulmun2yong-consumer
-                instance: consumer-1
-          - targets: [sulmun2yong-consumer-2:8080]
-            labels:
-                application: sulmun2yong-consumer
-                instance: consumer-2
-          - targets: [sulmun2yong-consumer-3:8080]
-            labels:
-                application: sulmun2yong-consumer
-                instance: consumer-3
 
     # ────────── Kafka Exporter (외부 브로커 lag/offset) ──────────
     - job_name: kafka-exporter

@@ -95,46 +95,6 @@ services:
             -Dotel.service.name=sulmun2yong-web
             -jar /app/app.jar
 
-    # ────────────── Consumer × 3 ──────────────
-    consumer-1:
-        <<: *app-base
-        container_name: sulmun2yong-consumer-1
-        volumes:
-            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
-            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
-        command: >
-            java
-            -Dspring.config.additional-location=file:/app/config/
-            -Dotel.service.name=sulmun2yong-consumer
-            -jar /app/app.jar
-
-    consumer-2:
-        <<: *app-base
-        container_name: sulmun2yong-consumer-2
-        volumes:
-            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
-            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
-        command: >
-            java
-            -Dspring.config.additional-location=file:/app/config/
-            -Dotel.service.name=sulmun2yong-consumer
-            -jar /app/app.jar
-
-    consumer-3:
-        <<: *app-base
-        container_name: sulmun2yong-consumer-3
-        volumes:
-            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/consumer/build/libs/consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
-            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
-        command: >
-            java
-            -Dspring.config.additional-location=file:/app/config/
-            -Dotel.service.name=sulmun2yong-consumer
-            -jar /app/app.jar
-
     # ────────────── 옵저버빌리티 스택 ──────────────
     prometheus:
         image: prom/prometheus:v2.54.1
@@ -145,17 +105,15 @@ services:
             - --storage.tsdb.path=/prometheus
             - --storage.tsdb.retention.time=7d
             - --web.enable-lifecycle
+            - --web.enable-remote-write-receiver
         volumes:
             - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
             - sulmun2yong-cluster-prometheus:/prometheus
         ports:
-            - "19090:9090"  # 1+default 규칙 (9090 → 19090)
+            - "19090:9090"
         depends_on:
             - web-1
             - web-2
-            - consumer-1
-            - consumer-2
-            - consumer-3
         networks:
             - sulmun2yong-cluster
 
@@ -209,6 +167,7 @@ services:
 
 networks:
     sulmun2yong-cluster:
+        name: sulmun2yong-cluster
         driver: bridge
 
 volumes:
