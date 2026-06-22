@@ -27,6 +27,7 @@ import {
     cleanupTestOutbox,
     awaitCondition,
 } from './lib/db.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 const TOPIC = 'survey-response-submitted';
 const INJECT_COUNT = Number(__ENV.INJECT_COUNT || 200);
@@ -58,7 +59,10 @@ export function setup() {
 
     const after = getOutboxStatsByTopic(TOPIC);
     console.log(`주입 전: ${JSON.stringify(before)}, 주입 후: ${JSON.stringify(after)}`);
-    return { keyPrefix, beforePublished: before.PUBLISHED };
+
+    const annotationId = startAnnotation('skip-locked-concurrency', ['outbox', 'skip-locked']);
+
+    return { keyPrefix, beforePublished: before.PUBLISHED, annotationId };
 }
 
 export default function () {
@@ -100,4 +104,6 @@ export function teardown(data) {
 
     cleanupTestOutbox();
     closeDb();
+
+    endAnnotation(data?.annotationId);
 }

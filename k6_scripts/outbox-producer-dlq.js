@@ -25,6 +25,7 @@ import {
     cleanupTestOutbox,
     awaitCondition,
 } from './lib/db.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 const BAD_TOPIC = __ENV.BAD_TOPIC || 'non-existent-topic-k6dlqtest';
 const TIMEOUT_SEC = Number(__ENV.TIMEOUT_SEC || 360); // 6분
@@ -48,7 +49,10 @@ export function setup() {
 
     insertPendingOutbox('TestDlqEvent', BAD_TOPIC, key, payload, 90);
     console.log(`잘못된 토픽 ${BAD_TOPIC}로 PENDING 1건 주입 (key=${key})`);
-    return {key};
+
+    const annotationId = startAnnotation('outbox-producer-dlq', ['outbox', 'dlq']);
+
+    return {key, annotationId};
 }
 
 export default function () {
@@ -77,4 +81,6 @@ export function teardown(data) {
 
     cleanupTestOutbox();
     closeDb();
+
+    endAnnotation(data?.annotationId);
 }

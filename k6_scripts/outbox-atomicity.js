@@ -20,6 +20,7 @@
 import { check, group, sleep } from 'k6';
 import { Counter, Rate } from 'k6/metrics';
 import { setupSurveyWithDrawing, submitResponse } from './lib/helpers.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 const DUPLICATE_VUS = parseInt(__ENV.DUPLICATE_VUS || '10');
 
@@ -71,7 +72,9 @@ export function setup() {
         title: 'k6 원자성 테스트 (동시 중복)',
     });
 
-    return { survey1, survey2 };
+    const annotationId = startAnnotation('outbox-atomicity', ['outbox']);
+
+    return { survey1, survey2, annotationId };
 }
 
 // ── 시나리오 1: 기본 원자성 검증 (순차) ──
@@ -143,4 +146,6 @@ export function teardown(data) {
     console.log('=== Outbox 원자성 테스트 결과 ===');
     console.log('시나리오 2 (동시 중복): 1개만 성공해야 정상');
     console.log('duplicate_submit_success 카운터를 확인하세요 (기대값: 1)');
+
+    endAnnotation(data?.annotationId);
 }

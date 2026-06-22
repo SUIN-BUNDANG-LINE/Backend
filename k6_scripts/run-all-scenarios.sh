@@ -28,6 +28,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 K6="${K6_BIN:-${SCRIPT_DIR}/k6-custom}"
 MODE="${1:-all}"
 
+# .env 자동 로드 — GRAFANA_URL/GRAFANA_TOKEN 등 k6 시나리오용 변수를 셸에 export
+if [ -f "${SCRIPT_DIR}/../.env" ]; then
+    set -a
+    source "${SCRIPT_DIR}/../.env"
+    set +a
+fi
+
 if [ ! -x "${K6}" ]; then
     echo "❌ 커스텀 k6 바이너리를 찾을 수 없습니다: ${K6}"
     echo "   xk6 build로 빌드 후 ${SCRIPT_DIR}/k6-custom에 배치하세요."
@@ -40,6 +47,10 @@ fi
 
 if [ -z "${DB_DSN}" ]; then
     echo "⚠️  DB_DSN 환경변수가 비어 있습니다. 기본값(user:password@tcp(localhost:3307)/test)이 사용됩니다."
+fi
+
+if [ -z "${GRAFANA_TOKEN}" ]; then
+    echo "ℹ️  GRAFANA_TOKEN 미설정 — Grafana annotation 마킹은 graceful skip됩니다."
 fi
 
 run_scenario() {

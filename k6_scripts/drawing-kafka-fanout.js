@@ -33,6 +33,7 @@ import {
     doDrawing,
     getSurveyInfo,
 } from './lib/helpers.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 const NUM_SURVEYS = parseInt(__ENV.NUM_SURVEYS || '20');
 const BOARD_SIZE = parseInt(__ENV.BOARD_SIZE || '100');
@@ -131,8 +132,10 @@ export function setup() {
         `셋업 완료: ${surveys.length}개 설문, ${allParticipants.length}명 participantId 확보 ` +
             `(per-survey: board=${PER_BOARD}, win=${PER_WINNING}, participants=${PER_PARTICIPANTS})`,
     );
+    const annotationId = startAnnotation('drawing-kafka-fanout', ['kafka', 'fanout']);
+
     // teardown 폴링용 기준 시각 — 추첨 마감 → close까지 fan-out latency 측정
-    return { surveys, participants: allParticipants };
+    return { surveys, participants: allParticipants, annotationId };
 }
 
 // ── 추첨 실행 ──
@@ -216,4 +219,6 @@ export function teardown(data) {
         `Fan-out 검증 결과: ${closedCount}/${data.surveys.length}개 설문 CLOSED ` +
             `(소요 ${Math.round((Date.now() - pollStart) / 1000)}s)`,
     );
+
+    endAnnotation(data?.annotationId);
 }

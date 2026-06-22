@@ -24,6 +24,7 @@ import {
     cleanupTestOutbox,
     awaitCondition,
 } from './lib/db.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 const TOPIC = 'survey-response-submitted';
 const INJECT_COUNT = Number(__ENV.INJECT_COUNT || 100);
@@ -57,7 +58,10 @@ export function setup() {
 
     const before = getOutboxStatsByTopic(TOPIC);
     console.log(`주입 완료. 토픽 ${TOPIC} 현황: ${JSON.stringify(before)}`);
-    return { keyPrefix, beforePending: before.PENDING };
+
+    const annotationId = startAnnotation('outbox-relay-recovery', ['outbox', 'recovery']);
+
+    return { keyPrefix, beforePending: before.PENDING, annotationId };
 }
 
 export default function () {
@@ -92,4 +96,6 @@ export function teardown(data) {
 
     cleanupTestOutbox();
     closeDb();
+
+    endAnnotation(data?.annotationId);
 }

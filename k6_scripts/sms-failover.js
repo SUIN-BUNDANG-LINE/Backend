@@ -32,6 +32,7 @@ import {
     countDltMessages,
     awaitCondition,
 } from './lib/db.js';
+import { startAnnotation, endAnnotation } from './lib/annotations.js';
 
 const TIMEOUT_SEC = Number(__ENV.TIMEOUT_SEC || 90);
 
@@ -66,11 +67,14 @@ export function setup() {
     const participantId = res.json().participantId;
     console.log(`설문 셋업 완료. participantId=${participantId}`);
 
+    const annotationId = startAnnotation('sms-failover', ['sms', 'dlt']);
+
     return {
         surveyId: survey.surveyId,
         participantId,
         dltBefore,
         jobsFailedBefore: jobsBefore.FAILED,
+        annotationId,
     };
 }
 
@@ -110,4 +114,6 @@ export function teardown(data) {
     });
 
     closeDb();
+
+    endAnnotation(data?.annotationId);
 }
