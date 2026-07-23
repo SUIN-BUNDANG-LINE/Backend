@@ -41,7 +41,11 @@
 
 ## 실행 단위 (Entry Points)
 
-Gradle 멀티 프로젝트(`:common`, `:web`)로 빈 경계를 보장한다.
+Gradle 멀티 프로젝트(`:support`, `:produce`, `:web`)로 빈 경계를 보장한다. 의존 방향은 `:support` ← `:produce` ← `:web` 선형(순환 없음, `:web`은 `:support`도 직접 의존).
+- `:support` — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user). 기반 라이브러리.
+- `:produce` — Kafka 를 produce 하는 도메인(drawing/survey)의 서비스/퍼블리셔/컨트롤러 + outbox·publisher·kafka config + 분산락(global/lock) + `@LoginUser` 등 인증 애노테이션. 라이브러리.
+- `:web` — 실행 진입점(`Sulmun2yongApplication`) + 비프로듀서 도메인 컨트롤러(ai/aws/user) + 보안/JWT/resolver/전역 config·예외 핸들러. 유일한 실행 모듈.
+
 `:consumer` 모듈은 별도 레포지토리(`sulmoon2yong-consumer`)로 분리되어 독립적으로 빌드·배포된다.
 
 | 진입점 | 모듈 | 클래스 | 책임 |
@@ -62,19 +66,23 @@ Consumer 진입점(`Sulmun2yongConsumerApplication`, Kafka 어댑터, 도메인 
 
 ### 통합 테스트
 
-Spring 런타임을 띄우는 JVM 통합 테스트는 제거되었고, 런타임 검증은 `k6_scripts/`의 시나리오로 대체한다 (drawing concurrency, outbox atomicity/relay/producer-dlq, skip-locked, sms-failover, drawing-kafka-fanout).
+Spring 런타임을 띄우는 JVM 통합 테스트는 제거되었고, 런타임 검증은 `scripts/scenarios/`의 k6 시나리오로 대체한다 (concurrency: drawing-concurrency·skip-locked, outbox: atomicity·relay-recovery, kafka: drawing-kafka-fanout, saga: cost-integrity).
+테스트 실행 진입점 `.sh`(k6 통합 러너·분산락 실험·consumer E2E/부하·브로커 비교 러너)는 `scripts/runners/` 에 모여 있고 레포 루트에서 실행한다. k6 자산(바이너리·시나리오·lib)은 `scripts/{bin,scenarios,lib}/`, consumer E2E/부하 하네스(compose·override·dashboard)와 브로커 비교 자산은 `tests/e2e/`·`tests/broker-comparison/` 아래에 둔다 — 컨슈머 jar 만 `module-consumer/<consumer>/build/libs/`(별도 레포 로컬 체크아웃)에서 `bootJar` 로 빌드해 마운트한다.
 Consumer end-to-end 흐름(Kafka listener 처리 검증)이 필요한 테스트는 `sulmoon2yong-consumer` 레포에서 작성한다 — 이 레포의 기존 Kafka E2E 테스트는 `@Disabled`로 보존되어 있다.
 
 ### 모듈에 새 코드 추가 시 주의
 
 - 새 **컨트롤러**: `web/src/main/kotlin/.../{도메인}/controller/`
 - 새 **KafkaListener / 도메인 listener / @Scheduled worker**: `sulmoon2yong-consumer` 레포에서 작성
-- 새 **service / repository / entity / dto / domain**: `common/src/main/kotlin/.../{도메인}/`
-- consumer 측에서 사용되는 공통 인프라(이벤트 DTO, Outbox, Kafka config 등)는 `:common`에서 관리 — 두 레포가 같은 `:common` 코드를 공유한다 (현재는 sulmoon2yong-consumer가 `:common`을 자체 복사 보유, 코드 변경 시 양쪽 동기화 필요)
+- 새 **entity / repository / domain / 공유 기반 util** 또는 **비프로듀서 도메인(ai/aws/notification/user) 로직**: `support/src/main/kotlin/.../{도메인}/`
+- 새 **프로듀서 도메인(drawing/survey)의 service / publisher / controller** 또는 **kafka·outbox·lock**: `produce/src/main/kotlin/.../{도메인}/`
+- 새 **비프로듀서 도메인 컨트롤러 / 보안·JWT·resolver·전역 config**: `web/src/main/kotlin/.../{도메인}/`
+- 판단 기준: 의존은 `:support` ← `:produce` ← `:web` 한 방향만. 하위 모듈이 상위를 참조하면 순환이므로, 참조당하는 타입은 항상 더 아래(공유) 모듈에 둔다. `kotlin("kapt")`가 있는 `:support`에는 메타-애노테이트된 애노테이션(@AuthenticationPrincipal 파생 등)을 두지 말 것 — kapt 스텁 생성이 깨진다(그래서 `@LoginUser`류는 `:produce`에 있다)
+- consumer 측과 공유되는 Kafka 이벤트 DTO(`DrawingCompletedEvent`)는 이 레포와 sulmoon2yong-consumer가 각자 사본을 보유 — wire 스키마 계약이므로 코드 변경 시 양쪽 동기화 필요
 
 ## 아키텍처
 
-Gradle 멀티 프로젝트 — `:common`, `:web` 2개 모듈로 컴파일 타임 격리.
+Gradle 멀티 프로젝트 — `:support`(기반 라이브러리), `:produce`(프로듀서 도메인), `:web`(실행 진입점) 3개 모듈로 컴파일 타임 격리. `:support` ← `:produce` ← `:web` 단방향 의존.
 `:consumer`는 별도 레포(`sulmoon2yong-consumer`)로 분리됨.
 
 ```
@@ -192,11 +200,13 @@ Web 측에서는 Producer / Outbox Relay만 동작하며, Kafka Consumer는 `sul
 
 | 토픽 | groupId | Consumer 어댑터 (sulmoon2yong-consumer) | 도메인 리스너 (sulmoon2yong-consumer) |
 |---|---|---|---|
-| `drawing-completed` | `drawing-notification` | `DrawingCompletedNotificationKafkaListener` | `drawing.DrawingSmsNotificationEventListener` |
-| `drawing-completed` | `drawing-auto-close` | `DrawingCompletedAutoCloseKafkaListener` | `survey.SurveyAutoCloseOnDrawingExhaustedEventListener` |
-| `drawing-completed` | `sms-cost-calculator` | `DrawingCompletedSmsCostKafkaListener` (`ConsumerSeekAware` 리플레이) | `drawing.SmsCostEventListener` |
-| `survey-response-submitted` | `response-stats` | `SurveyResponseSubmittedStatsKafkaListener` | `survey.SurveyResponseStatsEventListener` |
+| `drawing-completed` | `drawing-notification` | `DrawingCompletedNotificationKafkaListener` (`ConsumerSeekAware` 리플레이) | `drawing.DrawingSmsNotificationEventListener` (SMS 잡 생성) |
+| `sms-delivery-permanently-failed` | — | 발행만 존재 (dlt 컨슈머가 발행, 현재 구독자 없음 — PG 정산 사가의 환불 리스너가 구독 예정, `docs/kafka-distribute-lock/PRD.md` 참조) | — |
 | `drawing-notification.DLT` | `dlt-sms-notification` | `DltSmsNotificationKafkaListener` | `notification.DltMessageEventListener` |
+
+컨슈머 모듈은 2개: `drawing-sms-notification-consumer`(발송), `dlt-sms-notification-consumer`.
+
+티켓 소진 시 설문 자동 종료는 응답 일관성을 위해 동기 처리 — `DrawingProcessService.closeSurveyIfTicketsExhausted`가 추첨 트랜잭션 안에서 직접 수행한다 (Kafka fan-out 대상 아님).
 
 ### 관찰가능성 (Observability) 스택
 
