@@ -1,0 +1,72 @@
+spring:
+    profiles.include:
+        - secret
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                format_sql: true
+                dialect: org.hibernate.dialect.MySQLDialect
+        open-in-view: false
+    flyway:
+        enabled: true
+        baseline-on-migrate: true
+    task:
+        scheduling:
+            pool:
+                size: 4
+
+sms:
+    mock:
+        failure-rate: 0.0  # 0.0 ~ 1.0 (기본: 실패 없음)
+        delay-ms: 0        # 지연 밀리초 (기본: 즉시)
+
+springdoc:
+    packages-to-scan: com.sbl.sulmun2yong
+    default-consumes-media-type: application/json;charset=UTF-8
+    default-produces-media-type: application/json;charset=UTF-8
+
+    swagger-ui:
+        path: /
+        disable-swagger-default-url: true
+        display-request-duration: true
+        operations-sorter: alpha
+
+management:
+    endpoints:
+        web:
+            base-path: /management
+            exposure:
+                include: health, info, prometheus, kafkaReplay
+            path-mapping:
+                health: health
+
+    metrics:
+        tags:
+            application: ${spring.application.name:sulmun2yong}
+        distribution:
+            percentiles-histogram:
+                spring.kafka.listener: true
+                drawing_lock_wait_seconds: true
+
+frontend:
+    base-url: http://localhost:3000
+
+backend:
+    base-url: http://localhost:8080
+
+cookie:
+    domain: localhost
+
+# 부하 테스트(k6)용 JWT 발급 엔드포인트 활성화 여부 (프로덕션은 false 유지)
+test-auth:
+    enabled: ${TEST_AUTH_ENABLED:false}
+
+ai-server:
+    base-url: http://localhost:8000
+
+cloudfront:
+    base-url: https://file.sulmoon.io
+server:
+    port: 8081
