@@ -50,7 +50,7 @@ Gradle 멀티 프로젝트(`:support`, `:produce`, `:web`)로 빈 경계를 보�
 
 | 진입점 | 모듈 | 클래스 | 책임 |
 |---|---|---|---|
-| Web | `:web` | `Sulmun2yongApplication` | REST API 서버, Outbox Producer relay, Spring Security/JWT, OAuth2, Swagger, ai 헬스체크 스케줄러 |
+| Web | `:web` | `Sulmun2yongApplication` | REST API 서버, Outbox Producer relay, Payment Command Relay(토스 confirm 자력 발송), Spring Security/JWT, OAuth2, Swagger, ai 헬스체크 스케줄러 |
 
 Consumer 진입점(`Sulmun2yongConsumerApplication`, Kafka 어댑터, 도메인 listener, SMS 보상 워커, 시간 기반 자동 마감 스케줄러, Notification/DLT 메트릭)은 `sulmoon2yong-consumer` 레포에서 관리한다.
 
@@ -77,6 +77,7 @@ Consumer end-to-end 흐름(Kafka listener 처리 검증)이 필요한 테스트�
 - 새 **entity / repository / domain / 공유 기반 util** 또는 **비프로듀서 도메인(ai/aws/notification/user) 로직**: `support/src/main/kotlin/.../{도메인}/`
 - 새 **프로듀서 도메인(drawing/survey)의 service / publisher / controller** 또는 **kafka·outbox·lock**: `produce/src/main/kotlin/.../{도메인}/`
 - 새 **비프로듀서 도메인 컨트롤러 / 보안·JWT·resolver·전역 config**: `web/src/main/kotlin/.../{도메인}/`
+- 새 **payment(결제) 코드**는 3모듈 분산: entity·repository·adapter·dto → `:support`, service·relay → `:produce`, controller·`RestTemplateConfig`(toss 빈) → `:web`. 토스 API 통신은 `payment/adapter/`(TossPaymentsAdapter)로 격리한다
 - 판단 기준: 의존은 `:support` ← `:produce` ← `:web` 한 방향만. 하위 모듈이 상위를 참조하면 순환이므로, 참조당하는 타입은 항상 더 아래(공유) 모듈에 둔다. `kotlin("kapt")`가 있는 `:support`에는 메타-애노테이트된 애노테이션(@AuthenticationPrincipal 파생 등)을 두지 말 것 — kapt 스텁 생성이 깨진다(그래서 `@LoginUser`류는 `:produce`에 있다)
 - consumer 측과 공유되는 Kafka 이벤트 DTO(`DrawingCompletedEvent`)는 이 레포와 sulmoon2yong-consumer가 각자 사본을 보유 — wire 스키마 계약이므로 코드 변경 시 양쪽 동기화 필요
 
@@ -150,6 +151,14 @@ Gradle 멀티 프로젝트 — `:support`(기반 라이브러리), `:produce`(�
 │   ├── repository/              # SmsNotificationJobRepository, DltMessageRepository
 │   └── service/                 # SmsSender + SmsNotificationJobService
 │                                # ※ listener/, worker/ 는 sulmoon2yong-consumer 레포에 위치
+├── payment/                     # 결제 도메인 (토스페이먼츠 카드결제 — Command Outbox + Webhook Inbox)
+│   ├── adapter/                 # TossPaymentsAdapter(confirm/getOrder), TossConfirmResult(삼분법 sealed)
+│   ├── controller/              # 결제 success/fail 착지·checkout-info·webhook (:web)
+│   ├── dto/                     # Toss confirm/webhook 요청·응답 DTO
+│   ├── entity/                  # payment_orders(장부)·payment_commands(Outbox)·payment_webhook_inbox
+│   ├── relay/                   # PaymentCommandRelay (@Scheduled + SKIP LOCKED 자력 발송, :produce)
+│   ├── repository/
+│   └── service/                 # ConfirmService/Relay(오케스트레이터·HTTP) ↔ SettleService(짧은 tx)
 ├── survey/                      # 설문조사 도메인 (핵심)
 │   ├── controller/
 │   ├── domain/
@@ -188,7 +197,7 @@ Gradle 멀티 프로젝트 — `:support`(기반 라이브러리), `:produce`(�
 | `dto/` | 요청/응답 데이터 전송 객체 |
 | `dto/event/` | 이벤트 DTO (Kafka 토픽 payload + 도메인 ApplicationEvent payload `*ConsumedEvent`) |
 | `entity/` | JPA 엔티티 + 도메인 로직 통합 클래스 (`@Entity`) |
-| `adapter/` | 외부 시스템 연동 어댑터 (ai 패키지에만 존재, AI 서버·Redis 통신 전담) |
+| `adapter/` | 외부 시스템 연동 어댑터 (ai: AI 서버·Redis 통신, payment: 토스페이먼츠 API 통신) |
 | `repository/` | Spring Data JPA 리포지토리 |
 | `service/` | 비즈니스 로직 서비스 |
 | `exception/` | 도메인별 커스텀 예외 |
@@ -259,6 +268,8 @@ docs/
 |---|---|
 | `MYSQL_*` | MySQL 연결 정보 |
 | `REDIS_PASSWORD` | Redis 비밀번호 |
+| `toss.client-key` | 토스페이먼츠 클라이언트 키 (결제창 SDK용, 프론트 노출) |
+| `toss.secret-key` | 토스페이먼츠 시크릿 키 (백엔드 confirm/cancel Basic Auth용) |
 
 ### 외부 서비스 URL (application.yml)
 
@@ -269,6 +280,8 @@ docs/
 | `ai-server.base-url` | `http://localhost:8000` | AI 서버 |
 | `cloudfront.base-url` | `https://file.sulmoon.io` | CDN |
 | `cookie.domain` | `localhost` | 쿠키 도메인 |
+| `toss.base-url` | `https://api.tosspayments.com` | 토스페이먼츠 결제 API |
+| `payment.reward-unit-price` | `2000` | 경품 1개당 단가(원) — 결제 금액 = 단가 × 경품 수 |
 
 ## 개발 도구 및 설정
 
