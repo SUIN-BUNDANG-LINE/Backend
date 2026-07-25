@@ -7,3 +7,10 @@ indent_style = space
 indent_size = 4
 insert_final_newline = true
 ktlint_standard_function-expression-body = enabled
+# consumer 계열 이식 코드가 쓰는 스타일(엔티티 파라미터 그룹핑용 빈 줄 등) 허용 — 완화라 기존 코드는 계속 통과
+ktlint_standard_no-blank-line-in-list = disabled
+ktlint_standard_no-empty-class-body = disabled
+ktlint_standard_no-empty-first-line-in-class-body = disabled
+ktlint_standard_no-blank-line-before-rbrace = disabled
+# IDE 자동 접기(와일드카드 import) 허용 — 동명이인 클래스는 import 줄 확인 습관으로 방어
+ktlint_standard_no-wildcard-imports = disabled

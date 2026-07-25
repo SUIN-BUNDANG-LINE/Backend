@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>설문이용 — 결제 결과</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <style>
+        :root {
+            --paper: #f7f3ec;
+            --card: #fffdf9;
+            --ink: #221c14;
+            --ink-soft: #6f6657;
+            --line: #e4dccd;
+            --stamp: #d1495b;
+            --seal: #2f6f4f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; padding: 64px 16px 80px;
+            background: radial-gradient(1200px 500px at 50% -200px, #fdfaf4 0%, transparent 70%), var(--paper);
+            color: var(--ink);
+            font-family: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.5 0 0 0 0 0.42 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .wrap { max-width: 520px; margin: 0 auto; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 52px 32px 46px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(34,28,20,.05), 0 12px 32px -12px rgba(34,28,20,.18);
+            animation: rise .55s cubic-bezier(.2,.7,.2,1) both;
+        }
+        /* 인장(도장) */
+        .seal {
+            width: 92px; height: 92px;
+            margin: 0 auto 22px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Gowun Batang', serif;
+            font-size: 42px; font-weight: 700;
+            border: 3px solid currentColor;
+            transform: rotate(-4deg);
+        }
+        .done .seal { color: var(--seal); background: #f0f7f2; animation: stampIn .4s .2s cubic-bezier(.2,1.4,.4,1) both; }
+        .failed .seal { color: var(--stamp); background: #fbf1f0; animation: stampIn .4s .2s cubic-bezier(.2,1.4,.4,1) both; }
+        .processing .seal { color: var(--ink-soft); border-style: dashed; animation: spin 6s linear infinite; }
+
+        h1 { font-family: 'Gowun Batang', serif; font-size: 24px; margin: 0 0 12px; }
+        p { font-size: 14.5px; color: var(--ink-soft); line-height: 1.8; margin: 0; }
+        .order-no { margin-top: 18px; font-size: 11.5px; color: var(--ink-soft); letter-spacing: .04em; }
+
+        .actions { margin-top: 30px; }
+        .btn {
+            display: inline-block; padding: 14px 28px;
+            font-size: 15px; font-weight: 700; text-decoration: none;
+            color: #fffdf9; background: var(--ink);
+            border-radius: 10px;
+            box-shadow: 0 10px 24px -10px rgba(34,28,20,.55);
+            transition: transform .15s ease;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn.ghost { color: var(--ink); background: transparent; border: 1.5px solid var(--line); box-shadow: none; }
+
+        .dots span { display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%; background: var(--ink-soft); animation: blink 1.2s infinite; }
+        .dots span:nth-child(2) { animation-delay: .2s; }
+        .dots span:nth-child(3) { animation-delay: .4s; }
+
+        .hidden { display: none; }
+
+        @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes stampIn { from { opacity: 0; transform: rotate(-4deg) scale(1.6); } to { opacity: 1; transform: rotate(-4deg) scale(1); } }
+        @keyframes spin { to { transform: rotate(356deg); } }
+        @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .card, .seal { animation: none !important; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <main class="card" id="card">
+            <div class="seal" id="seal">…</div>
+            <h1 id="title">결과를 확인하는 중</h1>
+            <p id="desc">잠시만 기다려주세요.</p>
+            <p class="dots hidden" id="dots"><span></span><span></span><span></span></p>
+            <div class="order-no" id="order-no"></div>
+            <div class="actions" id="actions"></div>
+        </main>
+    </div>
+
+    <script>
+        // state=done|processing|failed — success/fail 핸들러가 302로 붙여준다 (PRG: 이 페이지는 새로고침해도 무해)
+        const params = new URLSearchParams(location.search);
+        const orderId = params.get("orderId") || "";
+        let state = params.get("state") || "processing";
+
+        const el = (id) => document.getElementById(id);
+        el("order-no").textContent = orderId ? "No. " + orderId : "";
+
+        function render(s) {
+            const card = el("card");
+            card.className = "card " + s;
+            el("dots").classList.add("hidden");
+
+            if (s === "done") {
+                el("seal").textContent = "완";
+                el("title").textContent = "결제가 완료되었습니다";
+                el("desc").innerHTML = "설문이 시작되었습니다.<br>이제 참여자를 모을 수 있어요.";
+                el("actions").innerHTML = '<a class="btn" href="/">설문 관리로 이동</a>';
+            } else if (s === "failed") {
+                el("seal").textContent = "반";
+                el("title").textContent = "결제가 완료되지 않았습니다";
+                el("desc").innerHTML = "카드가 거절되었거나 결제가 취소되었습니다.<br>결제는 청구되지 않았으니 안심하세요.";
+                el("actions").innerHTML = orderId
+                    ? '<a class="btn" href="/payments/checkout.html?orderId=' + encodeURIComponent(orderId) + '">다시 결제하기</a>'
+                    : '<a class="btn ghost" href="/">설문 관리로 이동</a>';
+            } else {
+                el("seal").textContent = "인";
+                el("title").textContent = "결제를 확인하고 있어요";
+                el("desc").innerHTML =
+                    "보통 1분 이내에 확인됩니다.<br>" +
+                    "확인되지 않으면 결제는 자동으로 청구되지 않습니다.<br>" +
+                    "이 창을 닫으셔도 됩니다 — 완료되면 설문이 자동으로 시작됩니다.";
+                el("dots").classList.remove("hidden");
+                el("actions").innerHTML = "";
+            }
+        }
+
+        // "확인 중"이면 주문 상태를 폴링해 done/failed 로 자동 전환한다 (checkout-info 재사용)
+        async function poll(elapsed) {
+            if (state !== "processing" || !orderId) return;
+
+            if (elapsed >= 90) {
+                el("desc").innerHTML =
+                    "확인이 지연되고 있어요.<br>" +
+                    "결제 결과는 확정되는 대로 반영되며, 실패로 확정되면 청구되지 않습니다.<br>" +
+                    "마이페이지에서 확인하실 수 있어요.";
+                el("dots").classList.add("hidden");
+                el("actions").innerHTML = '<a class="btn ghost" href="/">설문 관리로 이동</a>';
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/v1/payments/checkout-info?orderId=" + encodeURIComponent(orderId));
+                if (res.ok) {
+                    const info = await res.json();
+                    if (info.status === "DONE") { state = "done"; render(state); return; }
+                    if (info.status === "FAILED" || info.status === "CANCELED") { state = "failed"; render(state); return; }
+                }
+            } catch (e) { /* 일시적 실패 — 다음 주기에 재시도 */ }
+
+            setTimeout(() => poll(elapsed + 3), 3000);
+        }
+
+        render(state);
+        poll(0);
+    </script>
+</body>
+</html>

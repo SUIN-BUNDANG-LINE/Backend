@@ -12,24 +12,9 @@ import com.sbl.sulmun2yong.survey.domain.reward.RewardSettingType
 import com.sbl.sulmun2yong.survey.domain.section.Section
 import com.sbl.sulmun2yong.survey.domain.section.SectionId
 import com.sbl.sulmun2yong.survey.domain.section.SectionIds
-import com.sbl.sulmun2yong.survey.exception.InvalidPublishedAtException
-import com.sbl.sulmun2yong.survey.exception.InvalidSurveyException
-import com.sbl.sulmun2yong.survey.exception.InvalidSurveyResponseException
-import com.sbl.sulmun2yong.survey.exception.InvalidSurveyStartException
-import com.sbl.sulmun2yong.survey.exception.InvalidUpdateSurveyException
-import com.sbl.sulmun2yong.survey.exception.SurveyClosedException
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
-import jakarta.persistence.OrderBy
-import jakarta.persistence.Table
-import jakarta.persistence.Transient
-import java.util.Date
-import java.util.UUID
+import com.sbl.sulmun2yong.survey.exception.*
+import jakarta.persistence.*
+import java.util.*
 
 @Entity
 @Table(name = "surveys")
@@ -150,7 +135,7 @@ class Survey(
 
     fun start() =
         when (status) {
-            SurveyStatus.NOT_STARTED ->
+            SurveyStatus.NOT_STARTED -> {
                 fromComponents(
                     id = id,
                     title = title,
@@ -172,7 +157,33 @@ class Survey(
                     isResultOpen = isResultOpen,
                     sections = sections,
                 )
-            SurveyStatus.IN_MODIFICATION ->
+            }
+
+            SurveyStatus.PENDING_PAYMENT -> {
+                fromComponents(
+                    id = id,
+                    title = title,
+                    description = description,
+                    thumbnail = thumbnail,
+                    publishedAt = DateUtil.getCurrentDate(),
+                    status = SurveyStatus.IN_PROGRESS,
+                    finishMessage = finishMessage,
+                    rewardSetting =
+                        RewardSetting.of(
+                            type = rewardSetting.type,
+                            rewards = rewardSetting.rewards,
+                            targetParticipantCount = rewardSetting.targetParticipantCount,
+                            finishedAt = rewardSetting.finishedAt?.value,
+                            surveyStatus = SurveyStatus.IN_PROGRESS,
+                        ),
+                    isVisible = isVisible,
+                    makerId = makerId,
+                    isResultOpen = isResultOpen,
+                    sections = sections,
+                )
+            }
+
+            SurveyStatus.IN_MODIFICATION -> {
                 fromComponents(
                     id = id,
                     title = title,
@@ -187,9 +198,54 @@ class Survey(
                     isResultOpen = isResultOpen,
                     sections = sections,
                 )
-            SurveyStatus.IN_PROGRESS -> throw InvalidSurveyStartException()
-            SurveyStatus.CLOSED -> throw InvalidSurveyStartException()
+            }
+
+            SurveyStatus.IN_PROGRESS -> {
+                throw InvalidSurveyStartException()
+            }
+
+            SurveyStatus.CLOSED -> {
+                throw InvalidSurveyStartException()
+            }
         }
+
+    // 결제 대기 집입 - 시작 요청 시 결제가 필요한 설문은 곧바로 열리지 않고 이 상태에서 confirm 확정을 기다린다
+    fun awaitPayment(): Survey {
+        require(status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyStartException() }
+        return fromComponents(
+            id = id,
+            title = title,
+            description = description,
+            thumbnail = thumbnail,
+            publishedAt = publishedAt,
+            status = SurveyStatus.PENDING_PAYMENT,
+            finishMessage = finishMessage,
+            rewardSetting = rewardSetting,
+            isVisible = isVisible,
+            makerId = makerId,
+            isResultOpen = isResultOpen,
+            sections = sections,
+        )
+    }
+
+    // 결제 실패 확정 시 복귀 - 작성자가 다시 시작(재결제)할 수 있는 상태로 되돌린다
+    fun revertToNotStarted(): Survey {
+        require(status == SurveyStatus.PENDING_PAYMENT) { throw InvalidSurveyStartException() }
+        return fromComponents(
+            id = id,
+            title = title,
+            description = description,
+            thumbnail = thumbnail,
+            publishedAt = publishedAt,
+            status = SurveyStatus.NOT_STARTED,
+            finishMessage = finishMessage,
+            rewardSetting = rewardSetting,
+            isVisible = isVisible,
+            makerId = makerId,
+            isResultOpen = isResultOpen,
+            sections = sections,
+        )
+    }
 
     fun edit(): Survey {
         require(status == SurveyStatus.IN_PROGRESS) { throw InvalidSurveyEditException() }
@@ -288,10 +344,19 @@ class Survey(
             // 섹션 ID 중복 금지
             require(sections.size == sections.distinctBy { it.id }.size) { throw InvalidSurveyException() }
             // publishedAt이 null이면 NOT_STARTED만 허용
-            require(publishedAt != null || status == SurveyStatus.NOT_STARTED) { throw InvalidSurveyException() }
+            require(
+                publishedAt != null ||
+                    status == SurveyStatus.NOT_STARTED ||
+                    status == SurveyStatus.PENDING_PAYMENT,
+            ) { throw InvalidSurveyException() }
             // finishedAt은 publishedAt 이후여야 함
             val finishedAtValue = rewardSetting.finishedAt?.value
-            require(publishedAt == null || finishedAtValue == null || finishedAtValue.after(publishedAt)) {
+            require(
+                publishedAt == null || finishedAtValue == null ||
+                    finishedAtValue.after(
+                        publishedAt,
+                    ),
+            ) {
                 throw InvalidPublishedAtException()
             }
             // 모든 섹션의 sectionIds는 실제 섹션 ID 집합과 일치해야 함
@@ -302,7 +367,12 @@ class Survey(
             // 진행 중인 설문은 섹션이 비어 있을 수 없고, 모든 선택지가 유일해야 함
             if (status == SurveyStatus.IN_PROGRESS) {
                 require(sections.isNotEmpty()) { throw InvalidSurveyException() }
-                val isAllChoicesUnique = sections.all { section -> section.questions.all { it.choices?.isUnique() ?: true } }
+                val isAllChoicesUnique =
+                    sections.all { section ->
+                        section.questions.all {
+                            it.choices?.isUnique() ?: true
+                        }
+                    }
                 require(isAllChoicesUnique) { throw InvalidSurveyException() }
             }
         }

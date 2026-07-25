@@ -1,11 +1,15 @@
 package com.sbl.sulmun2yong.global.test
 
 import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
+import com.sbl.sulmun2yong.survey.domain.SurveyStatus
+import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import com.sbl.sulmun2yong.user.domain.UserRole
 import com.sbl.sulmun2yong.user.dto.DefaultUserProfile
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -18,6 +22,9 @@ import java.util.UUID
  * OAuth2 로그인 없이 access token 을 발급받기 위한 용도로, 브라우저 쿠키 복사 과정을 대체한다.
  * access 경로 인증은 토큰만으로 통과하므로(필터가 DB 조회를 하지 않음) User 를 실제로 저장하지 않는다.
  *
+ * 추가로, 경품 설문이 PENDING_PAYMENT(결제 대기)에 머물러 응답을 못 받는 것을 우회하기 위해
+ * 설문을 곧바로 IN_PROGRESS 로 여는 활성화 엔드포인트를 제공한다(외부 PG 없이 부하 테스트용).
+ *
  * 프로덕션에서 노출되지 않도록 `test-auth.enabled=true` 일 때만 빈이 등록된다.
  */
 @RestController
@@ -25,6 +32,7 @@ import java.util.UUID
 @ConditionalOnProperty(prefix = "test-auth", name = ["enabled"], havingValue = "true")
 class TestAuthController(
     private val jwtTokenProvider: JwtTokenProvider,
+    private val surveyRepository: SurveyRepository,
 ) {
     @PostMapping("/token")
     fun issueToken(
@@ -40,6 +48,22 @@ class TestAuthController(
         response.addCookie(jwtTokenProvider.makeAccessTokenCookie(accessToken))
 
         return ResponseEntity.ok(TestTokenResponse(accessToken = accessToken, userId = id.toString(), role = role))
+    }
+
+    // 결제 우회 — PENDING_PAYMENT/NOT_STARTED 설문을 결제 없이 IN_PROGRESS 로 전환해 응답을 받게 한다.
+    // start() 가 lazy 컬렉션(rewardEntities)을 건드리므로 세션 유지를 위해 트랜잭션 안에서 실행한다.
+    @Transactional
+    @PostMapping("/surveys/{surveyId}/activate")
+    fun activateSurvey(
+        @PathVariable surveyId: UUID,
+    ): ResponseEntity<Map<String, String>> {
+        val survey =
+            surveyRepository
+                .findByIdAndIsDeletedFalse(surveyId)
+                .orElseThrow { IllegalArgumentException("설문을 찾을 수 없습니다: $surveyId") }
+        val activated = if (survey.status == SurveyStatus.IN_PROGRESS) survey else survey.start()
+        surveyRepository.save(activated)
+        return ResponseEntity.ok(mapOf("surveyId" to surveyId.toString(), "status" to activated.status.name))
     }
 }
 
