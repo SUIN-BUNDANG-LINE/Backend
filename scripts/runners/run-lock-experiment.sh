@@ -5,19 +5,21 @@
 # docs/kafka-distribute-lock/시나리오.md 의 실측 절차를 하나로 묶은 스크립트.
 # drawing-concurrency.js 를 LOCK_MODE=off 3회 → on 3회 실행하고 결과를 파일로 저장한다.
 #
-# 사전 조건 (스크립트가 직접 띄우지 않음 — bootRun 은 블로킹이므로 별도 터미널에서 실행):
-#   1) docker-compose up -d
-#   2) TEST_AUTH_ENABLED=true ./gradlew :web:bootRun
+# 타깃은 docker-compose 의 web-1(18080)/web-2(18081) — Prometheus 가 스크레이프하는 인스턴스라
+# 이걸 때려야 Grafana(race-comparison/drawing-lock) 대시보드에 지표가 잡힌다.
+# 스택은 TEST_AUTH_ENABLED=true 로 기동해 /api/v1/test/token 을 활성화한다.
 #
 # 사용법:
-#   ./scripts/runners/run-lock-experiment.sh              # OFF 3회 + ON 3회
+#   ./scripts/runners/run-lock-experiment.sh              # 스택 up → OFF 3회 + ON 3회
 #   RUNS=5 ./scripts/runners/run-lock-experiment.sh       # 회차 조정
-#   BASE_URL=http://localhost:8081 ./scripts/runners/run-lock-experiment.sh
+#   NO_UP=1 ./scripts/runners/run-lock-experiment.sh      # 스택 기동 생략(이미 떠 있음)
 #
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-http://localhost:8081}"
+BASE_URL="${BASE_URL:-http://localhost:18080}"                       # 토큰/헬스 (web-1)
+K6_TARGETS="${K6_TARGETS:-http://localhost:18080,http://localhost:18081}"  # k6 부하 대상 (web-1,web-2 라운드로빈)
 RUNS="${RUNS:-3}"
+NO_UP="${NO_UP:-0}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 K6_DIR="$REPO_ROOT/scripts/scenarios/concurrency"
 OUT_DIR="$REPO_ROOT/scripts/results/lock-experiment"
@@ -28,18 +30,29 @@ for cmd in k6 curl jq; do
     command -v "$cmd" >/dev/null 2>&1 || { echo "❌ '$cmd' 가 필요합니다. (brew install $cmd)"; exit 1; }
 done
 
-# ── 서버 헬스체크 ──
-echo "▶ 서버 확인: $BASE_URL/management/health"
-if ! curl -sf "$BASE_URL/management/health" >/dev/null 2>&1; then
-    echo "❌ 서버에 연결할 수 없습니다."
-    echo "   먼저 실행하세요: TEST_AUTH_ENABLED=true ./gradlew :web:bootRun"
-    exit 1
+# ── 스택 기동 (idempotent) ──
+if [[ "$NO_UP" != 1 ]]; then
+    echo "▶ 스택 기동: TEST_AUTH_ENABLED=true docker-compose up -d"
+    ( cd "$REPO_ROOT" && TEST_AUTH_ENABLED=true docker-compose up -d ) || { echo "❌ docker-compose 실패"; exit 1; }
 fi
+
+# ── web 헬스 대기 (web-1, web-2 모두) ──
+wait_health() {
+    local url="$1" name="$2"
+    echo "▶ $name 헬스 대기: $url/management/health (최대 180s)"
+    for _ in $(seq 1 90); do
+        curl -sf "$url/management/health" >/dev/null 2>&1 && { echo "✅ $name 준비 완료"; return 0; }
+        sleep 2
+    done
+    echo "❌ $name 부팅 타임아웃. 로그: docker logs sulmun2yong-web-1 --tail 40"
+    exit 1
+}
+wait_health "http://localhost:18080" "web-1"
+wait_health "http://localhost:18081" "web-2"
 
 # ── 테스트 엔드포인트 확인 ──
 if ! curl -sf -X POST "$BASE_URL/api/v1/test/token" >/dev/null 2>&1; then
-    echo "❌ 테스트 JWT 엔드포인트가 비활성입니다."
-    echo "   서버를 TEST_AUTH_ENABLED=true 로 실행했는지 확인하세요."
+    echo "❌ 테스트 JWT 엔드포인트가 비활성입니다. (스택을 TEST_AUTH_ENABLED=true 로 기동했는지 확인)"
     exit 1
 fi
 
@@ -53,12 +66,13 @@ run_mode() {
         local token
         token=$(curl -s -X POST "$BASE_URL/api/v1/test/token" | jq -r .accessToken)
         local logfile="$OUT_DIR/${mode}-run${i}.txt"
-        ( cd "$K6_DIR" && LOCK_MODE="$mode" k6 run --env ACCESS_TOKEN="$token" drawing-concurrency.js ) | tee "$logfile"
+        ( cd "$K6_DIR" && LOCK_MODE="$mode" k6 run \
+            --env ACCESS_TOKEN="$token" --env BASE_URLS="$K6_TARGETS" drawing-concurrency.js ) | tee "$logfile"
     done
 }
 
 echo "════════════════════════════════════════"
-echo " 분산락 실험 시작 — 각 모드 ${RUNS}회"
+echo " 분산락 실험 시작 — 각 모드 ${RUNS}회 · 타깃 $K6_TARGETS"
 echo " 결과 저장: $OUT_DIR"
 echo "════════════════════════════════════════"
 

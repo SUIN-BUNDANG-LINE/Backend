@@ -72,6 +72,14 @@ export function startSurvey(surveyId) {
     check(res, { '설문 시작 성공': (r) => r.status === 200 });
 }
 
+// 결제 우회(테스트 전용) — 경품 설문이 PENDING_PAYMENT 에 머무는 것을 IN_PROGRESS 로 강제 전환.
+// TEST_AUTH_ENABLED=true 로 뜬 서버의 TestAuthController 활성화 엔드포인트를 호출한다.
+export function activateSurvey(surveyId) {
+    const res = http.post(`${pickBaseUrl()}/api/v1/test/surveys/${surveyId}/activate`, null, jsonParams());
+    check(res, { '설문 활성화(결제 우회) 성공': (r) => r.status === 200 });
+    return res;
+}
+
 // 설문 삭제
 export function deleteSurvey(surveyId) {
     const res = http.del(`${pickBaseUrl()}/api/v1/surveys/workbench/delete/${surveyId}`, null, authParams());
@@ -135,6 +143,8 @@ export function setupSurveyWithDrawing(opts = {}) {
 
     const sectionId = saveSurveyWithImmediateDraw(surveyId, opts);
     startSurvey(surveyId);
+    // 경품 설문은 start 시 PENDING_PAYMENT 로 가므로, 테스트 우회로 IN_PROGRESS 로 전환한다.
+    activateSurvey(surveyId);
 
     console.log(`설문 셋업 완료: surveyId=${surveyId}, sectionId=${sectionId}`);
     return { surveyId, sectionId };

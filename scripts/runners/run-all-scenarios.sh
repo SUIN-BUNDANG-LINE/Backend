@@ -11,7 +11,7 @@
 #
 #   2. 환경변수 설정
 #      export ACCESS_TOKEN="<JWT 토큰>"
-#      export DB_DSN="user:password@tcp(localhost:3307)/test?parseTime=true"
+#      export DB_DSN="user:password@tcp(localhost:13306)/test?parseTime=true"
 #
 #   3. 인프라 기동 (MySQL, Redis, Kafka)
 #      docker-compose up -d
@@ -49,7 +49,7 @@ if [ -z "${ACCESS_TOKEN}" ]; then
 fi
 
 if [ -z "${DB_DSN}" ]; then
-    echo "⚠️  DB_DSN 환경변수가 비어 있습니다. 기본값(user:password@tcp(localhost:3307)/test)이 사용됩니다."
+    echo "⚠️  DB_DSN 환경변수가 비어 있습니다. 기본값(user:password@tcp(localhost:13306)/test)이 사용됩니다."
 fi
 
 if [ -z "${GRAFANA_TOKEN}" ]; then

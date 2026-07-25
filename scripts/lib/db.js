@@ -6,12 +6,12 @@
 //     --with github.com/grafana/xk6-sql-driver-mysql@latest
 //
 // 환경변수:
-//   DB_DSN — MySQL DSN (기본: user:password@tcp(localhost:3307)/test?parseTime=true)
+//   DB_DSN — MySQL DSN (기본: user:password@tcp(localhost:13306)/test?parseTime=true)
 import sql from 'k6/x/sql';
 import driver from 'k6/x/sql/driver/mysql';
 import { sleep } from 'k6';
 
-const DSN = __ENV.DB_DSN || 'user:password@tcp(localhost:3307)/test?parseTime=true';
+const DSN = __ENV.DB_DSN || 'user:password@tcp(localhost:13306)/test?parseTime=true';
 export const db = sql.open(driver, DSN);
 
 export function closeDb() {

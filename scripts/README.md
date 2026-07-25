@@ -85,7 +85,7 @@ mv ./k6 scripts/bin/k6-custom       # scripts/bin 으로 이동
 ### 1-ter. 환경변수 — DB DSN
 
 ```bash
-export DB_DSN="user:password@tcp(localhost:3307)/test?parseTime=true"
+export DB_DSN="user:password@tcp(localhost:13306)/test?parseTime=true"
 ```
 
 `docker-compose.yml`의 `${MYSQL_USER}:${MYSQL_PASSWORD}` 값과 일치해야 합니다.

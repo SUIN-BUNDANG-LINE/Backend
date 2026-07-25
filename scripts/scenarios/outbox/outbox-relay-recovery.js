@@ -12,7 +12,7 @@
  * 사전 조건: Relay가 정상 동작하는 토픽이어야 함 (drawing-completed 등)
  *
  * 실행:
- *   ./k6-custom run --env DB_DSN="user:pass@tcp(localhost:3307)/test?parseTime=true" outbox-relay-recovery.js
+ *   ./k6-custom run --env DB_DSN="user:pass@tcp(localhost:13306)/test?parseTime=true" outbox-relay-recovery.js
  */
 import { check } from 'k6';
 import { Counter } from 'k6/metrics';

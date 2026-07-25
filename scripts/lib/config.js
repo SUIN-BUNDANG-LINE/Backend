@@ -10,6 +10,7 @@
 //   2) 없으면 jwt.js의 makeAccessToken()으로 자동 발급
 //      (application-secret.yml에서 secret 자동 로드 — scripts/에서 실행 시)
 
+import exec from 'k6/execution';
 import { makeAccessToken, isSecretAvailable } from './jwt.js';
 
 const _rawBaseUrls = __ENV.BASE_URLS || __ENV.BASE_URL || 'http://localhost:18080,http://localhost:18081';
@@ -21,12 +22,14 @@ export const BASE_URLS = _rawBaseUrls
 // 하위 호환 — 단일 URL 기대 코드용 (첫 번째)
 export const BASE_URL = BASE_URLS[0];
 
-// 호출당 라운드로빈 — VU별로 카운터 독립이지만, VU 여러 개면 전체적으로 균등 분산
-let _rrCounter = 0;
+// 인스턴스 선택 — VU 전역 id(idInTest) 기준으로 분산한다.
+// per-vu-iterations 처럼 VU당 호출이 1회여도 VU마다 다른 인스턴스로 가므로
+// web-1/web-2 에 동시 부하가 갈려 분산락의 cross-JVM 경합이 실제로 검증된다.
+// (기존 모듈 카운터 방식은 k6 VU가 독립 isolate라 매 VU가 index 0 = web-1 로만 몰렸다.)
+// setup/teardown 등 VU 밖 컨텍스트에서는 idInTest 가 없으므로 0(첫 인스턴스)로 폴백.
 export function pickBaseUrl() {
-    const url = BASE_URLS[_rrCounter % BASE_URLS.length];
-    _rrCounter += 1;
-    return url;
+    const vu = exec.vu && exec.vu.idInTest ? exec.vu.idInTest : 0;
+    return BASE_URLS[vu % BASE_URLS.length];
 }
 
 // init context에서 토큰 1회 발급 후 모든 VU가 공유
