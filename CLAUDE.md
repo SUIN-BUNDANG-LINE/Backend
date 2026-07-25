@@ -243,6 +243,7 @@ infra/
 | Grafana | `sulmun2yong-cluster-grafana` | `13000` | 대시보드 + Explore (datasource provisioning) |
 | Tempo | `sulmun2yong-cluster-tempo` | `13200` (query), `14317` (OTLP gRPC) | 분산 trace 저장·질의 |
 | Kafka Exporter | `sulmun2yong-cluster-kafka-exporter` | `19308` | Kafka consumer lag 메트릭 |
+| MySQL Exporter | `sulmun2yong-cluster-mysqld-exporter` | `19104` | InnoDB 행 락 대기·데드락·롤백 (분산락 전-후 DB 부하 비교) |
 
 OTel Java Agent는 web 2개 JVM에 `-javaagent` 옵션으로 부착되어 Spring MVC, JDBC, Spring Kafka, Redisson, Hibernate, HikariCP 등을 **코드 수정 없이 자동 instrument**. trace는 OTLP gRPC로 Tempo에 push되고 W3C tracecontext 헤더(`traceparent`)로 Kafka 메시지 경계를 자동 전파. consumer 측 trace는 sulmoon2yong-consumer 레포에서 동일하게 Tempo로 push 가능 (동일 클러스터 공유).
 
@@ -270,6 +271,8 @@ docs/
 | `REDIS_PASSWORD` | Redis 비밀번호 |
 | `toss.client-key` | 토스페이먼츠 클라이언트 키 (결제창 SDK용, 프론트 노출) |
 | `toss.secret-key` | 토스페이먼츠 시크릿 키 (백엔드 confirm/cancel Basic Auth용) |
+| `TEST_AUTH_ENABLED` | 부하테스트용 엔드포인트 활성화 (JWT 발급·설문 활성화, 기본 false) |
+| `TX_ISOLATION` | 트랜잭션 격리수준 실험용 (HikariCP, 기본 TRANSACTION_REPEATABLE_READ) |
 
 ### 외부 서비스 URL (application.yml)
 
@@ -295,3 +298,8 @@ docs/
 | CI | GitHub Actions (PR CI + 배포) |
 | 컨테이너 빌드 | JIB |
 | 로컬 인프라 | Docker Compose (MySQL + Redis) |
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->

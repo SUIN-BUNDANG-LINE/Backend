@@ -12,6 +12,9 @@ x-app-base: &app-base
     # application-secret.yml 의 localhost 기반 설정을 컨테이너 네트워크 호스트명으로 오버라이드
     environment:
         SERVER_PORT: 8080  # application.yml은 로컬 dev용 8081, 컨테이너 내부는 기본값 8080으로 통일
+        TEST_AUTH_ENABLED: ${TEST_AUTH_ENABLED:-false}  # 부하테스트용 JWT 발급 엔드포인트
+        # 트랜잭션 격리수준 실험용 — HikariCP 가 커넥션마다 적용 (기본: MySQL 기본값 REPEATABLE_READ)
+        SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION: ${TX_ISOLATION:-TRANSACTION_REPEATABLE_READ}
         SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
         SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
         SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
@@ -71,8 +74,8 @@ services:
         ports:
             - "18080:8080"  # 1+default 규칙 (8080 → 18080)
         volumes:
-            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./modules-web/web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules-web/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
@@ -86,8 +89,8 @@ services:
         ports:
             - "18081:8080"  # web-1(18080) + 1 (호스트 포트 충돌 회피)
         volumes:
-            - ./modules/common/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./modules-web/web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules-web/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
@@ -107,7 +110,7 @@ services:
             - --web.enable-lifecycle
             - --web.enable-remote-write-receiver
         volumes:
-            - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - ./infra/monitoring/prometheus:/etc/prometheus:ro
             - sulmun2yong-cluster-prometheus:/prometheus
         ports:
             - "19090:9090"
@@ -127,6 +130,25 @@ services:
             - --kafka.server=kafka-b3.q-asker.com:9092
         ports:
             - "19308:9308"  # 1+default 규칙 (9308 → 19308)
+        networks:
+            - sulmun2yong-cluster
+
+    # MySQL 내부 부하 계측 (행 락 대기·데드락·롤백) — 분산락 전-후 DB 리소스 비교용
+    mysqld-exporter:
+        image: prom/mysqld-exporter:v0.16.0
+        container_name: sulmun2yong-cluster-mysqld-exporter
+        restart: unless-stopped
+        depends_on:
+            mysql:
+                condition: service_healthy
+        environment:
+            MYSQLD_EXPORTER_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        command:
+            - --mysqld.address=mysql:3306
+            - --mysqld.username=root
+            - --collect.info_schema.innodb_metrics
+        ports:
+            - "19104:9104"  # 1+default 규칙 (9104 → 19104)
         networks:
             - sulmun2yong-cluster
 

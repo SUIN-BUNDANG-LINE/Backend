@@ -15,6 +15,10 @@ global:
     external_labels:
         cluster: sulmun2yong-local
 
+# 사가 관측 알림 규칙 (멈춘 PENDING / 보상 과다)
+rule_files:
+    - saga-alerts.yml
+
 scrape_configs:
     # ────────── Spring Boot 인스턴스 5개 ──────────
     - job_name: spring-apps
@@ -30,6 +34,18 @@ scrape_configs:
                 application: sulmun2yong-web
                 instance: web-2
 
+    # ────────── SMS 사가 컨슈머 2개 (sulmoon2yong-consumer 레포) → /management/prometheus:8081 ──────────
+    - job_name: sms-consumers
+      metrics_path: /management/prometheus
+      scrape_interval: 15s
+      static_configs:
+          - targets: [sulmun2yong-drawing-sms-notification-consumer:8081]
+            labels:
+                application: drawing-sms-notification-consumer
+          - targets: [sulmun2yong-dlt-sms-notification-consumer:8081]
+            labels:
+                application: dlt-sms-notification-consumer
+
     # ────────── Kafka Exporter (외부 브로커 lag/offset) ──────────
     - job_name: kafka-exporter
       metrics_path: /metrics
@@ -38,6 +54,16 @@ scrape_configs:
           - targets: [kafka-exporter:9308]
             labels:
                 exporter: kafka-exporter
+
+    # ────────── MySQL Exporter (InnoDB 행 락·데드락·롤백 — 분산락 전-후 DB 부하 비교) ──────────
+    - job_name: mysqld-exporter
+      metrics_path: /metrics
+      scrape_interval: 15s
+      static_configs:
+          - targets: [mysqld-exporter:9104]
+            labels:
+                exporter: mysqld-exporter
+                instance: cluster-mysql
 
     # ────────── Prometheus 자체 메트릭 (디버깅용) ──────────
     - job_name: prometheus
