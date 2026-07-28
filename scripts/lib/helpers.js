@@ -104,8 +104,16 @@ export function submitResponse(surveyId, sectionId, visitorId) {
 }
 
 // 추첨 실행
-// LOCK_MODE=off → /draw-no-lock (실험용, 분산락 미적용)
-// LOCK_MODE=on (default) → /draw (운영, 분산락 적용)
+// LOCK_MODE=off              → /draw-no-lock          (실험용, 락 없음)
+// LOCK_MODE=optimistic       → /draw-optimistic       (실험용, 낙관적 락)
+// LOCK_MODE=optimistic-retry → /draw-optimistic-retry (실험용, 낙관적 락 + 재시도 5회)
+// LOCK_MODE=on (기본)        → /draw                  (운영, Redisson 분산락)
+const DRAW_PATHS = {
+    'off': '/api/v1/drawing-board/draw-no-lock',
+    'optimistic': '/api/v1/drawing-board/draw-optimistic',
+    'optimistic-retry': '/api/v1/drawing-board/draw-optimistic-retry',
+};
+
 export function doDrawing(participantId, selectedNumber, phoneNumber) {
     const payload = JSON.stringify({
         participantId: participantId,
@@ -113,9 +121,7 @@ export function doDrawing(participantId, selectedNumber, phoneNumber) {
         phoneNumber: phoneNumber,
     });
 
-    const path = __ENV.LOCK_MODE === 'off'
-        ? '/api/v1/drawing-board/draw-no-lock'
-        : '/api/v1/drawing-board/draw';
+    const path = DRAW_PATHS[__ENV.LOCK_MODE] || '/api/v1/drawing-board/draw';
 
     return http.post(`${pickBaseUrl()}${path}`, payload, jsonParams());
 }

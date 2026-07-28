@@ -1,89 +1,134 @@
 #!/usr/bin/env bash
 #
-# 분산락 효과 측정 실험 러너 (Lock OFF vs ON)
+# 정합성 직렬화 3자 비교 러너 — SERIALIZABLE(DB 안) → 낙관적 락(앱 충돌+재시도) → Redisson(DB 앞)
 #
-# docs/kafka-distribute-lock/시나리오.md 의 실측 절차를 하나로 묶은 스크립트.
-# drawing-concurrency.js 를 LOCK_MODE=off 3회 → on 3회 실행하고 결과를 파일로 저장한다.
+# 같은 지속 부하(drawing-load.js, 기본 10 TPS × 30s)를 세 방식에 순서대로 걸고,
+# MySQL 내부 낭비 지표(데드락·행 락 대기·롤백)와 앱 충돌·k6 성공률/p95 를 단계별로 집계한다.
 #
-# 타깃은 docker-compose 의 web-1(18080)/web-2(18081) — Prometheus 가 스크레이프하는 인스턴스라
-# 이걸 때려야 Grafana(race-comparison/drawing-lock) 대시보드에 지표가 잡힌다.
-# 스택은 TEST_AUTH_ENABLED=true 로 기동해 /api/v1/test/token 을 활성화한다.
+#   1단계: web 을 TX_ISOLATION=TRANSACTION_SERIALIZABLE 로 재기동 → LOCK_MODE=off (/draw-no-lock)
+#   2단계: web 을 기본 격리수준으로 재기동 → LOCK_MODE=optimistic-retry (/draw-optimistic-retry, @Version+재시도5회)
+#          충돌량(attempts{conflict})·성공당 시도 횟수·선착순 역전을 함께 집계한다
+#   3단계: (같은 web 유지) → LOCK_MODE=on (/draw, Redisson)
 #
 # 사용법:
-#   ./scripts/runners/run-lock-experiment.sh              # 스택 up → OFF 3회 + ON 3회
-#   RUNS=5 ./scripts/runners/run-lock-experiment.sh       # 회차 조정
-#   NO_UP=1 ./scripts/runners/run-lock-experiment.sh      # 스택 기동 생략(이미 떠 있음)
+#   ./scripts/runners/run-lock-experiment.sh                 # 10 TPS × 30s
+#   RATE=20 DURATION_S=60 ./scripts/runners/run-lock-experiment.sh
 #
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-http://localhost:18080}"                       # 토큰/헬스 (web-1)
-K6_TARGETS="${K6_TARGETS:-http://localhost:18080,http://localhost:18081}"  # k6 부하 대상 (web-1,web-2 라운드로빈)
-RUNS="${RUNS:-3}"
-NO_UP="${NO_UP:-0}"
+BASE_URL="${BASE_URL:-http://localhost:18080}"
+PROM_URL="${PROM_URL:-http://localhost:19090}"
+RATE="${RATE:-10}"
+DURATION_S="${DURATION_S:-30}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 K6_DIR="$REPO_ROOT/scripts/scenarios/concurrency"
 OUT_DIR="$REPO_ROOT/scripts/results/lock-experiment"
 mkdir -p "$OUT_DIR"
 
-# ── 의존 도구 확인 ──
-for cmd in k6 curl jq; do
-    command -v "$cmd" >/dev/null 2>&1 || { echo "❌ '$cmd' 가 필요합니다. (brew install $cmd)"; exit 1; }
+for cmd in k6 curl jq docker; do
+    command -v "$cmd" >/dev/null 2>&1 || { echo "❌ '$cmd' 가 필요합니다."; exit 1; }
 done
 
-# ── 스택 기동 (idempotent) ──
-if [[ "$NO_UP" != 1 ]]; then
-    echo "▶ 스택 기동: TEST_AUTH_ENABLED=true docker-compose up -d"
-    ( cd "$REPO_ROOT" && TEST_AUTH_ENABLED=true docker-compose up -d ) || { echo "❌ docker-compose 실패"; exit 1; }
-fi
-
-# ── web 헬스 대기 (web-1, web-2 모두) ──
-wait_health() {
-    local url="$1" name="$2"
-    echo "▶ $name 헬스 대기: $url/management/health (최대 180s)"
-    for _ in $(seq 1 90); do
-        curl -sf "$url/management/health" >/dev/null 2>&1 && { echo "✅ $name 준비 완료"; return 0; }
-        sleep 2
-    done
-    echo "❌ $name 부팅 타임아웃. 로그: docker logs sulmun2yong-web-1 --tail 40"
-    exit 1
+# ── MySQL 내부 카운터 스냅샷 (mysqld-exporter → Prometheus) ──
+prom() { curl -s --data-urlencode "query=$1" "$PROM_URL/api/v1/query" | jq -r '.data.result[0].value[1] // "0"'; }
+snapshot() {
+    echo "$(prom 'mysql_info_schema_innodb_metrics_lock_lock_deadlocks_total') \
+$(prom 'mysql_global_status_innodb_row_lock_waits') \
+$(prom 'mysql_global_status_innodb_row_lock_time') \
+$(prom 'mysql_global_status_commands_total{command="rollback"}')"
 }
-wait_health "http://localhost:18080" "web-1"
-wait_health "http://localhost:18081" "web-2"
-
-# ── 테스트 엔드포인트 확인 ──
-if ! curl -sf -X POST "$BASE_URL/api/v1/test/token" >/dev/null 2>&1; then
-    echo "❌ 테스트 JWT 엔드포인트가 비활성입니다. (스택을 TEST_AUTH_ENABLED=true 로 기동했는지 확인)"
-    exit 1
-fi
-
-# ── 실험 함수 ──
-run_mode() {
-    local mode="$1"
-    for i in $(seq 1 "$RUNS"); do
-        echo ""
-        echo "=== Lock ${mode^^} run #$i / $RUNS ==="
-        # access token 만료(10분) 방지 — 회차마다 재발급
-        local token
-        token=$(curl -s -X POST "$BASE_URL/api/v1/test/token" | jq -r .accessToken)
-        local logfile="$OUT_DIR/${mode}-run${i}.txt"
-        ( cd "$K6_DIR" && LOCK_MODE="$mode" k6 run \
-            --env ACCESS_TOKEN="$token" --env BASE_URLS="$K6_TARGETS" drawing-concurrency.js ) | tee "$logfile"
-    done
+delta() { # $1=before $2=after → "데드락 Δ / 행락대기 Δ / 행락시간 Δms / 롤백 Δ"
+    read -r d1 w1 t1 r1 <<< "$1"; read -r d2 w2 t2 r2 <<< "$2"
+    echo "데드락 +$(echo "$d2-$d1" | bc) · 행락대기 +$(echo "$w2-$w1" | bc) · 행락대기시간 +$(echo "$t2-$t1" | bc)ms · 롤백 +$(echo "$r2-$r1" | bc)"
 }
 
-echo "════════════════════════════════════════"
-echo " 분산락 실험 시작 — 각 모드 ${RUNS}회 · 타깃 $K6_TARGETS"
-echo " 결과 저장: $OUT_DIR"
-echo "════════════════════════════════════════"
+# ── web 재기동 (격리수준 지정) + 헬스 대기 ──
+restart_web() { # $1=TX_ISOLATION 값 (비우면 기본 REPEATABLE_READ)
+    ( cd "$REPO_ROOT" && TX_ISOLATION="${1:-TRANSACTION_REPEATABLE_READ}" TEST_AUTH_ENABLED=true \
+        docker-compose up -d --force-recreate --no-deps web-1 web-2 ) >/dev/null 2>&1
+    for _ in $(seq 1 60); do
+        curl -sf -m3 http://localhost:18080/management/health >/dev/null 2>&1 \
+          && curl -sf -m3 http://localhost:18081/management/health >/dev/null 2>&1 && return 0
+        sleep 3
+    done
+    echo "❌ web 부팅 타임아웃 (docker logs sulmun2yong-web-1 --tail 40 확인)"; exit 1
+}
 
-run_mode off
-run_mode on
+# ── 한 단계 실행: 부하 → k6/DB 지표 집계 ──
+run_phase() { # $1=라벨 $2=LOCK_MODE
+    local label="$1" mode="$2"
+    local token before after
+    token=$(curl -s -X POST "$BASE_URL/api/v1/test/token" | jq -r .accessToken)
+    [[ "$token" == "null" || -z "$token" ]] && { echo "❌ 테스트 토큰 발급 실패 (TEST_AUTH_ENABLED 확인)"; exit 1; }
+
+    before=$(snapshot)
+    echo "  부하 주입: ${RATE} TPS × ${DURATION_S}s (LOCK_MODE=$mode)"
+    # k6 는 임계값(p95<5000ms) 실패 시 비제로 종료하므로 || true — 임계값 붕괴 자체가 측정 결과다
+    ( cd "$K6_DIR" && LOCK_MODE="$mode" k6 run \
+        --env ACCESS_TOKEN="$token" --env RATE="$RATE" --env DURATION_S="$DURATION_S" \
+        drawing-load.js ) > "$OUT_DIR/$label.txt" 2>&1 || true
+    sleep 20   # Prometheus 스크레이프(15s) 반영 대기
+    after=$(snapshot)
+
+    local s f p95
+    s=$(grep -a drawing_success_total "$OUT_DIR/$label.txt" | grep -oE ': [0-9]+' | head -1 | tr -d ': ' || true)
+    f=$(grep -a drawing_fail_total "$OUT_DIR/$label.txt" | grep -oE ': [0-9]+' | head -1 | tr -d ': ' || true)
+    p95=$(grep -a http_req_duration "$OUT_DIR/$label.txt" | grep -oE 'p\(95\)=[0-9.]+m?s' | head -1 || true)
+    echo "  k6: 성공=${s:-0} 실패=${f:-0} $p95"
+    echo "  MySQL: $(delta "$before" "$after")"
+    echo "  앱 카운터(누적): 낙관락충돌=$(prom 'sum(optimistic_lock_failure_total)') · 데드락예외=$(prom 'sum(db_deadlock_total)')"
+
+    # 낙관락 계열이면 심화 지표: 성공당 시도 횟수 + 선착순 역전 쌍
+    if [[ "$mode" == optimistic* ]]; then
+        local att_ok att_vc att_dl
+        att_ok=$(prom 'sum(drawing_attempts_total{result="success"})')
+        att_vc=$(prom 'sum(drawing_attempts_total{result="version_conflict"})')
+        att_dl=$(prom 'sum(drawing_attempts_total{result="deadlock"})')
+        if [[ "$att_ok" != "0" ]]; then
+            echo "  시도(누적): 성공 $att_ok · 버전충돌 $att_vc · 데드락 $att_dl → 성공당 시도 $(echo "scale=2; ($att_ok+$att_vc+$att_dl)/$att_ok" | bc)회"
+        fi
+        # 선착순 역전 — 발사 순번(selected_ticket_index)과 확정 시각(created_at)의 역전 쌍 수
+        local sid
+        sid=$(grep -aoE 'surveyId=[0-9a-f-]+' "$OUT_DIR/$label.txt" | head -1 | cut -d= -f2)
+        if [[ -n "$sid" ]]; then
+            local inv
+            inv=$(docker exec sulmun2yong-cluster-mysql mysql -uroot -ppassword -N -B test -e "
+                SELECT COUNT(*) FROM drawing_histories a
+                JOIN drawing_histories b
+                  ON a.survey_id = b.survey_id
+                 AND a.selected_ticket_index < b.selected_ticket_index
+                 AND a.created_at > b.created_at
+                WHERE a.survey_id = UUID_TO_BIN('$sid')" 2>/dev/null || echo "?")
+            echo "  선착순 역전: ${inv}쌍 (먼저 발사됐는데 늦게 확정된 조합)"
+        fi
+    fi
+}
+
+echo "════════════════════════════════════════════════"
+echo " 직렬화 3자 비교 — SERIALIZABLE → 낙관락(재시도) → Redisson"
+echo " 부하: ${RATE} TPS × ${DURATION_S}s · 결과: $OUT_DIR"
+echo "════════════════════════════════════════════════"
+
+# ── 전체 스택 선기동 (idempotent) — 내려가 있으면 MySQL·Redis·Prometheus 까지 올린다 ──
+echo ""
+echo "▶ 스택 확인/기동: docker-compose up -d"
+( cd "$REPO_ROOT" && TEST_AUTH_ENABLED=true docker-compose up -d ) >/dev/null 2>&1 \
+    || { echo "❌ docker-compose up 실패"; exit 1; }
 
 echo ""
-echo "✅ 완료. 원시 로그: $OUT_DIR/{off,on}-run*.txt"
+echo "▶ [1/3] SERIALIZABLE (DB 안 직렬화) — web 재기동 중"
+restart_web "TRANSACTION_SERIALIZABLE"
+run_phase "serializable" "off"
+
 echo ""
-echo "다음으로 Grafana( http://localhost:13000 )에서 캡처하세요:"
-echo "  • race-comparison → db_deadlock_total (OFF 3회 후 vs ON 3회 후 누적 차이 = 데드락 건수)"
-echo "  • drawing-lock    → 락 대기 p95, 획득 성공/실패 비율"
+echo "▶ [2/3] 낙관적 락 (@Version + 재시도 5회) — web 재기동 중 (격리수준 원복)"
+restart_web ""
+run_phase "optimistic" "optimistic-retry"
+
 echo ""
-echo "k6 로그의 drawing_success_total / http_req_duration(p95) 값을 시나리오.md 결과 표에 옮기세요."
+echo "▶ [3/3] Redisson 분산락 (DB 앞 직렬화) — 같은 web 유지"
+run_phase "redisson" "on"
+
+echo ""
+echo "✅ 완료. 원시 로그: $OUT_DIR/{serializable,optimistic,redisson}.txt"
+echo "   Grafana( http://localhost:13000/d/race-comparison )에서 두 구간을 시간축으로 대조하세요."

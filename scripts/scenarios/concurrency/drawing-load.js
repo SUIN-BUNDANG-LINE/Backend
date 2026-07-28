@@ -20,7 +20,7 @@ import { setupSurveyWithDrawing, submitResponse, doDrawing } from '../../lib/hel
 const drawSuccess = new Counter('drawing_success_total');
 const drawFail = new Counter('drawing_fail_total');
 
-const LOCK_MODE = __ENV.LOCK_MODE === 'off' ? 'off' : 'on';
+const LOCK_MODE = __ENV.LOCK_MODE || 'on'; // on | off | optimistic
 const RATE = Number(__ENV.RATE || 10);
 const DURATION_S = Number(__ENV.DURATION_S || 30);
 const POOL = RATE * DURATION_S;
