@@ -24,6 +24,7 @@
     {
       "type": "timeseries",
       "title": "MySQL Deadlock 누적 — by instance",
+      "description": "낭비 자원 ⑤ 처리량 손실 — 데드락 1건 = 요청 1건이 자원(대기·감지·롤백)만 소모하고 결과 없이 소멸. 앱 예외(CannotAcquireLockException) 기반 카운터.",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short" }, "overrides": [] },
@@ -34,6 +35,7 @@
     {
       "type": "timeseries",
       "title": "MySQL Deadlock 발생률 (건/초)",
+      "description": "낭비 자원 ⑤ 처리량 손실의 시간축 — 초당 몇 건의 요청이 헛수고로 끝나는지. 부하 구간 식별용.",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops" }, "overrides": [] },
@@ -44,7 +46,7 @@
     {
       "type": "timeseries",
       "title": "DB 커넥션 풀 점유 — active vs max (HikariCP)",
-      "description": "active가 max(10)에 붙으면 풀 고갈. 데드락 롤백·긴 트랜잭션이 커넥션을 오래 점유할수록 여기가 치솟는다.",
+      "description": "낭비 자원 ④ 커넥션 점유 — 대기·롤백 중인 트랜잭션이 커넥션을 반납하지 못해 active가 max(10)에 붙으면 풀 고갈. 경합과 무관한 요청까지 밀리는 파급의 시작점.",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [
@@ -58,7 +60,7 @@
     {
       "type": "timeseries",
       "title": "커넥션 대기 스레드 수 — pending (HikariCP)",
-      "description": "커넥션을 못 받아 대기 중인 스레드. 0보다 크면 DB가 병목이라는 직접 신호.",
+      "description": "낭비 자원 ④ 의 파급 — 풀이 말라 커넥션을 못 받고 대기하는 앱 스레드 수. 0보다 크면 DB 병목이 앱 계층까지 번졌다는 직접 신호.",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
@@ -69,7 +71,7 @@
     {
       "type": "timeseries",
       "title": "커넥션 획득 대기 시간 — avg / max (HikariCP acquire)",
-      "description": "스레드가 풀에서 커넥션을 받기까지 걸린 시간. 풀 포화 시 급증.",
+      "description": "낭비 자원 ④ 의 대기 비용 — 앱 스레드가 커넥션을 받기까지 기다린 시간. 풀 포화 시 급증하며, 이 시간만큼 사용자 응답이 지연된다.",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "s", "min": 0 }, "overrides": [] },
@@ -81,7 +83,7 @@
     {
       "type": "timeseries",
       "title": "커넥션 사용(보유) 시간 — avg / max (HikariCP usage)",
-      "description": "트랜잭션이 커넥션을 쥐고 있던 시간 ≈ 트랜잭션 소요시간. leaseTime(10s)을 넘으면 락 조기 만료 위험 구간.",
+      "description": "낭비 자원 ④ 의 원인 — 트랜잭션이 커넥션을 쥐고 있던 시간(≈ 트랜잭션 소요시간). 행 락 대기·롤백이 길수록 보유가 늘어 풀을 말린다. leaseTime(10s) 초과 시 분산락 조기 만료 위험 구간.",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "s", "min": 0 }, "overrides": [] },
@@ -93,7 +95,7 @@
     {
       "type": "timeseries",
       "title": "커넥션 획득 타임아웃 (건/초)",
-      "description": "connectionTimeout(기본 30s) 내 커넥션을 못 받은 실패. 풀 고갈의 최종 증상.",
+      "description": "낭비 자원 ④ 의 최종 증상 — connectionTimeout(기본 30s) 내 커넥션을 못 받아 실패한 요청. 여기까지 오면 경합 무관 요청도 죽는다.",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
@@ -104,6 +106,7 @@
     {
       "type": "timeseries",
       "title": "분산락 획득 성공/실패 (참고 — DB 부하와 대조용)",
+      "description": "낭비가 아닌 대조군 — 직렬화가 Redis 로 이동했다는 증거. Redisson 구간에서 이 지표가 활동하는 동안 아래 MySQL 내부 낭비 지표는 전부 0 이어야 한다.",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
@@ -117,13 +120,13 @@
       "gridPos": { "h": 3, "w": 24, "x": 0, "y": 36 },
       "options": {
         "mode": "markdown",
-        "content": "**서버 내부에서 실제로 타는 리소스** — SERIALIZABLE 로 정합성을 지키면 MySQL 은 ① 행 락 대기(스레드 점유) ② 데드락 감지(대기 그래프 순환 탐지 CPU) ③ 패자 롤백(undo 적용) 3중 비용을 낸다. Redisson 구간에서는 아래 지표가 전부 0 — 경합이 DB 에 도달하지 않는다."
+        "content": "**낭비 자원 분류 (각 패널 설명의 번호)** — ① 스레드 대기: DB 스레드가 일 대신 행 락 줄서기(잠든 채 슬롯 점유) · ② CPU: 데드락 감지(대기 그래프 순환 탐색) · ③ 디스크/버퍼 I/O: 패자 롤백(undo 역적용 = 쓰고 지우는 마이너스 노동) · ④ 커넥션 점유: 대기·롤백 동안 반납 못 해 풀 고갈로 파급 · ⑤ 처리량 손실: 위 낭비의 합 = 자원만 쓰고 결과 없는 요청.\n\nSERIALIZABLE 구간에서 ①~⑤ 전부 발화, Redisson 구간에서는 전부 0 — 경합이 DB 에 도달하지 않는다."
       }
     },
     {
       "type": "timeseries",
       "title": "InnoDB 데드락 누적 (DB 내부 카운터)",
-      "description": "MySQL이 직접 센 데드락. 앱 쪽 db_deadlock_total(예외 기반)과 교차 검증용.",
+      "description": "낭비 자원 ② CPU — 락 대기가 생길 때마다 InnoDB 가 대기 그래프(wait-for graph) 순환을 탐색해 데드락을 감지·희생자를 선정한다. 정상 처리 대신 '누가 누굴 기다리나' 계산에 태우는 CPU. 앱 쪽 db_deadlock_total 과 교차 검증용.",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 39 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
@@ -134,7 +137,7 @@
     {
       "type": "timeseries",
       "title": "InnoDB 행 락 대기 — 발생률·현재 대기 수",
-      "description": "트랜잭션이 같은 행을 두고 서버 안에서 줄 선 횟수. SERIALIZABLE 구간에서만 튀고 Redisson 구간은 0 이어야 정상.",
+      "description": "낭비 자원 ① 스레드 대기 — 트랜잭션이 같은 행을 두고 서버 안에서 줄 선 횟수. 대기 중인 DB 스레드는 일을 못 하면서 슬롯·메모리를 점유한다. SERIALIZABLE 구간에서만 튀고 Redisson 구간은 0 이어야 정상.",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 39 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
@@ -146,7 +149,7 @@
     {
       "type": "timeseries",
       "title": "InnoDB 행 락 대기에 태운 시간 (ms/s)",
-      "description": "초당 행 락 대기로 소모된 밀리초 — DB 스레드가 일 대신 대기에 쓴 시간.",
+      "description": "낭비 자원 ① 의 정량 — 초당 행 락 대기로 소모된 밀리초. DB 스레드가 일 대신 대기에 쓴 시간의 총량 (실측: SERIALIZABLE 30초 부하에서 4.7초 소모).",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 47 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
@@ -157,7 +160,7 @@
     {
       "type": "timeseries",
       "title": "롤백 비율 (rollback/s vs commit/s)",
-      "description": "데드락 패자의 undo 적용 = 순수 낭비 작업. SERIALIZABLE 구간에서 rollback 급증, Redisson 구간은 0 기대.",
+      "description": "낭비 자원 ③ 디스크/버퍼 I/O — 데드락 패자가 이미 한 일을 undo 로그로 역적용(쓰고 → 지우는 마이너스 노동). 커밋됐다면 없었을 작업이며 purge 부담도 쌓인다. SERIALIZABLE 구간에서 rollback 급증, Redisson 구간은 0 기대.",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 47 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
@@ -169,7 +172,7 @@
     {
       "type": "timeseries",
       "title": "MySQL 실행 중 스레드 (Threads_running)",
-      "description": "락 대기·롤백 중인 스레드가 서버 슬롯을 점유하는 정도.",
+      "description": "낭비 자원 ① 의 점유 현황 — 락 대기·롤백 중이어도 스레드는 슬롯을 차지한다. running 이 치솟는데 처리량이 안 오르면 스레드가 대기에 묶여 있다는 뜻.",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 47 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
