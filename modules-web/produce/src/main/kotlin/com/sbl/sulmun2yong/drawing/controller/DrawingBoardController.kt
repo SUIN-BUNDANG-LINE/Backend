@@ -55,6 +55,20 @@ class DrawingBoardController(
         return ResponseEntity.ok(drawingResultResponse)
     }
 
+    // 실험용 — synchronized(JVM 로컬) 직렬화. cross-JVM 한계 실측 전용.
+    @PostMapping("/draw-synchronized")
+    fun doDrawingWithSynchronized(
+        @RequestBody request: DrawingRequest,
+    ): ResponseEntity<DrawingResultResponse> {
+        val drawingResultResponse =
+            drawingBoardService.doDrawingWithSynchronized(
+                participantId = request.participantId,
+                selectedNumber = request.selectedNumber,
+                phoneNumber = request.phoneNumber,
+            )
+        return ResponseEntity.ok(drawingResultResponse)
+    }
+
     // 실험용 — 낙관적 락 + 재시도(최대 5회). 성공당 시도 횟수(attempts-per-success) 측정 전용.
     @PostMapping("/draw-optimistic-retry")
     fun doDrawingWithOptimisticRetry(

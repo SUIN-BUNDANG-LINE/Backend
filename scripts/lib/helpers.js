@@ -112,6 +112,7 @@ const DRAW_PATHS = {
     'off': '/api/v1/drawing-board/draw-no-lock',
     'optimistic': '/api/v1/drawing-board/draw-optimistic',
     'optimistic-retry': '/api/v1/drawing-board/draw-optimistic-retry',
+    'synchronized': '/api/v1/drawing-board/draw-synchronized',
 };
 
 export function doDrawing(participantId, selectedNumber, phoneNumber) {

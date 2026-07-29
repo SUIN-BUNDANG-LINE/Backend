@@ -16,6 +16,7 @@ import org.springframework.dao.CannotAcquireLockException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class DrawingBoardService(
@@ -30,6 +31,9 @@ class DrawingBoardService(
     companion object {
         private const val OPTIMISTIC_MAX_ATTEMPTS = 5
     }
+
+    // synchronized 실험용 — 설문별 JVM 로컬 모니터 객체. 인스턴스(JVM)마다 별개라는 점이 실험의 핵심.
+    private val surveyLocks = ConcurrentHashMap<UUID, Any>()
 
     fun getDrawingBoard(surveyId: UUID): DrawingBoardResponse {
         val surveyStatus =
@@ -118,5 +122,28 @@ class DrawingBoardService(
             }
         }
         throw lastFailure ?: IllegalStateException("낙관락 재시도 소진")
+    }
+
+    // 실험용 — synchronized(JVM 로컬) 직렬화. 트랜잭션을 락 안에서 시작·커밋해 단일 인스턴스에선
+    // 상호배제가 성립하지만, 모니터가 JVM마다 별개라 cross-JVM 경합은 막지 못한다 — 그 한계 실측 경로.
+    fun doDrawingWithSynchronized(
+        participantId: UUID,
+        selectedNumber: Int,
+        phoneNumber: String,
+    ): DrawingResultResponse {
+        val participant = participantRepository.findById(participantId).orElseThrow { InvalidParticipantException() }
+        val surveyId = participant.surveyId
+
+        val survey = surveyRepository.findByIdAndIsDeletedFalse(surveyId).orElseThrow { SurveyNotFoundException() }
+        if (survey.status == SurveyStatus.CLOSED) {
+            throw FinishedDrawingException()
+        }
+
+        val lockObject = surveyLocks.computeIfAbsent(surveyId) { Any() }
+        val waitStart = System.nanoTime()
+        synchronized(lockObject) {
+            drawingProcessMetrics.recordJvmLockWait(System.nanoTime() - waitStart)
+            return drawingProcessWithoutLockAdapter.processDrawingWithoutLock(surveyId, participantId, selectedNumber, phoneNumber)
+        }
     }
 }

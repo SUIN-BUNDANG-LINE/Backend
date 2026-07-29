@@ -2,7 +2,9 @@ package com.sbl.sulmun2yong.drawing.metrics
 
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 class DrawingProcessMetrics(
@@ -49,4 +51,15 @@ class DrawingProcessMetrics(
     fun recordAttemptVersionConflict() = attemptVersionConflictCounter.increment()
 
     fun recordAttemptDeadlock() = attemptDeadlockCounter.increment()
+
+    // synchronized 실험용 — JVM 로컬 락 진입 대기 시간.
+    // 이 지표가 활동하면 "인스턴스 안에서는 직렬화가 작동"한다는 증거이고,
+    // 그런데도 데드락이 남으면 cross-JVM 경합이 로컬 락을 통과했다는 증거가 된다.
+    private val jvmLockWaitTimer: Timer =
+        Timer
+            .builder("jvm_lock_wait_seconds")
+            .description("synchronized JVM 로컬 락 진입 대기 시간 (실험용)")
+            .register(registry)
+
+    fun recordJvmLockWait(nanos: Long) = jvmLockWaitTimer.record(nanos, TimeUnit.NANOSECONDS)
 }
