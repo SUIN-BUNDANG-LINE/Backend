@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 #
-# 정합성 직렬화 3자 비교 러너 — SERIALIZABLE(DB 안) → 낙관적 락(앱 충돌+재시도) → Redisson(DB 앞)
+# 정합성 직렬화 5자 비교 러너
+#   No-Lock(무보호 기준선) → SERIALIZABLE(DB 안) → 낙관락(앱+재시도) → synchronized(JVM 로컬) → Redisson(DB 앞)
 #
-# 같은 지속 부하(drawing-load.js, 기본 10 TPS × 30s)를 세 방식에 순서대로 걸고,
+# 같은 지속 부하(drawing-load.js, 기본 10 TPS × 30s)를 다섯 방식에 순서대로 걸고,
 # MySQL 내부 낭비 지표(데드락·행 락 대기·롤백)와 앱 충돌·k6 성공률/p95 를 단계별로 집계한다.
 #
-#   1단계: web 을 TX_ISOLATION=TRANSACTION_SERIALIZABLE 로 재기동 → LOCK_MODE=off (/draw-no-lock)
-#   2단계: web 을 기본 격리수준으로 재기동 → LOCK_MODE=optimistic-retry (/draw-optimistic-retry, @Version+재시도5회)
-#          충돌량(attempts{conflict})·성공당 시도 횟수·선착순 역전을 함께 집계한다
-#   3단계: (같은 web 유지) → LOCK_MODE=on (/draw, Redisson)
+#   1단계: 기본 격리수준(REPEATABLE_READ) → LOCK_MODE=off (/draw-no-lock) — 아무 보호 없음
+#   2단계: TX_ISOLATION=TRANSACTION_SERIALIZABLE 재기동 → LOCK_MODE=off (/draw-no-lock)
+#   3단계: 기본 격리수준 재기동 → LOCK_MODE=optimistic-retry (@Version+재시도5회, 시도·역전 집계)
+#   4단계: (같은 web) → LOCK_MODE=synchronized (JVM 로컬 — cross-JVM 한계 검증)
+#   5단계: (같은 web) → LOCK_MODE=on (/draw, Redisson)
 #
 # 사용법:
 #   ./scripts/runners/run-lock-experiment.sh                 # 10 TPS × 30s
@@ -102,10 +104,15 @@ run_phase() { # $1=라벨 $2=LOCK_MODE
             echo "  선착순 역전: ${inv}쌍 (먼저 발사됐는데 늦게 확정된 조합)"
         fi
     fi
+
+    # synchronized 이면: JVM 로컬 락 활동 (활동 있음 + 데드락 잔존 = cross-JVM 경합 통과 증거)
+    if [[ "$mode" == "synchronized" ]]; then
+        echo "  JVM 락 진입: count=$(prom 'sum(jvm_lock_wait_seconds_count)') · 최대 대기 $(prom 'max(jvm_lock_wait_seconds_max)')s — 로컬 직렬화 작동 증거"
+    fi
 }
 
 echo "════════════════════════════════════════════════"
-echo " 직렬화 3자 비교 — SERIALIZABLE → 낙관락(재시도) → Redisson"
+echo " 직렬화 5자 비교 — No-Lock → SERIALIZABLE → 낙관락 → synchronized → Redisson"
 echo " 부하: ${RATE} TPS × ${DURATION_S}s · 결과: $OUT_DIR"
 echo "════════════════════════════════════════════════"
 
@@ -116,19 +123,28 @@ echo "▶ 스택 확인/기동: docker-compose up -d"
     || { echo "❌ docker-compose up 실패"; exit 1; }
 
 echo ""
-echo "▶ [1/3] SERIALIZABLE (DB 안 직렬화) — web 재기동 중"
+echo "▶ [1/5] No-Lock (무보호 기준선, REPEATABLE_READ) — web 재기동 중"
+restart_web ""
+run_phase "no-lock" "off"
+
+echo ""
+echo "▶ [2/5] SERIALIZABLE (DB 안 직렬화) — web 재기동 중"
 restart_web "TRANSACTION_SERIALIZABLE"
 run_phase "serializable" "off"
 
 echo ""
-echo "▶ [2/3] 낙관적 락 (@Version + 재시도 5회) — web 재기동 중 (격리수준 원복)"
+echo "▶ [3/5] 낙관적 락 (@Version + 재시도 5회) — web 재기동 중 (격리수준 원복)"
 restart_web ""
 run_phase "optimistic" "optimistic-retry"
 
 echo ""
-echo "▶ [3/3] Redisson 분산락 (DB 앞 직렬화) — 같은 web 유지"
+echo "▶ [4/5] synchronized (JVM 로컬 직렬화 — cross-JVM 한계 검증) — 같은 web 유지"
+run_phase "synchronized" "synchronized"
+
+echo ""
+echo "▶ [5/5] Redisson 분산락 (DB 앞 직렬화) — 같은 web 유지"
 run_phase "redisson" "on"
 
 echo ""
-echo "✅ 완료. 원시 로그: $OUT_DIR/{serializable,optimistic,redisson}.txt"
+echo "✅ 완료. 원시 로그: $OUT_DIR/{no-lock,serializable,optimistic,synchronized,redisson}.txt"
 echo "   Grafana( http://localhost:13000/d/race-comparison )에서 두 구간을 시간축으로 대조하세요."

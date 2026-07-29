@@ -180,6 +180,29 @@
         { "refId": "A", "expr": "mysql_global_status_threads_running", "legendFormat": "threads_running" },
         { "refId": "B", "expr": "mysql_global_status_threads_connected", "legendFormat": "threads_connected" }
       ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM 로컬 락 대기 (synchronized) — by instance",
+      "description": "synchronized 실험 전용 — 각 인스턴스가 자기 JVM 안에서 줄 세우는 대기 시간. 이 지표가 활동하는데(로컬 직렬화 작동) 위의 InnoDB 데드락이 함께 뜨면, 두 JVM 의 모니터가 서로 별개라 cross-JVM 경합이 로컬 락을 그대로 통과한다는 실측 증거다.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 55 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "s", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum by (instance) (rate(jvm_lock_wait_seconds_sum{instance=~\"web.*\"}[1m])) / sum by (instance) (rate(jvm_lock_wait_seconds_count{instance=~\"web.*\"}[1m]))", "legendFormat": "avg {{instance}}" },
+        { "refId": "B", "expr": "jvm_lock_wait_seconds_max{instance=~\"web.*\"}", "legendFormat": "max {{instance}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM 락 처리율 (synchronized 진입/초) — by instance",
+      "description": "synchronized 실험 전용 — 인스턴스별 로컬 락 통과 속도. 두 인스턴스가 각자 절반씩 직렬화하지만, 그 둘 사이에는 아무 조율이 없다.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 55 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum by (instance) (rate(jvm_lock_wait_seconds_count{instance=~\"web.*\"}[1m]))", "legendFormat": "{{instance}}" }
+      ]
     }
   ]
 }
