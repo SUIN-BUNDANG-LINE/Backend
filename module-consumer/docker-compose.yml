@@ -1,0 +1,49 @@
+x-consumer-base: &consumer-base
+    image: eclipse-temurin:17-jre
+    networks:
+        - sulmun2yong-cluster
+    environment:
+        SERVER_PORT: 8080
+        SPRING_DATASOURCE_URL: jdbc:mysql://sulmun2yong-cluster-mysql:3306/${MYSQL_DATABASE}
+        SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+        SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+        SPRING_DATA_REDIS_HOST: sulmun2yong-cluster-redis
+        SPRING_DATA_REDIS_PORT: 6379
+        SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+        JAVA_TOOL_OPTIONS: "-Xms512m -Xmx1024m -javaagent:/app/otel-javaagent.jar"
+        OTEL_TRACES_EXPORTER: otlp
+        OTEL_EXPORTER_OTLP_ENDPOINT: http://sulmun2yong-cluster-tempo:4317
+        OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+        OTEL_METRICS_EXPORTER: none
+        OTEL_LOGS_EXPORTER: none
+        OTEL_PROPAGATORS: tracecontext,baggage
+    command: >
+        java
+        -Dspring.config.additional-location=file:/app/config/
+        -jar /app/app.jar
+
+services:
+    drawing-sms-notification-consumer:
+        <<: *consumer-base
+        container_name: sulmun2yong-drawing-sms-notification-consumer
+        environment:
+            OTEL_SERVICE_NAME: sulmun2yong-drawing-sms-notification-consumer
+        volumes:
+            - ./modules/drawing-sms-notification-consumer/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
+
+    dlt-sms-notification-consumer:
+        <<: *consumer-base
+        container_name: sulmun2yong-dlt-sms-notification-consumer
+        environment:
+            OTEL_SERVICE_NAME: sulmun2yong-dlt-sms-notification-consumer
+        volumes:
+            - ./modules/dlt-sms-notification-consumer/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./modules/dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
+
+networks:
+    # backend의 docker-compose.cluster.yml 에서 생성한 네트워크에 join
+    sulmun2yong-cluster:
+        external: true

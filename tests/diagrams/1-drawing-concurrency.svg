@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#495057"/>
+    </marker>
+  </defs>
+  <rect width="960" height="720" fill="#FBFCFE"/>
+
+  <!-- header -->
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#1A1B1E">① drawing-concurrency — 추첨 분산락 동시성</text>
+  <text x="30" y="64" font-size="13" fill="#868E96">원본: DrawingBoardServiceConcurrencyTest · Redisson 분산락(global/lock) · per-vu-iterations 로 동시 발사</text>
+
+  <!-- ===================== 시나리오 1 ===================== -->
+  <g transform="translate(0,88)">
+    <text x="30" y="18" font-size="16" font-weight="700" fill="#3B5BDB">S1 · same_ticket</text>
+    <text x="30" y="38" font-size="12" fill="#495057">10명이 같은 티켓 번호(#5)에 동시 추첨</text>
+
+    <rect x="30" y="52" width="150" height="70" rx="10" fill="#EDF2FF" stroke="#3B5BDB"/>
+    <text x="105" y="82" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">VU × 10</text>
+    <text x="105" y="102" font-size="11" fill="#495057" text-anchor="middle">doDrawing(번호=5)</text>
+
+    <line x1="180" y1="87" x2="360" y2="87" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <text x="270" y="80" font-size="11" fill="#868E96" text-anchor="middle">동시 요청</text>
+
+    <rect x="360" y="52" width="180" height="70" rx="10" fill="#FFF4E6" stroke="#E8590C"/>
+    <text x="450" y="80" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">Redisson 락</text>
+    <text x="450" y="100" font-size="11" fill="#495057" text-anchor="middle">key = ticket:#5</text>
+
+    <line x1="540" y1="72" x2="720" y2="72" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <line x1="540" y1="104" x2="720" y2="104" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+
+    <rect x="720" y="50" width="210" height="34" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="825" y="72" font-size="12" font-weight="700" fill="#2F9E44" text-anchor="middle">성공 1건 · 200 (isWon)</text>
+    <rect x="720" y="90" width="210" height="34" rx="8" fill="#FFF5F5" stroke="#E03131"/>
+    <text x="825" y="112" font-size="12" font-weight="700" fill="#E03131" text-anchor="middle">실패 9건 · 400/409</text>
+    <text x="720" y="140" font-size="10.5" fill="#868E96">AlreadySelectedTicketException</text>
+  </g>
+
+  <!-- ===================== 시나리오 2 ===================== -->
+  <g transform="translate(0,300)">
+    <text x="30" y="18" font-size="16" font-weight="700" fill="#3B5BDB">S2 · same_user</text>
+    <text x="30" y="38" font-size="12" fill="#495057">동일 참가자 1명이 서로 다른 번호로 10번 동시 추첨</text>
+
+    <rect x="30" y="52" width="150" height="70" rx="10" fill="#EDF2FF" stroke="#3B5BDB"/>
+    <text x="105" y="82" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">참가자 1명</text>
+    <text x="105" y="102" font-size="11" fill="#495057" text-anchor="middle">10 요청(번호 0..9)</text>
+
+    <line x1="180" y1="87" x2="360" y2="87" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <text x="270" y="80" font-size="11" fill="#868E96" text-anchor="middle">동시 요청</text>
+
+    <rect x="360" y="52" width="180" height="70" rx="10" fill="#FFF4E6" stroke="#E8590C"/>
+    <text x="450" y="80" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">Redisson 락</text>
+    <text x="450" y="100" font-size="11" fill="#495057" text-anchor="middle">key = participantId</text>
+
+    <line x1="540" y1="72" x2="720" y2="72" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <line x1="540" y1="104" x2="720" y2="104" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+
+    <rect x="720" y="50" width="210" height="34" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="825" y="72" font-size="12" font-weight="700" fill="#2F9E44" text-anchor="middle">성공 1건 (1번 참여만)</text>
+    <rect x="720" y="90" width="210" height="34" rx="8" fill="#FFF5F5" stroke="#E03131"/>
+    <text x="825" y="112" font-size="12" font-weight="700" fill="#E03131" text-anchor="middle">실패 9건 · 400/409</text>
+    <text x="720" y="140" font-size="10.5" fill="#868E96">AlreadyParticipatedDrawingException</text>
+  </g>
+
+  <!-- ===================== 시나리오 3 ===================== -->
+  <g transform="translate(0,512)">
+    <text x="30" y="18" font-size="16" font-weight="700" fill="#3B5BDB">S3 · diff_tickets</text>
+    <text x="30" y="38" font-size="12" fill="#495057">10명이 각각 다른 번호로 동시 추첨 → 락 키가 달라 경합 없음</text>
+
+    <rect x="30" y="52" width="150" height="70" rx="10" fill="#EDF2FF" stroke="#3B5BDB"/>
+    <text x="105" y="82" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">VU × 10</text>
+    <text x="105" y="102" font-size="11" fill="#495057" text-anchor="middle">번호 0..9 (모두 다름)</text>
+
+    <line x1="180" y1="87" x2="360" y2="87" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+
+    <rect x="360" y="52" width="180" height="70" rx="10" fill="#FFF4E6" stroke="#E8590C"/>
+    <text x="450" y="80" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">Redisson 락</text>
+    <text x="450" y="100" font-size="11" fill="#495057" text-anchor="middle">서로 다른 키 10개</text>
+
+    <line x1="540" y1="87" x2="720" y2="87" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+
+    <rect x="720" y="70" width="210" height="36" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="825" y="93" font-size="12" font-weight="700" fill="#2F9E44" text-anchor="middle">전부 성공 10건 · 200</text>
+  </g>
+
+  <text x="30" y="712" font-size="11" fill="#868E96">검증 지표: drawing_success_total / drawing_fail_total / drawing_success_rate · threshold p95 &lt; 5s</text>
+</svg>

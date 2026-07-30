@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#495057"/>
+    </marker>
+  </defs>
+  <rect width="960" height="500" fill="#FBFCFE"/>
+
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#1A1B1E">④ outbox-relay-recovery — Relay 보상 발행 복구</text>
+  <text x="30" y="64" font-size="13" fill="#868E96">HTTP 트래픽 없이 outbox_events 에 PENDING 을 직접 주입 → OutboxRelayScheduler 가 폴링·발행하는지만 검증</text>
+
+  <!-- step 1: inject -->
+  <rect x="30" y="100" width="220" height="110" rx="12" fill="#F1F3F5" stroke="#868E96"/>
+  <text x="140" y="128" font-size="14" font-weight="700" fill="#1A1B1E" text-anchor="middle">setup() · DB 직접 주입</text>
+  <text x="140" y="152" font-size="12" fill="#495057" text-anchor="middle">PENDING 100건 INSERT</text>
+  <text x="140" y="172" font-size="12" fill="#495057" text-anchor="middle">created_at = now − 90s</text>
+  <text x="140" y="196" font-size="11" fill="#868E96" text-anchor="middle">topic: drawing-completed</text>
+
+  <line x1="250" y1="155" x2="330" y2="155" stroke="#495057" stroke-width="1.8" marker-end="url(#arw)"/>
+
+  <!-- outbox table -->
+  <rect x="330" y="96" width="180" height="118" rx="12" fill="#E7F5FF" stroke="#1971C2"/>
+  <text x="420" y="122" font-size="14" font-weight="700" fill="#1A1B1E" text-anchor="middle">outbox_events</text>
+  <rect x="350" y="134" width="140" height="22" rx="4" fill="#FFF4E6" stroke="#E8590C"/>
+  <text x="420" y="150" font-size="11" fill="#E8590C" text-anchor="middle" font-weight="700">PENDING × 100</text>
+  <text x="420" y="180" font-size="11" fill="#495057" text-anchor="middle">age filter 통과</text>
+  <text x="420" y="198" font-size="11" fill="#495057" text-anchor="middle">(90s &gt; 임계)</text>
+
+  <!-- relay scheduler -->
+  <line x1="510" y1="155" x2="590" y2="155" stroke="#495057" stroke-width="1.8" marker-end="url(#arw)"/>
+  <text x="550" y="147" font-size="10.5" fill="#868E96" text-anchor="middle">폴링</text>
+
+  <rect x="590" y="100" width="180" height="110" rx="12" fill="#FFF4E6" stroke="#E8590C"/>
+  <text x="680" y="128" font-size="14" font-weight="700" fill="#1A1B1E" text-anchor="middle">OutboxRelay</text>
+  <text x="680" y="148" font-size="11.5" fill="#495057" text-anchor="middle">Scheduler</text>
+  <text x="680" y="172" font-size="11" fill="#495057" text-anchor="middle">FOR UPDATE</text>
+  <text x="680" y="190" font-size="11" fill="#495057" text-anchor="middle">SKIP LOCKED + hint(-2)</text>
+
+  <!-- kafka -->
+  <line x1="770" y1="155" x2="850" y2="155" stroke="#495057" stroke-width="1.8" marker-end="url(#arw)"/>
+  <rect x="850" y="118" width="90" height="74" rx="10" fill="#F8F0FC" stroke="#9C36B5"/>
+  <text x="895" y="150" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">Kafka</text>
+  <text x="895" y="170" font-size="11" fill="#495057" text-anchor="middle">발행</text>
+
+  <!-- mark published back -->
+  <path d="M680,210 C680,250 420,250 420,232" fill="none" stroke="#2F9E44" stroke-width="1.8" marker-end="url(#arw)"/>
+  <text x="470" y="248" font-size="11" fill="#2F9E44" font-weight="700">발행 성공 → PUBLISHED 마킹</text>
+
+  <rect x="330" y="232" width="180" height="34" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+  <text x="420" y="254" font-size="12" font-weight="700" fill="#2F9E44" text-anchor="middle">PUBLISHED × 100</text>
+
+  <!-- teardown expectation -->
+  <rect x="30" y="300" width="900" height="150" rx="12" fill="#F8F9FA" stroke="#DEE2E6"/>
+  <text x="50" y="328" font-size="14" font-weight="700" fill="#1A1B1E">teardown 폴링 검증 (timeout 60s)</text>
+  <text x="50" y="356" font-size="12.5" fill="#495057">• Relay 가 PENDING 전량을 PUBLISHED 로 전환 (awaitCondition)</text>
+  <text x="50" y="380" font-size="12.5" fill="#495057">• PENDING 잔량 = 0</text>
+  <text x="50" y="404" font-size="12.5" fill="#495057">• FAILED 마킹된 행 없음</text>
+  <text x="50" y="432" font-size="12" fill="#868E96">메트릭: relay_published_total · relay_pending_remaining · 실행 후 테스트 행 cleanup</text>
+</svg>

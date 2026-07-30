@@ -1,0 +1,41 @@
+# 브로커 비교 데모 — Kafka / RabbitMQ / Redis Pub/Sub 을 나란히 띄운다.
+# 앱 의존 없음. run-comparison.sh 가 docker exec + management HTTP API 로만 검증한다.
+name: broker-comparison
+
+services:
+    bcmp-kafka:
+        image: apache/kafka:3.8.0
+        container_name: bcmp-kafka
+        networks: [bcmp-net]
+        environment:
+            KAFKA_NODE_ID: "1"
+            KAFKA_PROCESS_ROLES: broker,controller
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@bcmp-kafka:9093
+            KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://bcmp-kafka:9092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+            KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+            KAFKA_MIN_INSYNC_REPLICAS: "1"
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+
+    bcmp-redis:
+        image: redis:7
+        container_name: bcmp-redis
+        networks: [bcmp-net]
+
+    bcmp-rabbitmq:
+        image: rabbitmq:3-management
+        container_name: bcmp-rabbitmq
+        networks: [bcmp-net]
+        ports:
+            - "15672:15672" # management HTTP API (호스트 curl 로 발행/조회)
+
+networks:
+    bcmp-net:
+        name: bcmp-net

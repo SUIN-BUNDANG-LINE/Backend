@@ -1,0 +1,93 @@
+# 카프카 대용량 특성 실증 — 실제 3노드 학습 클러스터 백엔드 버전.
+#
+# 로컬 단일 브로커 대신 학습용 3노드 클러스터(kafka-b1/b2/b3)를 Kafka 백엔드로 쓴다.
+# drawing-completed 토픽이 PartitionCount=6 / RF=3 / min.insync=2 로 3브로커에 분산돼 있어,
+# 로컬 단일 브로커로는 불가능한 "진짜 파티션 분산 + 복제" 토폴로지에서 스케일링을 측정한다.
+# MySQL/Redis 는 여전히 로컬 격리(cost_record 측정 오염 방지).
+
+x-consumer-base: &consumer-base
+    image: eclipse-temurin:17-jre
+    networks: [load-net]
+    depends_on:
+        load-mysql: { condition: service_healthy }
+        load-redis: { condition: service_started }
+    environment: &consumer-env
+        SERVER_PORT: 8080
+        # 실제 3노드 클러스터로 연결
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka-b1.q-asker.com:9092,kafka-b2.q-asker.com:9093,kafka-b3.q-asker.com:9092"
+        SPRING_KAFKA_ADMIN_FAIL_FAST: "false"
+        SPRING_DATASOURCE_URL: jdbc:mysql://load-mysql:3306/test?allowPublicKeyRetrieval=true&useSSL=false
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: rootpw
+        SPRING_DATA_REDIS_HOST: load-redis
+        SPRING_DATA_REDIS_PORT: 6379
+        SPRING_DATA_REDIS_PASSWORD: ""
+        JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m"
+        OTEL_TRACES_EXPORTER: none
+        OTEL_METRICS_EXPORTER: none
+        OTEL_LOGS_EXPORTER: none
+    command: java -jar /app/app.jar
+
+services:
+    # 부하 주입/랙 조회용 Kafka CLI 컨테이너 (원격 3노드 클러스터를 대상으로 실행)
+    kafka-tools:
+        image: apache/kafka:3.8.0
+        container_name: load-ktools
+        networks: [load-net]
+        entrypoint: ["/bin/sh", "-c", "sleep infinity"]
+
+    load-mysql:
+        image: mysql:8.0
+        container_name: load-mysql
+        networks: [load-net]
+        ports: ["23307:3306"]
+        environment:
+            MYSQL_ROOT_PASSWORD: rootpw
+            MYSQL_DATABASE: test
+        command: ["--max_connections=500"]
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpw"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+    load-redis:
+        image: redis:7
+        container_name: load-redis
+        networks: [load-net]
+
+    dlt:
+        <<: *consumer-base
+        volumes:
+            - ../../../module-consumer/dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+
+    # ── 측정 대상: notification 컨슈머 — 발송+비용 통합 (스케일링 실증) ──
+    notification-1:
+        <<: *consumer-base
+        environment:
+            <<: *consumer-env
+            SMS_MOCK_FAILURE_RATE: "0.0"
+        volumes:
+            - ../../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+
+    notification-2:
+        <<: *consumer-base
+        profiles: ["scale"]
+        environment:
+            <<: *consumer-env
+            SMS_MOCK_FAILURE_RATE: "0.0"
+        volumes:
+            - ../../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+
+    notification-3:
+        <<: *consumer-base
+        profiles: ["scale"]
+        environment:
+            <<: *consumer-env
+            SMS_MOCK_FAILURE_RATE: "0.0"
+        volumes:
+            - ../../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+
+networks:
+    load-net:
+        name: sms-saga-load-net

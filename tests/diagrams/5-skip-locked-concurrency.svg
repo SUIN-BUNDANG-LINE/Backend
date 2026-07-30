@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#495057"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" fill="#FBFCFE"/>
+
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#1A1B1E">⑤ skip-locked-concurrency — SKIP LOCKED 중복 없는 정확히-1회 발행</text>
+  <text x="30" y="64" font-size="13" fill="#868E96">PENDING 200건 일괄 주입 → FOR UPDATE SKIP LOCKED 로 폴링 → 각 행 정확히 1회 PUBLISHED · retry_count=0 · 중복 0</text>
+
+  <!-- inject -->
+  <rect x="30" y="98" width="180" height="80" rx="12" fill="#F1F3F5" stroke="#868E96"/>
+  <text x="120" y="128" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">setup()</text>
+  <text x="120" y="150" font-size="12" fill="#495057" text-anchor="middle">PENDING 200건</text>
+  <text x="120" y="168" font-size="12" fill="#495057" text-anchor="middle">배치 INSERT</text>
+
+  <line x1="210" y1="138" x2="290" y2="138" stroke="#495057" stroke-width="1.8" marker-end="url(#arw)"/>
+
+  <!-- outbox rows -->
+  <rect x="290" y="92" width="200" height="150" rx="12" fill="#E7F5FF" stroke="#1971C2"/>
+  <text x="390" y="116" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">outbox_events (200 PENDING)</text>
+  <g>
+    <rect x="306" y="128" width="80" height="20" rx="3" fill="#FFF4E6" stroke="#E8590C"/>
+    <rect x="394" y="128" width="80" height="20" rx="3" fill="#FFF4E6" stroke="#E8590C"/>
+    <rect x="306" y="152" width="80" height="20" rx="3" fill="#FFF4E6" stroke="#E8590C"/>
+    <rect x="394" y="152" width="80" height="20" rx="3" fill="#FFF4E6" stroke="#E8590C"/>
+    <rect x="306" y="176" width="80" height="20" rx="3" fill="#FFF4E6" stroke="#E8590C"/>
+    <rect x="394" y="176" width="80" height="20" rx="3" fill="#FFF4E6" stroke="#E8590C"/>
+  </g>
+  <text x="390" y="220" font-size="11" fill="#868E96" text-anchor="middle">… 각 행은 한 릴레이만 잠금</text>
+
+  <!-- two relay instances -->
+  <path d="M490,140 L560,120" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+  <path d="M490,190 L560,210" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+  <text x="525" y="108" font-size="10.5" fill="#868E96">SKIP LOCKED</text>
+
+  <rect x="560" y="96" width="180" height="56" rx="10" fill="#FFF4E6" stroke="#E8590C"/>
+  <text x="650" y="120" font-size="12.5" font-weight="700" fill="#1A1B1E" text-anchor="middle">Relay 인스턴스 A</text>
+  <text x="650" y="140" font-size="11" fill="#495057" text-anchor="middle">잠긴 행은 건너뜀</text>
+
+  <rect x="560" y="186" width="180" height="56" rx="10" fill="#FFF4E6" stroke="#E8590C"/>
+  <text x="650" y="210" font-size="12.5" font-weight="700" fill="#1A1B1E" text-anchor="middle">Relay 인스턴스 B</text>
+  <text x="650" y="230" font-size="11" fill="#495057" text-anchor="middle">(멀티 인스턴스 시)</text>
+
+  <text x="650" y="172" font-size="11" fill="#868E96" text-anchor="middle" font-style="italic">서로 다른 행 집합만 처리 → 겹침 없음</text>
+
+  <!-- publish -->
+  <line x1="740" y1="124" x2="820" y2="140" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+  <line x1="740" y1="214" x2="820" y2="180" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+  <rect x="820" y="130" width="110" height="60" rx="10" fill="#F8F0FC" stroke="#9C36B5"/>
+  <text x="875" y="156" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">Kafka</text>
+  <text x="875" y="176" font-size="11" fill="#495057" text-anchor="middle">각 메시지 1회</text>
+
+  <!-- result -->
+  <rect x="30" y="286" width="900" height="240" rx="12" fill="#F8F9FA" stroke="#DEE2E6"/>
+  <text x="50" y="316" font-size="15" font-weight="700" fill="#1A1B1E">teardown 검증 (timeout 120s)</text>
+
+  <g font-size="12.5" fill="#495057">
+    <circle cx="58" cy="344" r="4" fill="#2F9E44"/><text x="72" y="349">PENDING 잔량 = 0</text>
+    <circle cx="58" cy="372" r="4" fill="#2F9E44"/><text x="72" y="377">FAILED 행 없음</text>
+    <circle cx="58" cy="400" r="4" fill="#2F9E44"/><text x="72" y="405">신규 PUBLISHED = 정확히 INJECT_COUNT(200) — 유실도 중복도 없음</text>
+    <circle cx="58" cy="428" r="4" fill="#2F9E44"/><text x="72" y="433">retry_count &gt; 0 인 행 = 0 — 재시도 없이 한 번에 발행 (락 충돌·중복 처리 없음의 증거)</text>
+    <circle cx="58" cy="456" r="4" fill="#2F9E44"/><text x="72" y="461">폴링 타임아웃 미발생</text>
+  </g>
+  <line x1="50" y1="480" x2="910" y2="480" stroke="#E9ECEF"/>
+  <text x="50" y="506" font-size="11.5" fill="#868E96">핵심: SKIP LOCKED 가 없으면 같은 행을 두 트랜잭션이 처리해 중복 발행 → retry/중복 카운트로 즉시 드러남</text>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#495057"/>
+    </marker>
+  </defs>
+  <rect width="960" height="520" fill="#FBFCFE"/>
+
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#1A1B1E">③ outbox-atomicity — 동일 visitorId 중복 응답 방어</text>
+  <text x="30" y="64" font-size="13" fill="#868E96">원본: OutboxAtomicityIntegrationTest · 응답 저장 + Outbox 이벤트 기록이 한 트랜잭션 → 중복 visitorId 는 1건만 성립</text>
+
+  <!-- ===== S1: 순차 ===== -->
+  <g transform="translate(0,90)">
+    <text x="30" y="16" font-size="16" font-weight="700" fill="#3B5BDB">S1 · basic_atomicity (순차)</text>
+
+    <rect x="30" y="34" width="160" height="60" rx="10" fill="#EDF2FF" stroke="#3B5BDB"/>
+    <text x="110" y="60" font-size="12.5" font-weight="700" fill="#1A1B1E" text-anchor="middle">1차 submit</text>
+    <text x="110" y="80" font-size="11" fill="#495057" text-anchor="middle">visitorId = V</text>
+
+    <line x1="190" y1="64" x2="360" y2="64" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+
+    <rect x="360" y="30" width="230" height="68" rx="10" fill="#E7F5FF" stroke="#1971C2"/>
+    <text x="475" y="56" font-size="12.5" font-weight="700" fill="#1A1B1E" text-anchor="middle">응답 저장 + Outbox INSERT</text>
+    <text x="475" y="78" font-size="11" fill="#495057" text-anchor="middle">단일 트랜잭션 · UNIQUE(visitorId)</text>
+
+    <line x1="590" y1="64" x2="760" y2="64" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="760" y="42" width="170" height="44" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="845" y="69" font-size="12.5" font-weight="700" fill="#2F9E44" text-anchor="middle">200 · participantId</text>
+
+    <!-- 2차 -->
+    <rect x="30" y="118" width="160" height="60" rx="10" fill="#EDF2FF" stroke="#3B5BDB"/>
+    <text x="110" y="144" font-size="12.5" font-weight="700" fill="#1A1B1E" text-anchor="middle">2차 submit</text>
+    <text x="110" y="164" font-size="11" fill="#495057" text-anchor="middle">동일 visitorId = V</text>
+
+    <line x1="190" y1="148" x2="360" y2="148" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="360" y="120" width="230" height="56" rx="10" fill="#FFF5F5" stroke="#E03131"/>
+    <text x="475" y="145" font-size="12.5" font-weight="700" fill="#E03131" text-anchor="middle">UNIQUE 충돌 → 롤백</text>
+    <text x="475" y="165" font-size="11" fill="#495057" text-anchor="middle">AlreadyParticipatedException</text>
+
+    <line x1="590" y1="148" x2="760" y2="148" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="760" y="126" width="170" height="44" rx="8" fill="#FFF5F5" stroke="#E03131"/>
+    <text x="845" y="153" font-size="12.5" font-weight="700" fill="#E03131" text-anchor="middle">4xx (차단)</text>
+  </g>
+
+  <line x1="30" y1="290" x2="930" y2="290" stroke="#E9ECEF" stroke-width="1"/>
+
+  <!-- ===== S2: 동시 ===== -->
+  <g transform="translate(0,306)">
+    <text x="30" y="16" font-size="16" font-weight="700" fill="#3B5BDB">S2 · concurrent_duplicate (동시)</text>
+    <text x="30" y="36" font-size="12" fill="#495057">DUPLICATE_VUS(기본 10)개 VU 가 같은 visitorId 로 동시 제출</text>
+
+    <rect x="30" y="50" width="170" height="72" rx="10" fill="#EDF2FF" stroke="#3B5BDB"/>
+    <text x="115" y="80" font-size="13" font-weight="700" fill="#1A1B1E" text-anchor="middle">VU × 10</text>
+    <text x="115" y="100" font-size="11" fill="#495057" text-anchor="middle">visitorId 전부 동일</text>
+
+    <line x1="200" y1="86" x2="380" y2="86" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <text x="290" y="78" font-size="11" fill="#868E96" text-anchor="middle">동시 요청</text>
+
+    <rect x="380" y="50" width="220" height="72" rx="10" fill="#E7F5FF" stroke="#1971C2"/>
+    <text x="490" y="80" font-size="12.5" font-weight="700" fill="#1A1B1E" text-anchor="middle">UNIQUE(visitorId)</text>
+    <text x="490" y="101" font-size="11" fill="#495057" text-anchor="middle">DB 제약이 경합 중재</text>
+
+    <line x1="600" y1="70" x2="770" y2="70" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <line x1="600" y1="104" x2="770" y2="104" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="770" y="52" width="160" height="34" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="850" y="74" font-size="12" font-weight="700" fill="#2F9E44" text-anchor="middle">성공 정확히 1건</text>
+    <rect x="770" y="90" width="160" height="34" rx="8" fill="#FFF5F5" stroke="#E03131"/>
+    <text x="850" y="112" font-size="12" font-weight="700" fill="#E03131" text-anchor="middle">나머지 4xx</text>
+  </g>
+
+  <text x="30" y="504" font-size="11" fill="#868E96">검증: duplicate_submit_success 기대값 = 1 · duplicate_success_rate · threshold p95 &lt; 3s</text>
+</svg>

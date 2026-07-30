@@ -1,0 +1,94 @@
+# SMS 발송-비용 정합 사가 — 자급형 멀티앱 E2E 스택.
+#
+# 백엔드 레포/운영 인프라에 의존하지 않는다. 자체 Kafka(단일 KRaft 브로커) + MySQL + Redis 를 띄우고,
+# 그 위에 4개 컨슈머를 모두 올린다. 운영 크리덴셜이 담긴 application-secret.yml 의 값(운영 Kafka/DB)은
+# 아래 environment 오버라이드(OS 환경변수가 yml 보다 우선)로 전부 로컬 인프라로 덮어써 격리한다.
+#
+# 산출물 jar 는 `./gradlew bootJar` 로 먼저 만들어야 한다(run-e2e.sh 가 대신 수행).
+
+x-consumer-base: &consumer-base
+    image: eclipse-temurin:17-jre
+    networks: [e2e-net]
+    depends_on:
+        e2e-kafka: { condition: service_started }
+        e2e-mysql: { condition: service_healthy }
+        e2e-redis: { condition: service_started }
+    environment: &consumer-env
+        SERVER_PORT: 8080
+        # ── 로컬 인프라로 강제 격리 (운영 secret 값 오버라이드) ──
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: e2e-kafka:9092
+        SPRING_KAFKA_ADMIN_FAIL_FAST: "false"          # 단일 브로커에서 RF=3 NewTopic 생성 실패해도 부팅 계속
+        SPRING_DATASOURCE_URL: jdbc:mysql://e2e-mysql:3306/test?allowPublicKeyRetrieval=true&useSSL=false
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: rootpw
+        SPRING_DATA_REDIS_HOST: e2e-redis
+        SPRING_DATA_REDIS_PORT: 6379
+        SPRING_DATA_REDIS_PASSWORD: ""
+        JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m"
+        OTEL_TRACES_EXPORTER: none
+        OTEL_METRICS_EXPORTER: none
+        OTEL_LOGS_EXPORTER: none
+    command: >
+        java -jar /app/app.jar
+
+services:
+    e2e-kafka:
+        image: apache/kafka:3.8.0
+        container_name: e2e-kafka
+        networks: [e2e-net]
+        ports: ["19092:9092"]     # 호스트 디버깅용 (드라이버는 docker exec 로 접근)
+        environment:
+            KAFKA_NODE_ID: "1"
+            KAFKA_PROCESS_ROLES: broker,controller
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@e2e-kafka:9093
+            KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://e2e-kafka:9092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+            KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+            KAFKA_MIN_INSYNC_REPLICAS: "1"
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+
+    e2e-mysql:
+        image: mysql:8.0
+        container_name: e2e-mysql
+        networks: [e2e-net]
+        ports: ["13307:3306"]
+        environment:
+            MYSQL_ROOT_PASSWORD: rootpw
+            MYSQL_DATABASE: test
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpw"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+    e2e-redis:
+        image: redis:7
+        container_name: e2e-redis
+        networks: [e2e-net]
+
+    drawing-sms-notification-consumer:
+        <<: *consumer-base
+        container_name: e2e-notification-consumer
+        environment:
+            <<: *consumer-env
+            # SMS mock 실패율 — run-e2e.sh 가 성공/실패 페이즈에서 이 값을 바꿔 재기동한다.
+            SMS_MOCK_FAILURE_RATE: "${SMS_MOCK_FAILURE_RATE:-0.0}"
+        volumes:
+            - ../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+
+    dlt-sms-notification-consumer:
+        <<: *consumer-base
+        container_name: e2e-dlt-consumer
+        volumes:
+            - ../../module-consumer/dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+
+networks:
+    e2e-net:
+        name: sms-saga-e2e-net

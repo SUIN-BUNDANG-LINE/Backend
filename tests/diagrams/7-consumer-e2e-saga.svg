@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#495057"/>
+    </marker>
+  </defs>
+  <rect width="960" height="640" fill="#FBFCFE"/>
+
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#1A1B1E">⑦ run-e2e.sh — SMS-비용 사가 멀티앱 E2E (S1~S5)</text>
+  <text x="30" y="64" font-size="13" fill="#868E96">컨슈머 3개 + Kafka/MySQL/Redis 를 자체 기동 · Kafka 로 이벤트 주입 → cost_record 최종 상태 폴링·단언 (backend 무의존)</text>
+
+  <!-- column headers -->
+  <text x="40" y="98" font-size="12" font-weight="700" fill="#868E96">시나리오</text>
+  <text x="300" y="98" font-size="12" font-weight="700" fill="#868E96">주입 이벤트</text>
+  <text x="720" y="98" font-size="12" font-weight="700" fill="#868E96">기대 결과</text>
+  <line x1="30" y1="106" x2="930" y2="106" stroke="#E9ECEF"/>
+
+  <!-- S1 -->
+  <g transform="translate(0,116)">
+    <text x="40" y="24" font-size="14" font-weight="700" fill="#3B5BDB">S1 · 정상 과금</text>
+    <text x="40" y="44" font-size="11" fill="#868E96">FR-002 · 실패율 0.0</text>
+    <rect x="290" y="6" width="380" height="42" rx="8" fill="#F8F0FC" stroke="#9C36B5"/>
+    <text x="305" y="32" font-size="12" fill="#495057">drawing-completed(s1, isWinner=true)</text>
+    <line x1="670" y1="27" x2="712" y2="27" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="720" y="6" width="210" height="42" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="825" y="32" font-size="13" font-weight="700" fill="#2F9E44" text-anchor="middle">CONFIRMED</text>
+  </g>
+  <line x1="30" y1="180" x2="930" y2="180" stroke="#F1F3F5"/>
+
+  <!-- S3 -->
+  <g transform="translate(0,188)">
+    <text x="40" y="24" font-size="14" font-weight="700" fill="#3B5BDB">S3 · 비당첨</text>
+    <text x="40" y="44" font-size="11" fill="#868E96">FR-004 · edge</text>
+    <rect x="290" y="6" width="380" height="42" rx="8" fill="#F8F0FC" stroke="#9C36B5"/>
+    <text x="305" y="32" font-size="12" fill="#495057">drawing-completed(s3, isWinner=false)</text>
+    <line x1="670" y1="27" x2="712" y2="27" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="720" y="6" width="210" height="42" rx="8" fill="#F1F3F5" stroke="#868E96"/>
+    <text x="825" y="32" font-size="13" font-weight="700" fill="#495057" text-anchor="middle">레코드 없음 (0행)</text>
+  </g>
+  <line x1="30" y1="252" x2="930" y2="252" stroke="#F1F3F5"/>
+
+  <!-- S4 -->
+  <g transform="translate(0,260)">
+    <text x="40" y="24" font-size="14" font-weight="700" fill="#3B5BDB">S4 · 멱등</text>
+    <text x="40" y="44" font-size="11" fill="#868E96">FR-005 · 중복 이벤트</text>
+    <rect x="290" y="0" width="380" height="26" rx="6" fill="#F8F0FC" stroke="#9C36B5"/>
+    <text x="305" y="18" font-size="11.5" fill="#495057">drawing-completed(s4, true)  ①</text>
+    <rect x="290" y="30" width="380" height="26" rx="6" fill="#F8F0FC" stroke="#9C36B5"/>
+    <text x="305" y="48" font-size="11.5" fill="#495057">drawing-completed(s4, true)  ② 동일 eventId</text>
+    <line x1="670" y1="28" x2="712" y2="28" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="720" y="6" width="210" height="44" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="825" y="26" font-size="13" font-weight="700" fill="#2F9E44" text-anchor="middle">CONFIRMED</text>
+    <text x="825" y="44" font-size="11" fill="#495057" text-anchor="middle">정확히 1행 (UNIQUE)</text>
+  </g>
+  <line x1="30" y1="330" x2="930" y2="330" stroke="#F1F3F5"/>
+
+  <!-- S5 -->
+  <g transform="translate(0,338)">
+    <text x="40" y="24" font-size="14" font-weight="700" fill="#3B5BDB">S5 · 순서 역전</text>
+    <text x="40" y="44" font-size="11" fill="#868E96">FR-010 · earliest</text>
+    <rect x="290" y="0" width="380" height="26" rx="6" fill="#FFF4E6" stroke="#E8590C"/>
+    <text x="305" y="18" font-size="11.5" fill="#495057">sms-delivery-permanently-failed(s5)  ① 먼저 도착</text>
+    <rect x="290" y="30" width="380" height="26" rx="6" fill="#F8F0FC" stroke="#9C36B5"/>
+    <text x="305" y="48" font-size="11.5" fill="#495057">drawing-completed(s5, true)  ② 나중 도착</text>
+    <line x1="670" y1="28" x2="712" y2="28" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="720" y="6" width="210" height="44" rx="8" fill="#EBFBEE" stroke="#2F9E44"/>
+    <text x="825" y="26" font-size="13" font-weight="700" fill="#E03131" text-anchor="middle">REVERSED 수렴</text>
+    <text x="825" y="44" font-size="11" fill="#495057" text-anchor="middle">1행</text>
+  </g>
+  <line x1="30" y1="408" x2="930" y2="408" stroke="#F1F3F5"/>
+
+  <!-- S2 -->
+  <g transform="translate(0,416)">
+    <text x="40" y="24" font-size="14" font-weight="700" fill="#E03131">S2 · 보상 경로</text>
+    <text x="40" y="44" font-size="11" fill="#868E96">FR-003/007</text>
+    <text x="40" y="62" font-size="11" fill="#868E96">실패율 1.0 재기동</text>
+    <rect x="290" y="6" width="380" height="52" rx="8" fill="#F8F0FC" stroke="#9C36B5"/>
+    <text x="305" y="28" font-size="12" fill="#495057">drawing-completed(s2, true)</text>
+    <text x="305" y="48" font-size="11" fill="#E03131">→ MAX_RETRY=5 소진 → drawing-notification.DLT</text>
+    <line x1="670" y1="32" x2="712" y2="32" stroke="#495057" stroke-width="1.6" marker-end="url(#arw)"/>
+    <rect x="720" y="10" width="210" height="44" rx="8" fill="#FFF5F5" stroke="#E03131"/>
+    <text x="825" y="30" font-size="13" font-weight="700" fill="#E03131" text-anchor="middle">REVERSED</text>
+    <text x="825" y="48" font-size="11" fill="#495057" text-anchor="middle">보상 (최대 ~300s)</text>
+  </g>
+
+  <rect x="30" y="500" width="900" height="112" rx="12" fill="#F8F9FA" stroke="#DEE2E6"/>
+  <text x="50" y="528" font-size="13" font-weight="700" fill="#1A1B1E">공통</text>
+  <text x="50" y="552" font-size="12" fill="#495057">• auto-offset-reset=earliest → 발행/구독 순서 무관 (S5 역전 시나리오가 성립하는 근거)</text>
+  <text x="50" y="574" font-size="12" fill="#495057">• await_state() 가 cost_record.state 를 3초 간격 폴링하며 기대 상태 도달까지 대기</text>
+  <text x="50" y="596" font-size="12" fill="#495057">• PASS/FAIL 집계 → 전건 통과 시 exit 0, 하나라도 실패 시 exit 1 + teardown</text>
+</svg>

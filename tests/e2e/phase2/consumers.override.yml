@@ -1,0 +1,33 @@
+# Phase 2 override — 커밋된 docker-compose.yml 의 anchor environment 유실 버그 보정용.
+#
+# 원본 compose 는 각 컨슈머 서비스가 자기 environment(OTEL_SERVICE_NAME) 를 정의하는데,
+# YAML `<<: *consumer-base` 병합이 environment 맵을 깊은 병합하지 않고 통째로 교체해
+# anchor 의 SPRING_DATASOURCE_*/REDIS_* 가 사라진다 → 컨슈머가 secret 의 localhost:13306 으로
+# 붙어 Connection refused. 이 override(-f 로 겹쳐 적용)가 데이터소스/레디스 env 를 다시 주입한다.
+#
+# 사용: docker compose -f docker-compose.yml -f e2e/phase2/consumers.override.yml up -d
+
+x-db-env: &db-env
+    SPRING_DATASOURCE_URL: jdbc:mysql://sulmun2yong-cluster-mysql:3306/test?allowPublicKeyRetrieval=true&useSSL=false
+    SPRING_DATASOURCE_USERNAME: user
+    SPRING_DATASOURCE_PASSWORD: password
+    SPRING_DATA_REDIS_HOST: sulmun2yong-cluster-redis
+    SPRING_DATA_REDIS_PORT: "6379"
+    SPRING_DATA_REDIS_PASSWORD: ""
+    SPRING_KAFKA_ADMIN_FAIL_FAST: "false"
+    # 같은 anchor-유실 버그로 -javaagent 와 OTEL_* 도 사라져 컨슈머에 OTel 에이전트가 안 붙어 있었다.
+    # 재주입 → 컨슈머 스팬이 Tempo 로 흐르고, saga.id 속성으로 검색 가능해진다.
+    # (OTEL_SERVICE_NAME 은 각 서비스 base environment 에 남아 있어 서비스명은 그대로 구분된다.)
+    JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
+    OTEL_TRACES_EXPORTER: otlp
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://sulmun2yong-cluster-tempo:4317
+    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+    OTEL_PROPAGATORS: tracecontext,baggage
+
+services:
+    drawing-sms-notification-consumer:
+        environment: *db-env
+    dlt-sms-notification-consumer:
+        environment: *db-env
