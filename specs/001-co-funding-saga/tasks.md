@@ -37,7 +37,7 @@ Swagger doc 인터페이스, 독립 단위 테스트 태스크(핵심 검증은 
 
 ## Phase 6: 종단 검증
 
-- [ ] T011 종단 검증 + 문서 — k6/수동 시나리오 3종(전원 결제→활성화, 기한 만료→전원 환불 누락·이중 0, 경합: 동시 결제·마지막 결제 vs 마감) + ./gradlew build ktlintCheck + CLAUDE.md 동기화(cofunding·토픽 표·V9) in scripts/scenarios/saga/, CLAUDE.md
+- [x] T011 종단 검증 + 문서 — 주입+관찰 시나리오 3종(scripts/scenarios/saga/co-funding-saga-verify.sh: S1 장벽·활성화·멱등 / S2 만료→CANCEL 팬아웃·이중적재 방어 / S3 경합 상호배타) 10/10 PASS + 결제자 0명 무산 종단 실관찰(스케줄러→Kafka→리스너→REFUNDED) + ./gradlew build ktlintCheck + CLAUDE.md 동기화(cofunding 3모듈 배치·컨슈머 표·검증 스크립트) (완료)
 
 ---
 

@@ -17,6 +17,9 @@ spring:
             pool:
                 size: 4
 
+payment:
+    reward-unit-price: 2000
+
 sms:
     mock:
         failure-rate: 0.0  # 0.0 ~ 1.0 (기본: 실패 없음)
