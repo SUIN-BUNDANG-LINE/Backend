@@ -46,7 +46,7 @@ class PaymentWebhookService(
 
         // MVP 는 취소 반영만 - 환불 & 설문 후속 처리는 B단계(부분취소 사가)
         if (status == "CANCELED" || status == "PARTIAL_CANCELED") {
-            paymentOrderRepository.findByOrderId(orderId).ifPresent { order ->
+            paymentOrderRepository.findByTossOrderId(orderId).ifPresent { order ->
                 if (order.status == PaymentOrderStatus.DONE) {
                     order.markCanceled()
                     log.warn("결제 취소 웹훅 반영 - orderId={}, status={}", orderId, status)

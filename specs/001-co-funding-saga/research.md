@@ -86,7 +86,11 @@ Alternatives 형식.
 - **Decision**: 참여자 결제의 settle 처리(동기 핸들러·릴레이 공통)가 확정 직전에
   모금 상태를 검사한다 — `FUNDING`이면 확정 행 기록 + `co-payment-settled` 발행,
   `FAILED/REFUNDED`면 확정 기록 없이 즉시 CANCEL 커맨드를 적재한다. 검사와 기록은
-  한 트랜잭션.
+  한 트랜잭션이며, 검사는 `co_fundings` 행 잠금 조회(SELECT ... FOR UPDATE,
+  `findByIdForUpdate`)로 무산 CAS(`tryFail`)와 직렬화한다 — 일반 읽기면 "검사 통과
+  직후 무산 확정" 틈새에서 늦게 커밋된 SETTLED 를 환불 리스너의 1회성 재조회가
+  놓치는 환불 누락 창이 열린다. 잠금 순서는 모든 트랜잭션이
+  `co_fundings → participants` 한 방향이라 데드락 교차가 없다.
 - **Rationale**: "무산 확정 vs 결제 확정" 경합의 결승선을 D4의 CAS와 같은 DB
   트랜잭션 경계로 통일 — 어느 쪽이 이기든 돈의 최종 귀속이 결정된다.
 - **Alternatives**: 무산 후 결제 승인을 거부(confirm 안 함) — 토스 결제창에서

@@ -25,8 +25,8 @@ class CoFundingParticipant(
     @Column(nullable = false, length = 20)
     var status: CoFundingParticipantStatus = CoFundingParticipantStatus.REGISTERED,
     // 개설 트랜잭션에서 사전 발급 (payment_orders 연결)
-    @Column(nullable = false, length = 64)
-    val orderId: String,
+    @Column(name = "order_id", nullable = false, length = 64)
+    val tossOrderId: String,
     var settledAt: LocalDateTime? = null,
 ) : BaseTimeEntity() {
     val isOwner: Boolean
@@ -53,7 +53,7 @@ class CoFundingParticipant(
             fundingId = fundingId,
             userId = userId,
             role = CoFundingParticipantRole.OWNER,
-            orderId = orderId,
+            tossOrderId = orderId,
         )
 
         fun member(
@@ -65,7 +65,7 @@ class CoFundingParticipant(
             fundingId = fundingId,
             userId = userId,
             role = CoFundingParticipantRole.MEMBER,
-            orderId = orderId,
+            tossOrderId = orderId,
         )
     }
 }

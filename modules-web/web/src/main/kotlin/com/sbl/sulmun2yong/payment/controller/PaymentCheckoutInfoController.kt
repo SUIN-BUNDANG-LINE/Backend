@@ -23,12 +23,12 @@ class PaymentCheckoutInfoController(
         @RequestParam orderId: String,
     ): ResponseEntity<CheckoutInfoResponse> {
         val order =
-            paymentOrderRepository.findByOrderId(orderId).orElse(null)
+            paymentOrderRepository.findByTossOrderId(orderId).orElse(null)
                 ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok(
             CheckoutInfoResponse(
-                orderId = order.orderId,
+                orderId = order.tossOrderId,
                 amount = order.amount,
                 status = order.status.name,
                 clientKey = tossClientKey,

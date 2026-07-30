@@ -5,7 +5,6 @@ import com.sbl.sulmun2yong.payment.adapter.TossConfirmResult
 import com.sbl.sulmun2yong.payment.adapter.TossPaymentsAdapter
 import com.sbl.sulmun2yong.payment.dto.TossConfirmRequest
 import com.sbl.sulmun2yong.payment.entity.PaymentOrderStatus
-import com.sbl.sulmun2yong.payment.repository.PaymentCommandRepository
 import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service
 @Service
 class PaymentConfirmService(
     private val paymentOrderRepository: PaymentOrderRepository,
-    private val paymentCommandRepository: PaymentCommandRepository,
     private val paymentSettleService: PaymentSettleService,
     private val tossPaymentsAdapter: TossPaymentsAdapter,
     private val objectMapper: ObjectMapper,
@@ -31,7 +29,7 @@ class PaymentConfirmService(
     ): ConfirmOutcome {
         // 1. 금액 위변조 검증 - successUrl 쿼리를 믿지 않고 장부와 대조
         val order =
-            paymentOrderRepository.findByOrderId(orderId).orElse(null)
+            paymentOrderRepository.findByTossOrderId(orderId).orElse(null)
                 ?: return ConfirmOutcome.FAILED
         if (order.amount != amount) {
             log.warn("금액 위변조 의심 - orderId={}, 장부={}, 쿼리={}", orderId, order.amount, amount)

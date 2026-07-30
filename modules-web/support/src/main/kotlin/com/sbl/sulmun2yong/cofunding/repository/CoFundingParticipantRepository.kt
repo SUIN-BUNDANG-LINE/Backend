@@ -12,5 +12,5 @@ interface CoFundingParticipantRepository : JpaRepository<CoFundingParticipant, U
     ): CoFundingParticipant?
 
     // settle(D6)/릴레이 CANCEL 후처리 - 주문 -> 참여자 역참조
-    fun findByOrderId(orderId: String): CoFundingParticipant?
+    fun findByTossOrderId(tossOrderId: String): CoFundingParticipant?
 }

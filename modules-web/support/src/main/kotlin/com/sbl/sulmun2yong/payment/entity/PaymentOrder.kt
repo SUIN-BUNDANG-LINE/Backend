@@ -17,8 +17,8 @@ class PaymentOrder(
     @Column(nullable = false, columnDefinition = "BINARY(16)")
     val makerId: UUID,
     // 토스 주문 고유값(6~64자) - 재 결제 시 새 값으로 교체되므로 var
-    @Column(nullable = false, length = 64)
-    var orderId: String,
+    @Column(name = "order_id", nullable = false, length = 64)
+    var tossOrderId: String,
     // successUrl amount 위변조 대조 기준 - 재결제 시 경품 수 변동 반영 위해 var
     @Column(nullable = false)
     var amount: Int,
@@ -47,7 +47,7 @@ class PaymentOrder(
         newOrderId: String,
         newAmount: Int,
     ) {
-        this.orderId = newOrderId
+        this.tossOrderId = newOrderId
         this.amount = newAmount
         this.paymentKey = null
         this.status = PaymentOrderStatus.PENDING
@@ -63,7 +63,7 @@ class PaymentOrder(
             id = UUID.randomUUID(),
             surveyId = surveyId,
             makerId = makerId,
-            orderId = orderId,
+            tossOrderId = orderId,
             amount = amount,
         )
     }

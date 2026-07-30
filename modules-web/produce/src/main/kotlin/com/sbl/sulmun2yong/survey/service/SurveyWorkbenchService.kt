@@ -106,7 +106,7 @@ class SurveyWorkbenchService(
                 surveyRepository.save(survey.awaitPayment())
                 SurveyStartResponse(
                     paymentRequired = true,
-                    checkoutUrl = "/payments/checkout.html?orderId=${order.orderId}",
+                    checkoutUrl = "/payments/checkout.html?orderId=${order.tossOrderId}",
                 )
             }
 
@@ -115,7 +115,7 @@ class SurveyWorkbenchService(
                 val order = paymentOrderRepository.findBySurveyId(survey.id).orElseThrow()
                 SurveyStartResponse(
                     paymentRequired = true,
-                    checkoutUrl = "/payments/checkout.html?orderId=${order.orderId}",
+                    checkoutUrl = "/payments/checkout.html?orderId=${order.tossOrderId}",
                 )
             }
 

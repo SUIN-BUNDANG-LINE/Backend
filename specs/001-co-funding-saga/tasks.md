@@ -27,8 +27,8 @@ Swagger doc 인터페이스, 독립 단위 테스트 태스크(핵심 검증은 
 
 ## Phase 4: 정방향 체인 (개시 → 결제 → 활성화)
 
-- [ ] T006 CoFundingService — 개시(분담금 factory+참여자 명단·주문 일괄 INSERT+Survey PENDING_PAYMENT 한 트랜잭션)·내 주문 조회 + 최소 컨트롤러 2종(개시/내 주문 조회, doc 없이) in modules-web/produce/.../cofunding/service/, modules-web/web/.../cofunding/controller/
-- [ ] T007 settle 확장(D6 전체) — FUNDING이면 SETTLED 전이+co-payment-settled Outbox 발행, FAILED/REFUNDED면 즉시 CANCEL 커맨드 적재(늦은 확정 보상), 한 트랜잭션 + CoFundingEventPublisher in modules-web/produce/.../payment/service/PaymentSettleService.kt, cofunding/publisher/
+- [x] T006 CoFundingService — 개시(분담금 factory+참여자 명단·주문 일괄 INSERT+Survey PENDING_PAYMENT 한 트랜잭션)·내 주문 조회 + 최소 컨트롤러 2종(개시/내 주문 조회, doc 없이) + orderId→tossOrderId 리네임(@Column("order_id") 유지) (build·ktlint·기동 검증 완료)
+- [x] T007 settle 확장(D6 전체) — FUNDING이면 SETTLED 전이+co-payment-settled Outbox 발행, FAILED/REFUNDED면 즉시 CANCEL 커맨드 적재(늦은 확정 보상), 모금 상태 검사는 findByIdForUpdate 잠금으로 tryFail과 직렬화, 한 트랜잭션 + CoFundingEventPublisher + enqueueCancelCommand(exists 사전검사+UNIQUE 최종방어) (build·ktlint·기동 검증 완료)
 - [ ] T008 (consumer 모듈) 집계 리스너 — co-funding-consumer 모듈 부트스트랩(기존 컨슈머 보일러플레이트 복제) + JPA 엔티티·리포지토리 사본(CoFunding·참여자 + 슬림 Survey, D12) + co-payment-settled 소비, tryConfirm CAS 승자만 설문 활성화 CAS, 재수신·패배 no-op + DTO 사본(module-consumer/common) 동기화
 
 ## Phase 5: 보상 체인 (무산 → 부채꼴 환불 → 수렴)

@@ -1,7 +1,9 @@
 package com.sbl.sulmun2yong.cofunding.repository
 
 import com.sbl.sulmun2yong.cofunding.entity.CoFunding
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -33,4 +35,12 @@ interface CoFundingRepository : JpaRepository<CoFunding, UUID> {
         @Param("id") id: UUID,
         @Param("now") now: LocalDateTime,
     ): Int
+
+    // settle(D6)의 모금 상태 검사용 잠금 조회 - 무산 CAS(tryFail)와 행 잠금으로 직렬화해
+    // "검사 통과 직후 무산 확정" 틈새(환불 누락 창)를 닫는다
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM CoFunding  f WHERE f.id = :id")
+    fun findByIdForUpdate(
+        @Param("id") id: UUID,
+    ): CoFunding?
 }

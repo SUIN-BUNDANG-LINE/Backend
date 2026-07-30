@@ -1,11 +1,18 @@
 package com.sbl.sulmun2yong.payment.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.sbl.sulmun2yong.cofunding.entity.CoFundingParticipant
 import com.sbl.sulmun2yong.cofunding.entity.CoFundingParticipantStatus
+import com.sbl.sulmun2yong.cofunding.entity.CoFundingStatus
+import com.sbl.sulmun2yong.cofunding.exception.CoFundingNotFoundException
+import com.sbl.sulmun2yong.cofunding.publisher.CoFundingEventPublisher
 import com.sbl.sulmun2yong.cofunding.repository.CoFundingParticipantRepository
 import com.sbl.sulmun2yong.cofunding.repository.CoFundingRepository
+import com.sbl.sulmun2yong.payment.dto.TossCancelRequest
 import com.sbl.sulmun2yong.payment.entity.PaymentCommand
 import com.sbl.sulmun2yong.payment.entity.PaymentCommandStatus
 import com.sbl.sulmun2yong.payment.entity.PaymentCommandType
+import com.sbl.sulmun2yong.payment.entity.PaymentOrder
 import com.sbl.sulmun2yong.payment.repository.PaymentCommandRepository
 import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
@@ -27,6 +34,8 @@ class PaymentSettleService(
     private val surveyRepository: SurveyRepository,
     private val coFundingRepository: CoFundingRepository,
     private val coFundingParticipantRepository: CoFundingParticipantRepository,
+    private val coFundingEventPublisher: CoFundingEventPublisher,
+    private val objectMapper: ObjectMapper,
 ) {
 
     companion object {
@@ -34,6 +43,8 @@ class PaymentSettleService(
 
         // 이 시간 안의 커맨드는 success 핸들러가 처리 중일 수 있다 - 릴레이는 건드리지 않는다
         private const val RELAY_STALE_SECONDS = 60L
+
+        private const val CANCEL_REASON = "공동 모금 무산 전액 환불"
     }
 
     // 릴레이 클레임 - 오래 미확정(PENDING & SENT)인 심부름을 SKIP LOCKED 로 집는다
@@ -65,14 +76,51 @@ class PaymentSettleService(
         }
         command.markConfirmed()
 
-        val order = paymentOrderRepository.findByOrderId(command.aggregateId).orElseThrow()
+        val order = paymentOrderRepository.findByTossOrderId(command.aggregateId).orElseThrow()
         order.markDone(paymentKey)
         log.info("결제 확정 - orderId={}, paymentKey={}", command.aggregateId, paymentKey)
         // 설문 활성화 - 결제 대기 중이었을 때만 연다 (이미 열렸으면 멱등 스킵)
-        val survey =
-            surveyRepository.findByIdAndIsDeletedFalse(order.surveyId).orElseThrow()
+        val participant = coFundingParticipantRepository.findByTossOrderId(command.aggregateId)
+        if (participant == null) {
+            settleSoloApproved(order)
+        } else {
+            settleCoFundingApproved(participant)
+        }
+    }
+
+    // 단독 결제 - 결제 즉시 설문 활성화 (기존 동작, 결제 대기였을 때만 - 이미 열렸으면 멱등 스킵)
+    private fun settleSoloApproved(order: PaymentOrder) {
+        val survey = surveyRepository.findByIdAndIsDeletedFalse(order.surveyId).orElseThrow()
         if (survey.status == SurveyStatus.PENDING_PAYMENT) {
             surveyRepository.save(survey.start())
+        }
+    }
+
+    // 공동 모금(D6) - 잠금 조회(FOR UPDATE)로 무산 CAS(tryFail)의 직렬화된 상태 검사가
+    // "무산 확정 vs 결제 확정" 경합의 결승선. 잠금 없이 읽으면 검사 통과 직후 무산이 확정되는
+    // 틈새에서 늦게 커밋된 SETTLED 를 환불 리스너가 못 보는 환불 누락 창이 열린다.
+    // 설문 활성화는 여기 없다 - 전원 완료 장벽 CAS 승자(집계 리스너)의 몫
+    private fun settleCoFundingApproved(participant: CoFundingParticipant) {
+        val funding =
+            coFundingRepository.findByIdForUpdate(participant.fundingId)
+                ?: throw CoFundingNotFoundException()
+
+        when (funding.status) {
+            CoFundingStatus.FUNDING -> {
+                participant.settle(LocalDateTime.now())
+                coFundingEventPublisher.publishSettled(funding, participant)
+            }
+
+            CoFundingStatus.FAILED, CoFundingStatus.REFUNDED -> {
+                // 늦은 결제 - SETTLED 기록 없이 즉시 전액 환불 커맨드 적재
+                enqueueCancelCommand(participant.tossOrderId)
+                log.warn("무산 후 늦은 결제 - 즉시 환불 적재: orderId={}", participant.tossOrderId)
+            }
+
+            CoFundingStatus.CONFIRMED -> {
+                // 도달 불가(전원 SETTLED여야 CONFIRMED, 중복 settle은 커맨드 멱등 가드가 흡수) - 방어 로그만
+                log.warn("개설 확정 모금에 결제 확정 도착(무시): orderId={}", participant.tossOrderId)
+            }
         }
     }
 
@@ -86,13 +134,17 @@ class PaymentSettleService(
         if (command.status == PaymentCommandStatus.FAILED) return
         command.markFailed()
 
-        val order = paymentOrderRepository.findByOrderId(command.aggregateId).orElseThrow()
+        val order = paymentOrderRepository.findByTossOrderId(command.aggregateId).orElseThrow()
         order.markFailed()
         log.warn("결제 거절 확정 - orderId={}, code={}", command.aggregateId, code)
-        // 설문 복귀 - 작성자가 다시 시작(재결제)할 수 있게 되돌린다
-        val survey = surveyRepository.findByIdAndIsDeletedFalse(order.surveyId).orElseThrow()
-        if (survey.status == SurveyStatus.PENDING_PAYMENT) {
-            surveyRepository.save(survey.revertToNotStarted())
+        // 공등 모금이면 설문 복귀 없음 - 모금은 FUNDING 유지, 거절 참여자는 기한 만료 무산 경로.
+        // 단독 결제만 작성자가 재시작(재결제)할 수 있게 설문을 되돌린다
+        // null이면 단독결제라는 의미이다
+        if (coFundingParticipantRepository.findByTossOrderId(command.aggregateId) == null) {
+            val survey = surveyRepository.findByIdAndIsDeletedFalse(order.surveyId).orElseThrow()
+            if (survey.status == SurveyStatus.PENDING_PAYMENT) {
+                surveyRepository.save(survey.revertToNotStarted())
+            }
         }
     }
 
@@ -110,7 +162,7 @@ class PaymentSettleService(
     // null = 주문이 없거나 confirm 전이라 키 미기록. DONE 주문 없이 CANCEL 은 적재될 수
     // 없으므로 데이터 이상 신호다 - 호출자(릴레이)는 recordRetry 로 다음 주기에 재확인한다.
     @Transactional(readOnly = true)
-    fun findPaymentKeyByOrderId(orderId: String): String? = paymentOrderRepository.findByOrderId(orderId).orElse(null)?.paymentKey
+    fun findPaymentKeyByOrderId(orderId: String): String? = paymentOrderRepository.findByTossOrderId(orderId).orElse(null)?.paymentKey
 
     // CANCEL 전이 tx - 장부 CANCELED + 참여자 REFUNDED. 커맨드 확정 도장은 tx 가 맨 마지막에 찍는다.
     // 반환: 판정 tx(settleCancelJudged)에 넘길 모금 ID.
@@ -124,10 +176,10 @@ class PaymentSettleService(
         val command = paymentCommandRepository.findById(commandId).orElseThrow()
         if (command.status == PaymentCommandStatus.CONFIRMED) return null
 
-        val order = paymentOrderRepository.findByOrderId(command.aggregateId).orElseThrow()
+        val order = paymentOrderRepository.findByTossOrderId(command.aggregateId).orElseThrow()
         order.markCanceled()
 
-        val participant = coFundingParticipantRepository.findByOrderId(command.aggregateId)
+        val participant = coFundingParticipantRepository.findByTossOrderId(command.aggregateId)
         // 늦은 결제(D6)의 취소는 참여자가 REGISTERED 인 채로 온다 - SETTLE 일 때만 환불 전이
         if (participant?.status == CoFundingParticipantStatus.SETTLED) {
             participant.markRefunded()
@@ -167,6 +219,32 @@ class PaymentSettleService(
         if (command.status == PaymentCommandStatus.FAILED) return
         command.markFailed()
         log.error("환불 거절 - orderId={}, code={} 수동 확인 필요", command.aggregateId, code)
+    }
+
+    // CANCEL 적재 - 이중 환불의 최종 방어는 UNIQUE(aggregate_id, command_type).
+    // 사전 exists 검사 흔한 중복(settle 재시도/환불 리스너와의 경합)을 조용히 흡수하고,
+    // 검사 틈새의 동시 삽입은 UNIQUE 위반 -> 호출 tx 롤백 -> 재시도의 exists 에서 수렴한다
+    @Transactional
+    fun enqueueCancelCommand(tossOrderId: String) {
+        if (paymentCommandRepository.existsByAggregateIdAndCommandType(
+                tossOrderId,
+                PaymentCommandType.CANCEL,
+            )
+        ) {
+            return
+        }
+        paymentCommandRepository.save(
+            PaymentCommand.create(
+                commandType = PaymentCommandType.CANCEL,
+                aggregateId = tossOrderId,
+                requestPayload =
+                    objectMapper.writeValueAsString(
+                        TossCancelRequest(
+                            CANCEL_REASON,
+                        ),
+                    ),
+            ),
+        )
     }
 
     // 적재 전용 짧은 트랜잭션 - 이 커밋이 "무슨 일이 있어도 confirm은 완수한다"는 보증서다

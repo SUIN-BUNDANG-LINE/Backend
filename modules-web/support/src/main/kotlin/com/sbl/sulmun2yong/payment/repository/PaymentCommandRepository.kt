@@ -4,6 +4,7 @@ package com.sbl.sulmun2yong.payment.repository
 
 import com.sbl.sulmun2yong.payment.entity.PaymentCommand
 import com.sbl.sulmun2yong.payment.entity.PaymentCommandStatus
+import com.sbl.sulmun2yong.payment.entity.PaymentCommandType
 import jakarta.persistence.LockModeType
 import jakarta.persistence.QueryHint
 import org.springframework.data.domain.Pageable
@@ -33,4 +34,10 @@ interface PaymentCommandRepository : JpaRepository<PaymentCommand, UUID> {
         @Param("before") before: Instant,
         pageable: Pageable,
     ): List<PaymentCommand>
+
+    // CANCEL 이중 적재 사전 검사 - 최종 방어는 UNIQUE(aggregate_id, command_type)
+    fun existsByAggregateIdAndCommandType(
+        aggregateId: String,
+        commandType: PaymentCommandType,
+    ): Boolean
 }

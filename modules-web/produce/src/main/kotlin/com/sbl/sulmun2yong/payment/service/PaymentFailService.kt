@@ -23,7 +23,7 @@ class PaymentFailService(
         orderId: String,
         code: String?,
     ) {
-        val order = paymentOrderRepository.findByOrderId(orderId).orElse(null) ?: return
+        val order = paymentOrderRepository.findByTossOrderId(orderId).orElse(null) ?: return
 
         // 이미 확정됨 - 늦은 fail은 무시 (멱등)
         if (order.status != PaymentOrderStatus.PENDING) return
