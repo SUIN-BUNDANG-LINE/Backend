@@ -1,0 +1,10 @@
+spring:
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQLDialect
+    flyway:
+        enabled: true
+        baseline-on-migrate: true
