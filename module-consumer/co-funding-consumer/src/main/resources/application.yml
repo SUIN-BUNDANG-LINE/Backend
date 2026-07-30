@@ -1,0 +1,63 @@
+spring:
+    profiles.include:
+        - secret
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        properties:
+            hibernate:
+                format_sql: true
+                dialect: org.hibernate.dialect.MySQLDialect
+        open-in-view: false
+    flyway:
+        enabled: false
+        baseline-on-migrate: true
+    task:
+        scheduling:
+            pool:
+                size: 4
+    application.name: co-funding-consumer
+
+springdoc:
+    packages-to-scan: com.sbl.sulmun2yong
+    default-consumes-media-type: application/json;charset=UTF-8
+    default-produces-media-type: application/json;charset=UTF-8
+
+    swagger-ui:
+        path: /
+        disable-swagger-default-url: true
+        display-request-duration: true
+        operations-sorter: alpha
+
+management:
+    endpoints:
+        web:
+            base-path: /management
+            exposure:
+                include: health, info, prometheus
+            path-mapping:
+                health: health
+
+    metrics:
+        tags:
+            application: ${spring.application.name:sulmun2yong}
+        distribution:
+            percentiles-histogram:
+                spring.kafka.listener: true
+
+frontend:
+    base-url: http://localhost:3000
+
+backend:
+    base-url: http://localhost:8080
+
+cookie:
+    domain: localhost
+
+ai-server:
+    base-url: http://localhost:8000
+
+cloudfront:
+    base-url: https://file.sulmoon.io
+server:
+    port: 8081

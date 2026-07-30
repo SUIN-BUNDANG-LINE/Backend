@@ -29,11 +29,11 @@ Swagger doc 인터페이스, 독립 단위 테스트 태스크(핵심 검증은 
 
 - [x] T006 CoFundingService — 개시(분담금 factory+참여자 명단·주문 일괄 INSERT+Survey PENDING_PAYMENT 한 트랜잭션)·내 주문 조회 + 최소 컨트롤러 2종(개시/내 주문 조회, doc 없이) + orderId→tossOrderId 리네임(@Column("order_id") 유지) (build·ktlint·기동 검증 완료)
 - [x] T007 settle 확장(D6 전체) — FUNDING이면 SETTLED 전이+co-payment-settled Outbox 발행, FAILED/REFUNDED면 즉시 CANCEL 커맨드 적재(늦은 확정 보상), 모금 상태 검사는 findByIdForUpdate 잠금으로 tryFail과 직렬화, 한 트랜잭션 + CoFundingEventPublisher + enqueueCancelCommand(exists 사전검사+UNIQUE 최종방어) (build·ktlint·기동 검증 완료)
-- [ ] T008 (consumer 모듈) 집계 리스너 — co-funding-consumer 모듈 부트스트랩(기존 컨슈머 보일러플레이트 복제) + JPA 엔티티·리포지토리 사본(CoFunding·참여자 + 슬림 Survey, D12) + co-payment-settled 소비, tryConfirm CAS 승자만 설문 활성화 CAS, 재수신·패배 no-op + DTO 사본(module-consumer/common) 동기화
+- [x] T008 (consumer 모듈) 집계 리스너 — co-funding-consumer 모듈 부트스트랩(진입점 패키지 루트 배치·리플레이 미채택) + JPA 슬림 사본(CoFunding·참여자 + Survey(status String), D12) + co-payment-settled 소비(어댑터→ConsumedEvent 2단), tryConfirm CAS 승자만 tryActivate, 재수신·패배 no-op + DTO 사본(module-consumer/common) (build·ktlint·기동·Kafka 파티션 할당 검증 완료)
 
 ## Phase 5: 보상 체인 (무산 → 부채꼴 환불 → 수렴)
 
-- [ ] T010 (consumer 모듈) 환불 리스너 + 기한 스케줄러 — 리스너: failed 소비→DB 재조회→주문별 CANCEL 적재(PaymentCommand 사본, UNIQUE 흡수, 적재까지만 — 수렴 전이는 릴레이 후처리 소관) / 스케줄러: 만료 FUNDING 스캔→tryFail 승자만 failed 발행 (JPA 사본 리포지토리, D12)
+- [x] T010 (consumer 모듈) 환불 리스너 + 기한 스케줄러 — 리스너: failed 소비→DB 재조회→주문별 CANCEL 적재(PaymentCommand 사본, UNIQUE 흡수, 적재까지만 — 수렴 전이는 릴레이 후처리 소관, 결제자 0명 무산만 직접 종착 D5 예외) / 스케줄러: 만료 FUNDING SKIP LOCKED 스캔→tryFail 승자만 failed 발행(tx 밖 — 유령 신호 방지, 유실 창 수용) (build·ktlint·기동·양 그룹 파티션 할당 검증 완료)
 
 ## Phase 6: 종단 검증
 
