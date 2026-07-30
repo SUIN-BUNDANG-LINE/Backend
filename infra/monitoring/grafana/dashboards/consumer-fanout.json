@@ -205,7 +205,7 @@
       "type": "timeseries",
       "id": 4,
       "title": "Topic: drawing-completed — Produced vs Consumed (rate, by group)",
-      "description": "produced = 브로커 high water mark 증가율(토픽에 도착한 레코드/초). consumed by <group> = 각 컨슈머 그룹의 offset commit 증가율(처리 완료 후 commit 기준). fan-out 토픽이라 produced ≈ consumed × 3 그룹(drawing-notification, drawing-auto-close, sms-cost-calculator)이 정상 동작.",
+      "description": "produced = 브로커 high water mark 증가율(토픽에 도착한 레코드/초). consumed by <group> = 각 컨슈머 그룹의 offset commit 증가율(처리 완료 후 commit 기준). fan-out 토픽이라 produced ≈ consumed × 2 그룹(drawing-notification, drawing-auto-close)이 정상 동작.",
       "gridPos": {
         "h": 8,
         "w": 24,
@@ -279,82 +279,6 @@
     },
     {
       "type": "timeseries",
-      "id": 5,
-      "title": "Topic: survey-response-submitted — Produced vs Consumed (rate, by group)",
-      "description": "produced = 응답 제출 이벤트 도착률. 현재 활성 그룹은 response-stats 1개(SurveyResponseStatsEventListener). 다른 그룹이 존재하면(예: 삭제된 auto-close zombie) consumed가 0인 채 lag만 누적됨 → Lag 패널에서 별도 확인.",
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 27
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "expr": "sum (rate(kafka_topic_partition_current_offset{topic=\"survey-response-submitted\"}[1m]))",
-          "legendFormat": "produced",
-          "refId": "A"
-        },
-        {
-          "expr": "sum by (consumergroup) (rate(kafka_consumergroup_current_offset{topic=\"survey-response-submitted\"}[1m]))",
-          "legendFormat": "consumed / {{consumergroup}}",
-          "refId": "B"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "min": 0,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 5,
-            "showPoints": "never"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "produced"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "white"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 3
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "legend": {
-          "calcs": [
-            "last",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "type": "timeseries",
       "id": 6,
       "title": "Topic: drawing-notification.DLT — Produced vs Consumed (rate, by group)",
       "description": "DLT 토픽 — 재시도 초과 메시지 영속화 경로. produced는 0이 정상(DLT로 빠지는 메시지 없음이 정상 상태). produced > 0이면 SMS 발송 실패 누적 발생 — sms-failover 대시보드 + Kafka UI에서 메시지 본문 확인.",
@@ -362,7 +286,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 27
       },
       "datasource": {
         "type": "prometheus",

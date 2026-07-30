@@ -252,7 +252,7 @@
       "type": "timeseries",
       "id": 4,
       "title": "Outbox Relay Publish Latency (p50/p95/p99 by topic)",
-      "description": "Kafka 발행 latency 분포. p99가 1초 넘으면 Kafka 브로커 또는 네트워크 의심. 토픽별 분리 — drawing-completed vs survey-response-submitted 비교.",
+      "description": "Kafka 발행 latency 분포. p99가 1초 넘으면 Kafka 브로커 또는 네트워크 의심. 토픽별 분리.",
       "gridPos": {
         "h": 8,
         "w": 12,
