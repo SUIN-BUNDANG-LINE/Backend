@@ -3,8 +3,10 @@ package com.sbl.sulmun2yong.payment.relay
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.payment.adapter.TossConfirmResult
 import com.sbl.sulmun2yong.payment.adapter.TossPaymentsAdapter
+import com.sbl.sulmun2yong.payment.dto.TossCancelRequest
 import com.sbl.sulmun2yong.payment.dto.TossConfirmRequest
 import com.sbl.sulmun2yong.payment.entity.PaymentCommand
+import com.sbl.sulmun2yong.payment.entity.PaymentCommandType
 import com.sbl.sulmun2yong.payment.service.PaymentSettleService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -39,10 +41,17 @@ class PaymentCommandRelay(
     }
 
     private fun process(command: PaymentCommand) {
-        val payload = objectMapper.readValue(command.requestPayload, TossConfirmRequest::class.java)
-
         // tx: 보냈다 기록
         paymentSettleService.markSent(command.id)
+
+        when (command.commandType) {
+            PaymentCommandType.CONFIRM -> processConfirm(command)
+            PaymentCommandType.CANCEL -> processCancel(command)
+        }
+    }
+
+    private fun processConfirm(command: PaymentCommand) {
+        val payload = objectMapper.readValue(command.requestPayload, TossConfirmRequest::class.java)
 
         // HTTP (tx 밖) -> 삼분법 소비
         when (
@@ -70,6 +79,44 @@ class PaymentCommandRelay(
         }
     }
 
+    private fun processCancel(command: PaymentCommand) {
+        val payload = objectMapper.readValue(command.requestPayload, TossCancelRequest::class.java)
+        val paymentKey = paymentSettleService.findPaymentKeyByOrderId(command.aggregateId)
+        if (paymentKey == null) {
+            // DONE 주문 없이 CANCEL 은 적재될 수 없다 - 데이터 이상, 다음 주기 재확인
+            log.error("취소 대상 주문의 paymentKey 없음 - orderId={}", command.aggregateId)
+            paymentSettleService.recordRetry(command.id)
+            return
+        }
+
+        when (
+            val result =
+                tossPaymentsAdapter.cancel(paymentKey, command.aggregateId, payload.cancelReason)
+        ) {
+            is TossConfirmResult.Approved -> {
+                completeCancel(command)
+            }
+
+            is TossConfirmResult.Rejected -> {
+                paymentSettleService.settleCancelRejected(
+                    command.id,
+                    result.code,
+                )
+            }
+
+            TossConfirmResult.Unknown -> {
+                resolveCancelUnknown(command)
+            }
+        }
+    }
+
+    // 전이 tx -> 판정 tx 순서 고정 - 커맨드 확정 도장이 판정 tx 끝에 있어,
+    // 어느 틈에서 죽어도 SENT 로 남아 재클레임이 이어 간다
+    private fun completeCancel(command: PaymentCommand) {
+        val fundingId = paymentSettleService.settleCancelTransition(command.id)
+        paymentSettleService.settleCancelJudged(command.id, fundingId)
+    }
+
     // 미확정 - 조회("그 결제 어떻게 됐어?")로 수렴을 시도하고, 그래도 모르면 재시도 카운트만 올린다
     private fun resolveUnknown(command: PaymentCommand) {
         val payment = tossPaymentsAdapter.getOrder(command.aggregateId)
@@ -89,6 +136,15 @@ class PaymentCommandRelay(
             else -> {
                 paymentSettleService.recordRetry(command.id)
             }
+        }
+    }
+
+    // CANCEL 미확정 - 실제 상태가 CANCELED 면 취소 성공으로 마감, 아니면 다음 주기 재시도
+    private fun resolveCancelUnknown(command: PaymentCommand) {
+        val payment = tossPaymentsAdapter.getOrder(command.aggregateId)
+        when (payment?.status) {
+            "CANCELED" -> completeCancel(command)
+            else -> paymentSettleService.recordRetry(command.id)
         }
     }
 }
