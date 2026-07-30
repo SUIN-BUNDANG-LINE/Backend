@@ -1,0 +1,29 @@
+package com.sbl.sulmun2yong.ai.exception
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.sbl.sulmun2yong.global.error.BusinessException
+import org.springframework.web.client.HttpClientErrorException
+
+object PythonServerExceptionMapper {
+    private val objectMapper = ObjectMapper()
+
+    data class ErrorDetail(
+        val code: String = "",
+        val message: String = "",
+    )
+
+    data class PythonServerException(
+        val detail: ErrorDetail = ErrorDetail(),
+    )
+
+    fun mapException(e: HttpClientErrorException): BusinessException {
+        val exception = objectMapper.readValue(e.responseBodyAsString, PythonServerException::class.java)
+        when (exception.detail.code) {
+            "PY0001" -> throw SurveyAIProcessingFailedException()
+            "PY0002" -> throw TextTooLongException()
+            "PY0003" -> throw FileExtensionNotSupportedException()
+            "PY0004" -> throw FileNotFoundException()
+            else -> throw SurveyAIProcessingFailedException()
+        }
+    }
+}
