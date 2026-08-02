@@ -19,6 +19,8 @@ spring:
 
 payment:
     reward-unit-price: 2000
+    # 결제 서비스 내부 API(단독 결제 주문 발급) 주소 - Phase 5
+    base-url: http://localhost:8082
 
 sms:
     mock:
