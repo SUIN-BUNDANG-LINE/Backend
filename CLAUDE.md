@@ -43,16 +43,18 @@
 
 Gradle 멀티 프로젝트로 빈 경계를 보장한다. 프로듀서/웹 계열(`modules-web/`)은 `:support`, `:produce`, `:web` — 의존 방향은 `:support` ← `:produce` ← `:web` 선형(순환 없음, `:web`은 `:support`도 직접 의존).
 - `:support` — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user). 기반 라이브러리.
-- `:produce` — Kafka 를 produce 하는 도메인(drawing/survey)의 서비스/퍼블리셔/컨트롤러 + outbox·publisher·kafka config + 분산락(global/lock) + `@LoginUser` 등 인증 애노테이션. 라이브러리.
+- `:produce` — Kafka 를 produce 하는 도메인(drawing/survey)의 서비스/퍼블리셔/컨트롤러 + `@LoginUser` 등 인증 애노테이션. 라이브러리. (outbox·kafka·분산락 인프라는 `:support`의 global/kafka·global/lock 로 하강 — 구조변경 Phase 1)
 - `:web` — 실행 진입점(`Sulmun2yongApplication`) + 비프로듀서 도메인 컨트롤러(ai/aws/user) + 보안/JWT/resolver/전역 config·예외 핸들러. 유일한 실행 모듈.
 
-컨슈머 계열(`module-consumer/`)은 `:common`(컨슈머 공유 DTO 라이브러리 — `:support`와 별개) + `:drawing-sms-notification-consumer` + `:dlt-sms-notification-consumer` + `:co-funding-consumer`. 각 컨슈머는 `:common`에만 의존하며, 각자 SpringBootApplication/bootJar/이미지를 가진 MSA 자족형 독립 서비스다. 컨슈머의 DB 접근은 JPA 슬림 사본(만지는 컬럼만 매핑, 스키마 주인은 web의 Flyway·컨슈머는 validate만)이다.
+컨슈머 계열(`module-consumer/`)은 `:common`(컨슈머 공유 DTO 라이브러리 — `:support`와 별개) + `:drawing-sms-notification-consumer` + `:dlt-sms-notification-consumer`. 각 컨슈머는 `:common`에만 의존하며, 각자 SpringBootApplication/bootJar/이미지를 가진 MSA 자족형 독립 서비스다. (`:co-funding-consumer`는 구조변경 Phase 3에서 `module-cofunding`으로 흡수·해체)
+
+도메인 서비스 계열(구조변경, `docs/kafka-distribute-lock/구조변경-실행계획.md`): `module-gateway`(8000, 라우팅·JWT 검증) · `module-auth`(8090, OAuth2·발급) · `module-cofunding`(8083, 개설 API+④⑦리스너+⏰기한 스케줄러 — co_fundings·participants 단일 기록자) · `module-payment`(8082, confirm 착지·webhook·checkout-info API+커맨드 릴레이+②⑥⑧리스너 — payment_* 단일 기록자, 토스 어댑터 유일 구동처). 신설 서비스는 `:support`만 의존하고 필요한 패키지만 스캔한다. 컨슈머의 DB 접근은 JPA 슬림 사본(만지는 컬럼만 매핑, 스키마 주인은 web의 Flyway·컨슈머는 validate만)이다.
 
 | 진입점 | 모듈 | 클래스 | 책임 |
 |---|---|---|---|
-| Web | `:web` | `Sulmun2yongApplication` | REST API 서버, Outbox Producer relay, Payment Command Relay(토스 confirm 자력 발송), Spring Security/JWT, OAuth2, Swagger, ai 헬스체크 스케줄러 |
+| Web | `:web` | `Sulmun2yongApplication` | REST API 서버(설문·추첨·사용자·AI·파일), Outbox Producer relay, HeaderAuth/GatewayOnly 필터, Swagger, ai 헬스체크 스케줄러 (JWT 발급→auth · 결제 릴레이→payment 로 이관) |
 
-Consumer 진입점은 3개 — `SmsNotificationConsumerApplication`(drawing-completed 구독, Kafka 어댑터·도메인 listener·SMS 보상 워커·Notification 메트릭), `DltSmsNotificationConsumerApplication`(DLT 구독·적재, DLT 메트릭), `CoFundingConsumerApplication`(co-payment-settled·co-funding-failed 구독 — 장벽 집계·환불 팬아웃·기한 만료 무산 스케줄러). 진입점 클래스는 패키지 루트(`com.sbl.sulmun2yong`) 배치가 관례이며, `module-consumer/` 각 모듈에서 관리한다.
+Consumer 진입점은 2개 — `SmsNotificationConsumerApplication`(drawing-completed 구독, Kafka 어댑터·도메인 listener·SMS 보상 워커·Notification 메트릭), `DltSmsNotificationConsumerApplication`(DLT 구독·적재, DLT 메트릭). 도메인 서비스 진입점은 `PaymentApplication`(8082)·`CoFundingApplication`(8083)·`AuthApplication`(8090)·`GatewayApplication`(8000). 진입점 클래스는 패키지 루트(`com.sbl.sulmun2yong`) 배치가 관례다.
 
 ### 실행 방법
 
@@ -62,7 +64,7 @@ Consumer 진입점은 3개 — `SmsNotificationConsumerApplication`(drawing-comp
 | 패키징 — Web | `./gradlew :web:bootJar` → `modules-web/web/build/libs/web-*-SNAPSHOT.jar` |
 | 운영 — Web | `java -jar web-*.jar` |
 
-배포 시 Web JAR을 이미지로 만들어 Deployment로 운영한다 (`{DOCKER_IMAGE_NAME}-web`). Consumer 이미지는 `module-consumer/` 각 모듈의 JIB 설정으로 빌드한다. Actuator 엔드포인트(`/management/health`, `/management/prometheus`)는 양쪽 모두 동일하게 노출되어 K8s HTTP probe로 헬스체크 가능.
+배포 시 Web JAR을 이미지로 만들어 EC2에서 docker 컨테이너로 운영한다 (`{DOCKER_IMAGE_NAME}-web`, JIB→Docker Hub push→EC2 `docker pull`/run). Consumer 이미지는 `module-consumer/` 각 모듈의 JIB 설정으로 빌드한다. Actuator 엔드포인트(`/management/health`, `/management/prometheus`)는 양쪽 모두 동일하게 노출되어 docker-compose healthcheck·Prometheus 스크레이프로 헬스체크 가능.
 
 ### 통합 테스트
 
@@ -75,7 +77,8 @@ Consumer end-to-end 흐름(Kafka listener 처리 검증)은 `module-consumer/` �
 - 새 **컨트롤러**: `web/src/main/kotlin/.../{도메인}/controller/`
 - 새 **KafkaListener / 도메인 listener / @Scheduled worker**: `module-consumer/<consumer>/src/main/kotlin/.../`
 - 새 **entity / repository / domain / 공유 기반 util** 또는 **비프로듀서 도메인(ai/aws/notification/user) 로직**: `support/src/main/kotlin/.../{도메인}/`
-- 새 **프로듀서 도메인(drawing/survey)의 service / publisher / controller** 또는 **kafka·outbox·lock**: `produce/src/main/kotlin/.../{도메인}/`
+- 새 **프로듀서 도메인(drawing/survey)의 service / publisher / controller**: `produce/src/main/kotlin/.../{도메인}/`
+- 새 **kafka·outbox·분산락 인프라**: `support/src/main/kotlin/.../global/{kafka,lock}/`
 - 새 **비프로듀서 도메인 컨트롤러 / 보안·JWT·resolver·전역 config**: `web/src/main/kotlin/.../{도메인}/`
 - 새 **payment(결제) 코드**는 3모듈 분산: entity·repository·adapter·dto → `:support`, service·relay → `:produce`, controller·`RestTemplateConfig`(toss 빈) → `:web`. 토스 API 통신은 `payment/adapter/`(TossPaymentsAdapter)로 격리한다
 - 판단 기준: 의존은 `:support` ← `:produce` ← `:web` 한 방향만. 하위 모듈이 상위를 참조하면 순환이므로, 참조당하는 타입은 항상 더 아래(공유) 모듈에 둔다. `kotlin("kapt")`가 있는 `:support`에는 메타-애노테이트된 애노테이션(@AuthenticationPrincipal 파생 등)을 두지 말 것 — kapt 스텁 생성이 깨진다(그래서 `@LoginUser`류는 `:produce`에 있다)
@@ -107,9 +110,8 @@ Gradle 멀티 프로젝트 — 프로듀서/웹 계열(`modules-web/`)은 `:supp
 │   ├── dto/
 │   └── service/
 ├── cofunding/                   # 공동 모금(더치페이) 도메인 (코레오그래피 사가 — specs/001-co-funding-saga/)
-│   ├── entity/·exception/·repository/·dto/  # CoFunding·CoFundingParticipant(초대제·주문 사전 발급) + tryMarkRefunded 수렴 CAS + 요청/응답·사가 이벤트 DTO (:support)
-│   ├── service/·publisher/      # CoFundingService(개시·내 주문 조회), CoFundingEventPublisher(settled Outbox 발행) (:produce)
-│   └── controller/              # 모금 개시·내 주문 조회 (:web) ※ 장벽 CAS·환불 팬아웃·기한 스케줄러는 co-funding-consumer 모듈
+│   ├── entity/·exception/·repository/·dto/  # CoFunding·CoFundingParticipant(초대제·주문 사전 발급) + 사가 CAS(tryConfirm·tryFail·tryMarkRefunded) + 요청/응답·사가 이벤트 DTO (:support 잔류 — 공유 기반)
+│   └── ※ service·controller·publisher·listener·scheduler 는 전부 module-cofunding (Phase 3 완전체)
 ├── drawing/                     # 추첨 도메인
 │   ├── controller/
 │   ├── domain/
@@ -155,13 +157,8 @@ Gradle 멀티 프로젝트 — 프로듀서/웹 계열(`modules-web/`)은 `:supp
 │   └── service/                 # SmsSender + SmsNotificationJobService
 │                                # ※ listener/, worker/ 는 module-consumer 컨슈머 모듈에 위치
 ├── payment/                     # 결제 도메인 (토스페이먼츠 카드결제 — Command Outbox + Webhook Inbox)
-│   ├── adapter/                 # TossPaymentsAdapter(confirm/cancel/getOrder), TossConfirmResult(삼분법 sealed)
-│   ├── controller/              # 결제 success/fail 착지·checkout-info·webhook (:web)
-│   ├── dto/                     # Toss confirm/webhook 요청·응답 DTO
-│   ├── entity/                  # payment_orders(장부)·payment_commands(Outbox)·payment_webhook_inbox
-│   ├── relay/                   # PaymentCommandRelay (@Scheduled + SKIP LOCKED 자력 발송, :produce)
-│   ├── repository/
-│   └── service/                 # PaymentConfirmService(오케스트레이터·HTTP) ↔ PaymentSettleService(짧은 tx) + PaymentFailService·PaymentWebhookService
+│   ├── adapter/·dto/·entity/·repository/  # (:support 잔류 — 공유 기반) TossPaymentsAdapter·장부/커맨드/웹훅 인박스
+│   └── ※ service·controller·relay·publisher·listener 는 전부 module-payment (Phase 4 완전체)
 ├── survey/                      # 설문조사 도메인 (핵심)
 │   ├── controller/
 │   ├── domain/
@@ -207,17 +204,46 @@ Gradle 멀티 프로젝트 — 프로듀서/웹 계열(`modules-web/`)은 `:supp
 
 ### Kafka 컨슈머 구조 (ApplicationEvent 기반)
 
-Web 측에서는 Producer / Outbox Relay만 동작하며, Kafka Consumer는 `module-consumer/` 컨슈머 모듈에서 관리한다.
+Kafka Consumer 는 `module-consumer/` 컨슈머 모듈이 주 관리처다. 단, 구조변경 Phase 2(단일 기록자 이벤트화, `docs/kafka-distribute-lock/구조변경-실행계획.md`)부터 목표 서비스 소속 리스너가 웹 계열(`:produce`)·신설 서비스 모듈에도 생긴다.
 
 | 토픽 | groupId | Consumer 어댑터 (module-consumer) | 도메인 리스너 (module-consumer) |
 |---|---|---|---|
 | `drawing-completed` | `drawing-notification` | `DrawingCompletedNotificationKafkaListener` (`ConsumerSeekAware` 리플레이) | `drawing.DrawingSmsNotificationEventListener` (SMS 잡 생성) |
 | `sms-delivery-permanently-failed` | — | 발행만 존재 (dlt 컨슈머가 발행, 현재 구독자 없음 — PG 정산 사가의 환불 리스너가 구독 예정, `docs/kafka-distribute-lock/PRD.md` 참조) | — |
 | `drawing-notification.DLT` | `dlt-sms-notification` | `DltSmsNotificationKafkaListener` | `notification.DltMessageEventListener` |
-| `co-payment-settled` | `co-funding-settlement` | `CoPaymentSettledKafkaListener` | `cofunding.CoFundingSettlementEventListener` (장벽 tryConfirm 승자만 설문 활성화) |
-| `co-funding-failed` | `co-funding-refund` | `CoFundingFailedKafkaListener` | `cofunding.CoFundingRefundEventListener` (SETTLED 재조회 → CANCEL 팬아웃, 0명 무산만 직접 종착) |
+| (구 co-payment-settled·co-funding-failed 컨슈머 리스너들은 Phase 2c·3에서 module-cofunding·module-payment 리스너로 대체 — co-payment-settled 토픽은 발행 중단) | | | |
 
-co-funding 사가의 무산 트리거는 기한 만료 하나 — `CoFundingDeadlineScheduler`(co-funding-consumer)가 만료 FUNDING 을 SKIP LOCKED 스캔해 tryFail 승자만 `co-funding-failed` 를 직접 발행한다(발행은 tx 밖). 환불 실행·FAILED→REFUNDED 수렴은 web `PaymentCommandRelay` 의 CANCEL 후처리(전이 tx/판정 tx 분리) 소관. 종단 검증: `scripts/scenarios/saga/co-funding-saga-verify.sh` (주입+관찰, 컨슈머 기동 필요).
+구조변경 Phase 2a 신설 — `co-funding-created`(개설 확정 사실, 발행: `CoFundingEventPublisher.publishCreated` Outbox) 구독 리스너 3개. 개설 tx 의 교차 쓰기(주문 사전 발급·설문 대기 전이·보드 생성)를 대체하며, 각 리스너는 자기 테이블만 쓴다(단일 기록자):
+
+| groupId | 리스너 (위치) | 쓰는 테이블 |
+|---|---|---|
+| `payment-cofunding-created` | `payment.listener.CoFundingCreatedPaymentListener` (`module-payment` ★신설 모듈) | payment_orders (참여자별 발급, tossOrderId 멱등) |
+| `survey-cofunding-created` | `survey.listener.CoFundingCreatedSurveyListener` (`:produce`) | surveys (NOT_STARTED→PENDING_PAYMENT 가드 멱등) |
+| `drawing-cofunding-created` | `drawing.listener.CoFundingCreatedDrawingListener` (`:produce`) | drawing_boards (findBySurveyId 멱등) |
+
+구조변경 Phase 2b 신설 — `payment-settled`·`payment-failed`(confirm 성공/거절·이탈 사실, 발행: `PaymentEventPublisher` Outbox — 단독·모금 불문). 결제의 surveys 직접 쓰기(단독 활성화·복귀)를 대체. 설문 리스너는 co_fundings 교차 읽기로 모금 건을 스킵한다(모금 활성화는 장벽 ⑤, 모금 거절은 기한 만료 무산 경로):
+
+| groupId | 리스너 (위치) | 쓰는 테이블 |
+|---|---|---|
+| `survey-payment-settled` | `survey.listener.PaymentSettledSurveyListener` (`:produce`) | surveys (단독만 PENDING_PAYMENT→start, 멱등) |
+| `survey-payment-failed` | `survey.listener.PaymentFailedSurveyListener` (`:produce`) | surveys (단독만 PENDING_PAYMENT→NOT_STARTED 복귀, 멱등) |
+
+구조변경 Phase 2c 신설 — 모금·결제 사가 재배선. 결제의 participants·co_fundings 접근이 0 이 됐고(교차 FOR UPDATE 잠금 → 모금 로컬 tx 직렬화), `co-payment-settled` 발행이 중단됐다(기존 co-funding-consumer 의 장벽·설문 활성화 리스너는 자연 휴면 — Phase 3 에서 해체). 릴레이 CANCEL 후처리는 전이/판정 2-tx 에서 단일 tx(`settleCancelled`)로:
+
+| groupId | 리스너 (위치) | 쓰는 테이블 |
+|---|---|---|
+| `cofunding-payment-settled` | `cofunding.listener.PaymentSettledCoFundingListener` (`module-cofunding` ★신설 모듈) | participants SETTLED + co_fundings 장벽 CAS(tryConfirm) — 승자만 ⑤ 발행, 무산 후 늦은 결제엔 ⑧ 발행 |
+| `cofunding-payment-refunded` | `cofunding.listener.PaymentRefundedCoFundingListener` (`module-cofunding`) | participants REFUNDED + co_fundings 수렴 CAS(tryMarkRefunded) |
+| `payment-cancel-requested` | `payment.listener.PaymentCancelRequestedListener` (`module-payment`) | payment_commands (CANCEL 적재, UNIQUE 멱등) |
+| `survey-cofunding-confirmed` | `survey.listener.CoFundingConfirmedSurveyListener` (`:produce`) | surveys (PENDING_PAYMENT→start, 멱등) |
+
+구조변경 Phase 3 — `module-cofunding` 완전체(개설 API·⏰기한 스케줄러 흡수, `CoFundingSagaPublisher`가 ②⑤⑥⑧ 발행 전담) + `co-funding-consumer` 해체:
+
+| groupId | 리스너 (위치) | 쓰는 테이블 |
+|---|---|---|
+| `payment-cofunding-failed` | `payment.listener.CoFundingFailedPaymentListener` (`module-payment`) | payment_commands (⑥ 스냅샷 CANCEL 팬아웃, UNIQUE 멱등) |
+
+co-funding 사가의 무산 트리거는 기한 만료 하나 — `CoFundingDeadlineScheduler`(module-cofunding)가 만료 FUNDING 을 SKIP LOCKED 스캔해 tryFail 승자만 ⑥을 Outbox 발행(컨슈머 시절 "tx 밖 직접 발행"을 Outbox 로 개선 — 유령 신호·유실 모두 제거). 결제자 0명 무산은 스케줄러가 즉시 FAILED→REFUNDED 종착. 환불 실행은 web `PaymentCommandRelay` 의 CANCEL 발송(`settleCancelled` 단일 tx → ⑦ 발행), REFUNDED 수렴은 모금 ⑦ 리스너 소관. 종단 검증 스크립트: `scripts/scenarios/saga/co-funding-saga-verify.sh` (구 배선 기준 — 신 배선 반영 필요).
 
 티켓 소진 시 설문 자동 종료는 응답 일관성을 위해 동기 처리 — `DrawingProcessService.closeSurveyIfTicketsExhausted`가 추첨 트랜잭션 안에서 직접 수행한다 (Kafka fan-out 대상 아님).
 
