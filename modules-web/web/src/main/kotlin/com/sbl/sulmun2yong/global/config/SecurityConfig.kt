@@ -1,19 +1,13 @@
 package com.sbl.sulmun2yong.global.config
 
-import com.sbl.sulmun2yong.global.config.oauth2.CustomOAuth2Service
-import com.sbl.sulmun2yong.global.config.oauth2.HttpCookieOAuth2AuthorizationRequestRepository
-import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomAuthenticationSuccessHandler
-import com.sbl.sulmun2yong.global.config.oauth2.handler.CustomLogoutSuccessHandler
-import com.sbl.sulmun2yong.global.jwt.JwtAuthenticationFilter
-import com.sbl.sulmun2yong.global.jwt.JwtTokenProvider
-import com.sbl.sulmun2yong.user.repository.RefreshTokenRepository
+import com.sbl.sulmun2yong.global.filter.GatewayOnlyFilter
+import com.sbl.sulmun2yong.global.filter.HeaderAuthenticationFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.security.servlet.RequestMatcherProvider
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Lazy
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -30,28 +24,23 @@ import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.filter.ForwardedHeaderFilter
 
+// web(도메인 서비스) 보안 설정 — PURE.
+// JWT 발급·OAuth2 로그인은 auth-service 로 분리됐다. web 은 게이트웨이가 검증·주입한
+// X-User-Id/X-User-Role 헤더만 신뢰(HeaderAuthenticationFilter)하고, 게이트웨이 우회
+// 직접 접근을 GatewayOnlyFilter 로 막는다. JWT 를 직접 다루지 않는다.
 @Configuration
 class SecurityConfig(
-    @Value("\${frontend.base-url}")
-    private val frontendBaseUrl: String,
-    @Value("\${backend.base-url}")
-    private val backendBaseUrl: String,
     @Value("\${swagger.username}")
     private val username: String?,
     @Value("\${swagger.password}")
     private val password: String?,
     private val entryPoint: AuthenticationEntryPoint,
     private val deniedHandler: AccessDeniedHandler,
-    private val jwtTokenProvider: JwtTokenProvider,
-    @Lazy private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    private val refreshTokenRepository: RefreshTokenRepository,
+    private val headerAuthenticationFilter: HeaderAuthenticationFilter,
+    private val gatewayOnlyFilter: GatewayOnlyFilter,
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-
-    @Bean
-    fun cookieAuthorizationRequestRepository(): HttpCookieOAuth2AuthorizationRequestRepository =
-        HttpCookieOAuth2AuthorizationRequestRepository()
 
     @Bean
     fun userDetailsService(): UserDetailsService {
@@ -97,39 +86,10 @@ class SecurityConfig(
 
     @Order(1)
     @Bean
-    fun securityFilterChain(
-        http: HttpSecurity,
-        customOAuth2Service: CustomOAuth2Service,
-    ): SecurityFilterChain {
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http {
             csrf {
                 disable()
-            }
-            oauth2Login {
-                authorizationEndpoint {
-                    baseUri = "/oauth2/authorization"
-                    authorizationRequestRepository = cookieAuthorizationRequestRepository()
-                }
-                userInfoEndpoint {
-                    userService = customOAuth2Service
-                }
-                authenticationSuccessHandler =
-                    CustomAuthenticationSuccessHandler(
-                        frontendBaseUrl,
-                        backendBaseUrl,
-                        jwtTokenProvider,
-                        cookieAuthorizationRequestRepository(),
-                        refreshTokenRepository,
-                    )
-            }
-            logout {
-                logoutUrl = "/user/logout"
-                logoutSuccessHandler =
-                    CustomLogoutSuccessHandler(
-                        frontendBaseUrl,
-                        jwtTokenProvider,
-                        refreshTokenRepository,
-                    )
             }
             authorizeHttpRequests {
                 authorize("/api/v1/admin/**", hasRole("ADMIN"))
@@ -147,7 +107,8 @@ class SecurityConfig(
             sessionManagement {
                 sessionCreationPolicy = SessionCreationPolicy.STATELESS
             }
-            addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter)
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(headerAuthenticationFilter)
+            addFilterBefore<HeaderAuthenticationFilter>(gatewayOnlyFilter)
         }
         return http.build()
     }

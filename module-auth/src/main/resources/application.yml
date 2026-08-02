@@ -1,0 +1,53 @@
+spring:
+    application:
+        name: auth
+    profiles:
+        include:
+            - secret
+    jpa:
+        hibernate:
+            # 스키마 주인은 web 의 Flyway. auth 는 검증만 한다.
+            ddl-auto: validate
+        properties:
+            hibernate:
+                format_sql: true
+                dialect: org.hibernate.dialect.MySQLDialect
+        open-in-view: false
+    flyway:
+        # 마이그레이션은 web 소관. auth 는 실행하지 않는다.
+        enabled: false
+
+management:
+    endpoints:
+        web:
+            base-path: /management
+            exposure:
+                include: health, info, prometheus
+            path-mapping:
+                health: health
+    metrics:
+        tags:
+            application: ${spring.application.name:auth}
+
+frontend:
+    base-url: http://localhost:3000
+
+backend:
+    base-url: http://localhost:8080
+
+cookie:
+    domain: localhost
+
+# JWT 발급용 — auth 가 토큰을 만든다.
+# secret-key 는 게이트웨이(검증)와 같은 값이라야 서명이 성립 → git 미추적 application-secret.yml 에서 온다
+# (게이트웨이 secret 파일과 반드시 동일한 값). 만료 시간은 환경변수로 덮어쓸 수 있게 기본값 제공(access 10분, refresh 30일).
+jwt:
+    access-token-expire-time: ${JWT_ACCESS_EXPIRE_MS:600000}
+    refresh-token-expire-time: ${JWT_REFRESH_EXPIRE_MS:2592000000}
+
+# 부하 테스트(k6)용 JWT 발급 엔드포인트 활성화 여부 (프로덕션은 false 유지)
+test-auth:
+    enabled: ${TEST_AUTH_ENABLED:false}
+
+server:
+    port: 8090
