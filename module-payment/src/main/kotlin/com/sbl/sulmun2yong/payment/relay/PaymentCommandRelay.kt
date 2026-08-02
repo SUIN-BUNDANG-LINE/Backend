@@ -110,11 +110,11 @@ class PaymentCommandRelay(
         }
     }
 
-    // 전이 tx -> 판정 tx 순서 고정 - 커맨드 확정 도장이 판정 tx 끝에 있어,
-    // 어느 틈에서 죽어도 SENT 로 남아 재클레임이 이어 간다
+    // CANCEL 승인 확정 단일 tx - 장부 CANCELED + ⑦ 발행 + 커맨드 도장이 한 커밋.
+    // 참여자 REFUNDED·수렴 CAS 판정은 모금 ⑦ 리스너 몫이라 전이/판정 2-tx 분리가 사라졌다.
+    // tx 전에 죽으면 SENT 로 남아 재클레임이 이어 간다.
     private fun completeCancel(command: PaymentCommand) {
-        val fundingId = paymentSettleService.settleCancelTransition(command.id)
-        paymentSettleService.settleCancelJudged(command.id, fundingId)
+        paymentSettleService.settleCancelled(command.id)
     }
 
     // 미확정 - 조회("그 결제 어떻게 됐어?")로 수렴을 시도하고, 그래도 모르면 재시도 카운트만 올린다

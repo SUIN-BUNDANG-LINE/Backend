@@ -1,18 +1,18 @@
 package com.sbl.sulmun2yong.payment.service
 
 import com.sbl.sulmun2yong.payment.entity.PaymentOrderStatus
+import com.sbl.sulmun2yong.payment.publisher.PaymentEventPublisher
 import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
-import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-// failUrl 처리 - 사용자가 결제창에서 실패/이탈한 경우. 장부 FAILED + 설문 복귀 (멱등).
+// failUrl 처리 - 사용자가 결제창에서 실패/이탈한 경우. 장부 FAILED + payment-failed 사실 발행 (멱등).
+// 설문 복귀는 설문 리스너 몫(단일 기록자) - 결제는 surveys 를 쓰지 않는다.
 @Service
 class PaymentFailService(
     private val paymentOrderRepository: PaymentOrderRepository,
-    private val surveyRepository: SurveyRepository,
+    private val paymentEventPublisher: PaymentEventPublisher,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(PaymentFailService::class.java)
@@ -31,12 +31,6 @@ class PaymentFailService(
         order.markFailed()
         log.warn("결제창 실패/이탈 - orderId={}, code={}", orderId, code)
 
-        val survey =
-            surveyRepository.findByIdAndIsDeletedFalse(order.surveyId).orElse(null) ?: return
-
-        if (survey.status == SurveyStatus.PENDING_PAYMENT) {
-            surveyRepository.save(survey.revertToNotStarted())
-        }
-
+        paymentEventPublisher.publishFailed(order)
     }
 }
