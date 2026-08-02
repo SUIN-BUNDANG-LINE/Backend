@@ -5,6 +5,7 @@ import org.apache.kafka.common.config.TopicConfig
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.config.TopicBuilder
+import org.springframework.kafka.core.KafkaAdmin
 
 @Configuration
 class KafkaTopicConfig {
@@ -97,4 +98,27 @@ class KafkaTopicConfig {
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
             .build()
+
+    // 사가 토픽별 죽은 편지 큐 - KafkaDltConfig 의 에러핸들러가 "<원본 토픽>.DLT" 로 재발행한다.
+    // 기본 resolver 가 같은 파티션 번호로 보내므로 원본과 동일한 3파티션을 유지해야 한다.
+    @Bean
+    fun sagaDltTopics(): KafkaAdmin.NewTopics =
+        KafkaAdmin.NewTopics(
+            *listOf(
+                KafkaTopics.CO_FUNDING_CREATED,
+                KafkaTopics.CO_FUNDING_CONFIRMED,
+                KafkaTopics.CO_FUNDING_FAILED,
+                KafkaTopics.PAYMENT_SETTLED,
+                KafkaTopics.PAYMENT_FAILED,
+                KafkaTopics.PAYMENT_REFUNDED,
+                KafkaTopics.PAYMENT_CANCEL_REQUESTED,
+            ).map { topic ->
+                TopicBuilder
+                    .name("$topic.DLT")
+                    .partitions(3)
+                    .replicas(3)
+                    .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+                    .build()
+            }.toTypedArray(),
+        )
 }
