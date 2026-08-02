@@ -7,4 +7,10 @@ object KafkaTopics {
     const val DRAWING_NOTIFICATION_DLT = "drawing-notification.DLT"
     const val CO_PAYMENT_SETTLED = "co-payment-settled"
     const val CO_FUNDING_FAILED = "co-funding-failed"
+    const val CO_FUNDING_CREATED = "co-funding-created"
+    const val PAYMENT_SETTLED = "payment-settled"
+    const val PAYMENT_FAILED = "payment-failed"
+    const val PAYMENT_REFUNDED = "payment-refunded"
+    const val PAYMENT_CANCEL_REQUESTED = "payment-cancel-requested"
+    const val CO_FUNDING_CONFIRMED = "co-funding-confirmed"
 }
