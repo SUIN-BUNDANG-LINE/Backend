@@ -1,7 +1,9 @@
 package com.sbl.sulmun2yong.notification.handler
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingFailedEvent
 import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
+import com.sbl.sulmun2yong.notification.NotificationTypes
 import com.sbl.sulmun2yong.notification.entity.SmsNotificationJobEntity
 import com.sbl.sulmun2yong.notification.exception.SmsSendException
 import com.sbl.sulmun2yong.notification.metrics.SmsNotificationMetrics
@@ -33,10 +35,8 @@ class SmsAttemptHandler(
         // 헤더가 사가 키(=originalDrawingEventId)를 실어 나른다. 발송 결과와 무관하게 finally 에서 정리.
         MDC.put("correlationId", job.eventId)
         try {
-            val drawingCompletedEvent =
-                objectMapper.readValue(job.payload, DrawingCompletedEvent::class.java)
             try {
-                smsSender.sendWinnerNotification(drawingCompletedEvent)
+                dispatchSend(job)
                 jobService.markCompleted(job.id)
                 metrics.recordAttempt("success")
             } catch (e: SmsSendException) {
@@ -53,6 +53,22 @@ class SmsAttemptHandler(
             }
         } finally {
             MDC.remove("correlationId")
+        }
+    }
+
+    // 잡의 notificationType 에 맞춰 payload 를 파싱해 발송한다. 파싱 실패·미지의 타입은
+    // SmsSendException 이 아닌 시스템 오류로 전파한다 - 재시도/DLT 회로에 태우지 않는다.
+    private fun dispatchSend(job: SmsNotificationJobEntity) {
+        when (job.notificationType) {
+            NotificationTypes.DRAWING_SMS ->
+                smsSender.sendWinnerNotification(
+                    objectMapper.readValue(job.payload, DrawingCompletedEvent::class.java),
+                )
+            NotificationTypes.CO_FUNDING_FAILED_SMS ->
+                smsSender.sendCoFundingFailedNotification(
+                    objectMapper.readValue(job.payload, CoFundingFailedEvent::class.java),
+                )
+            else -> throw IllegalStateException("알 수 없는 notificationType: ${job.notificationType}, jobId=${job.id}")
         }
     }
 }

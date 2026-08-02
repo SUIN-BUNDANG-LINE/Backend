@@ -1,5 +1,6 @@
 package com.sbl.sulmun2yong.notification.service
 
+import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingFailedEvent
 import com.sbl.sulmun2yong.drawing.dto.event.DrawingCompletedEvent
 import com.sbl.sulmun2yong.notification.exception.SmsSendException
 
@@ -10,4 +11,8 @@ interface SmsSender {
      */
     @Throws(SmsSendException::class)
     fun sendWinnerNotification(event: DrawingCompletedEvent)
+
+    /** 모금 무산 안내 SMS 발송. 실패 계약은 [sendWinnerNotification] 과 동일하다. */
+    @Throws(SmsSendException::class)
+    fun sendCoFundingFailedNotification(event: CoFundingFailedEvent)
 }
