@@ -1,6 +1,7 @@
 package com.sbl.sulmun2yong.cofunding.repository
 
 import com.sbl.sulmun2yong.cofunding.entity.CoFundingParticipant
+import com.sbl.sulmun2yong.cofunding.entity.CoFundingParticipantStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 
@@ -13,4 +14,10 @@ interface CoFundingParticipantRepository : JpaRepository<CoFundingParticipant, U
 
     // settle(D6)/릴레이 CANCEL 후처리 - 주문 -> 참여자 역참조
     fun findByTossOrderId(tossOrderId: String): CoFundingParticipant?
+
+    // 기한 스케줄러 - 무산 시점 SETTLED 스냅샷 (환불 대상)
+    fun findAllByFundingIdAndStatus(
+        fundingId: UUID,
+        status: CoFundingParticipantStatus,
+    ): List<CoFundingParticipant>
 }

@@ -19,12 +19,30 @@ include(
     "common",
     "drawing-sms-notification-consumer",
     "dlt-sms-notification-consumer",
-    "co-funding-consumer",
 )
 project(":common").projectDir = file("module-consumer/common")
 project(":drawing-sms-notification-consumer").projectDir =
     file("module-consumer/drawing-sms-notification-consumer")
 project(":dlt-sms-notification-consumer").projectDir =
     file("module-consumer/dlt-sms-notification-consumer")
-project(":co-funding-consumer").projectDir =
-    file("module-consumer/co-funding-consumer")
+
+// ── API 게이트웨이 (module-gateway/) — 인증(JWT 검증)·라우팅 전용. Spring Cloud Gateway(WebFlux).
+// 도메인 서비스는 게이트웨이가 붙인 X-User-Id 헤더만 신뢰한다. 자족형 독립 서비스.
+include("gateway")
+project(":gateway").projectDir = file("module-gateway")
+
+// ── 모금 서비스 (module-cofunding/) — 단일 기록자: co_fundings·participants. 완전체(Phase 3):
+// 개설 API + ④ 정산(SETTLED+장벽 CAS)·⑦ 환불 수렴 리스너 + ⏰기한 무산 스케줄러 + 사가 발행(②⑤⑥⑧).
+include("cofunding")
+project(":cofunding").projectDir = file("module-cofunding")
+
+// ── 결제 서비스 (module-payment/) — 단일 기록자: payment_orders·commands·webhook_inbox. 완전체(Phase 4):
+// confirm 착지·webhook·checkout-info API + 커맨드 릴레이(토스 자력 발송) + ②⑥⑧ 리스너 + 사실 발행(④⑦·failed).
+include("payment")
+project(":payment").projectDir = file("module-payment")
+
+// ── 인증 서비스 (module-auth/) — OAuth2 로그인·JWT 발급·리프레시 전담.
+// 게이트웨이는 검증만, auth 는 발급만, 도메인 서비스는 PURE(헤더만 신뢰)로 가는 삼분 구조.
+// user/refresh 엔티티·리포지토리는 :support 공유. 자족형 독립 서비스.
+include("auth")
+project(":auth").projectDir = file("module-auth")
