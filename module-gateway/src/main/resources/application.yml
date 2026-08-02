@@ -1,0 +1,67 @@
+# 게이트웨이는 클라이언트가 처음 닿는 관문. web(8080)/auth(8090)와 안 겹치게 8000 고정.
+server:
+    port: 8000
+
+spring:
+    application:
+        # 메트릭 태그/로그에서 이 서비스를 식별하는 이름. 아래 metrics 태그가 이 값을 참조.
+        name: gateway
+    profiles:
+        include:
+            - secret
+
+    cloud:
+        gateway:
+            # 라우트 = predicates(이 요청이 내 것인가) + uri(맞으면 어디로).
+            # 위->아래로 훑어 먼저 맞는 게 이김 -> 구체 경로 위, 포괄 fallback(/api/**) 아래.
+            routes:
+                # 로그인 발급 흐름(리프레시/소셜 콜백)은 auth 소관.
+                # 이 경로들은 관문 필터의 PUBLIC_PREFIXES 와 같게 맞춰 검증 없이 통과된다
+                # (로그인하려는데 로그인 토큰을 요구하면 모순이므로).
+                -   id: auth
+                    # 주소를 하드코딩하지 않고 아래 services 표를 참조(환경별로 표만 교체)/
+                    uri: ${services.auth}
+                    predicates:
+                        - Path=/auth/**,/login/oauth2/**,/oauth2/**
+                # 모금 서비스 (Phase 3 분리) - 개설은 surveys 하위 경로라 둘 다 잡는다.
+                # 구체 경로이므로 fallback(web-api)보다 위에.
+                -   id: cofunding
+                    uri: ${services.cofunding}
+                    predicates:
+                        - Path=/api/v1/co-fundings/**,/api/v1/surveys/*/co-funding
+                # 결제 서비스 (Phase 4 분리) - 착지·webhook·checkout-info.
+                -   id: payment
+                    uri: ${services.payment}
+                    predicates:
+                        - Path=/api/v1/payments/**
+                # 나머지 도메인 API 는 web 으로. 범위가 넓으니 반드시 맨 아래(fallback).
+                -   id: web-api
+                    uri: ${services.web}
+                    predicates:
+                        - Path=/api/**
+            # 모든 라우트 공통 - 게이트웨이만 아는 비밀헤더 주입(우회 직접접근 차단).
+            # 공격자가 위조해 보낸 값을 먼저 지우고(Remove) -> 진짜값을 찍는다(Add). 순서 중요.
+            # 이 값과 web 의 GatewayOnlyFilter 기대값이 같아야 통과한다.
+            default-filters:
+                - RemoveRequestHeader=X-Gateway-Auth
+                - AddRequestHeader=X-Gateway-Auth, ${GATEWAY_SECRET:local-dev-secret}
+
+management:
+    endpoints:
+        web:
+            base-path: /management
+            # 노출을 셋으로 한정 — env·beans 같은 민감 엔드포인트 유출 방지.
+            exposure:
+                include: health, info, prometheus
+    metrics:
+        tags:
+            # 여러 서비스를 한 판에 볼 때 어느 서비스 지표인지 구분하는 라벨.
+            application: ${spring.application.name:gateway}
+
+# 라우팅 대상 주소의 단일 출처 — routes 의 uri 가 ${services.xxx} 로 참조.
+# 실제로 떠 있는 포트와 일치해야 함(어긋나면 없는 주소로 프록시해 502).
+services:
+    auth: http://localhost:8090
+    web: http://localhost:8080
+    cofunding: http://localhost:8083
+    payment: http://localhost:8082
