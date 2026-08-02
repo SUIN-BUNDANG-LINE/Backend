@@ -5,13 +5,17 @@ plugins {
 
 rootProject.name = "sulmun2yong"
 
-include("support", "produce", "web")
-// :support — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter·annotation, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user). 기반 라이브러리.
-// :produce — Kafka 를 produce 하는 도메인(drawing/survey)의 서비스/퍼블리셔/컨트롤러 + outbox·publisher·kafka config + 분산락. :support 에 의존.
-// :web    — 실행 진입점(SpringBootApplication) + 비프로듀서 도메인 컨트롤러(ai/aws/user) + 보안/JWT/resolver/전역 config. :produce, :support 에 의존.
-project(":support").projectDir = file("modules-web/support")
-project(":produce").projectDir = file("modules-web/produce")
-project(":web").projectDir = file("modules-web/web")
+// ── 공유 기반 (module-support/) — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter,
+// kafka·outbox·분산락 인프라, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user).
+// 모든 도메인 서비스(web·auth·cofunding·payment)가 의존하는 기반 라이브러리.
+include("support")
+project(":support").projectDir = file("module-support")
+
+// ── 웹 서비스 (module-web/) — 실행 진입점(SpringBootApplication) + 설문/추첨 도메인
+// (서비스·퍼블리셔·컨트롤러·사가 리스너) + 비프로듀서 도메인 컨트롤러(ai/aws/user) +
+// 보안/JWT/resolver/전역 config. 다른 서비스와 같은 최상위 단일 모듈. :support 에 의존.
+include("web")
+project(":web").projectDir = file("module-web")
 
 // ── Kafka 컨슈머 계열 (module-consumer/) — MSA 자족형. 각자 SpringBootApplication/bootJar/이미지를 가진 독립 서비스.
 // :common 은 컨슈머가 공유하는 DTO 라이브러리(프로듀서 계열의 :support 와 별개). 각 컨슈머는 :common 에만 의존한다.

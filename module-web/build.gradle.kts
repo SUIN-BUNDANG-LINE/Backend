@@ -24,7 +24,6 @@ java {
 
 dependencies {
     implementation(project(":support"))
-    implementation(project(":produce"))
 
     // Web 진입점 전용
     implementation("org.springframework.boot:spring-boot-starter-web")

@@ -14,7 +14,7 @@
 | JDK | 17 |
 | 데이터베이스 | MySQL 8.0 (Spring Data JPA + Hibernate) |
 | ORM | JPA/Hibernate + QueryDSL 5.1.0 |
-| 마이그레이션 | Flyway (`modules-web/web/src/main/resources/db/migration/`, V1~V10) |
+| 마이그레이션 | Flyway (`module-web/src/main/resources/db/migration/`, V1~V10) |
 | 캐시/분산락 | Redis (Spring Data Redis) + Redisson 3.45.1 |
 | 인증 | Spring Security + OAuth2 + JWT (jjwt 0.12.6) |
 | API 문서 | SpringDoc OpenAPI 2.3.0 (Swagger UI) |
@@ -36,15 +36,14 @@
 | `./gradlew ktlintFormat` | 코드 스타일 자동 수정 (전체 모듈) |
 | `./gradlew jacocoTestReport` | 테스트 커버리지 리포트 생성 |
 | `./gradlew :web:bootRun` | Web 진입점 로컬 실행 |
-| `./gradlew :web:bootJar` | Web JAR 패키징 (`modules-web/web/build/libs/*-SNAPSHOT.jar`) |
+| `./gradlew :web:bootJar` | Web JAR 패키징 (`module-web/build/libs/*-SNAPSHOT.jar`) |
 | `./gradlew :web:jib` | Web Docker 이미지 빌드 및 푸시 |
 
 ## 실행 단위 (Entry Points)
 
-Gradle 멀티 프로젝트로 빈 경계를 보장한다. 프로듀서/웹 계열(`modules-web/`)은 `:support`, `:produce`, `:web` — 의존 방향은 `:support` ← `:produce` ← `:web` 선형(순환 없음, `:web`은 `:support`도 직접 의존).
-- `:support` — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user). 기반 라이브러리.
-- `:produce` — Kafka 를 produce 하는 도메인(drawing/survey)의 서비스/퍼블리셔/컨트롤러 + `@LoginUser` 등 인증 애노테이션. 라이브러리. (outbox·kafka·분산락 인프라는 `:support`의 global/kafka·global/lock 로 하강 — 구조변경 Phase 1)
-- `:web` — 실행 진입점(`Sulmun2yongApplication`) + 비프로듀서 도메인 컨트롤러(ai/aws/user) + 보안/JWT/resolver/전역 config·예외 핸들러. 유일한 실행 모듈.
+Gradle 멀티 프로젝트로 빈 경계를 보장한다. 모든 도메인 서비스는 최상위 단일 모듈(`module-*/`)이며 공유 기반 `:support`(`module-support/`)에만 의존한다.
+- `:support`(`module-support/`) — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter, kafka·outbox·분산락 인프라, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user). 기반 라이브러리 (bootJar 비활성).
+- `:web`(`module-web/`) — 실행 진입점(`Sulmun2yongApplication`) + 설문/추첨 도메인(서비스·퍼블리셔·컨트롤러·사가 리스너) + `@LoginUser` 등 인증 애노테이션 + 비프로듀서 도메인 컨트롤러(ai/aws/user) + 보안/JWT/resolver/전역 config·예외 핸들러.
 
 컨슈머 계열(`module-consumer/`)은 `:common`(컨슈머 공유 DTO 라이브러리 — `:support`와 별개) + `:drawing-sms-notification-consumer` + `:dlt-sms-notification-consumer`. 각 컨슈머는 `:common`에만 의존하며, 각자 SpringBootApplication/bootJar/이미지를 가진 MSA 자족형 독립 서비스다. (`:co-funding-consumer`는 구조변경 Phase 3에서 `module-cofunding`으로 흡수·해체)
 
@@ -61,7 +60,7 @@ Consumer 진입점은 2개 — `SmsNotificationConsumerApplication`(drawing-comp
 | 환경 | 실행 명령 |
 |---|---|
 | 로컬 — Web | `./gradlew :web:bootRun` |
-| 패키징 — Web | `./gradlew :web:bootJar` → `modules-web/web/build/libs/web-*-SNAPSHOT.jar` |
+| 패키징 — Web | `./gradlew :web:bootJar` → `module-web/build/libs/web-*-SNAPSHOT.jar` |
 | 운영 — Web | `java -jar web-*.jar` |
 
 배포 시 Web JAR을 이미지로 만들어 EC2에서 docker 컨테이너로 운영한다 (`{DOCKER_IMAGE_NAME}-web`, JIB→Docker Hub push→EC2 `docker pull`/run). Consumer 이미지는 `module-consumer/` 각 모듈의 JIB 설정으로 빌드한다. Actuator 엔드포인트(`/management/health`, `/management/prometheus`)는 양쪽 모두 동일하게 노출되어 docker-compose healthcheck·Prometheus 스크레이프로 헬스체크 가능.
@@ -74,19 +73,18 @@ Consumer end-to-end 흐름(Kafka listener 처리 검증)은 `module-consumer/` �
 
 ### 모듈에 새 코드 추가 시 주의
 
-- 새 **컨트롤러**: `web/src/main/kotlin/.../{도메인}/controller/`
-- 새 **KafkaListener / 도메인 listener / @Scheduled worker**: `module-consumer/<consumer>/src/main/kotlin/.../`
-- 새 **entity / repository / domain / 공유 기반 util** 또는 **비프로듀서 도메인(ai/aws/notification/user) 로직**: `support/src/main/kotlin/.../{도메인}/`
-- 새 **프로듀서 도메인(drawing/survey)의 service / publisher / controller**: `produce/src/main/kotlin/.../{도메인}/`
-- 새 **kafka·outbox·분산락 인프라**: `support/src/main/kotlin/.../global/{kafka,lock}/`
-- 새 **비프로듀서 도메인 컨트롤러 / 보안·JWT·resolver·전역 config**: `web/src/main/kotlin/.../{도메인}/`
-- 새 **payment(결제) 코드**는 3모듈 분산: entity·repository·adapter·dto → `:support`, service·relay → `:produce`, controller·`RestTemplateConfig`(toss 빈) → `:web`. 토스 API 통신은 `payment/adapter/`(TossPaymentsAdapter)로 격리한다
-- 판단 기준: 의존은 `:support` ← `:produce` ← `:web` 한 방향만. 하위 모듈이 상위를 참조하면 순환이므로, 참조당하는 타입은 항상 더 아래(공유) 모듈에 둔다. `kotlin("kapt")`가 있는 `:support`에는 메타-애노테이트된 애노테이션(@AuthenticationPrincipal 파생 등)을 두지 말 것 — kapt 스텁 생성이 깨진다(그래서 `@LoginUser`류는 `:produce`에 있다)
-- consumer 측과 공유되는 Kafka 이벤트 DTO(`DrawingCompletedEvent`)는 `modules-web`(`:support`)과 `module-consumer`(`:common`)가 각자 사본을 보유 — wire 스키마 계약이므로 코드 변경 시 양쪽 동기화 필요
+- 새 **설문/추첨 도메인의 controller / service / publisher / 사가 리스너**: `module-web/src/main/kotlin/.../{도메인}/`
+- 새 **SMS·DLT 컨슈머의 KafkaListener / 도메인 listener / @Scheduled worker**: `module-consumer/<consumer>/src/main/kotlin/.../`
+- 새 **entity / repository / domain / 공유 기반 util** 또는 **비프로듀서 도메인(ai/aws/notification/user) 로직**: `module-support/src/main/kotlin/.../{도메인}/`
+- 새 **kafka·outbox·분산락 인프라**: `module-support/src/main/kotlin/.../global/{kafka,lock}/`
+- 새 **비프로듀서 도메인 컨트롤러 / 보안·JWT·resolver·전역 config**: `module-web/src/main/kotlin/.../{도메인}/`
+- 새 **payment(결제) 코드**: entity·repository·adapter·dto → `:support`, service·relay·controller·리스너 → `module-payment`. 토스 API 통신은 `payment/adapter/`(TossPaymentsAdapter)로 격리한다. **cofunding(모금) 코드**도 동형 — entity·repository·dto → `:support`, service·publisher·controller·리스너·스케줄러 → `module-cofunding`
+- 판단 기준: 참조당하는 타입(entity·repository·이벤트 DTO·공유 인프라)은 항상 `:support`, 서비스 고유 로직은 각 `module-*`. 서비스 모듈끼리는 서로 참조하지 않는다(이벤트/내부 API로만 소통). `kotlin("kapt")`가 있는 `:support`에는 메타-애노테이트된 애노테이션(@AuthenticationPrincipal 파생 등)을 두지 말 것 — kapt 스텁 생성이 깨진다(그래서 `@LoginUser`류는 `module-web`에 있다)
+- consumer 측과 공유되는 Kafka 이벤트 DTO(`DrawingCompletedEvent` 등)는 `module-support`(`:support`)와 `module-consumer`(`:common`)가 각자 사본을 보유 — wire 스키마 계약이므로 코드 변경 시 양쪽 동기화 필요
 
 ## 아키텍처
 
-Gradle 멀티 프로젝트 — 프로듀서/웹 계열(`modules-web/`)은 `:support`(기반 라이브러리), `:produce`(프로듀서 도메인), `:web`(실행 진입점) 3개 모듈로 컴파일 타임 격리. `:support` ← `:produce` ← `:web` 단방향 의존.
+Gradle 멀티 프로젝트 — 공유 기반 `module-support/`(`:support`) 위에 도메인 서비스 모듈들(`module-web`·`module-auth`·`module-cofunding`·`module-payment`·`module-gateway`)이 각각 최상위 단일 모듈로 올라선다. 서비스 모듈은 `:support`에만 의존하고 서로 참조하지 않는다.
 컨슈머 계열은 `module-consumer/`(`:common` + 컨슈머 2개)로 같은 빌드에 포함된다.
 
 ```
@@ -204,7 +202,7 @@ Gradle 멀티 프로젝트 — 프로듀서/웹 계열(`modules-web/`)은 `:supp
 
 ### Kafka 컨슈머 구조 (ApplicationEvent 기반)
 
-Kafka Consumer 는 `module-consumer/` 컨슈머 모듈이 주 관리처다. 단, 구조변경 Phase 2(단일 기록자 이벤트화, `docs/kafka-distribute-lock/구조변경-실행계획.md`)부터 목표 서비스 소속 리스너가 웹 계열(`:produce`)·신설 서비스 모듈에도 생긴다.
+Kafka Consumer 는 `module-consumer/` 컨슈머 모듈이 주 관리처다. 단, 구조변경 Phase 2(단일 기록자 이벤트화, `docs/kafka-distribute-lock/구조변경-실행계획.md`)부터 목표 서비스 소속 리스너가 웹 서비스(`module-web`)·신설 서비스 모듈에도 있다.
 
 | 토픽 | groupId | Consumer 어댑터 (module-consumer) | 도메인 리스너 (module-consumer) |
 |---|---|---|---|
@@ -218,15 +216,15 @@ Kafka Consumer 는 `module-consumer/` 컨슈머 모듈이 주 관리처다. 단,
 | groupId | 리스너 (위치) | 쓰는 테이블 |
 |---|---|---|
 | `payment-cofunding-created` | `payment.listener.CoFundingCreatedPaymentListener` (`module-payment` ★신설 모듈) | payment_orders (참여자별 발급, tossOrderId 멱등) |
-| `survey-cofunding-created` | `survey.listener.CoFundingCreatedSurveyListener` (`:produce`) | surveys (NOT_STARTED→PENDING_PAYMENT 가드 멱등) |
-| `drawing-cofunding-created` | `drawing.listener.CoFundingCreatedDrawingListener` (`:produce`) | drawing_boards (findBySurveyId 멱등) |
+| `survey-cofunding-created` | `survey.listener.CoFundingCreatedSurveyListener` (`module-web`) | surveys (NOT_STARTED→PENDING_PAYMENT 가드 멱등) |
+| `drawing-cofunding-created` | `drawing.listener.CoFundingCreatedDrawingListener` (`module-web`) | drawing_boards (findBySurveyId 멱등) |
 
 구조변경 Phase 2b 신설 — `payment-settled`·`payment-failed`(confirm 성공/거절·이탈 사실, 발행: `PaymentEventPublisher` Outbox — 단독·모금 불문). 결제의 surveys 직접 쓰기(단독 활성화·복귀)를 대체. 설문 리스너는 co_fundings 교차 읽기로 모금 건을 스킵한다(모금 활성화는 장벽 ⑤, 모금 거절은 기한 만료 무산 경로):
 
 | groupId | 리스너 (위치) | 쓰는 테이블 |
 |---|---|---|
-| `survey-payment-settled` | `survey.listener.PaymentSettledSurveyListener` (`:produce`) | surveys (단독만 PENDING_PAYMENT→start, 멱등) |
-| `survey-payment-failed` | `survey.listener.PaymentFailedSurveyListener` (`:produce`) | surveys (단독만 PENDING_PAYMENT→NOT_STARTED 복귀, 멱등) |
+| `survey-payment-settled` | `survey.listener.PaymentSettledSurveyListener` (`module-web`) | surveys (단독만 PENDING_PAYMENT→start, 멱등) |
+| `survey-payment-failed` | `survey.listener.PaymentFailedSurveyListener` (`module-web`) | surveys (단독만 PENDING_PAYMENT→NOT_STARTED 복귀, 멱등) |
 
 구조변경 Phase 2c 신설 — 모금·결제 사가 재배선. 결제의 participants·co_fundings 접근이 0 이 됐고(교차 FOR UPDATE 잠금 → 모금 로컬 tx 직렬화), `co-payment-settled` 발행이 중단됐다(기존 co-funding-consumer 의 장벽·설문 활성화 리스너는 자연 휴면 — Phase 3 에서 해체). 릴레이 CANCEL 후처리는 전이/판정 2-tx 에서 단일 tx(`settleCancelled`)로:
 
@@ -235,7 +233,7 @@ Kafka Consumer 는 `module-consumer/` 컨슈머 모듈이 주 관리처다. 단,
 | `cofunding-payment-settled` | `cofunding.listener.PaymentSettledCoFundingListener` (`module-cofunding` ★신설 모듈) | participants SETTLED + co_fundings 장벽 CAS(tryConfirm) — 승자만 ⑤ 발행, 무산 후 늦은 결제엔 ⑧ 발행 |
 | `cofunding-payment-refunded` | `cofunding.listener.PaymentRefundedCoFundingListener` (`module-cofunding`) | participants REFUNDED + co_fundings 수렴 CAS(tryMarkRefunded) |
 | `payment-cancel-requested` | `payment.listener.PaymentCancelRequestedListener` (`module-payment`) | payment_commands (CANCEL 적재, UNIQUE 멱등) |
-| `survey-cofunding-confirmed` | `survey.listener.CoFundingConfirmedSurveyListener` (`:produce`) | surveys (PENDING_PAYMENT→start, 멱등) |
+| `survey-cofunding-confirmed` | `survey.listener.CoFundingConfirmedSurveyListener` (`module-web`) | surveys (PENDING_PAYMENT→start, 멱등) |
 
 구조변경 Phase 3 — `module-cofunding` 완전체(개설 API·⏰기한 스케줄러 흡수, `CoFundingSagaPublisher`가 ②⑤⑥⑧ 발행 전담) + `co-funding-consumer` 해체:
 

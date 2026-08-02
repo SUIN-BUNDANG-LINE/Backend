@@ -74,8 +74,8 @@ services:
         ports:
             - "18080:8080"  # 1+default 규칙 (8080 → 18080)
         volumes:
-            - ./modules-web/web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules-web/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./module-web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
@@ -89,8 +89,8 @@ services:
         ports:
             - "18081:8080"  # web-1(18080) + 1 (호스트 포트 충돌 회피)
         volumes:
-            - ./modules-web/web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules-web/web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./module-web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
