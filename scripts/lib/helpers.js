@@ -104,13 +104,14 @@ export function submitResponse(surveyId, sectionId, visitorId) {
 }
 
 // 추첨 실행
-// LOCK_MODE=off              → /draw-no-lock          (실험용, 락 없음)
-// LOCK_MODE=optimistic       → /draw-optimistic       (실험용, 낙관적 락)
+// LOCK_MODE=off              → /draw-no-lock          (실험용, 무보호 기준선)
+// LOCK_MODE=serializable     → /draw-serializable     (실험용, 트랜잭션 격리수준 SERIALIZABLE)
 // LOCK_MODE=optimistic-retry → /draw-optimistic-retry (실험용, 낙관적 락 + 재시도 5회)
+// LOCK_MODE=synchronized     → /draw-synchronized     (실험용, JVM 로컬 직렬화)
 // LOCK_MODE=on (기본)        → /draw                  (운영, Redisson 분산락)
 const DRAW_PATHS = {
     'off': '/api/v1/drawing-board/draw-no-lock',
-    'optimistic': '/api/v1/drawing-board/draw-optimistic',
+    'serializable': '/api/v1/drawing-board/draw-serializable',
     'optimistic-retry': '/api/v1/drawing-board/draw-optimistic-retry',
     'synchronized': '/api/v1/drawing-board/draw-synchronized',
 };

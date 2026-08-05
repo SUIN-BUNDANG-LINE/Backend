@@ -11,7 +11,7 @@
  *   3) defaultValue
  *
  * open() 경로는 호출 파일(env.js) 기준 상대경로 — scripts/lib/ → 프로젝트 루트는 ../../
- * 같은 패턴이 jwt.js의 application-secret.yml 로드에 사용됨.
+ *
  *
  * 파싱 규칙 (POSIX dotenv 호환):
  *   - 빈 줄, #으로 시작하는 주석 무시
