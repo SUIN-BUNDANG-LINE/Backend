@@ -4,6 +4,7 @@ import com.sbl.sulmun2yong.drawing.dto.request.DrawingRequest
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingBoardResponse
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.service.DrawingBoardService
+import com.sbl.sulmun2yong.drawing.service.strategy.DrawMode
 import com.sbl.sulmun2yong.survey.controller.doc.DrawingBoardApiDoc
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -27,73 +28,44 @@ class DrawingBoardController(
         return ResponseEntity.ok(drawingResultResponse)
     }
 
+    // 운영 경로 — Redis 분산락 (DrawMode.REDISSON)
     @PostMapping("/draw")
     override fun doDrawing(
         @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> {
-        val drawingResultResponse =
-            drawingBoardService.doDrawing(
-                participantId = request.participantId,
-                selectedNumber = request.selectedNumber,
-                phoneNumber = request.phoneNumber,
-            )
-        return ResponseEntity.ok(drawingResultResponse)
-    }
+    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.REDISSON, request)
 
-    // 실험용 — 분산락 미적용. T8 race condition 비교 측정 전용.
-    // 운영 사용 금지. 측정 종료 후 제거 가능.
+    // ── 이하 실험용 — 경쟁 제어 5방식 비교 측정 전용, 운영 사용 금지 ──
+
     @PostMapping("/draw-no-lock")
     fun doDrawingWithoutLock(
         @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> {
-        val drawingResultResponse =
-            drawingBoardService.doDrawingWithoutLock(
-                participantId = request.participantId,
-                selectedNumber = request.selectedNumber,
-                phoneNumber = request.phoneNumber,
-            )
-        return ResponseEntity.ok(drawingResultResponse)
-    }
+    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.NO_LOCK, request)
 
-    // 실험용 — synchronized(JVM 로컬) 직렬화. cross-JVM 한계 실측 전용.
-    @PostMapping("/draw-synchronized")
-    fun doDrawingWithSynchronized(
+    @PostMapping("/draw-serializable")
+    fun doDrawingWithSerializable(
         @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> {
-        val drawingResultResponse =
-            drawingBoardService.doDrawingWithSynchronized(
-                participantId = request.participantId,
-                selectedNumber = request.selectedNumber,
-                phoneNumber = request.phoneNumber,
-            )
-        return ResponseEntity.ok(drawingResultResponse)
-    }
+    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.SERIALIZABLE, request)
 
-    // 실험용 — 낙관적 락 + 재시도(최대 5회). 성공당 시도 횟수(attempts-per-success) 측정 전용.
     @PostMapping("/draw-optimistic-retry")
     fun doDrawingWithOptimisticRetry(
         @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> {
-        val drawingResultResponse =
-            drawingBoardService.doDrawingWithOptimisticRetry(
-                participantId = request.participantId,
-                selectedNumber = request.selectedNumber,
-                phoneNumber = request.phoneNumber,
-            )
-        return ResponseEntity.ok(drawingResultResponse)
-    }
+    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.OPTIMISTIC_RETRY, request)
 
-    // 실험용 — 낙관적 락 경로. SERIALIZABLE/Redisson 과의 3자 비교 측정 전용.
-    @PostMapping("/draw-optimistic")
-    fun doDrawingWithOptimisticLock(
+    @PostMapping("/draw-synchronized")
+    fun doDrawingWithSynchronized(
         @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> {
-        val drawingResultResponse =
-            drawingBoardService.doDrawingWithOptimisticLock(
+    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.SYNCHRONIZED, request)
+
+    private fun draw(
+        mode: DrawMode,
+        request: DrawingRequest,
+    ): ResponseEntity<DrawingResultResponse> =
+        ResponseEntity.ok(
+            drawingBoardService.doDrawing(
+                mode = mode,
                 participantId = request.participantId,
                 selectedNumber = request.selectedNumber,
                 phoneNumber = request.phoneNumber,
-            )
-        return ResponseEntity.ok(drawingResultResponse)
-    }
+            ),
+        )
 }
