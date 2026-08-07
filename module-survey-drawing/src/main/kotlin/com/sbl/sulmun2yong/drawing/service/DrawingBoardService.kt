@@ -6,8 +6,8 @@ import com.sbl.sulmun2yong.drawing.exception.FinishedDrawingException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardAccessException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
+import com.sbl.sulmun2yong.drawing.service.strategy.AbstractDrawingStrategy
 import com.sbl.sulmun2yong.drawing.service.strategy.DrawMode
-import com.sbl.sulmun2yong.drawing.service.strategy.DrawingStrategy
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.exception.InvalidParticipantException
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
@@ -21,10 +21,10 @@ class DrawingBoardService(
     private val surveyRepository: SurveyRepository,
     private val participantRepository: ParticipantRepository,
     private val drawingBoardRepository: DrawingBoardRepository,
-    strategies: List<DrawingStrategy>,
+    strategies: List<AbstractDrawingStrategy>,
 ) {
     // 5개 전략(NO_LOCK·SERIALIZABLE·OPTIMISTIC_RETRY·SYNCHRONIZED·REDISSON)을 모드로 색인
-    private val strategyByMode: Map<DrawMode, DrawingStrategy> = strategies.associateBy { it.mode }
+    private val strategyByMode: Map<DrawMode, AbstractDrawingStrategy> = strategies.associateBy { it.mode }
 
     fun getDrawingBoard(surveyId: UUID): DrawingBoardResponse {
         val surveyStatus =
