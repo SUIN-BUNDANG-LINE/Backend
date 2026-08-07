@@ -9,7 +9,7 @@ import com.sbl.sulmun2yong.global.util.EncryptionUtils
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.UUID
 
 /**
  * 무보호 기준선 (비교 실험 전용) — 경쟁 제어 지점이 **없다**.

@@ -16,7 +16,7 @@ import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 
 enum class DrawMode {
     NO_LOCK,

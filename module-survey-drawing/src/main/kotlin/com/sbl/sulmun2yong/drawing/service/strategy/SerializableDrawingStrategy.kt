@@ -10,7 +10,7 @@ import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.UUID
 
 /**
  * DB 안 직렬화 (비교 실험 전용) — 경쟁 제어 지점은 **트랜잭션 격리수준**이다.

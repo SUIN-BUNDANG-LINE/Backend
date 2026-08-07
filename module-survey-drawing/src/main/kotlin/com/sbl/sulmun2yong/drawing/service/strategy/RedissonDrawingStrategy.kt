@@ -10,7 +10,7 @@ import com.sbl.sulmun2yong.global.util.EncryptionUtils
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.UUID
 
 /**
  * Redis 분산락 — **운영 경로**. 경쟁 제어 지점은 **DB 앞단(Redis)**이다.

@@ -14,7 +14,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import java.util.*
+import java.util.UUID
 
 /**
  * 낙관적 락 + 재시도 (비교 실험 전용) — 경쟁 제어 지점은 **엔티티 버전(@Version)**이다.
@@ -30,14 +30,14 @@ import java.util.*
 @Component
 class OptimisticRetryDrawingStrategy(
     transactionManager: PlatformTransactionManager,
-    private val boardRepository: DrawingBoardRepository,
+    drawingBoardRepository: DrawingBoardRepository,
     drawingHistoryRepository: DrawingHistoryRepository,
     surveyRepository: SurveyRepository,
     encryptionUtils: EncryptionUtils,
     drawingProcessMetrics: DrawingProcessMetrics,
     drawingEventPublisher: DrawingEventPublisher,
 ) : AbstractDrawingStrategy(
-        boardRepository,
+        drawingBoardRepository,
         drawingHistoryRepository,
         surveyRepository,
         encryptionUtils,
@@ -54,7 +54,7 @@ class OptimisticRetryDrawingStrategy(
 
     /** 조회만으로 커밋 시 보드 version 을 강제 증가시킨다 — 이 전략의 경쟁 제어 장치. */
     override fun findBoard(surveyId: UUID): DrawingBoard =
-        boardRepository
+        drawingBoardRepository
             .findBySurveyIdWithOptimisticForceIncrement(surveyId)
             .orElseThrow { InvalidDrawingBoardException() }
 
