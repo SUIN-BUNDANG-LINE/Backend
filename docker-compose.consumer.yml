@@ -29,8 +29,8 @@ services:
         environment:
             OTEL_SERVICE_NAME: sulmun2yong-drawing-sms-notification-consumer
         volumes:
-            - ./modules/drawing-sms-notification-consumer/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./module-drawing-sms-notification-consumer/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
 
     dlt-sms-notification-consumer:
@@ -39,8 +39,8 @@ services:
         environment:
             OTEL_SERVICE_NAME: sulmun2yong-dlt-sms-notification-consumer
         volumes:
-            - ./modules/dlt-sms-notification-consumer/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./modules/dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./module-dlt-sms-notification-consumer/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
 
 networks:

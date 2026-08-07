@@ -19,6 +19,9 @@ class DltMessageEventListener(
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(DltMessageEventListener::class.java)
+
+        // SMS 컨슈머의 NotificationTypes.DRAWING_SMS 와 wire 로 만나는 계약 값(봉투 notificationType)
+        private const val DRAWING_SMS_TYPE = "DRAWING_SMS"
     }
 
     // ① 저장 — KafkaListener 트랜잭션 안에서 동기 실행된다.
@@ -40,8 +43,11 @@ class DltMessageEventListener(
 
     // ② 발행 — DB 커밋이 끝난 뒤에만 사가 하류로 영구 실패 신호를 쏜다(FR-009).
     //    롤백되면 이 메서드는 호출되지 않아 유령 신호가 나가지 않는다.
+    //    당첨 SMS 한정 — 다른 타입(모금 무산 SMS 등)의 payload 는 DrawingCompletedPayload 가
+    //    아니라서 dispatcher 파싱이 깨지고, 애초에 당첨 통보 실패 신호가 아니므로 저장에서 종착한다.
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onCommitted(consumed: DltSmsNotificationConsumedEvent) {
+        if (consumed.event.notificationType != DRAWING_SMS_TYPE) return
         deliveryPermanentlyFailedDispatcher.dispatch(consumed.event)
         log.info("영구 실패 신호 발행 완료, eventId:{}", consumed.event.eventId)
     }

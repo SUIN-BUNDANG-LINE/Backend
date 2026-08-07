@@ -5,25 +5,28 @@ import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.math.absoluteValue
-import kotlin.test.assertFalse
 
 class DrawingTest {
     @Test
     fun `꽝 티켓을을 뽑으면 DrawingResultNonWinner 도메인이 만들어지고  DrawingBoard 에 그 결과가 반영된다`() {
         // given
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardNotExistsIndex3()
+        val selectedCountBefore = drawingBoard.selectedTicketCount
 
         // when
         val drawingResult = drawingBoard.getDrawingResult(3)
         val changedDrawingBoard = drawingResult.changedDrawingBoard
+
         // then
         assertTrue { drawingResult is DrawingResult.NonWinner }
-        assertEquals(drawingBoard.selectedTicketCount + 1, changedDrawingBoard.selectedTicketCount)
-        assertFalse { drawingBoard.tickets[3].isSelected }
+        // 고른 티켓은 보드에 제자리로 반영된다 — 사본이 아니라 그 보드 자신이 돌아온다
+        assertSame(drawingBoard, changedDrawingBoard)
+        assertEquals(selectedCountBefore + 1, changedDrawingBoard.selectedTicketCount)
         assertTrue { changedDrawingBoard.tickets[3].isSelected }
     }
 
@@ -31,15 +34,18 @@ class DrawingTest {
     fun `당첨 티켓을 뽑으면 DrawingResultWinner 도메인이 만들어지고 rewardName 을 가져올 수 있다 그리고 DrawingBoard 에 그 결과가 반영된다`() {
         // given
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardExistsIndex3()
+        val selectedCountBefore = drawingBoard.selectedTicketCount
 
         // when
         val drawingResult = drawingBoard.getDrawingResult(3)
         val changedDrawingBoard = drawingResult.changedDrawingBoard
+
         // then
         assertTrue { drawingResult is DrawingResult.Winner }
         assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, (drawingResult as DrawingResult.Winner).rewardName)
-        assertEquals(drawingBoard.selectedTicketCount + 1, changedDrawingBoard.selectedTicketCount)
-        assertFalse { drawingBoard.tickets[3].isSelected }
+        // 고른 티켓은 보드에 제자리로 반영된다 — 사본이 아니라 그 보드 자신이 돌아온다
+        assertSame(drawingBoard, changedDrawingBoard)
+        assertEquals(selectedCountBefore + 1, changedDrawingBoard.selectedTicketCount)
         assertTrue { changedDrawingBoard.tickets[3].isSelected }
     }
 

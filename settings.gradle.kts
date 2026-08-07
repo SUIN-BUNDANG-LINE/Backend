@@ -6,29 +6,30 @@ plugins {
 rootProject.name = "sulmun2yong"
 
 // ── 공유 기반 (module-support/) — 도메인/엔티티/리포지토리 + 공유 기반(global error·data·util·converter,
-// kafka·outbox·분산락 인프라, oauth2 provider) + 비프로듀서 도메인 로직(ai/aws/notification/user).
+// kafka·outbox·분산락 인프라, oauth2 provider) + notification 도메인 로직.
+// (ai/aws/user 서비스 계층은 :survey-drawing 소속 — 여기엔 데이터 계층(entity·repository·dto·domain)만)
 // 모든 도메인 서비스(web·auth·cofunding·payment)가 의존하는 기반 라이브러리.
 include("support")
 project(":support").projectDir = file("module-support")
 
-// ── 웹 서비스 (module-web/) — 실행 진입점(SpringBootApplication) + 설문/추첨 도메인
+// ── 설문·추첨 서비스 (module-survey-drawing/) — 실행 진입점(SpringBootApplication) + 설문/추첨 도메인
 // (서비스·퍼블리셔·컨트롤러·사가 리스너) + 비프로듀서 도메인 컨트롤러(ai/aws/user) +
 // 보안/JWT/resolver/전역 config. 다른 서비스와 같은 최상위 단일 모듈. :support 에 의존.
-include("web")
-project(":web").projectDir = file("module-web")
+include("survey-drawing")
+project(":survey-drawing").projectDir = file("module-survey-drawing")
 
-// ── Kafka 컨슈머 계열 (module-consumer/) — MSA 자족형. 각자 SpringBootApplication/bootJar/이미지를 가진 독립 서비스.
-// :common 은 컨슈머가 공유하는 DTO 라이브러리(프로듀서 계열의 :support 와 별개). 각 컨슈머는 :common 에만 의존한다.
+// ── Kafka 컨슈머 계열 — MSA 자족형. 각자 SpringBootApplication/bootJar/이미지를 가진 독립 서비스.
+// :common 은 컨슈머가 공유하는 DTO 라이브러리(:support 와 별개). 각 컨슈머는 :common 에만 의존한다.
 include(
     "common",
     "drawing-sms-notification-consumer",
     "dlt-sms-notification-consumer",
 )
-project(":common").projectDir = file("module-consumer/common")
+project(":common").projectDir = file("module-common")
 project(":drawing-sms-notification-consumer").projectDir =
-    file("module-consumer/drawing-sms-notification-consumer")
+    file("module-drawing-sms-notification-consumer")
 project(":dlt-sms-notification-consumer").projectDir =
-    file("module-consumer/dlt-sms-notification-consumer")
+    file("module-dlt-sms-notification-consumer")
 
 // ── API 게이트웨이 (module-gateway/) — 인증(JWT 검증)·라우팅 전용. Spring Cloud Gateway(WebFlux).
 // 도메인 서비스는 게이트웨이가 붙인 X-User-Id 헤더만 신뢰한다. 자족형 독립 서비스.

@@ -77,7 +77,7 @@ services:
     dlt:
         <<: *consumer-base
         volumes:
-            - ../../../module-consumer/dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ../../../module-dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
 
     # ── 측정 대상: notification 컨슈머 — 발송+비용 통합 (스케일링 실증) ──
     notification-1:
@@ -86,7 +86,7 @@ services:
             <<: *consumer-env
             SMS_MOCK_FAILURE_RATE: "0.0"    # 전량 성공 → 전량 CONFIRMED (회계 정확성 검증에 유리)
         volumes:
-            - ../../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ../../../module-drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
 
     notification-2:
         <<: *consumer-base
@@ -95,7 +95,7 @@ services:
             <<: *consumer-env
             SMS_MOCK_FAILURE_RATE: "0.0"
         volumes:
-            - ../../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ../../../module-drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
 
     notification-3:
         <<: *consumer-base
@@ -104,7 +104,7 @@ services:
             <<: *consumer-env
             SMS_MOCK_FAILURE_RATE: "0.0"
         volumes:
-            - ../../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ../../../module-drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
 
 networks:
     load-net:

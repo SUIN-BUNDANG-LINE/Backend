@@ -55,7 +55,7 @@ jobs:
               run: echo "${{ env.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
 
             - name: Web/Consumer Docker 이미지 빌드 및 푸시 (JIB)
-              run: ./gradlew :web:jib :consumer:jib -Ddocker.id="${{ env.DOCKER_ID }}" -Ddocker.password="${{ env.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ env.DOCKER_IMAGE_NAME }}"
+              run: ./gradlew :survey-drawing:jib :consumer:jib -Ddocker.id="${{ env.DOCKER_ID }}" -Ddocker.password="${{ env.DOCKER_PASSWORD }}" -Ddocker.image.name="${{ env.DOCKER_IMAGE_NAME }}"
 
     deploy:
         if: github.ref == 'refs/heads/main'  # main 브랜치에서만 실행

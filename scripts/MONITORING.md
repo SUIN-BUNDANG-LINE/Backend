@@ -25,9 +25,9 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 | 항목 | 내용 |
 |---|---|
 | 대상 대시보드 | `drawing-lock` (primary), `race-comparison`, `cluster-overview` (보조) |
-| 핵심 패널 | Lock Acquire Rate — by Result · Lock Wait Latency p50/p95/p99 · Lock Success Ratio (5m) · Lock Acquire Rate — by Lock Key Type · Race Detection (race-comparison) |
+| 핵심 패널 | Lock Acquire Rate — by Result · Lock Wait Latency p50/p95/p99 · Lock Success Ratio (5m) · 임계구역 진입률 — 전략별 · 추첨 결과/시도 (race-comparison) |
 | 기대 결과 | same_ticket 10 VU → success=1, fail=9 · same_user 10 VU → success=1, fail=9 · diff_tickets 10 VU → success=10 (분산락 mutex 정상). `LOCK_MODE=off`로 동일 endpoint 비교 시 deadlock 27건/회 발생 |
-| 디버깅 PromQL | `sum by (result, lock_key_type) (rate(drawing_lock_acquire_total[1m]))` · `histogram_quantile(0.95, sum by (le) (rate(drawing_lock_wait_seconds_bucket[1m])))` · `sum(db_deadlock_total)` |
+| 디버깅 PromQL | `sum by (mode, result) (rate(drawing_entry_total[1m]))` · `histogram_quantile(0.95, sum by (le) (rate(drawing_contention_wait_seconds_bucket{mode="REDISSON"}[1m])))` · `sum(drawing_outcome_total{outcome="deadlock"})` |
 
 ### 2. drawing-kafka-fanout
 
@@ -70,10 +70,10 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 ### Lock OFF vs Lock ON — Deadlock Prevention (F015 핵심)
 
 1. cluster 기동 후 `LOCK_MODE=off ./k6 run drawing-concurrency.js` 3회 실행 → Before 측정
-2. Grafana `race-comparison` 대시보드에서 `db_deadlock_total` 누적 카운트 캡처
+2. Grafana `race-comparison` 대시보드에서 `drawing_outcome_total{outcome="deadlock"}` 누적 카운트 캡처
 3. `LOCK_MODE=on ./k6 run drawing-concurrency.js` 3회 실행 → After 측정
 4. 동일 대시보드에서 deadlock 추가 발생 없음(0건) 확인
-5. p95 latency, 가용성, lock_acquire_total{result="fail"} 비교 표 작성
+5. p95 latency, 가용성, `drawing_entry_total{result="failure"}` 비교 표 작성
 
 ### P:1 vs P:2 처리량 비교
 

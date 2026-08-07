@@ -12,7 +12,7 @@
 | `phase2/`, `observability/` | 컨슈머 override compose · Grafana 사가 대시보드 |
 
 > 실행 진입점은 `scripts/runners/run-e2e.sh`, compose 하네스는 이 폴더(`tests/e2e/`) 에 있다.
-> 컨슈머 jar 는 `module-consumer/<consumer>/build/libs/` 에서 마운트하며 `(cd module-consumer && ./gradlew bootJar)` 로 빌드된다.
+> 컨슈머 jar 는 `module-<consumer>/build/libs/` 에서 마운트하며 `./gradlew :<consumer>:bootJar` 로 빌드된다.
 
 ## 실행
 

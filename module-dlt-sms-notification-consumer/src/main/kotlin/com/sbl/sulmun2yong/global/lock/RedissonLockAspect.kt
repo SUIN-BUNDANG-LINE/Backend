@@ -1,7 +1,6 @@
 package com.sbl.sulmun2yong.global.lock
 
 import com.sbl.sulmun2yong.global.lock.exception.TooManyLockRequestException
-import com.sbl.sulmun2yong.global.lock.metrics.DrawingLockMetrics
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -18,7 +17,6 @@ import java.util.concurrent.TimeUnit
 @Component
 class RedissonLockAspect(
     private val redissonClient: RedissonClient,
-    private val metrics: DrawingLockMetrics,
 ) {
     private val paramNameDiscoverer = DefaultParameterNameDiscoverer()
 
@@ -58,15 +56,11 @@ class RedissonLockAspect(
         lockKey: String,
         redissonLock: RedissonLock,
     ): RLock {
-        val lockKeyType = redissonLock.key
-        val sample = metrics.startSample()
         val lock = redissonClient.getLock(lockKey)
         val acquired = lock.tryLock(redissonLock.waitTime, redissonLock.leaseTime, TimeUnit.SECONDS)
         if (!acquired) {
-            metrics.recordAcquire("failure", lockKeyType, sample)
             throw TooManyLockRequestException()
         }
-        metrics.recordAcquire("success", lockKeyType, sample)
         return lock
     }
 

@@ -1,8 +1,7 @@
 package com.sbl.sulmun2yong.global.error
 
-import com.sbl.sulmun2yong.global.metrics.DeadlockMetrics
-import com.sbl.sulmun2yong.global.metrics.OptimisticLockMetrics
 import jakarta.servlet.http.HttpServletRequest
+import org.hibernate.exception.LockAcquisitionException
 import org.slf4j.LoggerFactory
 import org.springframework.dao.CannotAcquireLockException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
@@ -16,10 +15,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
-class GlobalExceptionHandler(
-    private val deadlockMetrics: DeadlockMetrics,
-    private val optimisticLockMetrics: OptimisticLockMetrics,
-) {
+class GlobalExceptionHandler {
     private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(Exception::class)
@@ -28,19 +24,19 @@ class GlobalExceptionHandler(
         return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR)
     }
 
-    // MySQL InnoDB deadlock 검출 — 분산락 효과 측정 지표 (db_deadlock_total)
-    @ExceptionHandler(CannotAcquireLockException::class)
-    protected fun handleDeadlock(e: CannotAcquireLockException): ErrorResponse {
-        deadlockMetrics.recordDeadlock()
+    // 계측은 DrawingProcessMetrics(mode 라벨 포함)가 전담한다. 여기서는 진단용 로그만 남긴다.
+    // 지연 로딩 조회에서 난 데드락은 Spring 예외 변환을 타지 않아 Hibernate 고유 예외로 올라오므로
+    // 두 타입을 함께 받는다 — 그러지 않으면 같은 데드락이 일반 오류 로그에 섞인다.
+    @ExceptionHandler(CannotAcquireLockException::class, LockAcquisitionException::class)
+    protected fun handleDeadlock(e: Exception): ErrorResponse {
         log.error("DB deadlock 발생: ${e.message}", e)
         return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR)
     }
 
-    // 낙관적 락 버전 충돌 검출 — 3자 비교 측정 지표 (optimistic_lock_failure_total)
+    // 보드 버전 충돌과 경합 중 사라진 행이 같은 타입으로 올라온다 — 메시지의 엔티티 이름으로 구분한다
     @ExceptionHandler(ObjectOptimisticLockingFailureException::class)
     protected fun handleOptimisticLockConflict(e: ObjectOptimisticLockingFailureException): ErrorResponse {
-        optimisticLockMetrics.recordConflict()
-        log.error("낙관적 락 충돌 발생: ${e.message}")
+        log.error("동시 수정 충돌 발생: ${e.message}")
         return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR)
     }
 

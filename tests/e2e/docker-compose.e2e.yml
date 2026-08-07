@@ -81,13 +81,13 @@ services:
             # SMS mock 실패율 — run-e2e.sh 가 성공/실패 페이즈에서 이 값을 바꿔 재기동한다.
             SMS_MOCK_FAILURE_RATE: "${SMS_MOCK_FAILURE_RATE:-0.0}"
         volumes:
-            - ../../module-consumer/drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ../../module-drawing-sms-notification-consumer/build/libs/drawing-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
 
     dlt-sms-notification-consumer:
         <<: *consumer-base
         container_name: e2e-dlt-consumer
         volumes:
-            - ../../module-consumer/dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ../../module-dlt-sms-notification-consumer/build/libs/dlt-sms-notification-consumer-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
 
 networks:
     e2e-net:

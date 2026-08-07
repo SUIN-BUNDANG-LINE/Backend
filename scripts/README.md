@@ -95,7 +95,7 @@ export DB_DSN="user:password@tcp(localhost:13306)/test?parseTime=true"
 설문 생성/시작 API는 인증이 필요합니다. 테스트용 발급 엔드포인트를 쓰면 브라우저 로그인 없이 얻을 수 있습니다.
 
 ```bash
-# 서버를 test-auth 켜서 실행: TEST_AUTH_ENABLED=true ./gradlew :web:bootRun
+# 서버를 test-auth 켜서 실행: TEST_AUTH_ENABLED=true ./gradlew :survey-drawing:bootRun
 export ACCESS_TOKEN=$(curl -s -X POST http://localhost:8081/api/v1/test/token | jq -r .accessToken)
 
 # (대안) 브라우저 개발자 도구 → Application → Cookies → access-token 값 복사

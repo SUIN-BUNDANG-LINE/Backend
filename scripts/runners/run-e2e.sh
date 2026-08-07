@@ -10,7 +10,7 @@
 #   SKIP_BUILD=1 ./scripts/runners/run-e2e.sh   # jar 재빌드 생략
 set -uo pipefail
 
-# 러너는 scripts/runners/ 에, compose 하네스는 tests/e2e/ 에 있고, 컨슈머 jar 만 module-consumer 에서 빌드된다.
+# 러너는 scripts/runners/ 에, compose 하네스는 tests/e2e/ 에 있고, 컨슈머 jar 는 루트 gradle 로 빌드된다.
 # compose 파일은 절대경로로 지정 → 프로젝트 디렉토리가 tests/e2e/ 로 고정되어 jar 상대 마운트가 정합.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE="docker compose -f ${REPO_ROOT}/tests/e2e/docker-compose.e2e.yml"
@@ -56,7 +56,7 @@ drawing() { # eventId isWinner  → drawing-completed JSON
 
 # ── 0) 빌드 & 기동 ───────────────────────────────────────────────────────────
 if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
-    log "bootJar 빌드 (module-consumer)"; (cd "${REPO_ROOT}/module-consumer" && ./gradlew bootJar -q) || { echo "빌드 실패"; exit 1; }
+    log "bootJar 빌드 (컨슈머 2종)"; (cd "${REPO_ROOT}" && ./gradlew :drawing-sms-notification-consumer:bootJar :dlt-sms-notification-consumer:bootJar -q) || { echo "빌드 실패"; exit 1; }
 fi
 
 log "인프라 + 컨슈머 기동 (notification: 실패율 0.0)"

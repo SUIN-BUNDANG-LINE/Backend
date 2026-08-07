@@ -9,7 +9,7 @@
 #
 # 사용: [N=8000] ./scripts/runners/run-load.sh   |  SKIP_BUILD=1 …  |  KEEP=1 …
 set -uo pipefail
-# 러너는 scripts/runners/ 에, load 하네스는 tests/e2e/load/ 에 있고, 컨슈머 jar 만 module-consumer 에서 빌드된다.
+# 러너는 scripts/runners/ 에, load 하네스는 tests/e2e/load/ 에 있고, 컨슈머 jar 는 루트 gradle 로 빌드된다.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CF="${CF:-${REPO_ROOT}/tests/e2e/load/docker-compose.load.yml}"
 COMPOSE="docker compose -f $CF"
@@ -60,7 +60,7 @@ run_burst(){
 }
 
 # ── 0) 빌드 & 인프라 + baseline(notification 1개) ──
-[[ "${SKIP_BUILD:-0}" != 1 ]] && { log "bootJar 빌드 (module-consumer)"; (cd "${REPO_ROOT}/module-consumer" && ./gradlew bootJar -q) || exit 1; }
+[[ "${SKIP_BUILD:-0}" != 1 ]] && { log "bootJar 빌드 (컨슈머 2종)"; (cd "${REPO_ROOT}" && ./gradlew :drawing-sms-notification-consumer:bootJar :dlt-sms-notification-consumer:bootJar -q) || exit 1; }
 log "인프라 + 컨슈머 기동 (notification 1개)"
 $COMPOSE up -d --force-recreate
 # 원격 클러스터 모드면 CLI client 타임아웃 설정 파일을 tools 컨테이너에 심는다.
