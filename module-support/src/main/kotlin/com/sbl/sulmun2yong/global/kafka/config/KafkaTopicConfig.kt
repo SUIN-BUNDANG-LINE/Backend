@@ -99,26 +99,32 @@ class KafkaTopicConfig {
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
             .build()
 
-    // 사가 토픽별 죽은 편지 큐 - KafkaDltConfig 의 에러핸들러가 "<원본 토픽>.DLT" 로 재발행한다.
-    // 기본 resolver 가 같은 파티션 번호로 보내므로 원본과 동일한 3파티션을 유지해야 한다.
+    // 개설 판정 사가(요청·판정 결과)와 단독 개시 이벤트 - 전 교차 접근의 이벤트화로 신설.
     @Bean
-    fun sagaDltTopics(): KafkaAdmin.NewTopics =
+    fun sagaHandshakeTopics(): KafkaAdmin.NewTopics =
         KafkaAdmin.NewTopics(
             *listOf(
-                KafkaTopics.CO_FUNDING_CREATED,
-                KafkaTopics.CO_FUNDING_CONFIRMED,
-                KafkaTopics.CO_FUNDING_FAILED,
-                KafkaTopics.PAYMENT_SETTLED,
-                KafkaTopics.PAYMENT_FAILED,
-                KafkaTopics.PAYMENT_REFUNDED,
-                KafkaTopics.PAYMENT_CANCEL_REQUESTED,
+                KafkaTopics.CO_FUNDING_REQUESTED,
+                KafkaTopics.CO_FUNDING_REVIEWED,
+                KafkaTopics.SURVEY_PAYMENT_PENDING,
             ).map { topic ->
                 TopicBuilder
-                    .name("$topic.DLT")
+                    .name(topic)
                     .partitions(3)
                     .replicas(3)
                     .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
                     .build()
             }.toTypedArray(),
         )
+
+    // 사가 리스너 실패의 통합 죽은 편지 큐 - KafkaDltConfig 의 에러핸들러가 여기로 재발행한다.
+    // 토픽별로 쪼개지 않는다 - 원본 토픽은 kafka_dlt-original-topic 헤더가 보존한다.
+    @Bean
+    fun sagaDltTopic(): NewTopic =
+        TopicBuilder
+            .name(KafkaTopics.SAGA_DLT)
+            .partitions(3)
+            .replicas(3)
+            .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .build()
 }

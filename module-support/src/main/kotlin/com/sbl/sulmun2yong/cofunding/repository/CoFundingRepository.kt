@@ -83,6 +83,20 @@ interface CoFundingRepository : JpaRepository<CoFunding, UUID> {
         @Param("now") now: LocalDateTime,
     ): Int
 
+    // 판정 미회신 접수의 만료 종착 CAS - 기한 지난 PENDING_APPROVAL 을 일괄 REJECTED.
+    // 승인/거절 리스너의 행 잠금과 상태 가드로 직렬화된다 - 반환값 = 종착시킨 행 수.
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        """
+        UPDATE CoFunding f
+        SET f.status = 'REJECTED', f.updatedAt = :now
+        WHERE f.status = 'PENDING_APPROVAL' AND f.deadline < :now
+    """,
+    )
+    fun rejectExpiredPendingApprovals(
+        @Param("now") now: LocalDateTime,
+    ): Int
+
     // 기한 스케줄러 클레임 - 만료된 FUNDING 을 잠그고 집는다.
     // SKIP LOCKED(-2): 다른 인스턴스가 잠근 행은 건너뛴다 - 스케줄러 다중 인스턴스 분업.
     // ④ 리스너의 findByIdForUpdate 와 같은 행 잠금이라 "만료 처리 vs 마지막 결제"도 직렬화된다.

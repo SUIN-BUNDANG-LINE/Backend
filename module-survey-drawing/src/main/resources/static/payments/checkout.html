@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>설문이용 — 경품 결제</title>
+    <script src="https://js.tosspayments.com/v2/standard"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <style>
+        :root {
+            --paper: #f7f3ec;          /* 따뜻한 종이 */
+            --card: #fffdf9;           /* 티켓 면 */
+            --ink: #221c14;            /* 먹색 잉크 */
+            --ink-soft: #6f6657;       /* 옅은 잉크 */
+            --line: #e4dccd;           /* 괘선 */
+            --stamp: #d1495b;          /* 도장 주홍 */
+            --seal: #2f6f4f;           /* 완료 인장 초록 */
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 48px 16px 80px;
+            background:
+                radial-gradient(1200px 500px at 50% -200px, #fdfaf4 0%, transparent 70%),
+                var(--paper);
+            color: var(--ink);
+            font-family: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 은은한 종이 결 */
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            pointer-events: none;
+            opacity: .5;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.5 0 0 0 0 0.42 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .wrap { max-width: 560px; margin: 0 auto; position: relative; }
+
+        /* ── 머리글 ── */
+        .masthead {
+            text-align: center;
+            margin-bottom: 28px;
+            animation: rise .55s cubic-bezier(.2,.7,.2,1) both;
+        }
+        .masthead .brand {
+            font-size: 13px;
+            letter-spacing: .35em;
+            text-indent: .35em;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+        }
+        .masthead h1 {
+            font-family: 'Gowun Batang', serif;
+            font-size: 30px;
+            font-weight: 700;
+            margin: 10px 0 0;
+            letter-spacing: -0.01em;
+        }
+        .masthead .rule {
+            width: 46px; height: 3px;
+            background: var(--ink);
+            margin: 16px auto 0;
+        }
+
+        /* ── 티켓(주문서) ── */
+        .ticket {
+            position: relative;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow:
+                0 1px 2px rgba(34,28,20,.05),
+                0 12px 32px -12px rgba(34,28,20,.18);
+            animation: rise .55s .08s cubic-bezier(.2,.7,.2,1) both;
+        }
+
+        .ticket-head {
+            padding: 22px 26px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+        }
+        .ticket-head .label {
+            font-family: 'Gowun Batang', serif;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .ticket-head .order-no {
+            font-size: 11.5px;
+            color: var(--ink-soft);
+            letter-spacing: .04em;
+            max-width: 55%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .rows { padding: 0 26px; }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 11px 0;
+            border-top: 1px dashed var(--line);
+            font-size: 14.5px;
+        }
+        .row .k { color: var(--ink-soft); }
+        .row .v { font-weight: 600; }
+
+        /* 금액 강조 줄 */
+        .row.total { padding: 16px 0 20px; }
+        .row.total .k { font-size: 14.5px; }
+        .row.total .v {
+            font-family: 'Gowun Batang', serif;
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .row.total .v small { font-size: 16px; margin-left: 2px; font-weight: 400; }
+
+        /* 절취선 — 양쪽 펀치 구멍 */
+        .perforation {
+            position: relative;
+            height: 0;
+            border-top: 2px dashed var(--line);
+            margin: 0 18px;
+        }
+        .perforation::before, .perforation::after {
+            content: "";
+            position: absolute;
+            top: -12px;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: var(--paper);
+            border: 1px solid var(--line);
+        }
+        .perforation::before { left: -31px; }
+        .perforation::after  { right: -31px; }
+
+        /* ── 결제 수단 영역 (토스 위젯) ── */
+        .pay-zone { padding: 10px 8px 8px; }
+        .pay-zone .zone-label {
+            font-size: 12px;
+            letter-spacing: .22em;
+            text-indent: .22em;
+            color: var(--ink-soft);
+            text-align: center;
+            margin: 14px 0 2px;
+        }
+
+        /* ── 결제 버튼 ── */
+        .cta {
+            display: block;
+            width: calc(100% - 52px);
+            margin: 10px auto 26px;
+            padding: 17px;
+            font-size: 16.5px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #fffdf9;
+            background: var(--ink);
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            letter-spacing: .02em;
+            transition: transform .15s ease, box-shadow .15s ease, background .2s;
+            box-shadow: 0 10px 24px -10px rgba(34,28,20,.55);
+        }
+        .cta:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 28px -10px rgba(34,28,20,.5); }
+        .cta:active:not(:disabled) { transform: translateY(0); }
+        .cta:disabled { background: #c9c1b2; cursor: default; box-shadow: none; }
+
+        /* 바코드 장식 */
+        .barcode {
+            height: 34px;
+            margin: 0 26px 22px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--ink) 0 2px, transparent 2px 5px,
+                var(--ink) 5px 6px, transparent 6px 10px,
+                var(--ink) 10px 13px, transparent 13px 16px
+            );
+            opacity: .82;
+        }
+
+        /* 테스트 모드 배지 */
+        .test-badge {
+            text-align: center;
+            margin-top: 18px;
+            animation: rise .55s .16s cubic-bezier(.2,.7,.2,1) both;
+        }
+        .test-badge span {
+            display: inline-block;
+            font-size: 12px;
+            color: var(--stamp);
+            border: 1.5px solid currentColor;
+            border-radius: 999px;
+            padding: 5px 14px;
+            letter-spacing: .06em;
+            transform: rotate(-1.2deg);
+        }
+
+        /* ── 상태 카드(로딩·오류·처리됨) ── */
+        .state {
+            padding: 46px 26px 50px;
+            text-align: center;
+        }
+        .state .glyph {
+            font-family: 'Gowun Batang', serif;
+            font-size: 40px;
+            line-height: 1;
+        }
+        .state h2 {
+            font-family: 'Gowun Batang', serif;
+            font-size: 20px;
+            margin: 14px 0 8px;
+        }
+        .state p { font-size: 14px; color: var(--ink-soft); margin: 0; line-height: 1.7; }
+        .state.error .glyph { color: var(--stamp); }
+        .state.done .glyph { color: var(--seal); }
+
+        /* 로딩 점 */
+        .dots span {
+            display: inline-block;
+            width: 7px; height: 7px;
+            margin: 0 3px;
+            border-radius: 50%;
+            background: var(--ink-soft);
+            animation: blink 1.2s infinite;
+        }
+        .dots span:nth-child(2) { animation-delay: .2s; }
+        .dots span:nth-child(3) { animation-delay: .4s; }
+
+        .hidden { display: none; }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: none; }
+        }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: .25; }
+            40% { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .masthead, .ticket, .test-badge { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header class="masthead">
+            <div class="brand">SULMOON2YONG</div>
+            <h1>경품 설문 결제</h1>
+            <div class="rule"></div>
+        </header>
+
+        <main class="ticket">
+            <!-- 로딩 상태 -->
+            <div id="state-loading" class="state">
+                <div class="dots"><span></span><span></span><span></span></div>
+                <h2>주문서를 펼치는 중</h2>
+                <p>잠시만 기다려주세요.</p>
+            </div>
+
+            <!-- 오류/처리됨 상태 -->
+            <div id="state-message" class="state hidden">
+                <div class="glyph" id="state-glyph">✕</div>
+                <h2 id="state-title"></h2>
+                <p id="state-desc"></p>
+            </div>
+
+            <!-- 주문서 본문 -->
+            <div id="order-body" class="hidden">
+                <div class="ticket-head">
+                    <span class="label">주문서</span>
+                    <span class="order-no" id="order-no"></span>
+                </div>
+                <div class="rows">
+                    <div class="row">
+                        <span class="k">상품</span>
+                        <span class="v">설문 경품 (당첨자 지급용)</span>
+                    </div>
+                    <div class="row total">
+                        <span class="k">결제 금액</span>
+                        <span class="v"><span id="amount-text">—</span><small>원</small></span>
+                    </div>
+                </div>
+
+                <div class="perforation"></div>
+
+                <div class="pay-zone">
+                    <div class="zone-label">결제 안내</div>
+                    <p style="text-align:center; font-size:13px; color:var(--ink-soft); margin:14px 24px 6px; line-height:1.7;">
+                        아래 버튼을 누르면 토스 결제창이 열립니다.<br>테스트 모드에서는 아무 카드 정보나 입력해도 됩니다.
+                    </p>
+                </div>
+
+                <button id="pay-button" class="cta" disabled>결제하기</button>
+                <div class="barcode" aria-hidden="true"></div>
+            </div>
+        </main>
+
+        <div class="test-badge">
+            <span>테스트 결제 — 실제로 청구되지 않습니다</span>
+        </div>
+    </div>
+
+    <script>
+        // 값은 전부 서버 API에서 받는다 — 금액은 결제 장부 기준(쿼리·화면 값 아님: 위변조 방어의 첫 단추)
+        // orderId(모금 — 참여자별 주문) 또는 surveyId(단독 — 설문당 1주문) 로 진입한다.
+        // 단독 주문은 이벤트로 발급되므로 잠깐 없을 수 있다(최종적 일관성 창) — 404면 짧게 재시도.
+        const params = new URLSearchParams(location.search);
+        const orderIdParam = params.get("orderId");
+        const surveyIdParam = params.get("surveyId");
+
+        const el = (id) => document.getElementById(id);
+        const show = (id) => el(id).classList.remove("hidden");
+        const hide = (id) => el(id).classList.add("hidden");
+
+        function showMessage(kind, glyph, title, desc) {
+            hide("state-loading");
+            hide("order-body");
+            const box = el("state-message");
+            box.className = "state " + kind;
+            el("state-glyph").textContent = glyph;
+            el("state-title").textContent = title;
+            el("state-desc").textContent = desc;
+            show("state-message");
+        }
+
+        async function fetchCheckoutInfo() {
+            const query = orderIdParam
+                ? `orderId=${encodeURIComponent(orderIdParam)}`
+                : `surveyId=${encodeURIComponent(surveyIdParam)}`;
+            // 발급 수렴 대기: 404면 1초 간격 최대 10회 재시도
+            for (let attempt = 0; attempt < 10; attempt++) {
+                const res = await fetch(`/api/v1/payments/checkout-info?${query}`);
+                if (res.ok) return res.json();
+                if (res.status !== 404) return null;
+                await new Promise((r) => setTimeout(r, 1000));
+            }
+            return null;
+        }
+
+        async function init() {
+            if (!orderIdParam && !surveyIdParam) {
+                showMessage("error", "✕", "주문 정보가 없습니다", "설문 관리 페이지에서 다시 시작해주세요.");
+                return;
+            }
+
+            const info = await fetchCheckoutInfo();
+            if (!info) {
+                showMessage("error", "✕", "주문을 찾을 수 없습니다", "설문 관리 페이지에서 다시 시작해주세요.");
+                return;
+            }
+
+            if (info.status !== "PENDING") {
+                showMessage("done", "✓", "이미 처리된 주문입니다",
+                    `이 주문의 상태는 ${info.status} 입니다. 설문 관리 페이지에서 확인해주세요.`);
+                return;
+            }
+
+            // 주문서 채우기
+            el("order-no").textContent = "No. " + info.orderId;
+            el("amount-text").textContent = info.amount.toLocaleString();
+            hide("state-loading");
+            show("order-body");
+
+            // API 개별 연동 키(test_ck_)로 동작하는 "결제창" 방식 — 버튼을 누르면 토스 결제창이 열린다.
+            // (결제위젯은 전자결제 신청/사업자 필요라 학습용으론 결제창 방식을 쓴다)
+            const tossPayments = TossPayments(info.clientKey);
+            const payment = tossPayments.payment({ customerKey: TossPayments.ANONYMOUS });
+
+            const button = el("pay-button");
+            button.disabled = false;
+            button.addEventListener("click", async () => {
+                try {
+                    await payment.requestPayment({
+                        method: "CARD",
+                        amount: { currency: "KRW", value: info.amount },
+                        orderId: info.orderId,
+                        orderName: "설문이용 경품 결제",
+                        successUrl: window.location.origin + "/api/v1/payments/success",
+                        failUrl: window.location.origin + "/api/v1/payments/fail",
+                        card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false },
+                    });
+                } catch (e) {
+                    // 사용자가 결제창을 닫은 경우 등 — 페이지는 그대로 두어 재시도 가능하게
+                    console.error(e);
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>

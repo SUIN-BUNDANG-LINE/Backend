@@ -32,6 +32,7 @@ class PaymentEventPublisher(
                     eventId = UUID.randomUUID().toString(),
                     orderId = order.tossOrderId,
                     surveyId = order.surveyId.toString(),
+                    origin = order.origin.name,
                     settledAt = Instant.now(),
                 ),
         )
@@ -48,6 +49,7 @@ class PaymentEventPublisher(
                     eventId = UUID.randomUUID().toString(),
                     orderId = order.tossOrderId,
                     surveyId = order.surveyId.toString(),
+                    origin = order.origin.name,
                     failedAt = Instant.now(),
                 ),
         )

@@ -28,6 +28,10 @@ class PaymentOrder(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var status: PaymentOrderStatus = PaymentOrderStatus.PENDING,
+    // 발급 출처(단독/모금) - 발급 시점 확정 불변, settled·failed 이벤트에 실려 나간다
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    val origin: PaymentOrderOrigin = PaymentOrderOrigin.SOLO,
 ) : BaseTimeEntity() {
     fun markDone(paymentKey: String) {
         this.paymentKey = paymentKey
@@ -59,12 +63,14 @@ class PaymentOrder(
             makerId: UUID,
             orderId: String,
             amount: Int,
+            origin: PaymentOrderOrigin,
         ) = PaymentOrder(
             id = UUID.randomUUID(),
             surveyId = surveyId,
             makerId = makerId,
             tossOrderId = orderId,
             amount = amount,
+            origin = origin,
         )
     }
 }

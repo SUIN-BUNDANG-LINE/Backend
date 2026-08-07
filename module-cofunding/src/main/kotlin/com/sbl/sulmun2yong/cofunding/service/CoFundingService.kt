@@ -3,19 +3,16 @@ package com.sbl.sulmun2yong.cofunding.service
 import com.sbl.sulmun2yong.cofunding.dto.request.CoFundingStartRequest
 import com.sbl.sulmun2yong.cofunding.dto.response.CoFundingMyOrderResponse
 import com.sbl.sulmun2yong.cofunding.dto.response.CoFundingStartResponse
+import com.sbl.sulmun2yong.cofunding.dto.response.CoFundingStatusResponse
 import com.sbl.sulmun2yong.cofunding.entity.CoFunding
 import com.sbl.sulmun2yong.cofunding.entity.CoFundingParticipant
+import com.sbl.sulmun2yong.cofunding.entity.CoFundingStatus
 import com.sbl.sulmun2yong.cofunding.exception.CoFundingNotFoundException
 import com.sbl.sulmun2yong.cofunding.exception.InvalidCoFundingRequestException
 import com.sbl.sulmun2yong.cofunding.exception.InvalidCoFundingStateException
 import com.sbl.sulmun2yong.cofunding.publisher.CoFundingSagaPublisher
 import com.sbl.sulmun2yong.cofunding.repository.CoFundingParticipantRepository
 import com.sbl.sulmun2yong.cofunding.repository.CoFundingRepository
-import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
-import com.sbl.sulmun2yong.survey.domain.SurveyStatus
-import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
-import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
-import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,18 +20,14 @@ import java.time.LocalDateTime
 import java.util.*
 
 // 공동 모금 개시 & 결제 진입 - 사가의 출발점.
-// 단일 기록자: 개설 tx 는 co_fundings·participants 만 쓴다. 주문 발급(결제)·설문 대기 전이(설문)·
-// 보드 생성(추첨)은 co-funding-created 이벤트의 구독자가 각자 자기 테이블에 수행한다.
-// 설문 상태 검증은 교차 "읽기"(공유 DB 허용) - 쓰기가 아니다.
+// 단일 기록자 + 무교차: 개설 tx 는 co_fundings·participants 만 쓰고 읽기도 자기 테이블뿐이다.
+// 설문 검증·총액 확정은 데이터 소유자(설문)의 판정 리스너 몫 - co-funding-requested 로 위임하고
+// approved/rejected 회신으로 수렴한다. 응답은 "접수(PENDING_APPROVAL)"까지 보증한다.
 @Service
 class CoFundingService(
-    private val surveyRepository: SurveyRepository,
     private val coFundingRepository: CoFundingRepository,
     private val coFundingParticipantRepository: CoFundingParticipantRepository,
-    private val paymentOrderRepository: PaymentOrderRepository,
     private val coFundingSagaPublisher: CoFundingSagaPublisher,
-    @Value("\${payment.reward-unit-price}")
-    private val rewardUnitPrice: Int,
     @Value("\${frontend.base-url}")
     private val frontendBaseUrl: String,
 ) {
@@ -42,8 +35,8 @@ class CoFundingService(
         private const val MAX_DEADLINE_DAYS = 7L
     }
 
-    // 개시 - 한 트랜잭션: 모금 + 참여자 명단 저장 + co-funding-created Outbox 발행.
-    // 응답이 보증하는 것은 "모금 생성"까지 - 주문·설문 전이는 이벤트로 수렴한다(최종적 일관성).
+    // 개설 접수 - 한 트랜잭션: 모금(PENDING_APPROVAL) + 참여자 명단 저장 + co-funding-requested Outbox 발행.
+    // 설문 판정(소유자·상태·경품 설정·총액)은 승인 회신으로 수렴한다 - 프론트는 상태 조회로 확정을 기다린다.
     @Transactional
     fun start(
         surveyId: UUID,
@@ -52,30 +45,19 @@ class CoFundingService(
     ): CoFundingStartResponse {
         validate(request, ownerId)
 
-        val survey =
-            surveyRepository
-                .findByIdAndMakerIdAndIsDeletedFalse(surveyId, ownerId)
-                .orElseThrow { SurveyNotFoundException() }
-
-        // 경품 설문이 시작 전 상태일 때만 모금 개시 가능
-        if (survey.rewardSetting !is ImmediateDrawSetting || survey.status != SurveyStatus.NOT_STARTED) {
-            throw InvalidCoFundingStateException()
-        }
         if (coFundingRepository.findBySurveyId(surveyId) != null) {
             throw InvalidCoFundingStateException()
         }
 
-        val totalAmount = rewardUnitPrice * survey.rewardSetting.rewards.sumOf { it.count }
         val funding =
             CoFunding.create(
                 surveyId = surveyId,
                 ownerId = ownerId,
                 capacity = request.participantUserIds.size + 1,
-                totalAmount = totalAmount,
                 deadline = request.deadline,
             )
 
-        // 참여자 명단 확정 - 주문 금액은 role 별(개설자 = 분담금 + 잔액), 발급은 결제 리스너 몫
+        // 참여자 명단·주문 ID 확정 - 금액은 승인에서, 발급은 ② 이벤트의 결제 리스너 몫
         val owner = CoFundingParticipant.owner(funding.id, ownerId, newTossOrderId())
         val members =
             request.participantUserIds.map {
@@ -89,19 +71,32 @@ class CoFundingService(
 
         coFundingRepository.save(funding)
         coFundingParticipantRepository.saveAll(participants)
-        coFundingSagaPublisher.publishCreated(funding, participants)
+        coFundingSagaPublisher.publishRequested(funding)
 
         return CoFundingStartResponse(
             fundingId = funding.id,
-            sharedAmount = funding.shareAmount,
-            ownerShareAmount = funding.ownerShareAmount,
+            status = funding.status,
             deadline = funding.deadline,
             inviteUrl = "$frontendBaseUrl/co-fundings/${funding.id}",
         )
     }
 
-    // 내 주문 조회 - 주문은 개설 이벤트의 결제 리스너가 발급하므로 잠깐 비어 있을 수 있다
-    // (최종적 일관성 창). 아직 없으면 404 - 프론트는 재시도한다.
+    // 상태 조회 - 접수 응답 이후 프론트가 판정 확정(FUNDING/REJECTED)을 폴링하는 진입점.
+    // 분담금은 승인 전 0 - FUNDING 부터 유효하다.
+    @Transactional(readOnly = true)
+    fun findStatus(fundingId: UUID): CoFundingStatusResponse {
+        val funding = coFundingRepository.findById(fundingId).orElseThrow { CoFundingNotFoundException() }
+        return CoFundingStatusResponse(
+            fundingId = funding.id,
+            status = funding.status,
+            sharedAmount = funding.shareAmount,
+            ownerShareAmount = funding.ownerShareAmount,
+            deadline = funding.deadline,
+        )
+    }
+
+    // 내 주문 조회 - 전부 자기 데이터로 조립한다(orderId 는 개설 시 사전 발급, 금액은 승인에서 확정).
+    // 승인 전(PENDING_APPROVAL·REJECTED)이면 결제 진입이 없으므로 404 - 프론트는 재시도한다.
     @Transactional(readOnly = true)
     fun findMyOrder(
         fundingId: UUID,
@@ -110,14 +105,14 @@ class CoFundingService(
         val participant =
             coFundingParticipantRepository.findByFundingIdAndUserId(fundingId, userId)
                 ?: throw CoFundingNotFoundException()
-        val order =
-            paymentOrderRepository
-                .findByTossOrderId(participant.tossOrderId)
-                .orElseThrow { CoFundingNotFoundException() }
+        val funding = coFundingRepository.findById(fundingId).orElseThrow { CoFundingNotFoundException() }
+        if (funding.status == CoFundingStatus.PENDING_APPROVAL || funding.status == CoFundingStatus.REJECTED) {
+            throw CoFundingNotFoundException()
+        }
         return CoFundingMyOrderResponse(
-            orderId = order.tossOrderId,
-            amount = order.amount,
-            checkoutUrl = "/payments/checkout.html?orderId=${order.tossOrderId}",
+            orderId = participant.tossOrderId,
+            amount = if (participant.isOwner) funding.ownerShareAmount else funding.shareAmount,
+            checkoutUrl = "/payments/checkout.html?orderId=${participant.tossOrderId}",
         )
     }
 

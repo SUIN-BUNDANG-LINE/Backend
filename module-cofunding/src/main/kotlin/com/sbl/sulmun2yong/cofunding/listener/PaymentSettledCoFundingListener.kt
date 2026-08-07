@@ -79,6 +79,11 @@ class PaymentSettledCoFundingListener(
                 // 재전달/중복 - 이미 장벽 통과, no-op 이 곧 멱등
                 log.debug("개설 확정 모금의 결제 재전달(무시): orderId={}", participant.tossOrderId)
             }
+
+            CoFundingStatus.PENDING_APPROVAL, CoFundingStatus.REJECTED -> {
+                // 도달 불가 방어 - 주문 발급(②)이 승인 후에만 일어나므로 판정 전 결제는 존재할 수 없다
+                log.warn("판정 전 모금에 결제 도착(무시): orderId={}, status={}", participant.tossOrderId, funding.status)
+            }
         }
         ack.acknowledge()
     }

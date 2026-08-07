@@ -3,6 +3,7 @@ package com.sbl.sulmun2yong.cofunding.controller
 import com.sbl.sulmun2yong.cofunding.dto.request.CoFundingStartRequest
 import com.sbl.sulmun2yong.cofunding.dto.response.CoFundingMyOrderResponse
 import com.sbl.sulmun2yong.cofunding.dto.response.CoFundingStartResponse
+import com.sbl.sulmun2yong.cofunding.dto.response.CoFundingStatusResponse
 import com.sbl.sulmun2yong.cofunding.service.CoFundingService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -27,4 +28,10 @@ class CoFundingController(
         @PathVariable fundingId: UUID,
         @RequestHeader("X-User-Id") userId: UUID,
     ): ResponseEntity<CoFundingMyOrderResponse> = ResponseEntity.ok(coFundingService.findMyOrder(fundingId, userId))
+
+    // 접수(PENDING_APPROVAL) 후 판정 확정(FUNDING/REJECTED)을 폴링하는 상태 조회
+    @GetMapping("/co-fundings/{fundingId}")
+    fun status(
+        @PathVariable fundingId: UUID,
+    ): ResponseEntity<CoFundingStatusResponse> = ResponseEntity.ok(coFundingService.findStatus(fundingId))
 }

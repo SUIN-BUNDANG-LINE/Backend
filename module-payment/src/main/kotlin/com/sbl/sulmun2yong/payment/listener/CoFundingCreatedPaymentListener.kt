@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingCreatedEvent
 import com.sbl.sulmun2yong.global.kafka.config.KafkaTopics
 import com.sbl.sulmun2yong.payment.entity.PaymentOrder
+import com.sbl.sulmun2yong.payment.entity.PaymentOrderOrigin
 import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
@@ -44,6 +45,7 @@ class CoFundingCreatedPaymentListener(
                         makerId = UUID.fromString(participant.userId),
                         orderId = participant.orderId,
                         amount = participant.amount,
+                        origin = PaymentOrderOrigin.CO_FUNDING,
                     ),
                 )
             } else {

@@ -23,20 +23,35 @@ class CoFunding(
     // 공동 주최 정원(개설자 포함, 2 이상)
     @Column(nullable = false)
     val capacity: Int,
-    // 참여자 1인 분담금(원)
+    // 참여자 1인 분담금(원) - 접수 시점엔 0, 설문 승인(approve)에서 확정된다
     @Column(nullable = false)
-    val shareAmount: Int,
-    // 개설자 분담금 = 분담금 + 균등 분할 잔액
+    var shareAmount: Int,
+    // 개설자 분담금 = 분담금 + 균등 분할 잔액 - 접수 시점엔 0, 승인에서 확정
     @Column(nullable = false)
-    val ownerShareAmount: Int,
+    var ownerShareAmount: Int,
     @Column(nullable = false)
     val deadline: LocalDateTime,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    var status: CoFundingStatus = CoFundingStatus.FUNDING,
+    var status: CoFundingStatus = CoFundingStatus.PENDING_APPROVAL,
 
 ) : BaseTimeEntity() {
     fun isExpired(now: LocalDateTime): Boolean = now.isAfter(deadline)
+
+    // 설문 판정 승인 - 총액을 받아 분담금을 확정하고 모금을 연다.
+    // findByIdForUpdate 행 잠금 아래에서 호출된다 - PENDING_APPROVAL 가드가 재전달 멱등을 보장.
+    fun approve(totalAmount: Int) {
+        if (status != CoFundingStatus.PENDING_APPROVAL) throw InvalidCoFundingStateException()
+        shareAmount = totalAmount / capacity
+        ownerShareAmount = shareAmount + totalAmount % capacity
+        status = CoFundingStatus.FUNDING
+    }
+
+    // 설문 판정 거절 - 결제자가 없는 접수 상태의 종착.
+    fun markRejected() {
+        if (status != CoFundingStatus.PENDING_APPROVAL) throw InvalidCoFundingStateException()
+        status = CoFundingStatus.REJECTED
+    }
 
     fun markConfirmed() {
         if (status != CoFundingStatus.FUNDING) throw InvalidCoFundingStateException()
@@ -54,23 +69,22 @@ class CoFunding(
     }
 
     companion object {
-        // 분담금 산정: 총액을 정원으로 균등 분할, 잔액은 개설자 몫에 합산.
+        // 개설 접수 - 금액은 설문 승인(approve)에서 확정되므로 0 으로 시작한다.
+        // 모금은 설문을 읽지 않는다 - 총액 재료(경품 수·단가)는 설문 소유 데이터다.
         fun create(
             surveyId: UUID,
             ownerId: UUID,
             capacity: Int,
-            totalAmount: Int,
             deadline: LocalDateTime,
         ): CoFunding {
             if (capacity < 2) throw InvalidCoFundingCapacityException()
-            val shareAmount = totalAmount / capacity
             return CoFunding(
                 id = UUID.randomUUID(),
                 surveyId = surveyId,
                 ownerId = ownerId,
                 capacity = capacity,
-                shareAmount = shareAmount,
-                ownerShareAmount = shareAmount + totalAmount % capacity,
+                shareAmount = 0,
+                ownerShareAmount = 0,
                 deadline = deadline,
             )
         }

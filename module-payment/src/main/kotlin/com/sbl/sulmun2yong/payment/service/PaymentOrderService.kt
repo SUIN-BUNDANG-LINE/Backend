@@ -1,13 +1,14 @@
 package com.sbl.sulmun2yong.payment.service
 
 import com.sbl.sulmun2yong.payment.entity.PaymentOrder
+import com.sbl.sulmun2yong.payment.entity.PaymentOrderOrigin
 import com.sbl.sulmun2yong.payment.entity.PaymentOrderStatus
 import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
-// 단독 결제 주문 발급 - 설문 개시(SurveyWorkbench)가 하던 payment_orders 쓰기를 이관받았다(단일 기록자).
+// 단독 결제 주문 발급 - survey-payment-pending 리스너가 호출한다(단일 기록자, origin=SOLO).
 // 멱등: 설문당 주문 1행 - PENDING 이면 재사용, 아니면 새 orderId 로 되살리고(재결제), 없으면 생성.
 @Service
 class PaymentOrderService(
@@ -35,6 +36,7 @@ class PaymentOrderService(
                             makerId = makerId,
                             orderId = "ord-${UUID.randomUUID()}",
                             amount = amount,
+                            origin = PaymentOrderOrigin.SOLO,
                         ),
                     )
                 }

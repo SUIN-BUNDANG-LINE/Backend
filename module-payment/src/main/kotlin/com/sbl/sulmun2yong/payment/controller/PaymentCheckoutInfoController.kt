@@ -18,13 +18,19 @@ class PaymentCheckoutInfoController(
     @Value("\${toss.client-key}")
     private val tossClientKey: String,
 ) {
+    // orderId(모금 - 참여자별 주문) 또는 surveyId(단독 - 설문당 1주문) 로 주문을 찾는다.
+    // 단독 개시는 이벤트로 발급되므로 수렴 전이면 404 - 프론트(checkout.html)가 재시도한다.
     @GetMapping("/checkout-info")
     fun checkoutInfo(
-        @RequestParam orderId: String,
+        @RequestParam(required = false) orderId: String?,
+        @RequestParam(required = false) surveyId: String?,
     ): ResponseEntity<CheckoutInfoResponse> {
         val order =
-            paymentOrderRepository.findByTossOrderId(orderId).orElse(null)
-                ?: return ResponseEntity.notFound().build()
+            when {
+                orderId != null -> paymentOrderRepository.findByTossOrderId(orderId).orElse(null)
+                surveyId != null -> paymentOrderRepository.findBySurveyId(java.util.UUID.fromString(surveyId)).orElse(null)
+                else -> null
+            } ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok(
             CheckoutInfoResponse(

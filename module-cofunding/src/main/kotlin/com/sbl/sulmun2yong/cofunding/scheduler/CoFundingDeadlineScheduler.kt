@@ -54,4 +54,13 @@ class CoFundingDeadlineScheduler(
         }
         if (failed.isNotEmpty()) log.info("기한 만료 무산 확정 {}건", failed.size)
     }
+
+    // 판정 회신이 영영 오지 않는 접수(PENDING_APPROVAL)의 안전망 - 기한이 지나면 REJECTED 종착.
+    // 결제자가 없는 상태라 환불이 없다 - CAS(tryRejectExpired)가 재실행·다중 인스턴스 멱등을 보장.
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    fun expireOverduePendingApprovals() {
+        val expired = coFundingRepository.rejectExpiredPendingApprovals(LocalDateTime.now())
+        if (expired > 0) log.info("판정 미회신 접수 만료 종착 {}건", expired)
+    }
 }

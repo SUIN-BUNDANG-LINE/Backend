@@ -20,4 +20,7 @@ interface CoFundingParticipantRepository : JpaRepository<CoFundingParticipant, U
         fundingId: UUID,
         status: CoFundingParticipantStatus,
     ): List<CoFundingParticipant>
+
+    // 승인 리스너 - ② created 발행용 전체 명단 (사전 발급 orderId 포함)
+    fun findAllByFundingId(fundingId: UUID): List<CoFundingParticipant>
 }

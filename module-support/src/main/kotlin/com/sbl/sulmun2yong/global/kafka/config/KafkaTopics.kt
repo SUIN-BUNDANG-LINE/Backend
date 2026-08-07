@@ -13,4 +13,12 @@ object KafkaTopics {
     const val PAYMENT_REFUNDED = "payment-refunded"
     const val PAYMENT_CANCEL_REQUESTED = "payment-cancel-requested"
     const val CO_FUNDING_CONFIRMED = "co-funding-confirmed"
+    const val CO_FUNDING_REQUESTED = "co-funding-requested"
+
+    // 개설 판정 결과(승인·거절) - 한 판정의 두 결과라 토픽 하나에 verdict 로 싣는다
+    const val CO_FUNDING_REVIEWED = "co-funding-reviewed"
+    const val SURVEY_PAYMENT_PENDING = "survey-payment-pending"
+
+    // 사가 리스너 실패의 통합 죽은 편지 큐 - 원본 토픽은 kafka_dlt-original-topic 헤더가 보존한다
+    const val SAGA_DLT = "saga.DLT"
 }

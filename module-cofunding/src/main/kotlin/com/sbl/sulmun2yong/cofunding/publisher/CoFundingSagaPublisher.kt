@@ -3,6 +3,7 @@ package com.sbl.sulmun2yong.cofunding.publisher
 import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingConfirmedEvent
 import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingCreatedEvent
 import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingFailedEvent
+import com.sbl.sulmun2yong.cofunding.dto.event.CoFundingRequestedEvent
 import com.sbl.sulmun2yong.cofunding.dto.event.PaymentCancelRequestedEvent
 import com.sbl.sulmun2yong.cofunding.entity.CoFunding
 import com.sbl.sulmun2yong.cofunding.entity.CoFundingParticipant
@@ -23,8 +24,26 @@ class CoFundingSagaPublisher(
     private val outboxEventRepository: OutboxEventRepository,
     private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
-    // ② 개설 확정 사실 - 개설 tx 안에서 호출되어 co_fundings·participants 저장과 함께 커밋된다.
-    // 주문 발급(결제)·설문 대기 전이(설문)·보드 생성(추첨)은 구독자가 수행한다(단일 기록자).
+    // 개설 접수 사실 - 개설 tx 안에서 호출되어 co_fundings(PENDING_APPROVAL)·participants 저장과 함께 커밋된다.
+    // 설문 판정(소유자·상태·경품 설정·총액 확정)은 구독자(설문)가 수행하고 approved/rejected 로 회신한다.
+    fun publishRequested(funding: CoFunding) {
+        publish(
+            aggregateId = funding.id.toString(),
+            eventType = "CoFundingRequested",
+            kafkaTopic = KafkaTopics.CO_FUNDING_REQUESTED,
+            event =
+                CoFundingRequestedEvent(
+                    eventId = UUID.randomUUID().toString(),
+                    fundingId = funding.id.toString(),
+                    surveyId = funding.surveyId.toString(),
+                    ownerId = funding.ownerId.toString(),
+                    requestedAt = Instant.now(),
+                ),
+        )
+    }
+
+    // ② 개설 확정 사실 - 승인 리스너 tx 안에서 호출된다(FUNDING 전이·분담금 확정과 함께 커밋).
+    // 주문 발급(결제)·보드 생성(추첨)은 구독자가 수행한다(단일 기록자).
     fun publishCreated(
         funding: CoFunding,
         participants: List<CoFundingParticipant>,
