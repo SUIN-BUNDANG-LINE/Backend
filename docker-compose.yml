@@ -10,8 +10,9 @@ x-app-base: &app-base
     networks:
         - sulmun2yong-cluster
     # application-secret.yml 의 localhost 기반 설정을 컨테이너 네트워크 호스트명으로 오버라이드
-    environment:
-        SERVER_PORT: 8080  # application.yml은 로컬 dev용 8081, 컨테이너 내부는 기본값 8080으로 통일
+    # (별도 앵커로 둬서, environment 를 덧쓰는 서비스가 &app-env 를 병합해 재사용할 수 있게 한다)
+    environment: &app-env
+        SERVER_PORT: 8080  # application.yml은 로컬 dev용 포트, 컨테이너 내부는 8080으로 통일
         TEST_AUTH_ENABLED: ${TEST_AUTH_ENABLED:-false}  # 부하테스트용 JWT 발급 엔드포인트
         # 트랜잭션 격리수준 실험용 — HikariCP 가 커넥션마다 적용 (기본: MySQL 기본값 REPEATABLE_READ)
         SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION: ${TX_ISOLATION:-TRANSACTION_REPEATABLE_READ}
@@ -74,8 +75,8 @@ services:
         ports:
             - "18080:8080"  # 1+default 규칙 (8080 → 18080)
         volumes:
-            - ./module-web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./module-web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./module-survey-drawing/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-survey-drawing/build/libs/survey-drawing-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
@@ -89,13 +90,89 @@ services:
         ports:
             - "18081:8080"  # web-1(18080) + 1 (호스트 포트 충돌 회피)
         volumes:
-            - ./module-web/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
-            - ./module-web/build/libs/web-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./module-survey-drawing/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-survey-drawing/build/libs/survey-drawing-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
             - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
         command: >
             java
             -Dspring.config.additional-location=file:/app/config/
             -Dotel.service.name=sulmun2yong-web
+            -jar /app/app.jar
+
+    # ────────────── 도메인 서비스 (게이트웨이 · 인증 · 결제 · 모금) ──────────────
+    # 내부 포트는 전부 8080 통일(SERVER_PORT) — 컨테이너마다 IP 가 달라 충돌하지 않는다.
+    # 외부 노출은 게이트웨이만: 나머지는 관문 뒤에 두고 /internal·비밀헤더로 지킨다.
+    gateway:
+        <<: *app-base
+        container_name: sulmun2yong-gateway
+        ports:
+            - "18000:8080"  # 유일한 외부 진입점 (1+default 규칙)
+        environment:
+            <<: *app-env
+            # 라우팅 대상을 컨테이너명으로 교체 — application.yml 의 services 표를 덮어쓴다
+            SERVICES_AUTH: http://sulmun2yong-auth:8080
+            SERVICES_COFUNDING: http://sulmun2yong-cofunding:8080
+            SERVICES_PAYMENT: http://sulmun2yong-payment:8080
+            SERVICES_WEB: http://sulmun2yong-web-1:8080
+            GATEWAY_SECRET: ${GATEWAY_SECRET:-local-dev-secret}
+            # 관문·인증·결제·모금은 트래픽이 적어 힙을 줄인다(web 은 부하 실험 대상이라 유지)
+            JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
+        volumes:
+            - ./module-gateway/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-gateway/build/libs/gateway-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-gateway
+            -jar /app/app.jar
+
+    auth:
+        <<: *app-base
+        container_name: sulmun2yong-auth
+        environment:
+            <<: *app-env
+            JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
+        volumes:
+            - ./module-auth/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-auth/build/libs/auth-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-auth
+            -jar /app/app.jar
+
+    payment:
+        <<: *app-base
+        container_name: sulmun2yong-payment
+        environment:
+            <<: *app-env
+            JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
+        volumes:
+            - ./module-payment/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-payment/build/libs/payment-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-payment
+            -jar /app/app.jar
+
+    cofunding:
+        <<: *app-base
+        container_name: sulmun2yong-cofunding
+        environment:
+            <<: *app-env
+            JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
+        volumes:
+            - ./module-cofunding/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
+            - ./module-cofunding/build/libs/cofunding-0.0.1-SNAPSHOT.jar:/app/app.jar:ro
+            - ./infra/otel/opentelemetry-javaagent.jar:/app/otel-javaagent.jar:ro
+        command: >
+            java
+            -Dspring.config.additional-location=file:/app/config/
+            -Dotel.service.name=sulmun2yong-cofunding
             -jar /app/app.jar
 
     # ────────────── 옵저버빌리티 스택 ──────────────

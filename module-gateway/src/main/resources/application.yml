@@ -19,7 +19,7 @@ spring:
                 # 이 경로들은 관문 필터의 PUBLIC_PREFIXES 와 같게 맞춰 검증 없이 통과된다
                 # (로그인하려는데 로그인 토큰을 요구하면 모순이므로).
                 -   id: auth
-                    # 주소를 하드코딩하지 않고 아래 services 표를 참조(환경별로 표만 교체)/
+                    # 주소를 하드코딩하지 않고 아래 services 표를 참조(환경별로 표만 교체)
                     uri: ${services.auth}
                     predicates:
                         - Path=/auth/**,/login/oauth2/**,/oauth2/**
@@ -46,6 +46,14 @@ spring:
                 - RemoveRequestHeader=X-Gateway-Auth
                 - AddRequestHeader=X-Gateway-Auth, ${GATEWAY_SECRET:local-dev-secret}
 
+# 라우팅 대상 주소 단일 출처 — 환경별로 이 표만 갈아끼운다.
+# 로컬(bootRun): 아래 기본값 / 컨테이너: compose 가 SERVICES_* 환경변수로 오버라이드(컨테이너명:8080).
+services:
+    auth: ${SERVICES_AUTH:http://localhost:8090}
+    cofunding: ${SERVICES_COFUNDING:http://localhost:8083}
+    payment: ${SERVICES_PAYMENT:http://localhost:8082}
+    web: ${SERVICES_WEB:http://localhost:8081}
+
 management:
     endpoints:
         web:
@@ -57,11 +65,3 @@ management:
         tags:
             # 여러 서비스를 한 판에 볼 때 어느 서비스 지표인지 구분하는 라벨.
             application: ${spring.application.name:gateway}
-
-# 라우팅 대상 주소의 단일 출처 — routes 의 uri 가 ${services.xxx} 로 참조.
-# 실제로 떠 있는 포트와 일치해야 함(어긋나면 없는 주소로 프록시해 502).
-services:
-    auth: http://localhost:8090
-    web: http://localhost:8080
-    cofunding: http://localhost:8083
-    payment: http://localhost:8082

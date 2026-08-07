@@ -21,9 +21,20 @@ rule_files:
 
 scrape_configs:
     # ────────── Spring Boot 인스턴스 5개 ──────────
+    # 판정은 전부 카운터·히스토그램(_sum/_count/_bucket)으로 하므로 주기와 무관하다.
+    # HikariCP active/pending 같은 게이지만 해상도를 타는데, 커넥션 압박은 이미
+    # acquire_seconds 의 _sum/_count 로 정확히 재고 있어 게이지는 정황용이다.
     - job_name: spring-apps
       metrics_path: /management/prometheus
       scrape_interval: 15s
+      metric_relabel_configs:
+          # Micrometer 가 타이머마다 자동으로 붙이는 _max 게이지는 감쇠 창(2~3분 실측)이
+          # 실험 단계 간격(1분)보다 길어, 앞 단계의 최댓값이 다음 단계에 그대로 남는다.
+          # 실험 지표는 _sum/_count 평균과 _bucket 분위수로만 읽으므로 저장하지 않는다.
+          # (http_server_requests 등 다른 _max 는 이상치 관측용으로 남긴다)
+          - source_labels: [__name__]
+            regex: drawing_.*_seconds_max
+            action: drop
       static_configs:
           - targets: [sulmun2yong-web-1:8080]
             labels:
@@ -34,15 +45,34 @@ scrape_configs:
                 application: sulmun2yong-web
                 instance: web-2
 
-    # ────────── SMS 사가 컨슈머 2개 (sulmoon2yong-consumer 레포) → /management/prometheus:8081 ──────────
+    # ────────── 도메인 서비스 4개 (게이트웨이·인증·결제·모금) → /management/prometheus ──────────
+    - job_name: domain-services
+      metrics_path: /management/prometheus
+      scrape_interval: 15s
+      static_configs:
+          - targets: [sulmun2yong-gateway:8080]
+            labels:
+                application: gateway
+          - targets: [sulmun2yong-auth:8080]
+            labels:
+                application: auth
+          - targets: [sulmun2yong-payment:8080]
+            labels:
+                application: payment
+          - targets: [sulmun2yong-cofunding:8080]
+            labels:
+                application: cofunding
+
+    # ────────── SMS·DLT 사가 컨슈머 2개 → /management/prometheus ──────────
+    # 컨테이너 내부 포트는 compose 의 SERVER_PORT=8080 (yml 기본값 8084·8085 는 로컬 기동용)
     - job_name: sms-consumers
       metrics_path: /management/prometheus
       scrape_interval: 15s
       static_configs:
-          - targets: [sulmun2yong-drawing-sms-notification-consumer:8081]
+          - targets: [sulmun2yong-drawing-sms-notification-consumer:8080]
             labels:
                 application: drawing-sms-notification-consumer
-          - targets: [sulmun2yong-dlt-sms-notification-consumer:8081]
+          - targets: [sulmun2yong-dlt-sms-notification-consumer:8080]
             labels:
                 application: dlt-sms-notification-consumer
 
@@ -56,6 +86,8 @@ scrape_configs:
                 exporter: kafka-exporter
 
     # ────────── MySQL Exporter (InnoDB 행 락·데드락·롤백 — 분산락 전-후 DB 부하 비교) ──────────
+    # 15초 유지 — 여기서 쓰는 지표는 전부 누적 카운터라 델타를 재는 이상 주기와 무관하다.
+    # 오히려 SHOW GLOBAL STATUS 를 더 자주 던지면 실험 대상 DB 에 관측자가 부하를 더한다.
     - job_name: mysqld-exporter
       metrics_path: /metrics
       scrape_interval: 15s
