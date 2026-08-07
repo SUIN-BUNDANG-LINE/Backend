@@ -55,11 +55,13 @@ class SynchronizedDrawingStrategy(
         val lockObject = surveyLocks.computeIfAbsent(surveyId) { Any() }
         val waitStart = System.nanoTime()
         synchronized(lockObject) {
-            drawingProcessMetrics.recordJvmLockWait(System.nanoTime() - waitStart)
+            recordEntry(System.nanoTime() - waitStart)
             // 트랜잭션을 락 안에서 시작하고 커밋까지 마친 뒤 락을 놓는다
-            return transactionTemplate.execute {
-                draw(surveyId, participantId, selectedNumber, phoneNumber)
-            }!!
+            return attempt {
+                transactionTemplate.execute {
+                    draw(surveyId, participantId, selectedNumber, phoneNumber)
+                }!!
+            }
         }
     }
 }

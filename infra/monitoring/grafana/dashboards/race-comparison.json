@@ -1,207 +1,578 @@
 {
   "uid": "race-comparison",
-  "title": "Race Condition Comparison (SERIALIZABLE vs Redisson)",
+  "title": "정합성 직렬화 5자 비교 (No-Lock · SERIALIZABLE · 낙관락 · synchronized · Redisson)",
   "schemaVersion": 39,
   "version": 2,
   "editable": true,
   "graphTooltip": 1,
   "timezone": "browser",
   "refresh": "10s",
-  "time": { "from": "now-30m", "to": "now" },
-  "tags": ["lock", "race", "db-load"],
-  "templating": { "list": [] },
-  "annotations": { "list": [] },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "tags": [
+    "lock",
+    "race",
+    "db-load"
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
   "panels": [
     {
       "type": "text",
       "title": "실험 설계",
-      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "options": {
         "mode": "markdown",
-        "content": "**SERIALIZABLE vs Redisson 분산락 — DB 부하 비교.** 정합성을 지키는 두 방식의 비용을 대조한다: DB 격리수준으로 지키면(SERIALIZABLE) 데드락·롤백이라는 실패 기반 직렬화가 되고, Redis 앞단에서 지키면(Redisson) DB는 경합을 보지 않는다.\n\n- SERIALIZABLE: `/draw-no-lock` (LOCK_MODE=off) + `TX_ISOLATION=TRANSACTION_SERIALIZABLE` 로 web 기동 — S락 읽기 → X락 승격 충돌 → InnoDB 데드락 → 롤백\n- Redisson: `/draw` (LOCK_MODE=on, 격리수준 기본값) — Redis 락으로 DB 앞단 직렬화\n- 실행: `TX_ISOLATION=TRANSACTION_SERIALIZABLE TEST_AUTH_ENABLED=true docker-compose up -d --force-recreate --no-deps web-1 web-2` 후 `drawing-load.js` (RATE/DURATION_S)"
+        "content": "**정합성을 지키는 다섯 방식의 비용 비교.** 같은 부하를 다섯 방식에 순서대로 걸고, 성공률·재시도·MySQL 내부 낭비를 같은 지표로 대조한다. 다섯 방식은 모두 `AbstractDrawingStrategy` 의 구현이라 web 재기동 없이 같은 프로세스에서 연속 측정된다.\n\n- No-Lock — `/draw-no-lock` · 경쟁 제어 없음 (무보호 기준선)\n- SERIALIZABLE — `/draw-serializable` · 요청 트랜잭션만 SERIALIZABLE (DB 안 직렬화)\n- 낙관락+재시도 — `/draw-optimistic-retry` · 보드 버전 조건부 UPDATE, 최대 5회 재시도\n- synchronized — `/draw-synchronized` · JVM 로컬 모니터 (cross-JVM 한계 검증)\n- Redisson — `/draw` · Redis 락으로 DB 앞단 직렬화 (운영 경로)\n\n실행: `./scripts/runners/run-lock-experiment.sh` (기본 10 TPS × 30s, `RATE`/`DURATION_S` 로 조절). 단계 사이 유휴 구간이 있으므로 시간축에서 다섯 구간이 분리돼 보인다."
       }
     },
     {
       "type": "timeseries",
-      "title": "MySQL Deadlock 누적 — by instance",
+      "title": "추첨 결과 — 전략별 결과 분포 (건/초)",
       "description": "낭비 자원 ⑤ 처리량 손실 — 데드락 1건 = 요청 1건이 자원(대기·감지·롤백)만 소모하고 결과 없이 소멸. 앱 예외(CannotAcquireLockException) 기반 카운터.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short" }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (db_deadlock_total)", "legendFormat": "{{instance}}" }
+        {
+          "refId": "A",
+          "legendFormat": "{{mode}} / {{outcome}}",
+          "expr": "sum by (mode, outcome) (rate(drawing_outcome_total[1m]))"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "MySQL Deadlock 발생률 (건/초)",
+      "title": "추첨 시도 — 전략별 시도 결과 (건/초, 재시도 포함)",
       "description": "낭비 자원 ⑤ 처리량 손실의 시간축 — 초당 몇 건의 요청이 헛수고로 끝나는지. 부하 구간 식별용.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops" }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (rate(db_deadlock_total[1m]))", "legendFormat": "{{instance}}" }
+        {
+          "refId": "A",
+          "legendFormat": "{{mode}} / {{result}}",
+          "expr": "sum by (mode, result) (rate(drawing_attempt_total[1m]))"
+        }
       ]
     },
     {
       "type": "timeseries",
       "title": "DB 커넥션 풀 점유 — active vs max (HikariCP)",
       "description": "낭비 자원 ④ 커넥션 점유 — 대기·롤백 중인 트랜잭션이 커넥션을 반납하지 못해 active가 max(10)에 붙으면 풀 고갈. 경합과 무관한 요청까지 밀리는 파급의 시작점.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [
-        { "matcher": { "id": "byRegexp", "options": "/max/" }, "properties": [ { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ] }
-      ] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/max/"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    10
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
       "targets": [
-        { "refId": "A", "expr": "hikaricp_connections_active{instance=~\"web.*\"}", "legendFormat": "active {{instance}}" },
-        { "refId": "B", "expr": "max(hikaricp_connections_max{instance=~\"web.*\"})", "legendFormat": "max (pool limit)" }
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_active{instance=~\"web.*\"}",
+          "legendFormat": "active {{instance}}"
+        },
+        {
+          "refId": "B",
+          "expr": "max(hikaricp_connections_max{instance=~\"web.*\"})",
+          "legendFormat": "max (pool limit)"
+        }
       ]
     },
     {
       "type": "timeseries",
       "title": "커넥션 대기 스레드 수 — pending (HikariCP)",
       "description": "낭비 자원 ④ 의 파급 — 풀이 말라 커넥션을 못 받고 대기하는 앱 스레드 수. 0보다 크면 DB 병목이 앱 계층까지 번졌다는 직접 신호.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "hikaricp_connections_pending{instance=~\"web.*\"}", "legendFormat": "pending {{instance}}" }
+        {
+          "refId": "A",
+          "expr": "hikaricp_connections_pending{instance=~\"web.*\"}",
+          "legendFormat": "pending {{instance}}"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "커넥션 획득 대기 시간 — avg / max (HikariCP acquire)",
+      "title": "커넥션 획득 대기 시간 — avg (HikariCP acquire)",
       "description": "낭비 자원 ④ 의 대기 비용 — 앱 스레드가 커넥션을 받기까지 기다린 시간. 풀 포화 시 급증하며, 이 시간만큼 사용자 응답이 지연된다.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "s", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (rate(hikaricp_connections_acquire_seconds_sum{instance=~\"web.*\"}[1m])) / sum by (instance) (rate(hikaricp_connections_acquire_seconds_count{instance=~\"web.*\"}[1m]))", "legendFormat": "avg {{instance}}" },
-        { "refId": "B", "expr": "hikaricp_connections_acquire_seconds_max{instance=~\"web.*\"}", "legendFormat": "max {{instance}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (instance) (rate(hikaricp_connections_acquire_seconds_sum{instance=~\"web.*\"}[1m])) / sum by (instance) (rate(hikaricp_connections_acquire_seconds_count{instance=~\"web.*\"}[1m]))",
+          "legendFormat": "avg {{instance}}"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "커넥션 사용(보유) 시간 — avg / max (HikariCP usage)",
+      "title": "커넥션 사용(보유) 시간 — avg (HikariCP usage)",
       "description": "낭비 자원 ④ 의 원인 — 트랜잭션이 커넥션을 쥐고 있던 시간(≈ 트랜잭션 소요시간). 행 락 대기·롤백이 길수록 보유가 늘어 풀을 말린다. leaseTime(10s) 초과 시 분산락 조기 만료 위험 구간.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "s", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (rate(hikaricp_connections_usage_seconds_sum{instance=~\"web.*\"}[1m])) / sum by (instance) (rate(hikaricp_connections_usage_seconds_count{instance=~\"web.*\"}[1m]))", "legendFormat": "avg {{instance}}" },
-        { "refId": "B", "expr": "hikaricp_connections_usage_seconds_max{instance=~\"web.*\"}", "legendFormat": "max {{instance}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (instance) (rate(hikaricp_connections_usage_seconds_sum{instance=~\"web.*\"}[1m])) / sum by (instance) (rate(hikaricp_connections_usage_seconds_count{instance=~\"web.*\"}[1m]))",
+          "legendFormat": "avg {{instance}}"
+        }
       ]
     },
     {
       "type": "timeseries",
       "title": "커넥션 획득 타임아웃 (건/초)",
       "description": "낭비 자원 ④ 의 최종 증상 — connectionTimeout(기본 30s) 내 커넥션을 못 받아 실패한 요청. 여기까지 오면 경합 무관 요청도 죽는다.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (rate(hikaricp_connections_timeout_total{instance=~\"web.*\"}[1m]))", "legendFormat": "timeout {{instance}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (instance) (rate(hikaricp_connections_timeout_total{instance=~\"web.*\"}[1m]))",
+          "legendFormat": "timeout {{instance}}"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "분산락 획득 성공/실패 (참고 — DB 부하와 대조용)",
+      "title": "추첨 요청 소요 시간 p95 — 전략별",
       "description": "낭비가 아닌 대조군 — 직렬화가 Redis 로 이동했다는 증거. Redisson 구간에서 이 지표가 활동하는 동안 아래 MySQL 내부 낭비 지표는 전부 0 이어야 한다.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (result) (rate(drawing_lock_acquire_total[1m]))", "legendFormat": "lock {{result}}" }
+        {
+          "refId": "A",
+          "legendFormat": "p95 {{mode}}",
+          "expr": "histogram_quantile(0.95, sum by (le, mode) (rate(drawing_duration_seconds_bucket[1m])))"
+        }
       ]
     },
     {
       "type": "text",
       "title": "MySQL 내부 부하 (mysqld-exporter)",
-      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 36 },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
       "options": {
         "mode": "markdown",
-        "content": "**낭비 자원 분류 (각 패널 설명의 번호)** — ① 스레드 대기: DB 스레드가 일 대신 행 락 줄서기(잠든 채 슬롯 점유) · ② CPU: 데드락 감지(대기 그래프 순환 탐색) · ③ 디스크/버퍼 I/O: 패자 롤백(undo 역적용 = 쓰고 지우는 마이너스 노동) · ④ 커넥션 점유: 대기·롤백 동안 반납 못 해 풀 고갈로 파급 · ⑤ 처리량 손실: 위 낭비의 합 = 자원만 쓰고 결과 없는 요청.\n\nSERIALIZABLE 구간에서 ①~⑤ 전부 발화, Redisson 구간에서는 전부 0 — 경합이 DB 에 도달하지 않는다."
+        "content": "**낭비 자원 분류 (각 패널 설명의 번호)** — ① 스레드 대기: DB 스레드가 일 대신 행 락 줄서기(잠든 채 슬롯 점유) · ② CPU: 데드락 감지(대기 그래프 순환 탐색) · ③ 디스크/버퍼 I/O: 패자 롤백(undo 역적용 = 쓰고 지우는 마이너스 노동) · ④ 커넥션 점유: 대기·롤백 동안 반납 못 해 풀 고갈로 파급 · ⑤ 처리량 손실: 위 낭비의 합 = 자원만 쓰고 결과 없는 요청.\n\n낙관락 구간에서 ①~⑤ 전부 최대로 발화하고, Redisson 구간에서는 전부 0 — 경합이 DB 에 도달하지 않는다."
       }
     },
     {
       "type": "timeseries",
       "title": "InnoDB 데드락 누적 (DB 내부 카운터)",
-      "description": "낭비 자원 ② CPU — 락 대기가 생길 때마다 InnoDB 가 대기 그래프(wait-for graph) 순환을 탐색해 데드락을 감지·희생자를 선정한다. 정상 처리 대신 '누가 누굴 기다리나' 계산에 태우는 CPU. 앱 쪽 db_deadlock_total 과 교차 검증용.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 39 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
+      "description": "낭비 자원 ② CPU — 락 대기가 생길 때마다 InnoDB 가 대기 그래프(wait-for graph) 순환을 탐색해 데드락을 감지·희생자를 선정한다. 정상 처리 대신 '누가 누굴 기다리나' 계산에 태우는 CPU. 앱 쪽 drawing_outcome_total{outcome=\"deadlock\"} 과 교차 검증용.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 39
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "mysql_info_schema_innodb_metrics_lock_lock_deadlocks_total", "legendFormat": "InnoDB deadlocks" }
+        {
+          "refId": "A",
+          "expr": "mysql_info_schema_innodb_metrics_lock_lock_deadlocks_total",
+          "legendFormat": "InnoDB deadlocks"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "InnoDB 행 락 대기 — 발생률·현재 대기 수",
+      "title": "InnoDB 행 락 대기 발생률 (건/초)",
       "description": "낭비 자원 ① 스레드 대기 — 트랜잭션이 같은 행을 두고 서버 안에서 줄 선 횟수. 대기 중인 DB 스레드는 일을 못 하면서 슬롯·메모리를 점유한다. SERIALIZABLE 구간에서만 튀고 Redisson 구간은 0 이어야 정상.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 39 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 39
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "rate(mysql_global_status_innodb_row_lock_waits[1m])", "legendFormat": "row lock waits/s" },
-        { "refId": "B", "expr": "mysql_global_status_innodb_row_lock_current_waits", "legendFormat": "current waits" }
+        {
+          "refId": "A",
+          "expr": "rate(mysql_global_status_innodb_row_lock_waits[1m])",
+          "legendFormat": "row lock waits/s"
+        }
       ]
     },
     {
       "type": "timeseries",
       "title": "InnoDB 행 락 대기에 태운 시간 (ms/s)",
       "description": "낭비 자원 ① 의 정량 — 초당 행 락 대기로 소모된 밀리초. DB 스레드가 일 대신 대기에 쓴 시간의 총량 (실측: SERIALIZABLE 30초 부하에서 4.7초 소모).",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 47 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 47
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "rate(mysql_global_status_innodb_row_lock_time[1m])", "legendFormat": "lock wait ms/s" }
+        {
+          "refId": "A",
+          "expr": "rate(mysql_global_status_innodb_row_lock_time[1m])",
+          "legendFormat": "lock wait ms/s"
+        }
       ]
     },
     {
       "type": "timeseries",
       "title": "롤백 비율 (rollback/s vs commit/s)",
       "description": "낭비 자원 ③ 디스크/버퍼 I/O — 데드락 패자가 이미 한 일을 undo 로그로 역적용(쓰고 → 지우는 마이너스 노동). 커밋됐다면 없었을 작업이며 purge 부담도 쌓인다. SERIALIZABLE 구간에서 rollback 급증, Redisson 구간은 0 기대.",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 47 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 47
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "rate(mysql_global_status_commands_total{command=\"rollback\"}[1m])", "legendFormat": "rollback/s" },
-        { "refId": "B", "expr": "rate(mysql_global_status_commands_total{command=\"commit\"}[1m])", "legendFormat": "commit/s" }
+        {
+          "refId": "A",
+          "expr": "rate(mysql_global_status_commands_total{command=\"rollback\"}[1m])",
+          "legendFormat": "rollback/s"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(mysql_global_status_commands_total{command=\"commit\"}[1m])",
+          "legendFormat": "commit/s"
+        }
       ]
     },
     {
       "type": "timeseries",
       "title": "MySQL 실행 중 스레드 (Threads_running)",
       "description": "낭비 자원 ① 의 점유 현황 — 락 대기·롤백 중이어도 스레드는 슬롯을 차지한다. running 이 치솟는데 처리량이 안 오르면 스레드가 대기에 묶여 있다는 뜻.",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 47 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "short", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 47
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "mysql_global_status_threads_running", "legendFormat": "threads_running" },
-        { "refId": "B", "expr": "mysql_global_status_threads_connected", "legendFormat": "threads_connected" }
+        {
+          "refId": "A",
+          "expr": "mysql_global_status_threads_running",
+          "legendFormat": "threads_running"
+        },
+        {
+          "refId": "B",
+          "expr": "mysql_global_status_threads_connected",
+          "legendFormat": "threads_connected"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "JVM 로컬 락 대기 (synchronized) — by instance",
+      "title": "임계구역 진입 대기 시간 — 전략별 avg / p99 (통일 지표)",
       "description": "synchronized 실험 전용 — 각 인스턴스가 자기 JVM 안에서 줄 세우는 대기 시간. 이 지표가 활동하는데(로컬 직렬화 작동) 위의 InnoDB 데드락이 함께 뜨면, 두 JVM 의 모니터가 서로 별개라 cross-JVM 경합이 로컬 락을 그대로 통과한다는 실측 증거다.",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 55 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "s", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 55
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (rate(jvm_lock_wait_seconds_sum{instance=~\"web.*\"}[1m])) / sum by (instance) (rate(jvm_lock_wait_seconds_count{instance=~\"web.*\"}[1m]))", "legendFormat": "avg {{instance}}" },
-        { "refId": "B", "expr": "jvm_lock_wait_seconds_max{instance=~\"web.*\"}", "legendFormat": "max {{instance}}" }
+        {
+          "refId": "A",
+          "legendFormat": "avg {{mode}}",
+          "expr": "sum by (mode) (rate(drawing_contention_wait_seconds_sum[1m])) / sum by (mode) (rate(drawing_contention_wait_seconds_count[1m]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "p99 {{mode}}",
+          "expr": "histogram_quantile(0.99, sum by (le, mode) (rate(drawing_contention_wait_seconds_bucket[1m])))"
+        }
       ]
     },
     {
       "type": "timeseries",
-      "title": "JVM 락 처리율 (synchronized 진입/초) — by instance",
+      "title": "임계구역 진입 처리율 (건/초) — 전략별",
       "description": "synchronized 실험 전용 — 인스턴스별 로컬 락 통과 속도. 두 인스턴스가 각자 절반씩 직렬화하지만, 그 둘 사이에는 아무 조율이 없다.",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 55 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 10 }, "unit": "ops", "min": 0 }, "overrides": [] },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 55
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 10
+          },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (instance) (rate(jvm_lock_wait_seconds_count{instance=~\"web.*\"}[1m]))", "legendFormat": "{{instance}}" }
+        {
+          "refId": "A",
+          "legendFormat": "{{mode}} {{result}}",
+          "expr": "sum by (mode, result) (rate(drawing_entry_total[1m]))"
+        }
       ]
     }
   ]

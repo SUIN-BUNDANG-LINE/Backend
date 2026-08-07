@@ -14,7 +14,6 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
-import jakarta.persistence.Version
 import java.util.UUID
 
 @Entity
@@ -29,11 +28,6 @@ class DrawingBoard(
     @OrderBy("ticketIndex ASC")
     val ticketEntities: MutableList<TicketEntity> = mutableListOf(),
 ) : BaseTimeEntity() {
-    // 낙관적 락 실험용 — 티켓 선택은 자식 행(TicketEntity)에 있어 보드 행이 dirty 되지 않으므로,
-    // OPTIMISTIC_FORCE_INCREMENT 조회와 조합해 "보드 전체"를 하나의 낙관적 자원으로 만든다.
-    @Version
-    var version: Long = 0
-
     @get:Transient
     val tickets: List<Ticket>
         get() = ticketEntities.map { it.toDomain() }
@@ -51,16 +45,20 @@ class DrawingBoard(
         val selectedTicket = tickets[selectedIndex]
         validateTicketIsSelected(selectedTicket)
 
-        val changedDrawingBoard = getChangedDrawingBoard(selectedIndex)
+        // 고른 티켓 한 장만 뒤집는다. 보드를 통째로 새로 만들어 돌려주면 자식 티켓이 전부 신규 엔티티가
+        // 되어, orphanRemoval 이 기존 행을 모두 지우고 같은 수만큼 다시 넣는다 — 한 장을 뒤집자고
+        // 보드 크기의 두 배에 달하는 행 연산을 치르게 된다. 관리 상태에서 필드만 바꾸면 UPDATE 한 줄이다.
+        ticketEntities[selectedIndex].isSelected = true
+
         return when (selectedTicket) {
             is Ticket.Winning ->
                 DrawingResult.Winner(
-                    changedDrawingBoard = changedDrawingBoard,
+                    changedDrawingBoard = this,
                     rewardName = selectedTicket.rewardName,
                 )
             is Ticket.NonWinning ->
                 DrawingResult.NonWinner(
-                    changedDrawingBoard = changedDrawingBoard,
+                    changedDrawingBoard = this,
                 )
         }
     }
@@ -76,28 +74,6 @@ class DrawingBoard(
             throw AlreadySelectedTicketException()
         }
     }
-
-    private fun getChangedDrawingBoard(selectedIndex: Int): DrawingBoard =
-        fromTickets(
-            id = this.id,
-            surveyId = this.surveyId,
-            tickets = deepCopyTicketsWithChangeSelectedTrue(selectedIndex),
-        ).also {
-            // 복사본이 version=0 으로 초기화되면 merge 시 가짜 낙관락 충돌이 나므로 현재 버전을 승계한다.
-            it.version = this.version
-        }
-
-    private fun deepCopyTicketsWithChangeSelectedTrue(selectedIndex: Int): List<Ticket> =
-        tickets.mapIndexed { index, ticket ->
-            if (index == selectedIndex) {
-                when (ticket) {
-                    is Ticket.Winning -> ticket.copy(isSelected = true)
-                    is Ticket.NonWinning -> ticket.copy(isSelected = true)
-                }
-            } else {
-                ticket
-            }
-        }
 
     companion object {
         fun create(

@@ -6,12 +6,12 @@
 # 같은 지속 부하(drawing-load.js, 기본 10 TPS × 30s)를 다섯 방식에 순서대로 걸고,
 # MySQL 내부 낭비 지표(데드락·행 락 대기·롤백)와 앱 충돌·k6 성공률/p95 를 단계별로 집계한다.
 #
-# 다섯 방식은 전부 DrawingStrategy 인터페이스의 구현이며(전략 패턴), 격리수준 전환도 전략 코드에
+# 다섯 방식은 전부 AbstractDrawingStrategy 의 구현이며(전략 패턴), 격리수준 전환도 전략 코드에
 # 내장(@Transactional(isolation=SERIALIZABLE))되어 web 재기동 없이 같은 프로세스에서 연속 측정한다.
 #
 #   1단계: LOCK_MODE=off              (/draw-no-lock)          — 무보호 기준선
 #   2단계: LOCK_MODE=serializable     (/draw-serializable)     — 트랜잭션 단위 SERIALIZABLE
-#   3단계: LOCK_MODE=optimistic-retry (/draw-optimistic-retry) — @Version+재시도5회, 시도·역전 집계
+#   3단계: LOCK_MODE=optimistic-retry (/draw-optimistic-retry) — 버전 검사+재시도5회, 시도·역전 집계
 #   4단계: LOCK_MODE=synchronized     (/draw-synchronized)     — JVM 로컬, cross-JVM 한계 검증
 #   5단계: LOCK_MODE=on               (/draw)                  — Redisson (운영)
 #
@@ -47,18 +47,57 @@ delta() { # $1=before $2=after → "데드락 Δ / 행락대기 Δ / 행락시�
     echo "데드락 +$(echo "$d2-$d1" | bc) · 행락대기 +$(echo "$w2-$w1" | bc) · 행락대기시간 +$(echo "$t2-$t1" | bc)ms · 롤백 +$(echo "$r2-$r1" | bc)"
 }
 
+# ── 앱 통일 지표 스냅샷 (전략 무관 동일 조회) ──
+# 다섯 전략이 같은 메트릭(mode 라벨만 다름)을 기록하므로, 단계마다 완전히 같은 질의를 던진다.
+app_snapshot() { # $1=DrawMode 이름
+    echo "$(prom "sum(drawing_outcome_total{mode=\"$1\",outcome=\"success\"})") \
+$(prom "sum(drawing_outcome_total{mode=\"$1\"})") \
+$(prom "sum(drawing_attempt_total{mode=\"$1\"})")"
+}
+app_delta() { # $1=before $2=after → "성공 N/M · 요청당 시도 X회"
+    read -r ok1 all1 att1 <<< "$1"; read -r ok2 all2 att2 <<< "$2"
+    local ok=$(echo "$ok2-$ok1" | bc) all=$(echo "$all2-$all1" | bc) att=$(echo "$att2-$att1" | bc)
+    # 재시도 배수는 요청 대비로 잰다 — 성공 대비로 재면 성공률이 낮은 전략이 재시도를 안 해도 커진다
+    local per="-"
+    if [[ "$all" != "0" ]]; then per=$(echo "scale=2; $att/$all" | bc); fi
+    echo "성공 $ok/$all · 시도 $att (요청당 ${per}회)"
+}
+# k6 LOCK_MODE → 앱 DrawMode 이름
+draw_mode() {
+    case "$1" in
+        off) echo NO_LOCK ;; serializable) echo SERIALIZABLE ;;
+        optimistic-retry) echo OPTIMISTIC_RETRY ;; synchronized) echo SYNCHRONIZED ;;
+        *) echo REDISSON ;;
+    esac
+}
+
 # ── web 재기동 (카운터 리셋용) + 헬스 대기 ──
 # 격리수준 전환은 이제 불필요 — SERIALIZABLE 은 전략 코드(@Transactional(isolation=SERIALIZABLE))가
 # 요청 트랜잭션 단위로 적용하므로, 실험 시작 시 1회만 재기동해 앱 카운터를 리셋한다.
 restart_web() {
     ( cd "$REPO_ROOT" && TEST_AUTH_ENABLED=true \
         docker-compose up -d --force-recreate --no-deps web-1 web-2 ) >/dev/null 2>&1
+    local booted=0
     for _ in $(seq 1 60); do
         curl -sf -m3 http://localhost:18080/management/health >/dev/null 2>&1 \
-          && curl -sf -m3 http://localhost:18081/management/health >/dev/null 2>&1 && return 0
+          && curl -sf -m3 http://localhost:18081/management/health >/dev/null 2>&1 && { booted=1; break; }
         sleep 3
     done
-    echo "❌ web 부팅 타임아웃 (docker logs sulmun2yong-web-1 --tail 40 확인)"; exit 1
+    [[ "$booted" == 1 ]] || { echo "❌ web 부팅 타임아웃 (docker logs sulmun2yong-web-1 --tail 40 확인)"; exit 1; }
+
+    # 결제 우회 엔드포인트가 등록됐는지 확인한다. TEST_AUTH_ENABLED 가 전달되지 않으면 이 컨트롤러가
+    # 빠지고, 설문이 PENDING_PAYMENT 에 머물러 모든 추첨이 거절된다 — 헬스체크는 통과하므로
+    # 확인하지 않으면 전 단계가 0 으로 채워진 결과를 데이터처럼 출력하게 된다.
+    local port code
+    for port in 18080 18081; do
+        code=$(curl -s -o /dev/null -w '%{http_code}' -m5 -X POST \
+                 "http://localhost:$port/api/v1/test/surveys/00000000-0000-0000-0000-000000000000/activate")
+        if [[ "$code" == 404 ]]; then
+            echo "❌ :$port 에 결제 우회 엔드포인트가 없습니다 — TEST_AUTH_ENABLED 가 전달되지 않았습니다."
+            echo "   확인: docker inspect sulmun2yong-web-1 --format '{{.Config.Env}}' | tr ' ' '\\n' | grep TEST_AUTH"
+            exit 1
+        fi
+    done
 }
 
 # ── 한 단계 실행: 부하 → k6/DB 지표 집계 ──
@@ -67,51 +106,53 @@ run_phase() { # $1=라벨 $2=LOCK_MODE
     local before after
     # 인증: JWT 불필요 — k6 가 게이트웨이 헤더(X-Gateway-Auth + X-User-Id/Role)를 직접 넣는다 (lib/config.js)
 
-    before=$(snapshot)
-    echo "  부하 주입: ${RATE} TPS × ${DURATION_S}s (LOCK_MODE=$mode)"
+    local dm; dm=$(draw_mode "$mode")
+    before=$(snapshot); local abefore; abefore=$(app_snapshot "$dm")
+    echo "  부하 주입: ${RATE} TPS × ${DURATION_S}s (LOCK_MODE=$mode → mode=$dm)"
     # k6 는 임계값(p95<5000ms) 실패 시 비제로 종료하므로 || true — 임계값 붕괴 자체가 측정 결과다
     ( cd "$K6_DIR" && LOCK_MODE="$mode" k6 run \
         --env RATE="$RATE" --env DURATION_S="$DURATION_S" \
         drawing-load.js ) > "$OUT_DIR/$label.txt" 2>&1 || true
     sleep 20   # Prometheus 스크레이프(15s) 반영 대기
-    after=$(snapshot)
+    after=$(snapshot); local aafter; aafter=$(app_snapshot "$dm")
 
-    local s f p95
-    s=$(grep -a drawing_success_total "$OUT_DIR/$label.txt" | grep -oE ': [0-9]+' | head -1 | tr -d ': ' || true)
-    f=$(grep -a drawing_fail_total "$OUT_DIR/$label.txt" | grep -oE ': [0-9]+' | head -1 | tr -d ': ' || true)
-    p95=$(grep -a http_req_duration "$OUT_DIR/$label.txt" | grep -oE 'p\(95\)=[0-9.]+m?s' | head -1 || true)
-    echo "  k6: 성공=${s:-0} 실패=${f:-0} $p95"
-    echo "  MySQL: $(delta "$before" "$after")"
-    echo "  앱 카운터(누적): 낙관락충돌=$(prom 'sum(optimistic_lock_failure_total)') · 데드락예외=$(prom 'sum(db_deadlock_total)')"
-
-    # 낙관락 계열이면 심화 지표: 성공당 시도 횟수 + 선착순 역전 쌍
-    if [[ "$mode" == optimistic* ]]; then
-        local att_ok att_vc att_dl
-        att_ok=$(prom 'sum(drawing_attempts_total{result="success"})')
-        att_vc=$(prom 'sum(drawing_attempts_total{result="version_conflict"})')
-        att_dl=$(prom 'sum(drawing_attempts_total{result="deadlock"})')
-        if [[ "$att_ok" != "0" ]]; then
-            echo "  시도(누적): 성공 $att_ok · 버전충돌 $att_vc · 데드락 $att_dl → 성공당 시도 $(echo "scale=2; ($att_ok+$att_vc+$att_dl)/$att_ok" | bc)회"
-        fi
-        # 선착순 역전 — 발사 순번(selected_ticket_index)과 확정 시각(created_at)의 역전 쌍 수
-        local sid
-        sid=$(grep -aoE 'surveyId=[0-9a-f-]+' "$OUT_DIR/$label.txt" | head -1 | cut -d= -f2)
-        if [[ -n "$sid" ]]; then
-            local inv
-            inv=$(docker exec sulmun2yong-cluster-mysql mysql -uroot -ppassword -N -B test -e "
-                SELECT COUNT(*) FROM drawing_histories a
-                JOIN drawing_histories b
-                  ON a.survey_id = b.survey_id
-                 AND a.selected_ticket_index < b.selected_ticket_index
-                 AND a.created_at > b.created_at
-                WHERE a.survey_id = UUID_TO_BIN('$sid')" 2>/dev/null || echo "?")
-            echo "  선착순 역전: ${inv}쌍 (먼저 발사됐는데 늦게 확정된 조합)"
-        fi
+    # ── 이하 전 전략 동일 항목만 출력한다 (통제 실험) ──
+    local p95 w50 w99
+    p95=$(prom "histogram_quantile(0.95, sum by (le) (rate(drawing_duration_seconds_bucket{mode=\"$dm\"}[5m])))")
+    # 요청이 앱 계측 지점에 하나도 닿지 않았으면 이 단계는 측정이 아니라 사고다 — 조용히 넘기지 않는다
+    read -r _ all_before _ <<< "$abefore"; read -r _ all_after _ <<< "$aafter"
+    if [[ "$(echo "$all_after-$all_before" | bc)" == "0" ]]; then
+        echo "  ⚠️  이 단계의 추첨 요청이 0건입니다 — k6 로그($OUT_DIR/$label.txt)의 체크 실패를 확인하세요."
     fi
-
-    # synchronized 이면: JVM 로컬 락 활동 (활동 있음 + 데드락 잔존 = cross-JVM 경합 통과 증거)
-    if [[ "$mode" == "synchronized" ]]; then
-        echo "  JVM 락 진입: count=$(prom 'sum(jvm_lock_wait_seconds_count)') · 최대 대기 $(prom 'max(jvm_lock_wait_seconds_max)')s — 로컬 직렬화 작동 증거"
+    echo "  앱:    $(app_delta "$abefore" "$aafter") · p95 ${p95}s"
+    echo "  실패:  $(for o in deadlock version_conflict stale_row lock_timeout rejected other; do
+                        v=$(prom "sum(drawing_outcome_total{mode=\"$dm\",outcome=\"$o\"})")
+                        if [[ "$v" != "0" ]]; then printf "%s=%s " "$o" "$v"; fi
+                    done)"
+    echo "  MySQL: $(delta "$before" "$after")"
+    # 정합성 — 같은 티켓이 두 명 이상에게 배정됐는가. 경쟁 제어가 실패해도 예외 없이 조용히
+    # 커밋되는 유일한 증상이라, 성공률만 보면 놓친다. 0 이 아니면 그 단계는 데이터가 깨진 것이다.
+    local sid dup
+    sid=$(grep -aoE 'surveyId=[0-9a-f-]+' "$OUT_DIR/$label.txt" | head -1 | cut -d= -f2)
+    if [[ -n "$sid" ]]; then
+        dup=$(docker exec sulmun2yong-cluster-mysql mysql -uroot -ppassword -N -B test -e "
+            SELECT IFNULL(SUM(n - 1), 0) FROM (
+                SELECT COUNT(*) AS n FROM drawing_histories
+                WHERE survey_id = UUID_TO_BIN('$sid')
+                GROUP BY selected_ticket_index HAVING COUNT(*) > 1) d" 2>/dev/null || echo "?")
+        echo "  정합성: 중복 배정 ${dup}건"
+    fi
+    # 공정성 — 진입 대기의 평균 대비 p99. 서버는 요청이 어떤 순서로 출발했는지 알 수 없으므로
+    # "선착순을 지켰는가"는 잴 수 없다. 대신 "누구는 얼마나 더 오래 기다렸는가"의 배수로 본다.
+    # 평균은 분위수가 아니라 sum/count 로 낸다 — 대기 0 인 전략은 최하 버킷 보간 때문에
+    # 분위수가 0.0005s 처럼 나오지만 sum/count 는 정확히 0 이다.
+    w50=$(prom "sum(rate(drawing_contention_wait_seconds_sum{mode=\"$dm\"}[5m])) / sum(rate(drawing_contention_wait_seconds_count{mode=\"$dm\"}[5m]))")
+    w99=$(prom "histogram_quantile(0.99, sum by (le) (rate(drawing_contention_wait_seconds_bucket{mode=\"$dm\"}[5m])))")
+    if awk -v a="$w50" 'BEGIN{exit !(a+0 > 0.0001)}'; then
+        echo "  공정성: 진입 대기 avg ${w50}s · p99 ${w99}s$(
+            awk -v a="$w50" -v b="$w99" 'BEGIN{ printf " (p99/avg %.1f배)", b/a }')"
+    else
+        echo "  공정성: 진입 제어 없음 — 대기 0"
     fi
 }
 
@@ -139,7 +180,7 @@ echo "▶ [2/5] SERIALIZABLE (DB 안 직렬화 — 전략이 트랜잭션 단위
 run_phase "serializable" "serializable"
 
 echo ""
-echo "▶ [3/5] 낙관적 락 (@Version + 재시도 5회)"
+echo "▶ [3/5] 낙관적 락 (보드 버전 검사 + 재시도 5회)"
 run_phase "optimistic" "optimistic-retry"
 
 echo ""

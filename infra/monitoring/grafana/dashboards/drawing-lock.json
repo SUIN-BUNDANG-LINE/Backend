@@ -68,7 +68,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (result) (rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[1m]))",
+          "expr": "sum by (result) (rate(drawing_entry_total{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[1m]))",
           "legendFormat": "{{result}}",
           "refId": "A"
         }
@@ -154,17 +154,17 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+          "expr": "histogram_quantile(0.50, sum by(le) (rate(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[1m])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[1m])))",
           "legendFormat": "p95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by(le) (rate(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\"}[1m])))",
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[1m])))",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -279,7 +279,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(drawing_lock_acquire_total{result=\"success\", application=~\"$application\", instance=~\"$instance\"}[5m])) / sum(rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
+          "expr": "sum(rate(drawing_entry_total{result=\"success\", mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[5m])) / sum(rate(drawing_entry_total{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[5m]))",
           "legendFormat": "success ratio",
           "refId": "A"
         }
@@ -325,7 +325,7 @@
     {
       "type": "timeseries",
       "id": 4,
-      "title": "Lock Acquire Rate — by Lock Key Type",
+      "title": "임계구역 진입률 — 전략별",
       "description": "lock_key_type 라벨별(annotation key 원본, 예: drawingLock:{surveyId}) 시도량. 카디널리티 폭발 방지를 위해 치환 전 템플릿 문자열을 라벨로 사용. 현재는 drawingLock 1종이지만 새 도메인 락 추가 시 자동 분리.",
       "gridPos": {
         "h": 6,
@@ -339,9 +339,9 @@
       },
       "targets": [
         {
-          "expr": "sum by (lock_key_type) (rate(drawing_lock_acquire_total{application=~\"$application\", instance=~\"$instance\"}[5m]))",
-          "legendFormat": "{{lock_key_type}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{mode}}",
+          "expr": "sum by (mode) (rate(drawing_entry_total[$__rate_interval]))"
         }
       ],
       "fieldConfig": {
@@ -390,37 +390,37 @@
       },
       "targets": [
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.01\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.01\"}[$__rate_interval]))",
           "legendFormat": "즉시 (≤10ms)",
           "refId": "A"
         },
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.05\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.01\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.05\"}[$__rate_interval])) - sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.01\"}[$__rate_interval]))",
           "legendFormat": "짧은 (10~50ms)",
           "refId": "B"
         },
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.1\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.05\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.1\"}[$__rate_interval])) - sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.05\"}[$__rate_interval]))",
           "legendFormat": "중간 (50~100ms)",
           "refId": "C"
         },
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.5\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.1\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.5\"}[$__rate_interval])) - sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.1\"}[$__rate_interval]))",
           "legendFormat": "긴 (100~500ms)",
           "refId": "D"
         },
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_count{application=~\"$application\", instance=~\"$instance\"}[$__rate_interval])) - sum(increase(drawing_lock_wait_seconds_bucket{application=~\"$application\", instance=~\"$instance\", le=\"0.5\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_count{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[$__rate_interval])) - sum(increase(drawing_contention_wait_seconds_bucket{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\", le=\"0.5\"}[$__rate_interval]))",
           "legendFormat": "심각 (>500ms)",
           "refId": "E"
         },
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_sum{application=~\"$application\", instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_sum{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "Contention Pressure",
           "refId": "F"
         },
         {
-          "expr": "sum(increase(drawing_lock_wait_seconds_count{application=~\"$application\", instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "sum(increase(drawing_contention_wait_seconds_count{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "📊 Total (전체 락 호출)",
           "refId": "G"
         }
