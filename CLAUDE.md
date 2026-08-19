@@ -252,7 +252,7 @@ Gradle 멀티 프로젝트 — 카프카 기반 `module-messaging/`(`:messaging`
 
 사가 리스너의 처리 실패는 토픽별로 쪼개지 않고 **`saga.DLT` 하나**로 모은다 (`KafkaDltConfig` 의 고정 destination resolver — 1s×2
 재시도 후 재발행). 원본 토픽·예외 메시지는 `kafka_dlt-*` 헤더가 보존한다. 구독자는 없다 — 죽은 편지는 토픽에 보관하고
-Kafbat UI 로 조사·수동 재발행한다(재발행 시 원본 키 유지 필수 — 파티션 순서 보장). DB 적재·재처리 API 방식(parking lot)은
+Kafbat UI 로 조사·수동 재발행한다(재발행 시 원본 키 유지 권장 — 추적성·같은 엔티티 이벤트의 파티션 응집. 순서 의존은 없다(리스너가 상태머신·CAS 로 도착 순서 불문 수렴)). DB 적재·재처리 API 방식(parking lot)은
 과설계로 판단해 제거했다.
 
 단독 (비모금) 개시도 **1인 모금 접수로 일원화** — 유료 개시의 유일한 길은 `POST /surveys/{id}/co-funding`
