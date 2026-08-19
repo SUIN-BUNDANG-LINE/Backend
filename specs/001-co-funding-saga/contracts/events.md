@@ -40,7 +40,7 @@
 ```
 
 - **컨슈머 계약(환불 리스너)**: `settledOrderIds` 각각에 CANCEL 커맨드 적재 —
-  `UNIQUE(aggregate_id, command_type)`로 재수신·중복 발행 흡수. 리스너 책임은
+  `UNIQUE(order_id, command_type)`로 재수신·중복 발행 흡수. 리스너 책임은
   적재까지다: 실제 토스 호출과 주문 CANCELED·참여자 REFUNDED·`FAILED → REFUNDED`
   수렴 전이는 web 릴레이의 CANCEL settle 후처리가 수행한다(D5). **주의**:
   이벤트의 settledOrderIds는 발행 시점 스냅샷 — 리스너는 DB의 SETTLED 행을

@@ -13,8 +13,7 @@
 | owner_id | BINARY(16) | NOT NULL | 개설자 (개설 시 참여자 명단에 포함) |
 | capacity | INT | NOT NULL, >= 2 | 공동 주최 인원 = 명단 크기(개설자 포함), 개설 후 불변 |
 | registered_count | INT | NOT NULL, DEFAULT 0 | 미사용 — 초대제 전환(D7)으로 잔존, 엔티티 미매핑 |
-| share_amount | INT | NOT NULL | 참여자 분담금(원). 잔액은 개설자 분담금에 합산 → owner_share_amount |
-| owner_share_amount | INT | NOT NULL | 개설자 분담금 = share_amount + 잔액 |
+| share_amount | INT | NOT NULL | 참여자 분담금(원) = 총액 / capacity. 전원 동일 — 균등 분할 잔액은 걷지 않는다(경품 기확보) |
 | deadline | DATETIME | NOT NULL | 모금 기한 (개설 시점 + 최대 7일) |
 | status | VARCHAR(20) | NOT NULL | 아래 상태 머신 |
 | fail_reason | VARCHAR(30) | NULL | 미사용 — 무산 트리거가 기한 만료 하나라 사유 기록 불필요, 컬럼 잔존·엔티티 미매핑 |
@@ -43,7 +42,6 @@ FAILED  ──(전원 환불 완료 판정)──────▶ REFUNDED
 | id | BINARY(16) | PK | UUID |
 | funding_id | BINARY(16) | NOT NULL, FK 개념 | co_fundings 참조 |
 | user_id | BINARY(16) | NOT NULL | 참여 메이커 |
-| role | VARCHAR(10) | NOT NULL | OWNER / MEMBER |
 | status | VARCHAR(20) | NOT NULL | 아래 상태 머신 |
 | order_id | VARCHAR(64) | NULL, UNIQUE | 개설 트랜잭션에서 사전 발급되는 주문 ID (payment_orders 연결, D7) |
 | settled_at | DATETIME | NULL | 결제 확정 시각 |
@@ -75,7 +73,7 @@ SETTLED    ──(무산 → CANCEL 커맨드 수렴)──▶ REFUNDED
 ### payment_commands (D5)
 
 - `command_type`에 `CANCEL` 값 추가 (enum 문자열 — DDL 변경 없음, 코드만).
-- `UNIQUE(aggregate_id, command_type)` 제약 추가 — 주문당 CANCEL 1회 멱등.
+- `UNIQUE(order_id, command_type)` 제약 추가 — 주문당 CANCEL 1회 멱등.
   (기존 CONFIRM 흐름도 주문당 1회이므로 소급 위반 없음 — V9에서 제약 추가 전
   중복 검사 필요.)
 
@@ -96,6 +94,6 @@ SETTLED    ──(무산 → CANCEL 커맨드 수렴)──▶ REFUNDED
 3. 참여자 행 수 = capacity (개설 트랜잭션에서 명단 일괄 확정, D7 — 이후 불변)
 4. CONFIRMED와 FAILED는 공존 불가 (단일 행 CAS)
 5. SETTLED 행 수 = capacity ⇔ CONFIRMED 전이 가능 (장벽 판정)
-6. 주문당 CANCEL 커맨드 최대 1건 (`UNIQUE(aggregate_id, command_type)`)
+6. 주문당 CANCEL 커맨드 최대 1건 (`UNIQUE(order_id, command_type)`)
 7. 무산 확정 후 신규 SETTLED 전이 불가 — settle 트랜잭션이 모금 상태를 검사(D6),
    FAILED면 즉시 CANCEL 적재

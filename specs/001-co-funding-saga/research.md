@@ -58,11 +58,11 @@ Alternatives 형식.
 
 ## D5. 환불: `PaymentCommandType.CANCEL` 신설 + 기존 릴레이 확장
 
-- **Decision**: 환불은 `payment_commands`에 CANCEL 커맨드(전액, aggregate_id =
+- **Decision**: 환불은 `payment_commands`에 CANCEL 커맨드(전액, order_id =
   orderId)를 적재하고 기존 `PaymentCommandRelay`가 command_type 분기로 토스
   `POST /v1/payments/{paymentKey}/cancel`(cancelAmount 생략 = 전액)을 호출해
   수렴시킨다. Idempotency-Key = `cancel:{orderId}`. 커맨드 멱등은
-  UNIQUE(aggregate_id, command_type). 응답 삼분법(승인/미확정/명시적 거절)은
+  UNIQUE(order_id, command_type). 응답 삼분법(승인/미확정/명시적 거절)은
   confirm과 동일 — 결과 타입(`TossConfirmResult`)·응답
   DTO(`TossPaymentResponse`)·에러 파싱을 그대로 재사용하고,
   `ALREADY_CANCELED_PAYMENT`류는 성공으로 간주. CANCEL 승인 settle 후처리는

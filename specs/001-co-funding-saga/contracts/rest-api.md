@@ -11,14 +11,14 @@ Authorization: 필요 (설문 소유자)
 ```
 
 - 선행 조건: 설문이 시작 전 상태 + ImmediateDraw(경품) 설정 존재.
-- 참여자 명단은 개설 시점에 확정(초대제, D7) — capacity = 명단 크기 + 1(개설자).
-- 동작(한 트랜잭션): 분담금 산정(총액/capacity, 잔액→개설자) → `co_fundings`
-  FUNDING 적재 + 참여자 행 일괄 INSERT(개설자 OWNER + 명단 MEMBER, 전원
+- 참여자 명단은 개설 시점에 확정(초대제, D7) — 개설자 자신을 포함하며 capacity = 명단 크기.
+- 동작(한 트랜잭션): 분담금 산정(총액/capacity, 전원 동일) → `co_fundings`
+  FUNDING 적재 + 참여자 행 일괄 INSERT(전원 동등·분담금 동일, 전원
   REGISTERED) + 참여자별 `payment_orders` PENDING 사전 적재(`order_id` 지정, D7)
   → Survey `PENDING_PAYMENT` 전이 → 설문·경품 잠금(FR-014).
-- 응답 200: `{ "fundingId", "shareAmount", "ownerShareAmount", "deadline",
+- 응답 200: `{ "fundingId", "shareAmount", "deadline",
   "inviteUrl" }` — inviteUrl은 참여자에게 공유하는 현황·결제 진입 페이지 URL.
-- 오류: 400(명단이 비어 있음(총 2인 미만) | 명단 중복·개설자 포함 | 기한 > 7일),
+- 오류: 400(명단 2인 미만 | 명단 중복 | 기한 > 7일),
   409(이미 모금 존재 | 설문 상태 부적합).
 
 ## 2. 분담금 결제 진입 (내 주문 조회)
@@ -67,6 +67,7 @@ Authorization: 필요 (참여자 또는 개설자)
 
 ## 기존 계약 재사용 (변경 없음)
 
-- `GET /payments/checkout?orderId=` · `GET /api/v1/payments/checkout-info`
+- `GET /payments/checkout?orderId=` · `GET /api/v1/payments/checkout-info/by-order/{orderId}`
+  (모금) · `GET /api/v1/payments/checkout-info/by-survey/{surveyId}` (단독)
 - `GET /api/v1/payments/success|fail` (settle 내부에 D6 분기만 추가)
 - `POST /api/v1/payments/webhook` (웹훅 Inbox — 취소 웹훅이 CANCEL 수렴의 보조 신호)
