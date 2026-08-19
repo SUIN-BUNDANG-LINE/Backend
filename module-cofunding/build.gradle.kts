@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -23,12 +22,15 @@ java {
 
 dependencies {
     // cofunding 엔티티/리포지토리·사가 이벤트 DTO·kafka(outbox 포함) 인프라 공유 기반
-    implementation(project(":support"))
+    implementation(project(":messaging"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    // 자기 스키마의 주인 - DB per service 라 각 서비스가 직접 마이그레이션한다
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
     runtimeOnly("com.mysql:mysql-connector-j")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -40,13 +42,6 @@ dependencies {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
-    }
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 

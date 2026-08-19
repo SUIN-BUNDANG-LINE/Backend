@@ -21,7 +21,11 @@ class CoFundingController(
         @PathVariable surveyId: UUID,
         @RequestHeader("X-User-Id") userId: UUID,
         @RequestBody request: CoFundingStartRequest,
-    ): ResponseEntity<CoFundingStartResponse> = ResponseEntity.ok(coFundingService.start(surveyId, userId, request))
+    ): ResponseEntity<CoFundingStartResponse> =
+        ResponseEntity.ok(
+            coFundingService
+                .start(surveyId, userId, request),
+        )
 
     @GetMapping("/co-fundings/{fundingId}/participants/me/order")
     fun myOrder(
@@ -29,7 +33,7 @@ class CoFundingController(
         @RequestHeader("X-User-Id") userId: UUID,
     ): ResponseEntity<CoFundingMyOrderResponse> = ResponseEntity.ok(coFundingService.findMyOrder(fundingId, userId))
 
-    // 접수(PENDING_APPROVAL) 후 판정 확정(FUNDING/REJECTED)을 폴링하는 상태 조회
+    // 접수(PENDING) 후 판정 확정(FUNDING/REJECTED)을 폴링하는 상태 조회
     @GetMapping("/co-fundings/{fundingId}")
     fun status(
         @PathVariable fundingId: UUID,

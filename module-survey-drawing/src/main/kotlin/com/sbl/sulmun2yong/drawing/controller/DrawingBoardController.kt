@@ -34,28 +34,6 @@ class DrawingBoardController(
         @RequestBody request: DrawingRequest,
     ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.REDISSON, request)
 
-    // ── 이하 실험용 — 경쟁 제어 5방식 비교 측정 전용, 운영 사용 금지 ──
-
-    @PostMapping("/draw-no-lock")
-    fun doDrawingWithoutLock(
-        @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.NO_LOCK, request)
-
-    @PostMapping("/draw-serializable")
-    fun doDrawingWithSerializable(
-        @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.SERIALIZABLE, request)
-
-    @PostMapping("/draw-optimistic-retry")
-    fun doDrawingWithOptimisticRetry(
-        @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.OPTIMISTIC_RETRY, request)
-
-    @PostMapping("/draw-synchronized")
-    fun doDrawingWithSynchronized(
-        @RequestBody request: DrawingRequest,
-    ): ResponseEntity<DrawingResultResponse> = draw(DrawMode.SYNCHRONIZED, request)
-
     private fun draw(
         mode: DrawMode,
         request: DrawingRequest,

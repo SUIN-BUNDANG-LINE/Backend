@@ -14,8 +14,10 @@ x-app-base: &app-base
     environment: &app-env
         SERVER_PORT: 8080  # application.yml은 로컬 dev용 포트, 컨테이너 내부는 8080으로 통일
         TEST_AUTH_ENABLED: ${TEST_AUTH_ENABLED:-false}  # 부하테스트용 JWT 발급 엔드포인트
+        LOCK_EXPERIMENT_ENABLED: ${LOCK_EXPERIMENT_ENABLED:-false}  # 경쟁 제어 5방식 비교 엔드포인트
         # 트랜잭션 격리수준 실험용 — HikariCP 가 커넥션마다 적용 (기본: MySQL 기본값 REPEATABLE_READ)
         SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION: ${TX_ISOLATION:-TRANSACTION_REPEATABLE_READ}
+        # 기본값 - 각 앱 서비스가 자기 스키마로 덮어쓴다(DB per service)
         SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
         SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
         SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
@@ -48,6 +50,8 @@ services:
             - "13306:3306"  # 1+default 규칙 (3306 → 13306)
         volumes:
             - sulmun2yong-cluster-mysql:/var/lib/mysql
+            # 서비스별 스키마 생성 (최초 기동 시 1회 실행)
+            - ./infra/mysql/init:/docker-entrypoint-initdb.d:ro
         healthcheck:
             test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
             interval: 5s
@@ -72,6 +76,9 @@ services:
     web-1:
         <<: *app-base
         container_name: sulmun2yong-web-1
+        environment:
+            <<: *app-env
+            SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/survey_db
         ports:
             - "18080:8080"  # 1+default 규칙 (8080 → 18080)
         volumes:
@@ -87,6 +94,9 @@ services:
     web-2:
         <<: *app-base
         container_name: sulmun2yong-web-2
+        environment:
+            <<: *app-env
+            SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/survey_db
         ports:
             - "18081:8080"  # web-1(18080) + 1 (호스트 포트 충돌 회피)
         volumes:
@@ -132,6 +142,7 @@ services:
         container_name: sulmun2yong-auth
         environment:
             <<: *app-env
+            SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db
             JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
         volumes:
             - ./module-auth/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
@@ -148,6 +159,7 @@ services:
         container_name: sulmun2yong-payment
         environment:
             <<: *app-env
+            SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/payment_db
             JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
         volumes:
             - ./module-payment/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
@@ -164,6 +176,9 @@ services:
         container_name: sulmun2yong-cofunding
         environment:
             <<: *app-env
+            SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cofunding_db
+            # inviteUrl 조립 기준 - 프론트 대역(게이트웨이 뒤 초대 페이지)이 열리는 origin
+            FRONTEND_BASEURL: http://localhost:18000
             JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -javaagent:/app/otel-javaagent.jar"
         volumes:
             - ./module-cofunding/src/main/resources/application-secret.yml:/app/config/application-secret.yml:ro
@@ -186,6 +201,8 @@ services:
             - --storage.tsdb.retention.time=7d
             - --web.enable-lifecycle
             - --web.enable-remote-write-receiver
+            # 파티션 확장 실험 러너가 이전 실험 시계열만 지우는 데 사용 (delete_series)
+            - --web.enable-admin-api
         volumes:
             - ./infra/monitoring/prometheus:/etc/prometheus:ro
             - sulmun2yong-cluster-prometheus:/prometheus
@@ -223,14 +240,14 @@ services:
         command:
             - --mysqld.address=mysql:3306
             - --mysqld.username=root
-            - --collect.info_schema.innodb_metrics
         ports:
             - "19104:9104"  # 1+default 규칙 (9104 → 19104)
         networks:
             - sulmun2yong-cluster
 
     grafana:
-        image: grafana/grafana:11.2.0
+        # 11.2.0 은 익명 접근 시 /api/user/* 401 -> "Unauthorized" 토스트 결함 - 11.6 에서 해소
+        image: grafana/grafana:11.6.0
         container_name: sulmun2yong-cluster-grafana
         restart: unless-stopped
         environment:

@@ -1,54 +1,20 @@
 package com.sbl.sulmun2yong.drawing.domain
 
-import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
 import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
-import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.fixture.drawing.DrawingBoardFixtureFactory
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.math.absoluteValue
 
+/**
+ * 보드가 스스로 아는 것만 검증한다.
+ *
+ * "이미 뽑힌 칸인가"·"판이 다 찼는가"는 조건부 UPDATE 가 판정한다 — 읽고 나서 판단하면 그 사이
+ * 다른 요청이 끼어들 수 있어 앱 메모리에서는 옳게 답할 수 없다. 그 규칙들은 DB 가 필요한
+ * 검증 대상이라 여기서 다루지 않는다.
+ */
 class DrawingTest {
-    @Test
-    fun `꽝 티켓을을 뽑으면 DrawingResultNonWinner 도메인이 만들어지고  DrawingBoard 에 그 결과가 반영된다`() {
-        // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardNotExistsIndex3()
-        val selectedCountBefore = drawingBoard.selectedTicketCount
-
-        // when
-        val drawingResult = drawingBoard.getDrawingResult(3)
-        val changedDrawingBoard = drawingResult.changedDrawingBoard
-
-        // then
-        assertTrue { drawingResult is DrawingResult.NonWinner }
-        // 고른 티켓은 보드에 제자리로 반영된다 — 사본이 아니라 그 보드 자신이 돌아온다
-        assertSame(drawingBoard, changedDrawingBoard)
-        assertEquals(selectedCountBefore + 1, changedDrawingBoard.selectedTicketCount)
-        assertTrue { changedDrawingBoard.tickets[3].isSelected }
-    }
-
-    @Test
-    fun `당첨 티켓을 뽑으면 DrawingResultWinner 도메인이 만들어지고 rewardName 을 가져올 수 있다 그리고 DrawingBoard 에 그 결과가 반영된다`() {
-        // given
-        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoardRewardExistsIndex3()
-        val selectedCountBefore = drawingBoard.selectedTicketCount
-
-        // when
-        val drawingResult = drawingBoard.getDrawingResult(3)
-        val changedDrawingBoard = drawingResult.changedDrawingBoard
-
-        // then
-        assertTrue { drawingResult is DrawingResult.Winner }
-        assertEquals(DrawingBoardFixtureFactory.REWARD_NAME, (drawingResult as DrawingResult.Winner).rewardName)
-        // 고른 티켓은 보드에 제자리로 반영된다 — 사본이 아니라 그 보드 자신이 돌아온다
-        assertSame(drawingBoard, changedDrawingBoard)
-        assertEquals(selectedCountBefore + 1, changedDrawingBoard.selectedTicketCount)
-        assertTrue { changedDrawingBoard.tickets[3].isSelected }
-    }
-
     @Test
     fun `당첨 티켓에는 리워드 이름과 리워드 카테고리 정보가 있다`() {
         // given
@@ -63,42 +29,49 @@ class DrawingTest {
     }
 
     @Test
-    fun `이미 뽑힌 곳을 뽑으면 오류가 발생한다`() {
-        // given
+    fun `보드를 만들면 경품 수만큼 당첨 티켓이 놓이고 나머지는 전부 꽝이다`() {
+        // when
         val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
-        val drawingResult = drawingBoard.getDrawingResult(3)
-        val changedDrawingBoard = drawingResult.changedDrawingBoard
 
-        // when, then
-        assertThrows<AlreadySelectedTicketException> {
-            changedDrawingBoard.getDrawingResult(3)
-        }
+        // then
+        assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, drawingBoard.tickets.size)
+        assertEquals(
+            DrawingBoardFixtureFactory.totalRewardCount,
+            drawingBoard.tickets.count { it is Ticket.Winning },
+        )
     }
 
     @Test
-    fun `이미 전부 추첨 완료된 보드에서 추첨하면 오류가 발생한다`() {
-        // given
+    fun `새로 만든 보드는 아무도 뽑지 않아 잔여가 전체와 같다`() {
+        // when
+        val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
+
+        // then
+        assertEquals(0, drawingBoard.selectedTicketCount)
+        assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, drawingBoard.remainingTicketCount)
+    }
+
+    @Test
+    fun `전부 뽑힌 보드는 잔여가 0이다`() {
+        // when
         val drawingBoard = DrawingBoardFixtureFactory.createAllSelectedDrawingBoard()
 
-        // when, then
-        assertThrows<AlreadySelectedTicketException> { drawingBoard.getDrawingResult(3) }
+        // then
+        assertEquals(DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT, drawingBoard.selectedTicketCount)
+        assertEquals(0, drawingBoard.remainingTicketCount)
     }
 
     @Test
-    fun `추첨을 loopCount 번 했을 때 기대 확률과 실제 확률 차가 0점1 미만이다`() {
-        // given
+    fun `보드를 loopCount 번 만들었을 때 특정 자리가 당첨일 기대 확률과 실제 확률 차가 1 미만이다`() {
+        // given — 당첨 확률은 뽑는 행위가 아니라 보드를 만들 때의 섞기가 정한다
         val selectedNumber = 3
         val loopCount = 500000
 
         // when
         val winCount =
-            (1..loopCount)
-                .map {
-                    val drawingBoard = DrawingBoardFixtureFactory.createDrawingBoard()
-                    val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
-
-                    if (drawingResult is DrawingResult.Winner) 1 else 0
-                }.sum()
+            (1..loopCount).count {
+                DrawingBoardFixtureFactory.createDrawingBoard().tickets[selectedNumber] is Ticket.Winning
+            }
 
         val expectedProbability =
             DrawingBoardFixtureFactory.totalRewardCount.toDouble() / DrawingBoardFixtureFactory.SURVEY_PARTICIPANT_COUNT * 100
@@ -107,8 +80,6 @@ class DrawingTest {
         // then
         println("기대 확률 : $expectedProbability%")
         println("실제 확률 : $realProbability%")
-        assertTrue(
-            (expectedProbability - realProbability).absoluteValue <= 1,
-        )
+        assertTrue((expectedProbability - realProbability).absoluteValue <= 1)
     }
 }

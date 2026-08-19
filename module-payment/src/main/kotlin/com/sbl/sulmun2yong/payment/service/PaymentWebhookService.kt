@@ -1,9 +1,9 @@
 package com.sbl.sulmun2yong.payment.service
 
-import com.sbl.sulmun2yong.payment.entity.PaymentOrderStatus
 import com.sbl.sulmun2yong.payment.entity.PaymentWebhookInbox
-import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
+import com.sbl.sulmun2yong.payment.entity.TossOrderStatus
 import com.sbl.sulmun2yong.payment.repository.PaymentWebhookInboxRepository
+import com.sbl.sulmun2yong.payment.repository.TossOrderRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class PaymentWebhookService(
     private val paymentWebhookInboxRepository: PaymentWebhookInboxRepository,
-    private val paymentOrderRepository: PaymentOrderRepository,
+    private val tossOrderRepository: TossOrderRepository,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(PaymentWebhookService::class.java)
@@ -46,8 +46,8 @@ class PaymentWebhookService(
 
         // MVP 는 취소 반영만 - 환불 & 설문 후속 처리는 B단계(부분취소 사가)
         if (status == "CANCELED" || status == "PARTIAL_CANCELED") {
-            paymentOrderRepository.findByTossOrderId(orderId).ifPresent { order ->
-                if (order.status == PaymentOrderStatus.DONE) {
+            tossOrderRepository.findById(orderId).ifPresent { order ->
+                if (order.status == TossOrderStatus.SUCCEEDED) {
                     order.markCanceled()
                     log.warn("결제 취소 웹훅 반영 - orderId={}, status={}", orderId, status)
                 }

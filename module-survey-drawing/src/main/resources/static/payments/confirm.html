@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>설문이용 — 결제 승인 중</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <style>
+        :root {
+            --paper: #f7f3ec;
+            --card: #fffdf9;
+            --ink: #221c14;
+            --ink-soft: #6f6657;
+            --line: #e4dccd;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; padding: 64px 16px 80px;
+            background: radial-gradient(1200px 500px at 50% -200px, #fdfaf4 0%, transparent 70%), var(--paper);
+            color: var(--ink);
+            font-family: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.5 0 0 0 0 0.42 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .wrap { max-width: 520px; margin: 0 auto; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 52px 32px 46px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(34,28,20,.05), 0 12px 32px -12px rgba(34,28,20,.18);
+            animation: rise .55s cubic-bezier(.2,.7,.2,1) both;
+        }
+        .seal {
+            width: 92px; height: 92px;
+            margin: 0 auto 22px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Gowun Batang', serif;
+            font-size: 42px; font-weight: 700;
+            color: var(--ink-soft);
+            border: 3px dashed currentColor;
+            transform: rotate(-4deg);
+            animation: spin 6s linear infinite;
+        }
+        h1 { font-family: 'Gowun Batang', serif; font-size: 24px; margin: 0 0 12px; }
+        p { font-size: 14.5px; color: var(--ink-soft); line-height: 1.8; margin: 0; }
+        .order-no { margin-top: 18px; font-size: 11.5px; color: var(--ink-soft); letter-spacing: .04em; }
+        .actions { margin-top: 30px; }
+        .actions:empty { display: none; }
+        .btn {
+            display: inline-block; padding: 14px 28px;
+            font-size: 15px; font-weight: 700; text-decoration: none;
+            color: #fffdf9; background: var(--ink);
+            border-radius: 10px;
+            box-shadow: 0 10px 24px -10px rgba(34,28,20,.55);
+            transition: transform .15s ease;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .dots span { display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%; background: var(--ink-soft); animation: blink 1.2s infinite; }
+        .dots span:nth-child(2) { animation-delay: .2s; }
+        .dots span:nth-child(3) { animation-delay: .4s; }
+        @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes spin { to { transform: rotate(356deg); } }
+        @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .card, .seal { animation: none !important; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <main class="card">
+            <div class="seal">승</div>
+            <h1>결제를 승인하고 있어요</h1>
+            <p id="desc">카드사 승인을 확인하는 중입니다.<br>잠시만 기다려주세요 — 창을 닫지 마세요.</p>
+            <p class="dots" id="dots"><span></span><span></span><span></span></p>
+            <div class="order-no" id="order-no"></div>
+            <div class="actions" id="actions"></div>
+        </main>
+    </div>
+
+    <script>
+        // 토스 귀환 착지장(성공·실패 공용) — 쿼리 모양으로 분기한다:
+        // paymentKey 있음 = 성공 귀환 → confirm fetch / code·orderId = 실패 귀환 → fail fetch.
+        // 성공 귀환은 스피너를 보여주는 동안 confirm 을 fetch 로 부르고,
+        // 응답 state 그대로 결과 페이지에 replace 착지한다 - succeeded|failed|processing.
+        // 미확정(processing·서버 오류·네트워크 단절)의 폴링 관전은 result.html 한 곳이 전담한다.
+        // replace 라 뒤로가기가 이 페이지로 오지 않고, F5 재승인은 confirm 멱등(도장 CAS·상태 기계)이 흡수한다.
+        const params = new URLSearchParams(location.search);
+        const paymentKey = params.get("paymentKey");
+        const orderId = params.get("orderId");
+        const amount = params.get("amount");
+
+        const el = (id) => document.getElementById(id);
+        el("order-no").textContent = orderId ? "No. " + orderId : "";
+
+        const resultUrl = (state) =>
+            "/payments/result.html?state=" + state +
+            (orderId ? "&orderId=" + encodeURIComponent(orderId) : "");
+
+        if (params.get("hold")) {
+            // 관찰용 - fetch 를 생략하고 스피너에 머문다
+        } else if (!paymentKey && orderId) {
+            // 토스 실패 귀환(code·message) - 실패를 서버 장부에 접수한 뒤 결과로.
+            // 부수효과(장부 기록)가 있어 POST - 쿼리의 값을 body 로 옮겨 싣는다.
+            fetch("/api/v1/payments/fail", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    orderId: orderId,
+                    code: params.get("code"),
+                    message: params.get("message"),
+                }),
+            })
+                .then((res) => res.json())
+                .then((body) => location.replace(resultUrl(body.state || "failed")))
+                .catch(() => location.replace(resultUrl("failed")));
+        } else if (!paymentKey || !orderId || !amount) {
+            location.replace(resultUrl("failed"));
+        } else {
+            // 승인 확정(돈이 움직임)이라 POST - GET 프리페치·스캐너가 confirm 을 쏘는 사고를 계약으로 차단
+            fetch("/api/v1/payments/success", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({paymentKey: paymentKey, orderId: orderId, amount: amount}),
+            })
+                .then((res) => res.json())
+                .then((body) => {
+                    location.replace(resultUrl(
+                        body.state === "succeeded" || body.state === "failed" ? body.state : "processing"));
+                })
+                // 서버 오류·네트워크 단절 — 확정 여부 미상이라 processing 으로
+                .catch(() => location.replace(resultUrl("processing")));
+        }
+    </script>
+</body>
+</html>

@@ -14,8 +14,9 @@ spring:
                 dialect: org.hibernate.dialect.MySQLDialect
         open-in-view: false
     flyway:
-        # 마이그레이션은 web 소관. auth 는 실행하지 않는다.
-        enabled: false
+        # 자기 스키마의 주인 - 서비스별 DB 라 각자 마이그레이션한다
+        enabled: true
+        baseline-on-migrate: true
 
 management:
     endpoints:

@@ -20,9 +20,17 @@ spring:
                 # (로그인하려는데 로그인 토큰을 요구하면 모순이므로).
                 -   id: auth
                     # 주소를 하드코딩하지 않고 아래 services 표를 참조(환경별로 표만 교체)
+                    # /api/v1/user/** 도 auth 소관 - 사용자의 주인이 auth 라 프로필 조회도 여기서 한다
+                    # (공개 경로가 아니므로 관문 필터의 JWT 검증을 거쳐 X-User-Id 가 주입된다).
                     uri: ${services.auth}
                     predicates:
-                        - Path=/auth/**,/login/oauth2/**,/oauth2/**
+                        - Path=/auth/**,/login/oauth2/**,/oauth2/**,/api/v1/user/**
+                # 부하테스트·데모용 JWT 발급 - auth 소관(test-auth.enabled=true 일 때만 빈 존재).
+                # fallback(/api/**→web)보다 위에 두어야 auth 로 간다.
+                -   id: test-token
+                    uri: ${services.auth}
+                    predicates:
+                        - Path=/api/v1/test/token
                 # 모금 서비스 (Phase 3 분리) - 개설은 surveys 하위 경로라 둘 다 잡는다.
                 # 구체 경로이므로 fallback(web-api)보다 위에.
                 -   id: cofunding
@@ -34,6 +42,20 @@ spring:
                     uri: ${services.payment}
                     predicates:
                         - Path=/api/v1/payments/**
+                # inviteUrl 의 목적지 - 프론트 대역(정적 초대 페이지)으로 재작성.
+                # fundingId 는 경로에 실려 오고 페이지 JS 가 pathname 에서 읽는다.
+                -   id: cofunding-invite-page
+                    uri: ${services.web}
+                    predicates:
+                        - Path=/co-fundings/**
+                    filters:
+                        - RewritePath=/co-fundings/.*, /payments/cofunding-invite.html
+                # 결제 정적 페이지(checkout/result.html) - web 의 정적 리소스.
+                # 결제 API 와 같은 origin 이어야 상대경로 fetch 와 successUrl 착지가 성립한다.
+                -   id: payment-pages
+                    uri: ${services.web}
+                    predicates:
+                        - Path=/payments/**
                 # 나머지 도메인 API 는 web 으로. 범위가 넓으니 반드시 맨 아래(fallback).
                 -   id: web-api
                     uri: ${services.web}

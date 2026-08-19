@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모금 개설 신청서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --desk: #17140e;
+        --paper: #f6f0e1;
+        --paper-edge: #e8dfc8;
+        --ink: #2b2620;
+        --ink-soft: #6f6656;
+        --rule: #c9bfa4;
+        --vermillion: #b3372a;
+        --amber: #a06b12;
+        --pine: #3d5a45;
+        --mono: "IBM Plex Mono", monospace;
+        --serif: "Gowun Batang", serif;
+    }
+    * { margin: 0; box-sizing: border-box; }
+    body {
+        font-family: var(--serif);
+        color: var(--ink);
+        background:
+            radial-gradient(ellipse 80% 60% at 50% -10%, #262117 0%, transparent 60%),
+            var(--desk);
+        min-height: 100vh;
+        padding: 48px 16px 80px;
+    }
+    /* 접수 창구에 내미는 한 장 - 크림 신청서 */
+    .slip {
+        max-width: 600px;
+        margin: 0 auto;
+        background: var(--paper);
+        box-shadow: 0 1px 0 var(--paper-edge) inset, 0 24px 60px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4);
+        position: relative;
+        animation: settle .7s cubic-bezier(.2,.9,.3,1) both;
+    }
+    @keyframes settle { from { opacity: 0; transform: translateY(18px) rotate(.6deg); } to { opacity: 1; transform: none; } }
+
+    .head { padding: 40px 44px 24px; border-bottom: 3px double var(--rule); position: relative; }
+    .head .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .35em; color: var(--ink-soft); }
+    .head h1 { font-size: 34px; font-weight: 700; letter-spacing: .04em; margin-top: 8px; }
+    .head .sub { margin-top: 10px; font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+    .seal {
+        position: absolute; right: 36px; top: 34px; width: 58px; height: 58px;
+        border: 2.5px solid var(--vermillion); border-radius: 50%;
+        color: var(--vermillion); display: grid; place-items: center;
+        font-size: 13px; font-weight: 700; letter-spacing: .1em; line-height: 1.25; text-align: center;
+        transform: rotate(-8deg); opacity: .85;
+    }
+
+    section { padding: 26px 44px; }
+    section + section { border-top: 1px solid var(--rule); }
+    h2 { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .3em; color: var(--ink-soft); margin-bottom: 16px; }
+
+    /* 서식 기입란 - 괘선 표 */
+    .form-grid { border: 1.5px solid var(--ink); }
+    .frow { display: flex; border-top: 1px solid var(--rule); }
+    .frow:first-child { border-top: 0; }
+    .frow > label {
+        flex: 0 0 118px; padding: 12px 14px; font-size: 13px; font-weight: 700;
+        background: rgba(201,191,164,.22); border-right: 1px solid var(--rule);
+        letter-spacing: .12em; display: flex; align-items: center;
+    }
+    .frow > .cell { flex: 1; padding: 6px 12px; display: flex; align-items: center; }
+    input, textarea {
+        width: 100%; background: transparent; border: 0;
+        font-family: var(--mono); font-size: 13px; color: var(--ink); padding: 7px 2px;
+        line-height: 1.7; resize: vertical;
+    }
+    input:focus, textarea:focus { outline: none; background: rgba(179,55,42,.05); }
+    .hint { font-size: 12px; color: var(--ink-soft); margin-top: 10px; line-height: 1.75; }
+
+    button {
+        margin-top: 16px; font-family: var(--serif); font-weight: 700; font-size: 14.5px;
+        background: var(--ink); color: var(--paper); border: 0; padding: 12px 26px; cursor: pointer;
+        letter-spacing: .08em; transition: background .15s, transform .1s;
+    }
+    button:hover { background: #000; } button:active { transform: translateY(1px); }
+    button.primary { background: var(--vermillion); box-shadow: 0 3px 0 #7d2318; font-size: 15px; padding: 13px 30px; }
+    button.primary:hover { background: var(--vermillion); filter: brightness(1.08); }
+    button.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #7d2318; }
+
+    /* 접수증 - 절취 반권 */
+    .stub { border-left: 3px dashed var(--rule); padding-left: 22px; margin-top: 6px; }
+    pre {
+        font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--ink);
+        white-space: pre-wrap; word-break: break-all;
+    }
+    .muted { color: var(--ink-soft); }
+
+    /* 판정 도장 */
+    .stamp-zone { display: flex; align-items: center; gap: 26px; }
+    .stamp {
+        width: 96px; height: 96px; flex: none; border-radius: 50%;
+        border: 3px solid currentColor; display: grid; place-items: center;
+        font-weight: 700; font-size: 17px; letter-spacing: .12em; text-align: center; line-height: 1.4;
+        transform: rotate(-10deg); position: relative; color: var(--ink-soft);
+    }
+    .stamp::after { content: ""; position: absolute; inset: 5px; border: 1px solid currentColor; border-radius: 50%; opacity: .6; }
+    .stamp.on { animation: press .45s cubic-bezier(.2,1.4,.4,1) both; }
+    @keyframes press { 0% { transform: rotate(-10deg) scale(1.8); opacity: 0; } 60% { opacity: 1; } 100% { transform: rotate(-10deg) scale(1); opacity: .92; } }
+    .stamp.PENDING  { color: var(--amber); }
+    .stamp.FUNDING, .stamp.CONFIRMED { color: var(--vermillion); }
+    .stamp.REJECTED, .stamp.FAILED, .stamp.REFUNDED { color: var(--ink-soft); }
+    .stamp .en { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: .18em; font-weight: 400; margin-top: 3px; }
+    .amount-big { font-family: var(--mono); font-size: 32px; font-weight: 600; letter-spacing: -.02em; }
+    .amount-big small { font-size: 15px; font-weight: 400; margin-left: 2px; }
+    .row { display: flex; align-items: baseline; gap: 8px; font-size: 14.5px; padding: 5px 0; }
+    .row .leader { flex: 1; border-bottom: 2px dotted var(--rule); transform: translateY(-4px); }
+    .row .val { font-family: var(--mono); font-size: 13px; }
+    .row .fname { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); letter-spacing: .02em; }
+    .polling::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+    @keyframes dots { 0% { content: "" } 25% { content: "." } 50% { content: ".." } 75% { content: "..." } }
+
+    /* 초대 링크 교부란 */
+    .invite-box {
+        margin-top: 18px; border: 1.5px solid var(--pine); padding: 16px 18px;
+        background: rgba(61,90,69,.06);
+    }
+    .invite-box .label { font-family: var(--mono); font-size: 10px; letter-spacing: .25em; color: var(--pine); font-weight: 600; }
+    .invite-box a {
+        display: block; margin-top: 8px; font-family: var(--mono); font-size: 13px;
+        color: var(--pine); word-break: break-all; text-decoration: underline;
+    }
+    .invite-box button { margin-top: 12px; background: var(--pine); font-size: 13px; padding: 9px 20px; }
+
+    .foot {
+        padding: 18px 44px 30px; border-top: 3px double var(--rule);
+        font-family: var(--mono); font-size: 10px; letter-spacing: .12em; color: var(--ink-soft);
+        display: flex; justify-content: space-between;
+    }
+    .reveal { animation: rise .5s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div class="slip">
+    <div class="head">
+        <div class="kicker">CO-FUNDING&nbsp;APPLICATION</div>
+        <h1>모금 개설 신청서</h1>
+        <p class="sub">개설자의 여정이 여기서 시작됩니다.<br>접수는 접수증만 즉시 내주고, 판정은 카프카 사가가 회신합니다.</p>
+        <div class="seal">접수<br>창구</div>
+    </div>
+
+    <section>
+        <h2>제 1 항 — 서명란 (개설자 로그인) <span style="letter-spacing:0">· POST /api/v1/test/token</span></h2>
+        <div class="form-grid">
+            <div class="frow">
+                <label>개설자</label>
+                <div class="cell"><input id="ownerId" value="eeeeeeee-0000-0000-0000-000000000003" spellcheck="false"></div>
+            </div>
+        </div>
+        <button onclick="login()">서명하고 입장</button>
+        <p id="loginOut" class="hint">개설 접수는 신원(X-User-Id)이 필요합니다 — 관문이 JWT 쿠키를 요구합니다.</p>
+    </section>
+
+    <section>
+        <h2>제 2 항 — 신청 내용 기입 <span style="letter-spacing:0">· POST /api/v1/surveys/{surveyId}/co-funding</span></h2>
+        <div class="form-grid">
+            <div class="frow">
+                <label>설문 좌표</label>
+                <div class="cell"><input id="surveyId" value="f1f1f1f1-0000-0000-0000-000000000002" spellcheck="false"></div>
+            </div>
+            <div class="frow">
+                <label>참여자 명단</label>
+                <div class="cell"><textarea id="participants" rows="2" spellcheck="false">eeeeeeee-0000-0000-0000-000000000003
+eeeeeeee-0000-0000-0000-000000000021</textarea></div>
+            </div>
+            <div class="frow">
+                <label>마감 기한</label>
+                <div class="cell"><input id="deadline" spellcheck="false"></div>
+            </div>
+        </div>
+        <p class="hint">명단은 1행 1인 — 개설자 본인이 명단에 있어야 접수됩니다. 개설자 한 줄만 남기면 단독 결제입니다(유료 개시의 유일한 길).
+        기한은 지금부터 7일 이내만 유효합니다.</p>
+        <button class="primary" onclick="submitForm()">접수 창구에 제출</button>
+        <div class="stub" style="margin-top:18px">
+            <pre id="receipt" class="muted">접수증 교부 대기 — 응답은 좌표(fundingId)와 접수 사실(status)뿐입니다.</pre>
+        </div>
+    </section>
+
+    <section>
+        <h2>제 3 항 — 판정 <span style="letter-spacing:0">· GET /api/v1/co-fundings/{fundingId} 폴링</span></h2>
+        <div class="stamp-zone">
+            <div id="stampEl" class="stamp"><span id="status">미접수</span></div>
+            <div style="flex:1">
+                <div id="amountLine" class="amount-big">—</div>
+                <div id="detail" class="hint">접수하면 1초 간격 폴링이 판정을 기다립니다 — 설문 서비스가 검증하고 회신하는 동안.</div>
+                <div id="pollRows" style="margin-top:10px"></div>
+            </div>
+        </div>
+        <div id="inviteZone"></div>
+    </section>
+
+    <div class="foot">
+        <span>SULMUN2YONG · GATEWAY :18000</span>
+        <span id="fundingIdFoot">FUNDING-ID —</span>
+    </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const STAMP_LABEL = {
+    PENDING: "접수", FUNDING: "모금 진행", CONFIRMED: "모금 확정",
+    REJECTED: "거절", FAILED: "무산", REFUNDED: "환불 종결",
+};
+let fundingId = null, lastStatus = null, pollTimer = null;
+
+// 마감 기한 기본값 - 지금 + 24시간 (LocalDateTime 형식)
+$("deadline").value = new Date(Date.now() + 24 * 3600 * 1000 - new Date().getTimezoneOffset() * 60000)
+    .toISOString().slice(0, 19);
+
+async function login() {
+    const uid = $("ownerId").value.trim();
+    const t = await fetch(`/api/v1/test/token?userId=${uid}`, { method: "POST" });
+    $("loginOut").textContent = t.ok
+        ? `서명 완료 — userId=${uid.slice(0, 8)}… (access-token 쿠키 수신)`
+        : `로그인 실패 ${t.status}`;
+}
+
+async function submitForm() {
+    const sid = $("surveyId").value.trim();
+    const body = {
+        participantUserIds: $("participants").value.split("\n").map(s => s.trim()).filter(Boolean),
+        deadline: $("deadline").value.trim(),
+    };
+    const res = await fetch(`/api/v1/surveys/${sid}/co-funding`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    $("receipt").classList.remove("muted");
+    if (!res.ok) {
+        $("receipt").textContent = `접수 반려 HTTP ${res.status}\n${text}`;
+        return;
+    }
+    const receipt = JSON.parse(text);
+    fundingId = receipt.fundingId;
+    $("receipt").textContent = `── 접 수 증 ──\nfundingId  ${receipt.fundingId}\nstatus     ${receipt.status}\n\n(deadline 은 에코라 없고, inviteUrl 은 확정의 산물이라 폴링이 줍니다)`;
+    $("fundingIdFoot").textContent = `FUNDING-ID ${receipt.fundingId}`;
+    clearTimeout(pollTimer);
+    lastStatus = null;
+    $("inviteZone").innerHTML = "";
+    poll(1);
+}
+
+// 진짜 폴링 - PENDING 인 동안 1초 간격으로 판정을 기다린다.
+async function poll(n) {
+    const res = await fetch(`/api/v1/co-fundings/${fundingId}`);
+    if (!res.ok) { $("detail").textContent = `조회 실패 ${res.status}`; return; }
+    const b = await res.json();
+    if (b.status !== lastStatus) {
+        // 상태가 바뀐 순간에만 도장을 다시 찍는다 (리플로우로 날인 애니메이션 재발동)
+        const st = $("stampEl");
+        st.className = `stamp ${b.status}`;
+        void st.offsetWidth;
+        st.classList.add("on");
+        lastStatus = b.status;
+    }
+    $("status").innerHTML = `${STAMP_LABEL[b.status] || b.status}<span class="en">${b.status}</span>`;
+    $("amountLine").innerHTML = `${b.sharedAmount.toLocaleString()}<small>원 / 인</small>`;
+    // 응답 DTO 의 나머지 필드도 전부 화면에 - 도장(status)·큰 금액(sharedAmount)과 합치면 5필드 1:1
+    const cut = (v) => (v && v.length > 44) ? `${v.slice(0, 30)}…${v.slice(-8)}` : v;
+    $("pollRows").innerHTML = `
+        <div class="row"><span class="fname">fundingId</span><span class="leader"></span><span class="val">${b.fundingId}</span></div>
+        <div class="row"><span class="fname">deadline</span><span class="leader"></span><span class="val">${b.deadline.replace("T", " ")}</span></div>
+        <div class="row"><span class="fname">inviteUrl</span><span class="leader"></span><span class="val" title="${b.inviteUrl || ""}">${b.inviteUrl ? cut(b.inviteUrl) : "null — 확정 전"}</span></div>`;
+
+    if (b.status === "PENDING") {
+        $("detail").classList.add("polling");
+        $("detail").textContent = `판정 대기 중 · ${n}회차 — 설문 서비스의 회신(co-funding-reviewed)을 기다립니다`;
+        if (n >= 60) {
+            $("detail").classList.remove("polling");
+            $("detail").textContent = "판정이 지연되고 있습니다 — 기한이 지나면 자동으로 거절 종착됩니다.";
+            return;
+        }
+        pollTimer = setTimeout(() => poll(n + 1), 1000);
+        return;
+    }
+
+    $("detail").classList.remove("polling");
+    $("detail").textContent = `${n}회차 만에 판정 수신`;
+    if (b.inviteUrl) {
+        $("inviteZone").innerHTML = `
+            <div class="invite-box reveal">
+                <div class="label">INVITE&nbsp;URL — 확정의 산물, 참여자들에게 이 링크를 돌리세요</div>
+                <a href="${b.inviteUrl}" target="_blank">${b.inviteUrl}</a>
+                <button onclick="copyInvite('${b.inviteUrl}', this)">초대 링크 복사</button>
+            </div>`;
+    }
+}
+
+function copyInvite(url, btn) {
+    navigator.clipboard.writeText(url).then(() => { btn.textContent = "복사됨 ✓"; });
+}
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@ import com.sbl.sulmun2yong.user.util.dummy.Probability
 import com.sbl.sulmun2yong.user.util.dummy.RandomParticipantGenerateUtil.generateRandomParticipants
 import com.sbl.sulmun2yong.user.util.dummy.RandomResponseGenerateUtil.generateSurveyResponseEntities
 import com.sbl.sulmun2yong.user.util.dummy.RandomSurveyGenerateUtil.generateRandomSurvey
-import com.sbl.sulmun2yong.user.util.dummy.RandomUserGenerateUtil.generateRandomUser
+import com.sbl.sulmun2yong.user.util.dummy.RandomUserGenerateUtil.generateRandomMakerId
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Service
@@ -23,11 +23,10 @@ class DummyDataService(
 
     @Transactional
     fun insertDummyData(surveyCount: Int) {
-        val userCount = max(1, surveyCount / 10)
-        val users = (1..userCount).map { generateRandomUser() }
-        val surveys = (1..surveyCount).map { generateRandomSurvey(users.random().id) }
+        val makerCount = max(1, surveyCount / 10)
+        val makerIds = (1..makerCount).map { generateRandomMakerId() }
+        val surveys = (1..surveyCount).map { generateRandomSurvey(makerIds.random()) }
 
-        users.forEach { entityManager.persist(it) }
         surveys.forEach { entityManager.persist(it) }
 
         for (survey in surveys) {

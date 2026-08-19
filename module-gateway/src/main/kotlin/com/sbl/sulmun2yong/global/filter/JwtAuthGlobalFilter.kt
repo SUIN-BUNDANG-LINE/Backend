@@ -23,7 +23,22 @@ class JwtAuthGlobalFilter(
         private const val USER_ROLE_HEADER = "X-User-Role"
 
         // /api/v1/payments/webhook: 토스 서버가 호출 - 쿠키가 없으므로 JWT 검증 면제(비밀 헤더는 부착됨)
-        private val PUBLIC_PREFIXES = listOf("/auth/", "/login/oauth2/", "/oauth2/", "/management/", "/api/v1/payments/webhook")
+        private val PUBLIC_PREFIXES =
+            listOf(
+                "/auth/",
+                "/login/oauth2/",
+                "/oauth2/",
+                "/management/",
+                "/api/v1/payments/webhook",
+                "/payments/",
+                "/api/v1/payments/checkout-info",
+                "/api/v1/payments/success",
+                "/api/v1/payments/fail",
+                // 테스트 JWT 발급(로그인의 대체) - 조건부 빈이라 프로덕션에선 404
+                "/api/v1/test/token",
+                // 초대 페이지(정적) - 링크 소지가 곧 입장 자격. API 호출은 페이지 안 로그인 후.
+                "/co-fundings/",
+            )
     }
 
     override fun filter(

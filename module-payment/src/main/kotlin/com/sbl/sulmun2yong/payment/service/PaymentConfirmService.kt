@@ -4,17 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.sbl.sulmun2yong.payment.adapter.TossConfirmResult
 import com.sbl.sulmun2yong.payment.adapter.TossPaymentsAdapter
 import com.sbl.sulmun2yong.payment.dto.TossConfirmRequest
-import com.sbl.sulmun2yong.payment.entity.PaymentOrderStatus
-import com.sbl.sulmun2yong.payment.repository.PaymentOrderRepository
+import com.sbl.sulmun2yong.payment.entity.TossOrderStatus
+import com.sbl.sulmun2yong.payment.repository.TossOrderRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-// successUrl 처리의 두뇌- 검증 -> 커맨드 적재(먼저 커밋!) -> 동기 confirm -> settle.
-// 트랜잭션 구조는 릴레이와 동일: 적재 tx-> HTTP(tx 밖)-> settle tx.
 @Service
 class PaymentConfirmService(
-    private val paymentOrderRepository: PaymentOrderRepository,
-    private val paymentSettleService: PaymentSettleService,
+    private val tossOrderRepository: TossOrderRepository,
+    private val tossApiCallOutboxService: TossApiCallOutboxService,
+    private val tossOrderService: TossOrderService,
     private val tossPaymentsAdapter: TossPaymentsAdapter,
     private val objectMapper: ObjectMapper,
 ) {
@@ -27,23 +26,24 @@ class PaymentConfirmService(
         orderId: String,
         amount: Int,
     ): ConfirmOutcome {
-        // 1. 금액 위변조 검증 - successUrl 쿼리를 믿지 않고 장부와 대조
+        // 1. 금액 위변조 검증 - amount 와 TossOrderEntity 의 amount 가 일치하지 않으면 토스 API 호출 없이 빠른 실패
         val order =
-            paymentOrderRepository.findByTossOrderId(orderId).orElse(null)
+            tossOrderRepository.findById(orderId).orElse(null)
                 ?: return ConfirmOutcome.FAILED
         if (order.amount != amount) {
             log.warn("금액 위변조 의심 - orderId={}, 장부={}, 쿼리={}", orderId, order.amount, amount)
             return ConfirmOutcome.FAILED
         }
 
-        // 이미 확정된 주문의 의도치않은 재요청(새로고침 등) - confirm 없이 바로 결과로 (멱등)
-        if (order.status == PaymentOrderStatus.DONE) return ConfirmOutcome.DONE
-        if (order.status != PaymentOrderStatus.PENDING) return ConfirmOutcome.FAILED
+        // 2. 확정된 주문의 재요청 차단
+        if (order.status == TossOrderStatus.SUCCEEDED) return ConfirmOutcome.SUCCEEDED
+        if (order.status == TossOrderStatus.CANCELED) return ConfirmOutcome.FAILED
 
-        // 2. 커맨드 적재 - 먼제 커밋해야 직후 서버가 죽어도 릴레이가 이어받는다 (Command Outbox 핵심)
-        val command =
-            paymentSettleService.enqueueConfirmCommand(
+        // 3. 커맨드 적재 - 먼제 커밋해야 직후 서버가 죽어도 릴레이가 이어받는다 (Command Outbox 핵심)
+        val tossApiCallOutbox =
+            tossApiCallOutboxService.commitConfirmIntent(
                 orderId = orderId,
+                paymentKey = paymentKey,
                 requestPayload =
                     objectMapper.writeValueAsString(
                         TossConfirmRequest(
@@ -54,21 +54,21 @@ class PaymentConfirmService(
                     ),
             )
 
-        // 3. 동기 confirm (tx 밖) -> settle
+        // 4. 동기적으로 tx 밖에서 toss confirm API 호출 -> 결과에따라 상태 전이
         return when (val result = tossPaymentsAdapter.confirm(paymentKey, orderId, amount)) {
             is TossConfirmResult.Approved -> {
-                paymentSettleService.settleApproved(command.id, result.paymentKey)
-                ConfirmOutcome.DONE
+                tossOrderService.settleApproved(tossApiCallOutbox.id, result.paymentKey)
+                ConfirmOutcome.SUCCEEDED
             }
 
             is TossConfirmResult.Rejected -> {
-                paymentSettleService.settleRejected(command.id, result.code)
+                tossOrderService.settleRejected(tossApiCallOutbox.id, result.code)
                 ConfirmOutcome.FAILED
             }
 
+            // 명시적 실패가 아니면 미확정으로 두어야한다. 실패인가 성공인가? 구분할 수 없기 때문이다.
+            // 커맨드는 PENDING 그대로 - 60초 뒤 릴레이가 재클레임해 조회로 수렴시킨다.
             TossConfirmResult.Unknown -> {
-                // SENT로 남겨 릴레이 수거 대상으로
-                paymentSettleService.markSent(command.id)
                 ConfirmOutcome.PROCESSING
             }
         }

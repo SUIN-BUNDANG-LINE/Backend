@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAGA CONSOLE — 더치페이 개설 ①②③</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #0b0d0a;
+        --panel: #10130e;
+        --line: #263021;
+        --amber: #ffb454;
+        --amber-dim: #8a6a3a;
+        --green: #7ce38b;
+        --red: #ff6b6b;
+        --text: #b9c2ae;
+        --dim: #5d6653;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans KR", sans-serif;
+    }
+    * { margin: 0; box-sizing: border-box; }
+    body {
+        font-family: var(--sans); color: var(--text); background: var(--bg);
+        min-height: 100vh; padding: 34px 16px 80px; position: relative;
+    }
+    /* CRT 스캔라인 + 비네트 */
+    body::before {
+        content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 9;
+        background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.16) 2px 4px);
+    }
+    body::after {
+        content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 9;
+        background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,.5) 100%);
+    }
+    .console { max-width: 900px; margin: 0 auto; }
+
+    /* 헤더 바 */
+    .bar {
+        display: flex; align-items: baseline; gap: 14px; padding: 12px 18px;
+        border: 1px solid var(--line); background: var(--panel);
+        font-family: var(--mono);
+    }
+    .bar .led { width: 9px; height: 9px; border-radius: 50%; background: var(--green); align-self: center;
+        box-shadow: 0 0 8px var(--green); animation: led 2.4s infinite; }
+    @keyframes led { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+    .bar h1 { font-size: 15px; font-weight: 700; color: var(--amber); letter-spacing: .18em; }
+    .bar .path { margin-left: auto; font-size: 11px; color: var(--dim); letter-spacing: .05em; }
+
+    .intro { font-size: 12.5px; color: var(--dim); line-height: 1.8; padding: 14px 4px 4px; }
+    .intro b { color: var(--text); font-weight: 500; }
+
+    /* 스텝 패널 */
+    .step {
+        border: 1px solid var(--line); background: var(--panel); margin-top: 18px;
+        animation: boot .5s ease both;
+    }
+    .step:nth-of-type(2) { animation-delay: .06s } .step:nth-of-type(3) { animation-delay: .12s }
+    .step:nth-of-type(4) { animation-delay: .18s } .step:nth-of-type(5) { animation-delay: .24s }
+    @keyframes boot { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+    .step header {
+        display: flex; align-items: baseline; gap: 12px; padding: 12px 18px;
+        border-bottom: 1px solid var(--line); font-family: var(--mono);
+    }
+    .step .no {
+        color: var(--bg); background: var(--amber); font-weight: 700; font-size: 12px;
+        padding: 1px 9px; letter-spacing: .05em;
+    }
+    .step h2 { font-size: 13px; font-weight: 600; color: var(--amber); letter-spacing: .06em; }
+    .step .ep { margin-left: auto; font-size: 10.5px; color: var(--dim); }
+    .step .body { padding: 16px 18px; }
+    .note { font-size: 12px; color: var(--dim); line-height: 1.75; margin-bottom: 12px; }
+
+    textarea, input {
+        width: 100%; background: #0d0f0b; color: var(--text);
+        border: 1px solid var(--line); padding: 9px 11px;
+        font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    }
+    textarea:focus, input:focus { outline: 1px solid var(--amber-dim); }
+    button {
+        margin-top: 10px; background: transparent; border: 1px solid var(--amber);
+        color: var(--amber); font-family: var(--mono); font-weight: 600; font-size: 12.5px;
+        padding: 9px 18px; cursor: pointer; letter-spacing: .08em;
+        transition: background .12s, color .12s;
+    }
+    button:hover { background: var(--amber); color: var(--bg); }
+    button::before { content: "▸ "; }
+
+    pre {
+        background: #0d0f0b; border: 1px dashed var(--line); padding: 11px 13px; margin-top: 12px;
+        font-family: var(--mono); font-size: 12px; line-height: 1.7; color: var(--text);
+        white-space: pre-wrap; word-break: break-all;
+    }
+    .log { font-family: var(--mono); font-size: 12.5px; line-height: 2; }
+    .log div { border-left: 2px solid var(--line); padding-left: 12px; animation: boot .3s ease both; }
+    .log div:last-child { border-left-color: var(--amber-dim); }
+    .PENDING { color: var(--amber); } .FUNDING { color: var(--green); font-weight: 700; }
+    .REJECTED, .FAILED { color: var(--red); }
+    a { color: var(--green); }
+
+    /* 폴링 중 커서 */
+    .cursor::after { content: "█"; color: var(--amber); animation: blink 1s steps(1) infinite; margin-left: 4px; }
+    @keyframes blink { 50% { opacity: 0 } }
+    .muted { color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="console">
+    <div class="bar">
+        <span class="led"></span>
+        <h1>SAGA&nbsp;CONSOLE</h1>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--dim)">co-funding&nbsp;①requested&nbsp;→&nbsp;②reviewed&nbsp;→&nbsp;③created</span>
+        <span class="path">gateway :18000</span>
+    </div>
+    <p class="intro">이 콘솔은 프론트엔드 대역입니다. <b>접수 POST 는 접수증(PENDING)만 즉시 반환</b>하고,
+    백스테이지에서 카프카 사가가 도는 동안 <b>폴링 GET 이 FUNDING 확정을 관찰</b>합니다.</p>
+
+    <div class="step">
+        <header><span class="no">00</span><h2>테스트 로그인 — 개설자</h2><span class="ep">POST /api/v1/test/token</span></header>
+        <div class="body">
+            <p class="note">관문(게이트웨이)은 JWT 쿠키를 요구합니다 — 테스트 토큰이 OAuth2 로그인을 대체하고, X-User-Id 는 관문이 주입합니다.</p>
+            <input id="ownerId" value="eeeeeeee-0000-0000-0000-000000000003" spellcheck="false">
+            <button onclick="login()">개설자로 로그인</button>
+            <pre id="loginOut" class="muted">-</pre>
+        </div>
+    </div>
+
+    <div class="step">
+        <header><span class="no">01</span><h2>접수</h2><span class="ep">POST /api/v1/surveys/{surveyId}/co-funding</span></header>
+        <div class="body">
+            <p class="note">응답은 접수증 — 좌표(fundingId)와 접수 사실(status)뿐. deadline 은 에코라 없고, inviteUrl 은 확정의 산물이라 폴링이 준다.</p>
+            <input id="surveyId" value="" spellcheck="false">
+            <textarea id="reqBody" rows="6" spellcheck="false"></textarea>
+            <button onclick="start()">접수 요청</button>
+            <pre id="startOut" class="muted">-</pre>
+        </div>
+    </div>
+
+    <div class="step">
+        <header><span class="no">02</span><h2>폴링</h2><span class="ep">GET /api/v1/co-fundings/{fundingId}</span></header>
+        <div class="body">
+            <p class="note">1초 간격. sharedAmount 0 → 확정값, inviteUrl null → 지급 — 그 줄이 approve CAS 의 순간이다.</p>
+            <div id="pollLog" class="log"></div>
+        </div>
+    </div>
+
+    <div class="step">
+        <header><span class="no">03</span><h2>참여자별 주문 — ③의 산물</h2><span class="ep">GET …/participants/me/order</span></header>
+        <div class="body">
+            <p class="note">각 참여자로 재로그인해 my-order 를 부른다 — 같은 요청, 신원(X-User-Id)에 따라 다른 결제표.</p>
+            <div id="orders" class="log"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const OWNER = "eeeeeeee-0000-0000-0000-000000000003";
+const P2 = "eeeeeeee-0000-0000-0000-000000000021";
+let fundingId = null, participants = [];
+
+// 기본값 채우기 - surveyId 는 시드 스크립트가 만든 데모 설문
+$("surveyId").value = new URLSearchParams(location.search).get("surveyId") || "";
+$("reqBody").value = JSON.stringify({
+    participantUserIds: [OWNER, P2],
+    deadline: new Date(Date.now() + 24*3600*1000).toISOString().slice(0, 19)
+}, null, 4);
+
+async function tokenAs(userId) {
+    const res = await fetch(`/api/v1/test/token?userId=${userId}`, { method: "POST" });
+    if (!res.ok) throw new Error(`토큰 발급 실패 ${res.status}`);
+    return res.json();
+}
+
+async function login() {
+    try {
+        const t = await tokenAs($("ownerId").value.trim());
+        $("loginOut").classList.remove("muted");
+        $("loginOut").textContent = `로그인됨: userId=${t.userId} (access-token 쿠키 수신)`;
+    } catch (e) { $("loginOut").textContent = String(e); }
+}
+
+async function start() {
+    const sid = $("surveyId").value.trim();
+    const res = await fetch(`/api/v1/surveys/${sid}/co-funding`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: $("reqBody").value
+    });
+    const text = await res.text();
+    $("startOut").classList.remove("muted");
+    $("startOut").textContent = `HTTP ${res.status}\n` + text;
+    if (!res.ok) return;
+    const body = JSON.parse(text);
+    fundingId = body.fundingId;
+    participants = JSON.parse($("reqBody").value).participantUserIds;
+    $("pollLog").innerHTML = "";
+    poll(0);
+}
+
+async function poll(n) {
+    const res = await fetch(`/api/v1/co-fundings/${fundingId}`);
+    const b = await res.json();
+    const line = document.createElement("div");
+    line.innerHTML = `GET #${n + 1} → status=<span class="${b.status}">${b.status}</span>, sharedAmount=${b.sharedAmount}` +
+        (b.inviteUrl ? `, inviteUrl=<a href="${b.inviteUrl}" target="_blank">${b.inviteUrl}</a>` : ", inviteUrl=null");
+    $("pollLog").appendChild(line);
+    if (b.status === "PENDING" && n < 30) {
+        line.classList.add("cursor");
+        setTimeout(() => { line.classList.remove("cursor"); poll(n + 1); }, 1000);
+        return;
+    }
+    if (b.status === "FUNDING") loadOrders();
+}
+
+async function loadOrders() {
+    for (const uid of participants) {
+        await tokenAs(uid);   // 참여자로 재로그인 (쿠키 교체)
+        const res = await fetch(`/api/v1/co-fundings/${fundingId}/participants/me/order`);
+        const line = document.createElement("div");
+        if (res.ok) {
+            const o = await res.json();
+            line.innerHTML = `${uid.slice(0, 8)}… → orderId=${o.orderId}, amount=${o.amount}원 ` +
+                `— <a href="/payments/checkout.html?orderId=${encodeURIComponent(o.orderId)}" target="_blank">결제창 열기</a>`;
+        } else {
+            line.textContent = `${uid.slice(0, 8)}… → my-order ${res.status}`;
+        }
+        $("orders").appendChild(line);
+    }
+    await tokenAs($("ownerId").value.trim());   // 개설자 쿠키 복원
+}
+</script>
+</body>
+</html>

@@ -10,7 +10,7 @@ import com.sbl.sulmun2yong.cofunding.entity.CoFundingStatus
 import com.sbl.sulmun2yong.cofunding.exception.CoFundingNotFoundException
 import com.sbl.sulmun2yong.cofunding.exception.InvalidCoFundingRequestException
 import com.sbl.sulmun2yong.cofunding.exception.InvalidCoFundingStateException
-import com.sbl.sulmun2yong.cofunding.publisher.CoFundingSagaPublisher
+import com.sbl.sulmun2yong.cofunding.publisher.CoFundingOutboxKafkaPublisher
 import com.sbl.sulmun2yong.cofunding.repository.CoFundingParticipantRepository
 import com.sbl.sulmun2yong.cofunding.repository.CoFundingRepository
 import org.springframework.beans.factory.annotation.Value
@@ -19,15 +19,11 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.*
 
-// 공동 모금 개시 & 결제 진입 - 사가의 출발점.
-// 단일 기록자 + 무교차: 개설 tx 는 co_fundings·participants 만 쓰고 읽기도 자기 테이블뿐이다.
-// 설문 검증·총액 확정은 데이터 소유자(설문)의 판정 리스너 몫 - co-funding-requested 로 위임하고
-// approved/rejected 회신으로 수렴한다. 응답은 "접수(PENDING_APPROVAL)"까지 보증한다.
 @Service
 class CoFundingService(
     private val coFundingRepository: CoFundingRepository,
     private val coFundingParticipantRepository: CoFundingParticipantRepository,
-    private val coFundingSagaPublisher: CoFundingSagaPublisher,
+    private val coFundingOutboxKafkaPublisher: CoFundingOutboxKafkaPublisher,
     @Value("\${frontend.base-url}")
     private val frontendBaseUrl: String,
 ) {
@@ -35,68 +31,80 @@ class CoFundingService(
         private const val MAX_DEADLINE_DAYS = 7L
     }
 
-    // 개설 접수 - 한 트랜잭션: 모금(PENDING_APPROVAL) + 참여자 명단 저장 + co-funding-requested Outbox 발행.
-    // 설문 판정(소유자·상태·경품 설정·총액)은 승인 회신으로 수렴한다 - 프론트는 상태 조회로 확정을 기다린다.
+    // 더치페이 시작
     @Transactional
     fun start(
+        // 패스 파라미터
         surveyId: UUID,
+        // HTTP 헤더에 있는 X-User-Id
         ownerId: UUID,
+        // 요청 DTO
         request: CoFundingStartRequest,
     ): CoFundingStartResponse {
-        validate(request, ownerId)
-
-        if (coFundingRepository.findBySurveyId(surveyId) != null) {
+        // 개최자 ID가 요청 DTO에 있는지 확인
+        if (ownerId !in request.participantUserIds) {
+            throw InvalidCoFundingRequestException()
+        }
+        // 데드라인이 허용범위 내인지 검증
+        val now = LocalDateTime.now()
+        if (request.deadline <= now || request.deadline > now.plusDays(MAX_DEADLINE_DAYS)) {
+            throw InvalidCoFundingRequestException()
+        }
+        // 진행 중인 모금이 있으면 중복 접수 차단 - 종착(거절·무산·환불) 건은 재접수 허용
+        val activeStatuses = listOf(CoFundingStatus.PENDING, CoFundingStatus.FUNDING, CoFundingStatus.CONFIRMED)
+        if (coFundingRepository.existsBySurveyIdAndStatusIn(surveyId, activeStatuses)) {
             throw InvalidCoFundingStateException()
         }
 
+        // 더치페이 주문 정보 엔티티 생성
         val funding =
             CoFunding.create(
                 surveyId = surveyId,
                 ownerId = ownerId,
-                capacity = request.participantUserIds.size + 1,
+                capacity = request.participantUserIds.size,
                 deadline = request.deadline,
             )
 
-        // 참여자 명단·주문 ID 확정 - 금액은 승인에서, 발급은 ② 이벤트의 결제 리스너 몫
-        val owner = CoFundingParticipant.owner(funding.id, ownerId, newTossOrderId())
-        val members =
-            request.participantUserIds.map {
-                CoFundingParticipant.member(
-                    funding.id,
-                    it,
-                    newTossOrderId(),
-                )
+        // 참가자 엔티티를 만든다 - 각자 따로 결제하므로 주문번호도 참여자마다 발급한다
+        val participants =
+            request.participantUserIds.map { userId ->
+                CoFundingParticipant.of(funding.id, userId, "ord-${UUID.randomUUID()}")
             }
-        val participants = listOf(owner) + members
 
+        // 영속성 컨텍스트에 등록한다
         coFundingRepository.save(funding)
+        // 영속성 컨텍스트에 등록한다
         coFundingParticipantRepository.saveAll(participants)
-        coFundingSagaPublisher.publishRequested(funding)
+        // 아웃박스 이벤트를 만들고 -> 카프카 브로커에 레코드를 전송한다
+        coFundingOutboxKafkaPublisher.publishRequested(funding)
 
+        // 접수증만 응답한다 - 좌표(fundingId)와 접수 사실. 나머지는 폴링(상태 조회)의 몫.
         return CoFundingStartResponse(
             fundingId = funding.id,
             status = funding.status,
-            deadline = funding.deadline,
-            inviteUrl = "$frontendBaseUrl/co-fundings/${funding.id}",
         )
     }
 
-    // 상태 조회 - 접수 응답 이후 프론트가 판정 확정(FUNDING/REJECTED)을 폴링하는 진입점.
-    // 분담금은 승인 전 0 - FUNDING 부터 유효하다.
     @Transactional(readOnly = true)
     fun findStatus(fundingId: UUID): CoFundingStatusResponse {
-        val funding = coFundingRepository.findById(fundingId).orElseThrow { CoFundingNotFoundException() }
+        val funding =
+            coFundingRepository.findById(fundingId).orElseThrow { CoFundingNotFoundException() }
+        // 초대 링크는 확정 후에만 - my-order 의 승인 전 404 와 같은 노출 게이트
+        val inviteUrl =
+            if (funding.status == CoFundingStatus.PENDING || funding.status == CoFundingStatus.REJECTED) {
+                null
+            } else {
+                "$frontendBaseUrl/co-fundings/${funding.id}"
+            }
         return CoFundingStatusResponse(
             fundingId = funding.id,
             status = funding.status,
             sharedAmount = funding.shareAmount,
-            ownerShareAmount = funding.ownerShareAmount,
             deadline = funding.deadline,
+            inviteUrl = inviteUrl,
         )
     }
 
-    // 내 주문 조회 - 전부 자기 데이터로 조립한다(orderId 는 개설 시 사전 발급, 금액은 승인에서 확정).
-    // 승인 전(PENDING_APPROVAL·REJECTED)이면 결제 진입이 없으므로 404 - 프론트는 재시도한다.
     @Transactional(readOnly = true)
     fun findMyOrder(
         fundingId: UUID,
@@ -105,30 +113,15 @@ class CoFundingService(
         val participant =
             coFundingParticipantRepository.findByFundingIdAndUserId(fundingId, userId)
                 ?: throw CoFundingNotFoundException()
-        val funding = coFundingRepository.findById(fundingId).orElseThrow { CoFundingNotFoundException() }
-        if (funding.status == CoFundingStatus.PENDING_APPROVAL || funding.status == CoFundingStatus.REJECTED) {
+        val funding =
+            coFundingRepository.findById(fundingId).orElseThrow { CoFundingNotFoundException() }
+        if (funding.status == CoFundingStatus.PENDING || funding.status == CoFundingStatus.REJECTED) {
             throw CoFundingNotFoundException()
         }
         return CoFundingMyOrderResponse(
             orderId = participant.tossOrderId,
-            amount = if (participant.isOwner) funding.ownerShareAmount else funding.shareAmount,
+            amount = funding.shareAmount,
             checkoutUrl = "/payments/checkout.html?orderId=${participant.tossOrderId}",
         )
     }
-
-    private fun validate(
-        request: CoFundingStartRequest,
-        ownerId: UUID,
-    ) {
-        val members = request.participantUserIds
-        if (members.toSet().size != members.size || ownerId in members) {
-            throw InvalidCoFundingRequestException()
-        }
-        val now = LocalDateTime.now()
-        if (request.deadline <= now || request.deadline > now.plusDays(MAX_DEADLINE_DAYS)) {
-            throw InvalidCoFundingRequestException()
-        }
-    }
-
-    private fun newTossOrderId() = "ord-${UUID.randomUUID()}"
 }

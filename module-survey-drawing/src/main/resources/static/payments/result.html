@@ -51,7 +51,7 @@
             border: 3px solid currentColor;
             transform: rotate(-4deg);
         }
-        .done .seal { color: var(--seal); background: #f0f7f2; animation: stampIn .4s .2s cubic-bezier(.2,1.4,.4,1) both; }
+        .succeeded .seal { color: var(--seal); background: #f0f7f2; animation: stampIn .4s .2s cubic-bezier(.2,1.4,.4,1) both; }
         .failed .seal { color: var(--stamp); background: #fbf1f0; animation: stampIn .4s .2s cubic-bezier(.2,1.4,.4,1) both; }
         .processing .seal { color: var(--ink-soft); border-style: dashed; animation: spin 6s linear infinite; }
 
@@ -97,7 +97,7 @@
     </div>
 
     <script>
-        // state=done|processing|failed — success/fail 핸들러가 302로 붙여준다 (PRG: 이 페이지는 새로고침해도 무해)
+        // state=succeeded|processing|failed — 착지장(confirm.html)이 API 응답의 state 로 붙여준다 (새로고침해도 무해)
         const params = new URLSearchParams(location.search);
         const orderId = params.get("orderId") || "";
         let state = params.get("state") || "processing";
@@ -110,10 +110,10 @@
             card.className = "card " + s;
             el("dots").classList.add("hidden");
 
-            if (s === "done") {
+            if (s === "succeeded") {
                 el("seal").textContent = "완";
                 el("title").textContent = "결제가 완료되었습니다";
-                el("desc").innerHTML = "설문이 시작되었습니다.<br>이제 참여자를 모을 수 있어요.";
+                el("desc").innerHTML = "내 몫의 결제가 확정되었습니다.<br>단독 결제는 곧바로, 더치페이는 전원의 결제가 모이면 설문이 시작됩니다.";
                 el("actions").innerHTML = '<a class="btn" href="/">설문 관리로 이동</a>';
             } else if (s === "failed") {
                 el("seal").textContent = "반";
@@ -128,7 +128,7 @@
                 el("desc").innerHTML =
                     "보통 1분 이내에 확인됩니다.<br>" +
                     "확인되지 않으면 결제는 자동으로 청구되지 않습니다.<br>" +
-                    "이 창을 닫으셔도 됩니다 — 완료되면 설문이 자동으로 시작됩니다.";
+                    "이 창을 닫으셔도 됩니다 — 확정되면 결제가 자동으로 반영됩니다.";
                 el("dots").classList.remove("hidden");
                 el("actions").innerHTML = "";
             }
@@ -149,10 +149,10 @@
             }
 
             try {
-                const res = await fetch("/api/v1/payments/checkout-info?orderId=" + encodeURIComponent(orderId));
+                const res = await fetch("/api/v1/payments/checkout-info/by-order/" + encodeURIComponent(orderId));
                 if (res.ok) {
                     const info = await res.json();
-                    if (info.status === "DONE") { state = "done"; render(state); return; }
+                    if (info.status === "SUCCEEDED") { state = "succeeded"; render(state); return; }
                     if (info.status === "FAILED" || info.status === "CANCELED") { state = "failed"; render(state); return; }
                 }
             } catch (e) { /* 일시적 실패 — 다음 주기에 재시도 */ }

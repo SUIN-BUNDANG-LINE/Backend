@@ -14,12 +14,9 @@ spring:
                 dialect: org.hibernate.dialect.MySQLDialect
         open-in-view: false
     flyway:
-        enabled: false
-    # redis 는 이 서비스가 쓰지 않는다 - :support 전이 의존으로 붙는 자동설정(헬스 포함)을 끈다
-    autoconfigure:
-        exclude:
-            - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-            - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+        # 자기 스키마의 주인 - 서비스별 DB 라 각자 마이그레이션한다
+        enabled: true
+        baseline-on-migrate: true
 
 management:
     endpoints:

@@ -1,19 +1,10 @@
 package com.sbl.sulmun2yong.user.util.dummy
 
-import com.sbl.sulmun2yong.global.config.oauth2.provider.Provider
-import com.sbl.sulmun2yong.user.domain.UserRole
-import com.sbl.sulmun2yong.user.entity.User
-import com.sbl.sulmun2yong.user.util.RandomNicknameGenerator
 import java.util.UUID
 
+// 더미 설문의 제작자 ID 만 만든다 - users 는 auth 서비스 소유(다른 DB)라 여기서 쓰지 않는다.
+// surveys.maker_id 에 외래키가 없어 실존하지 않는 ID 여도 무방하며,
+// 그 설문의 제작자 프로필만 조회되지 않는다(더미 데이터의 허용 범위).
 object RandomUserGenerateUtil {
-    fun generateRandomUser() =
-        User(
-            id = UUID.randomUUID(),
-            provider = listOf(Provider.GOOGLE, Provider.KAKAO).random(),
-            providerId = UUID.randomUUID().toString(),
-            nickname = RandomNicknameGenerator.generate(),
-            phoneNumber = null,
-            role = UserRole.ROLE_USER,
-        )
+    fun generateRandomMakerId(): UUID = UUID.randomUUID()
 }

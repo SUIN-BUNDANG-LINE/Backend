@@ -227,7 +227,7 @@
         }
         .state p { font-size: 14px; color: var(--ink-soft); margin: 0; line-height: 1.7; }
         .state.error .glyph { color: var(--stamp); }
-        .state.done .glyph { color: var(--seal); }
+        .state.succeeded .glyph { color: var(--seal); }
 
         /* 로딩 점 */
         .dots span {
@@ -301,6 +301,7 @@
 
                 <div class="pay-zone">
                     <div class="zone-label">결제 안내</div>
+                    <p id="pay-notice" style="text-align:center; font-size:13px; color:var(--seal-red, #b3372a); margin:14px 24px 0; line-height:1.7;"></p>
                     <p style="text-align:center; font-size:13px; color:var(--ink-soft); margin:14px 24px 6px; line-height:1.7;">
                         아래 버튼을 누르면 토스 결제창이 열립니다.<br>테스트 모드에서는 아무 카드 정보나 입력해도 됩니다.
                     </p>
@@ -318,11 +319,10 @@
 
     <script>
         // 값은 전부 서버 API에서 받는다 — 금액은 결제 장부 기준(쿼리·화면 값 아님: 위변조 방어의 첫 단추)
-        // orderId(모금 — 참여자별 주문) 또는 surveyId(단독 — 설문당 1주문) 로 진입한다.
-        // 단독 주문은 이벤트로 발급되므로 잠깐 없을 수 있다(최종적 일관성 창) — 404면 짧게 재시도.
+        // 진입은 orderId 단일 - 단독도 1인 모금 접수를 거쳐 my-order 로 자기 orderId 를 받아 온다.
+        // 주문은 ③ 이벤트로 발급되므로 잠깐 없을 수 있다(최종적 일관성 창) — 404면 짧게 재시도.
         const params = new URLSearchParams(location.search);
         const orderIdParam = params.get("orderId");
-        const surveyIdParam = params.get("surveyId");
 
         const el = (id) => document.getElementById(id);
         const show = (id) => el(id).classList.remove("hidden");
@@ -340,12 +340,10 @@
         }
 
         async function fetchCheckoutInfo() {
-            const query = orderIdParam
-                ? `orderId=${encodeURIComponent(orderIdParam)}`
-                : `surveyId=${encodeURIComponent(surveyIdParam)}`;
+            const path = `by-order/${encodeURIComponent(orderIdParam)}`;
             // 발급 수렴 대기: 404면 1초 간격 최대 10회 재시도
             for (let attempt = 0; attempt < 10; attempt++) {
-                const res = await fetch(`/api/v1/payments/checkout-info?${query}`);
+                const res = await fetch(`/api/v1/payments/checkout-info/${path}`);
                 if (res.ok) return res.json();
                 if (res.status !== 404) return null;
                 await new Promise((r) => setTimeout(r, 1000));
@@ -354,7 +352,7 @@
         }
 
         async function init() {
-            if (!orderIdParam && !surveyIdParam) {
+            if (!orderIdParam) {
                 showMessage("error", "✕", "주문 정보가 없습니다", "설문 관리 페이지에서 다시 시작해주세요.");
                 return;
             }
@@ -365,8 +363,10 @@
                 return;
             }
 
-            if (info.status !== "PENDING") {
-                showMessage("done", "✓", "이미 처리된 주문입니다",
+            // 결제 가능 = PENDING(첫 시도)·FAILED(거절 후 재시도 - 같은 orderId 로 새 가승인).
+            // SUCCEEDED·CANCELED 만 종착이라 문을 닫는다.
+            if (info.status === "SUCCEEDED" || info.status === "CANCELED") {
+                showMessage("succeeded", "✓", "이미 처리된 주문입니다",
                     `이 주문의 상태는 ${info.status} 입니다. 설문 관리 페이지에서 확인해주세요.`);
                 return;
             }
@@ -374,6 +374,9 @@
             // 주문서 채우기
             el("order-no").textContent = "No. " + info.orderId;
             el("amount-text").textContent = info.amount.toLocaleString();
+            if (info.status === "FAILED") {
+                el("pay-notice").textContent = "이전 결제가 승인되지 않았습니다 — 같은 주문으로 다시 시도합니다. 청구된 금액은 없습니다.";
+            }
             hide("state-loading");
             show("order-body");
 
@@ -391,8 +394,10 @@
                         amount: { currency: "KRW", value: info.amount },
                         orderId: info.orderId,
                         orderName: "설문이용 경품 결제",
-                        successUrl: window.location.origin + "/api/v1/payments/success",
-                        failUrl: window.location.origin + "/api/v1/payments/fail",
+                        // 성공·실패 모두 정적 착지장(confirm.html)으로 귀환 - API 호출은 그 페이지의 fetch 몫.
+                        // 토스가 붙이는 쿼리 모양(paymentKey vs code)으로 페이지가 성공/실패를 분기한다.
+                        successUrl: window.location.origin + "/payments/confirm.html",
+                        failUrl: window.location.origin + "/payments/confirm.html",
                         card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false },
                     });
                 } catch (e) {

@@ -1,41 +1,55 @@
 package com.sbl.sulmun2yong.drawing.service.strategy
 
-import com.sbl.sulmun2yong.drawing.domain.drawingResult.DrawingResult
+import com.sbl.sulmun2yong.drawing.domain.ticket.Ticket
 import com.sbl.sulmun2yong.drawing.dto.response.DrawingResultResponse
 import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
 import com.sbl.sulmun2yong.drawing.entity.DrawingHistory
-import com.sbl.sulmun2yong.drawing.exception.AlreadyParticipatedDrawingException
+import com.sbl.sulmun2yong.drawing.exception.AlreadySelectedTicketException
 import com.sbl.sulmun2yong.drawing.exception.InvalidDrawingBoardException
 import com.sbl.sulmun2yong.drawing.metrics.DrawingProcessMetrics
-import com.sbl.sulmun2yong.drawing.publisher.DrawingEventPublisher
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.drawing.repository.DrawingHistoryRepository
+import com.sbl.sulmun2yong.drawing.repository.TicketRepository
 import com.sbl.sulmun2yong.global.data.PhoneNumber
-import com.sbl.sulmun2yong.global.util.EncryptionUtils
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
-import org.hibernate.exception.LockAcquisitionException
 import org.slf4j.LoggerFactory
 import org.springframework.dao.CannotAcquireLockException
-import org.springframework.orm.ObjectOptimisticLockingFailureException
-import java.util.UUID
+import org.springframework.dao.DataIntegrityViolationException
+import java.sql.SQLException
+import java.util.*
+
+/**
+ * UNIQUE 위반의 정체 판별 — 예외 사슬의 메시지에 위반한 제약명이 실려 온다.
+ * uk_drawing_histories_survey_phone 이면 중복 참여(정상 거절), 아니면 티켓 중복 배정(사고)이다.
+ */
+internal fun isPhoneDuplicate(e: DataIntegrityViolationException): Boolean =
+    generateSequence<Throwable>(e) { it.cause }
+        .any { it.message?.contains("uk_drawing_histories_survey_phone") == true }
+
+/**
+ * CannotAcquireLockException 의 정체 판별 — MySQL 은 데드락(1213)과 락 대기 타임아웃(1205)을
+ * 같은 Spring 타입으로 수렴시키므로, 원인 사슬의 벤더 에러 코드로 가른다.
+ * 1205 는 "사이클 없는 긴 대기"의 포기라 의미상 Redisson 의 대기 초과와 같은 lock_timeout 이다.
+ */
+internal fun isLockWaitTimeout(e: CannotAcquireLockException): Boolean =
+    generateSequence<Throwable>(e) { it.cause }
+        .any { it is SQLException && it.errorCode == 1205 }
 
 enum class DrawMode {
-    NO_LOCK,
+    DEFAULT, // 기본 판정 (조건부 UPDATE — is_selected 가 버전 술어)
     SERIALIZABLE,
-    OPTIMISTIC_RETRY,
     SYNCHRONIZED,
     REDISSON,
 }
 
 abstract class AbstractDrawingStrategy(
     protected val drawingBoardRepository: DrawingBoardRepository,
+    protected val ticketRepository: TicketRepository,
     protected val drawingHistoryRepository: DrawingHistoryRepository,
     protected val surveyRepository: SurveyRepository,
-    protected val encryptionUtils: EncryptionUtils,
     protected val drawingProcessMetrics: DrawingProcessMetrics,
-    protected val drawingEventPublisher: DrawingEventPublisher,
 ) {
     companion object {
         private val log = LoggerFactory.getLogger(AbstractDrawingStrategy::class.java)
@@ -59,51 +73,14 @@ abstract class AbstractDrawingStrategy(
     ): DrawingResultResponse
 
     /**
-     * 임계구역 진입을 통일 지표로 기록한다.
+     * 임계구역 진입 대기를 통일 지표(drawing_contention_wait_seconds{mode})로 기록한다.
      *
-     * 진입 제어가 없는 전략(NO_LOCK·SERIALIZABLE·OPTIMISTIC_RETRY)도 `대기 0 · success` 로 기록해
+     * 진입 제어가 없는 전략(DEFAULT·SERIALIZABLE)도 **0 을 기록**해
      * 다섯 전략이 **항상 같은 시계열**을 갖게 한다 — "값이 없는 것"과 "0"을 구분해야 대조가 성립한다.
      */
-    protected fun recordEntry(
-        waitNanos: Long = 0L,
-        acquired: Boolean = true,
-    ) {
+    protected fun recordEntry(waitNanos: Long = 0L) {
         drawingProcessMetrics.recordContentionWait(mode.name, waitNanos)
-        drawingProcessMetrics.recordEntry(mode.name, if (acquired) "success" else "failure")
     }
-
-    /**
-     * 시도 1회를 감싸 결과를 통일 지표(drawing_attempt_total{mode,result})로 기록한다.
-     *
-     * 성공이든 실패든 **모든 종료 경로**를 세므로, 재시도가 없는 전략은 시도 합계가 요청 수와
-     * 같아지고 재시도가 있는 전략만 그보다 커진다 — 그 배수가 곧 재시도 낭비다.
-     *
-     * 호출부는 트랜잭션 커밋까지 이 블록 **안**에서 끝내야 한다. 커밋이 바깥이면 커밋 시점 실패가
-     * 기록되지 않아 그 전략만 시도가 전부 성공으로 보인다.
-     */
-    protected fun <T> attempt(block: () -> T): T =
-        try {
-            block().also { drawingProcessMetrics.recordAttempt(mode.name, "success") }
-        } catch (e: BoardVersionConflictException) {
-            drawingProcessMetrics.recordAttempt(mode.name, "version_conflict")
-            throw e
-        } catch (e: ObjectOptimisticLockingFailureException) {
-            // 경합 중 사라진 티켓 행 — Hibernate 가 UPDATE/DELETE 0행을 보고 올린다 (버전과 무관)
-            drawingProcessMetrics.recordAttempt(mode.name, "stale_row")
-            throw e
-        } catch (e: CannotAcquireLockException) {
-            drawingProcessMetrics.recordAttempt(mode.name, "deadlock")
-            throw e
-        } catch (e: LockAcquisitionException) {
-            // 지연 로딩 조회에서 난 데드락 — 리포지토리를 거치지 않아 Spring 예외 변환을 타지 않는다.
-            // SERIALIZABLE 은 평범한 SELECT 도 공유 락 읽기가 되어 이 경로로 데드락이 난다.
-            drawingProcessMetrics.recordAttempt(mode.name, "deadlock")
-            throw e
-        } catch (e: Exception) {
-            // 정상 거절(중복 참여·선택된 티켓)과 그 밖의 실패 — 세지 않으면 시도 합계가 요청 수에 못 미친다
-            drawingProcessMetrics.recordAttempt(mode.name, "other")
-            throw e
-        }
 
     /**
      * 보드 조회 — 다섯 전략 모두 락 없는 일반 조회를 쓴다. 경쟁 제어는 각 전략이 이 바깥에서 건다.
@@ -111,8 +88,21 @@ abstract class AbstractDrawingStrategy(
      */
     private fun findBoard(surveyId: UUID): DrawingBoard =
         drawingBoardRepository
-            .findBySurveyIdWithTickets(surveyId)
-            .orElseThrow { InvalidDrawingBoardException() }
+            .findBySurveyId(surveyId)
+            .orElseThrow {
+                InvalidDrawingBoardException()
+            }
+
+    /**
+     * 칸을 차지한다 — 경쟁 제어의 **가장 안쪽 판정**이다.
+     *
+     * 기본 판정: `is_selected = 0` 일 때만 뒤집고, 갱신 행이 0이면 이미 남이 가져간 것이다.
+     * 읽고 나서 판단하지 않고 쓰면서 판단하므로 그 사이에 끼어들 틈이 없다.
+     */
+    protected open fun claimTicket(
+        boardId: UUID,
+        index: Int,
+    ): Boolean = ticketRepository.markSelectedCAS(boardId, index) > 0
 
     /** 추첨 본체 — 호출 시점에 트랜잭션이 열려 있어야 한다. */
     protected fun draw(
@@ -121,49 +111,27 @@ abstract class AbstractDrawingStrategy(
         selectedNumber: Int,
         phoneNumber: String,
     ): DrawingResultResponse {
-        // 추첨 가능 여부 조회
-        val drawingBoard = findBoard(surveyId)
-        val drawingResult = drawingBoard.getDrawingResult(selectedNumber)
+        val board = findBoard(surveyId)
 
-        // 이미 추첨 참여했는지 검증
         val phoneNumberData = PhoneNumber.createWithNonNullable(phoneNumber)
-        val existingHistory =
-            drawingHistoryRepository
-                .findBySurveyIdAndParticipantIdOrPhoneNumber(
-                    surveyId,
-                    participantId,
-                    encryptionUtils.encrypt(phoneNumberData.value),
-                ).orElse(null)
-        if (existingHistory != null) {
-            throw AlreadyParticipatedDrawingException()
-        }
 
-        // 추첨 결과 저장
-        val changedDrawingBoard = drawingResult.changedDrawingBoard
-        drawingBoardRepository.save(changedDrawingBoard)
+        if (!claimTicket(board.id, selectedNumber)) throw AlreadySelectedTicketException()
+
+        val ticketEntity =
+            ticketRepository.findByBoardAndIndex(board.id, selectedNumber)
+                ?: throw InvalidDrawingBoardException()
+
+        val ticket = ticketEntity.toDomain()
+        val remaining = ticketRepository.countRemaining(board.id).toInt()
+
         drawingHistoryRepository.save(
-            DrawingHistory.create(
-                participantId = participantId,
-                phoneNumber = phoneNumberData,
-                surveyId = surveyId,
-                selectedTicketIndex = selectedNumber,
-                ticket = changedDrawingBoard.tickets[selectedNumber],
-            ),
+            DrawingHistory.create(participantId, phoneNumberData, surveyId, selectedNumber, ticket),
         )
-        drawingProcessMetrics.recordPersisted(isWinner = drawingResult is DrawingResult.Winner)
+        closeSurveyIfTicketsExhausted(surveyId, remaining)
 
-        closeSurveyIfTicketsExhausted(surveyId, changedDrawingBoard)
-
-        drawingEventPublisher.publishCompleted(
-            surveyId = surveyId,
-            participantId = participantId,
-            selectedNumber = selectedNumber,
-            changedDrawingBoard = changedDrawingBoard,
-        )
-
-        return when (drawingResult) {
-            is DrawingResult.Winner -> DrawingResultResponse.Winner(drawingResult.rewardName)
-            is DrawingResult.NonWinner -> DrawingResultResponse.NonWinner()
+        return when (ticket) {
+            is Ticket.Winning -> DrawingResultResponse.Winner(ticket.rewardName)
+            is Ticket.NonWinning -> DrawingResultResponse.NonWinner()
         }
     }
 
@@ -171,9 +139,9 @@ abstract class AbstractDrawingStrategy(
     // 동일 트랜잭션이라 추첨 결과와 설문 종료가 원자적으로 커밋된다.
     private fun closeSurveyIfTicketsExhausted(
         surveyId: UUID,
-        changedDrawingBoard: DrawingBoard,
+        remaining: Int,
     ) {
-        if (changedDrawingBoard.remainingTicketCount > 0) return
+        if (remaining > 0) return
 
         val survey =
             surveyRepository

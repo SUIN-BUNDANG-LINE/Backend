@@ -351,6 +351,7 @@ class SurveyTest {
                             sectionIds = SectionIds.from(listOf(sectionId)),
                         ),
                     ),
+                paymentLocked = false,
             )
 
         // then
@@ -385,6 +386,7 @@ class SurveyTest {
                 isVisible = survey1.isVisible,
                 isResultOpen = survey1.isResultOpen,
                 sections = survey1.sections,
+                paymentLocked = false,
             )
         }
         // 설문이 마감된 경우 예외 발생
@@ -398,6 +400,7 @@ class SurveyTest {
                 isVisible = survey2.isVisible,
                 isResultOpen = survey2.isResultOpen,
                 sections = survey2.sections,
+                paymentLocked = false,
             )
         }
         // 설문이 수정 중일 때 리워드 관련 정보가 변경되지 않은 경우 정상적으로 진행
@@ -411,6 +414,7 @@ class SurveyTest {
                 isVisible = survey3.isVisible,
                 isResultOpen = survey3.isResultOpen,
                 sections = survey3.sections,
+                paymentLocked = false,
             )
         }
         // 설문이 수정 중일 때 리워드 관련 정보가 변경된 경우 예외 발생
@@ -424,6 +428,7 @@ class SurveyTest {
                 isVisible = survey3.isVisible,
                 isResultOpen = survey3.isResultOpen,
                 sections = survey3.sections,
+                paymentLocked = false,
             )
         }
     }

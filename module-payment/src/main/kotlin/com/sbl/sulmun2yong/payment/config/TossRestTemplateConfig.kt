@@ -10,7 +10,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.DefaultUriBuilderFactory
-import java.util.Base64
+import java.util.*
 
 // 토스 API 통신용 RestTemplate - 결제 서비스가 어댑터(TossPaymentsAdapter)의 유일한 구동처다.
 // (web 의 RestTemplateConfig 에서 toss 빈을 가져옴 - Phase 4 이관)
@@ -23,7 +23,6 @@ class TossRestTemplateConfig(
 ) {
     @Bean
     fun tossPaymentsTemplate(): RestTemplate {
-        // 토스 응답은 camelCase + 우리가 모르는 필드가 많다 -> kotlin 모듈 + unknown 무시
         val objectMapper =
             ObjectMapper()
                 .registerKotlinModule()

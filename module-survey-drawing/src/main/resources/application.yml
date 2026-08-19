@@ -68,6 +68,11 @@ cookie:
 test-auth:
     enabled: ${TEST_AUTH_ENABLED:false}
 
+# 경쟁 제어 5방식 비교용 엔드포인트 활성화 여부 (프로덕션은 false 유지)
+# 무보호·JVM 로컬 경로는 중복 배정·중복 참여를 막지 못하므로 측정할 때만 연다
+lock-experiment:
+    enabled: ${LOCK_EXPERIMENT_ENABLED:false}
+
 ai-server:
     base-url: http://localhost:8000
 

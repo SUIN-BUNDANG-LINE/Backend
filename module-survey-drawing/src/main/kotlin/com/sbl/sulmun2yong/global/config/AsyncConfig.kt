@@ -6,21 +6,11 @@ import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import java.util.concurrent.Executor
 
+// outboxAsyncExecutor 는 :messaging 의 KafkaRecordOutboxAsyncConfig 가 제공한다 - 아웃박스를 쓰는 서비스가
+// 그 실행기를 각자 챙기지 않아도 되게 인프라 쪽으로 옮겼다.
 @Configuration
 @EnableAsync
 class AsyncConfig {
-    @Bean
-    fun outboxAsyncExecutor(): Executor {
-        val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 2
-        executor.maxPoolSize = 5
-        executor.queueCapacity = 100
-        executor.setThreadNamePrefix("outbox-async-")
-        executor.setTaskDecorator(MdcTaskDecorator())
-        executor.initialize()
-        return executor
-    }
-
     @Bean
     fun smsJobExecutor(): Executor {
         val executor = ThreadPoolTaskExecutor()

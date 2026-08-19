@@ -1,60 +1,47 @@
 package com.sbl.sulmun2yong.payment.controller
 
+import com.sbl.sulmun2yong.payment.dto.PaymentFailRequest
+import com.sbl.sulmun2yong.payment.dto.PaymentSuccessRequest
+import com.sbl.sulmun2yong.payment.dto.response.ConfirmResultResponse
 import com.sbl.sulmun2yong.payment.service.ConfirmOutcome
 import com.sbl.sulmun2yong.payment.service.PaymentConfirmService
 import com.sbl.sulmun2yong.payment.service.PaymentFailService
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-// 토스 결제창이 사용자 브라우저를 돌려보내는 착지점.
-// 처리 후 결과 페이지로 302 리다이렉트 - F5 를 눌러도 confirm URL 이 아니라 결과 페이지만 재요청된다.
+// 결제 결과 처리 - success·fail 모두 정적 착지장(confirm.html)의 fetch 가 부른다.
+// 부수효과(승인 확정·실패 기록)가 있어 POST - GET 의 안전 계약(프리페치·스캐너·자동 재시도) 밖이고,
+// paymentKey·amount 가 쿼리스트링(접근 로그·히스토리)에 남지 않는다.
+// JSON(state)만 돌려주고 화면 이동은 페이지 몫 - 착지 API 가 주소창에 남지 않아
+// F5 안전이 구조로 성립한다(재호출돼도 confirm 도장 CAS·fail PENDING 가드가 멱등 흡수).
 @RestController
 @RequestMapping("/api/v1/payments")
 class PaymentResultController(
     private val paymentConfirmService: PaymentConfirmService,
     private val paymentFailService: PaymentFailService,
 ) {
-    @GetMapping("/success")
+    @PostMapping("/success")
     fun success(
-        @RequestParam paymentKey: String,
-        @RequestParam orderId: String,
-        @RequestParam amount: Int,
-    ): ResponseEntity<Void> {
-        val outCome = paymentConfirmService.handleSuccess(paymentKey, orderId, amount)
+        @RequestBody request: PaymentSuccessRequest,
+    ): ConfirmResultResponse {
+        val outCome = paymentConfirmService.handleSuccess(request.paymentKey, request.orderId, request.amount)
         val state =
             when (outCome) {
-                ConfirmOutcome.DONE -> "done"
+                ConfirmOutcome.SUCCEEDED -> "succeeded"
                 ConfirmOutcome.PROCESSING -> "processing"
                 ConfirmOutcome.FAILED -> "failed"
             }
 
-        return redirectToResult(state, orderId)
+        return ConfirmResultResponse(state = state)
     }
 
-    @GetMapping("/fail")
+    @PostMapping("/fail")
     fun fail(
-        @RequestParam orderId: String,
-        @RequestParam(required = false) code: String?,
-        @RequestParam(required = false) message: String?,
-    ): ResponseEntity<Void> {
-        paymentFailService.handleFail(orderId, code)
-        return redirectToResult("failed", orderId)
+        @RequestBody request: PaymentFailRequest,
+    ): ConfirmResultResponse {
+        paymentFailService.handleFail(request.orderId, request.code)
+        return ConfirmResultResponse(state = "failed")
     }
-
-    private fun redirectToResult(
-        state: String,
-        orderId: String,
-    ): ResponseEntity<Void> =
-        ResponseEntity
-            .status(HttpStatus.FOUND)
-            .header(
-                HttpHeaders.LOCATION,
-                "/payments/result.html?state=$state&orderId=$orderId",
-            ).build()
-
 }

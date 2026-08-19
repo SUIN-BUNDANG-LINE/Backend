@@ -1,6 +1,6 @@
 package com.sbl.sulmun2yong.survey.service
 
-import com.sbl.sulmun2yong.drawing.entity.DrawingBoard
+import com.sbl.sulmun2yong.drawing.entity.DrawingBoardStatus
 import com.sbl.sulmun2yong.drawing.repository.DrawingBoardRepository
 import com.sbl.sulmun2yong.survey.domain.SurveyStatus
 import com.sbl.sulmun2yong.survey.domain.reward.ImmediateDrawSetting
@@ -9,7 +9,7 @@ import com.sbl.sulmun2yong.survey.dto.response.SurveyCreateResponse
 import com.sbl.sulmun2yong.survey.dto.response.SurveyStartResponse
 import com.sbl.sulmun2yong.survey.entity.Survey
 import com.sbl.sulmun2yong.survey.exception.SurveyNotFoundException
-import com.sbl.sulmun2yong.survey.publisher.SurveySagaPublisher
+import com.sbl.sulmun2yong.survey.publisher.SurveyOutboxKafkaPublisher
 import com.sbl.sulmun2yong.survey.repository.SurveyRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -20,7 +20,7 @@ import java.util.*
 class SurveyWorkbenchService(
     private val surveyRepository: SurveyRepository,
     private val drawingBoardRepository: DrawingBoardRepository,
-    private val sagaPublisher: SurveySagaPublisher,
+    private val sagaPublisher: SurveyOutboxKafkaPublisher,
     @Value("\${payment.reward-unit-price}")
     private val rewardUnitPrice: Int,
 ) {
@@ -39,6 +39,9 @@ class SurveyWorkbenchService(
             surveyRepository
                 .findByIdAndMakerIdAndIsDeletedFalse(surveyId, makerId)
                 .orElseThrow { SurveyNotFoundException() }
+        // 결제 대기 보드가 살아 있으면 수정 잠금 - 경품 스냅숏·총액이 현재 설정에 묶여 있다
+        val paymentLocked =
+            drawingBoardRepository.existsBySurveyIdAndStatus(surveyId, DrawingBoardStatus.PENDING_PAYMENT)
         val newSurvey =
             with(surveySaveRequest) {
                 survey.updateContent(
@@ -50,16 +53,15 @@ class SurveyWorkbenchService(
                     isVisible = this.isVisible,
                     isResultOpen = this.isResultOpen,
                     sections = this.sections.toDomain(),
+                    paymentLocked = paymentLocked,
                 )
             }
         surveyRepository.save(newSurvey)
     }
 
-    // 단독(비모금) 개시 - 한 트랜잭션: 검증 + 보드 생성 + PENDING_PAYMENT 전이 + survey-payment-pending
-    // Outbox 발행. 주문 발급(payment_orders 쓰기)은 이벤트 구독자(결제, origin=SOLO)의 몫이다.
-    // checkoutUrl 은 surveyId 로 조립한다 - 주문 식별은 결제 자기 데이터라 설문은 orderId 를 모른다.
-    // 발급이 이벤트 수렴 전이면 결제창의 주문 조회가 404 - 프론트가 재시도한다(최종적 일관성 창).
-    // 재호출(PENDING_PAYMENT)도 재발행한다 - 발급이 멱등(설문당 1행)이라 안전하고, 자기치유가 된다.
+    // 설문 시작 - 유료(경품) 설문이면 여기서 열지 않는다. 유료 개시의 유일한 길은 모금 접수
+    // (POST /surveys/{id}/co-funding, 1인 = 단독)이고, 보드 생성·주문 발급·개시는 그 사가(판정 tx·③·⑤)의 몫.
+    // 이 메서드는 결제 필요 신호(paymentRequired)만 돌려주고, 무료·수정 재개 설문만 즉시 연다.
     @Transactional
     fun startSurvey(
         surveyId: UUID,
@@ -72,53 +74,19 @@ class SurveyWorkbenchService(
 
         val rewardSetting = survey.rewardSetting
         return when {
-            // 경품 설문 최초 시작 -> 바로 열지 않고 결제 대기로
+            // 경품 설문 개시는 모금 접수(1인 = 단독)로 일원화 - 결제 필요 신호만 돌려준다.
+            // 보드 생성·주문 발급은 접수 사가(판정 tx·③)가 담당한다.
             rewardSetting is ImmediateDrawSetting && survey.status == SurveyStatus.NOT_STARTED -> {
-                // 경품 보드 사전 생성 - 설문·추첨은 같은 서비스 동거 도메인이라 직접 쓰기 유지(배포 경계 안)
-                drawingBoardRepository.findBySurveyId(survey.id).orElseGet {
-                    drawingBoardRepository.save(
-                        DrawingBoard.create(
-                            surveyId = survey.id,
-                            boardSize = rewardSetting.targetParticipantCount!!,
-                            rewards = rewardSetting.rewards,
-                        ),
-                    )
-                }
-                surveyRepository.save(survey.awaitPayment())
-                publishPending(survey, rewardSetting)
-                checkoutResponse(survey.id)
-            }
-
-            // 결제 대기 중 재호출 - 설문을 열지 않고(!) 결제 진입으로 재안내. 발급 유실 대비 재발행(멱등).
-            survey.status == SurveyStatus.PENDING_PAYMENT -> {
-                if (rewardSetting is ImmediateDrawSetting) publishPending(survey, rewardSetting)
-                checkoutResponse(survey.id)
+                SurveyStartResponse(paymentRequired = true)
             }
 
             // 결제가 필요 없는 경우(수정 재개 등) - 기존 즉시 시작
             else -> {
                 surveyRepository.save(survey.start())
-                SurveyStartResponse(paymentRequired = false, checkoutUrl = null)
+                SurveyStartResponse(paymentRequired = false)
             }
         }
     }
-
-    private fun publishPending(
-        survey: Survey,
-        rewardSetting: ImmediateDrawSetting,
-    ) {
-        sagaPublisher.publishPaymentPending(
-            surveyId = survey.id.toString(),
-            makerId = survey.makerId.toString(),
-            amount = rewardUnitPrice * rewardSetting.rewards.sumOf { it.count },
-        )
-    }
-
-    private fun checkoutResponse(surveyId: UUID) =
-        SurveyStartResponse(
-            paymentRequired = true,
-            checkoutUrl = "/payments/checkout.html?surveyId=$surveyId",
-        )
 
     fun editSurvey(
         surveyId: UUID,

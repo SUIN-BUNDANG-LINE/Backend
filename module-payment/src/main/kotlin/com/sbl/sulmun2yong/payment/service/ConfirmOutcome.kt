@@ -2,8 +2,8 @@ package com.sbl.sulmun2yong.payment.service
 
 // success 결과 — 컨트롤러가 어느 결과 페이지로 보낼지 결정하는 재료
 enum class ConfirmOutcome {
-    // 승인 확정 — 완료 화면
-    DONE,
+    // 승인 확정 — 완료 화면 (성공 종착 어휘는 장부·도장과 같이 SUCCEEDED 로 통일)
+    SUCCEEDED,
 
     // 미확정 — 확인 중 화면 (릴레이가 이어받음)
     PROCESSING,
