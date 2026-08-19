@@ -48,13 +48,13 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "**📌 이 대시보드의 책임**: Outbox 도메인 시계열 메트릭 — PENDING/FAILED 추이, Relay 발행 TPS, Publish Latency 분포.\n\n메시지 인스펙션·offset 리셋·파티션 할당 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  개별 row 디버깅 → **MySQL 직접 조회** (`SELECT * FROM outbox_events WHERE ...`)  •  베이스라인 헬스 → **Cluster Overview 대시보드**"
+        "content": "**📌 이 대시보드의 책임**: Outbox 도메인 시계열 메트릭 — PENDING/FAILED 추이, Relay 발행 TPS, Publish Latency 분포.\n\n메시지 인스펙션·offset 리셋·파티션 할당 → **Kafka UI** (http://kafka-b2.q-asker.com:9021)  •  개별 row 디버깅 → **MySQL 직접 조회** (`SELECT * FROM kafka_record_outbox WHERE ...`)  •  베이스라인 헬스 → **Cluster Overview 대시보드**"
       }
     },
     {
       "type": "timeseries",
       "id": 1,
-      "title": "Outbox Events — PENDING (by aggregate_type & instance)",
+      "title": "Outbox Events — PENDING (by instance)",
       "description": "PENDING 상태로 남아있는 outbox row 개수. 30초 주기 폴링으로 갱신. 부하 시 일시적 증가는 정상, 지속 증가하면 Relay 처리 지연 의심.",
       "gridPos": {
         "h": 8,
@@ -68,8 +68,8 @@
       },
       "targets": [
         {
-          "expr": "sum by (aggregate_type, instance) (outbox_events_pending{application=~\"$application\", instance=~\"$instance\"})",
-          "legendFormat": "{{aggregate_type}} / {{instance}}",
+          "expr": "sum by (instance) (kafka_record_outbox_pending{application=~\"$application\", instance=~\"$instance\"})",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
@@ -117,7 +117,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (outbox_events_failed{application=~\"$application\", instance=~\"$instance\"})",
+          "expr": "sum by (instance) (kafka_record_outbox_failed{application=~\"$application\", instance=~\"$instance\"})",
           "legendFormat": "{{instance}}",
           "refId": "A"
         }
@@ -171,7 +171,7 @@
       "type": "timeseries",
       "id": 3,
       "title": "Outbox Relay Publish Rate (by instance & status)",
-      "description": "5초 주기 Relay + AFTER_COMMIT 즉시 발행 두 경로 합산. instance별 시리즈로 web-1/web-2 부하 분산 확인. status=success/failure 분리.",
+      "description": "5초 주기 Relay + AFTER_COMMIT 즉시 발행 두 경로 합산. instance별 시리즈로 survey-drawing-1/2 부하 분산 확인. status=success/failure 분리.",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -327,7 +327,7 @@
           "uid": "prometheus"
         },
         "query": {
-          "query": "label_values(outbox_events_pending, application)",
+          "query": "label_values(kafka_record_outbox_pending, application)",
           "refId": "Application"
         },
         "refresh": 2,
@@ -348,7 +348,7 @@
           "uid": "prometheus"
         },
         "query": {
-          "query": "label_values(outbox_events_pending{application=~\"$application\"}, instance)",
+          "query": "label_values(kafka_record_outbox_pending{application=~\"$application\"}, instance)",
           "refId": "Instance"
         },
         "refresh": 2,

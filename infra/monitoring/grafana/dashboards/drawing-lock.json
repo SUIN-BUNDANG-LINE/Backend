@@ -54,7 +54,7 @@
     {
       "type": "timeseries",
       "id": 1,
-      "title": "Lock Acquire Rate — by Result",
+      "title": "Lock Acquire Rate — 시도 vs 획득 실패",
       "description": "@RedissonLock AOP에서 tryLock 결과별 분당 rate. success는 락 획득 성공 후 비즈니스 로직 진입, failure는 waitTime 초과로 TooManyLockRequestException 발생(HTTP 429). failure가 지속 발생하면 동시 요청 폭주 또는 락 보유 시간(leaseTime) 내 비즈니스 미완료 의심.",
       "gridPos": {
         "h": 8,
@@ -68,9 +68,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (result) (rate(drawing_entry_total{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[1m]))",
-          "legendFormat": "{{result}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "진입 시도",
+          "expr": "sum(rate(drawing_contention_wait_seconds_count{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[1m]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "획득 실패(lock_timeout)",
+          "expr": "sum(rate(drawing_outcome_total{mode=\"REDISSON\", outcome=\"lock_timeout\", application=~\"$application\", instance=~\"$instance\"}[1m]))"
         }
       ],
       "fieldConfig": {
@@ -279,9 +284,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(drawing_entry_total{result=\"success\", mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[5m])) / sum(rate(drawing_entry_total{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[5m]))",
-          "legendFormat": "success ratio",
-          "refId": "A"
+          "refId": "A",
+          "expr": "1 - (sum(rate(drawing_outcome_total{mode=\"REDISSON\", outcome=\"lock_timeout\", application=~\"$application\", instance=~\"$instance\"}[5m])) / sum(rate(drawing_contention_wait_seconds_count{mode=\"REDISSON\", application=~\"$application\", instance=~\"$instance\"}[5m])))"
         }
       ],
       "fieldConfig": {
@@ -341,7 +345,7 @@
         {
           "refId": "A",
           "legendFormat": "{{mode}}",
-          "expr": "sum by (mode) (rate(drawing_entry_total[$__rate_interval]))"
+          "expr": "sum by (mode) (rate(drawing_contention_wait_seconds_count[$__rate_interval]))"
         }
       ],
       "fieldConfig": {

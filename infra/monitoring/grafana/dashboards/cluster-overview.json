@@ -29,7 +29,7 @@
       }
     ]
   },
-  "description": "T1에서 자동 노출된 베이스라인 메트릭(JVM, HTTP, Spring Kafka, CPU)을 5개 인스턴스(web-1/2, consumer-1/2/3) 비교 시각화. 클러스터 전체 헬스 첫 화면.",
+  "description": "T1에서 자동 노출된 베이스라인 메트릭(JVM, HTTP, Spring Kafka, CPU)을 5개 인스턴스(survey-drawing-1/2, consumer-1/2/3) 비교 시각화. 클러스터 전체 헬스 첫 화면.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,

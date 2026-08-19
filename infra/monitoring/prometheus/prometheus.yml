@@ -15,15 +15,13 @@ global:
     external_labels:
         cluster: sulmun2yong-local
 
-# 사가 관측 알림 규칙 (멈춘 PENDING / 보상 과다)
-rule_files:
-    - saga-alerts.yml
-
 scrape_configs:
     # ────────── Spring Boot 인스턴스 5개 ──────────
     # 판정은 전부 카운터·히스토그램(_sum/_count/_bucket)으로 하므로 주기와 무관하다.
     # HikariCP active/pending 같은 게이지만 해상도를 타는데, 커넥션 압박은 이미
     # acquire_seconds 의 _sum/_count 로 정확히 재고 있어 게이지는 정황용이다.
+    # CPU/RAM 은 실측 결과 노이즈 수준(전략 간 MySQL CPU 차 1.6%p, 첫 단계는 JIT 오염)이라
+    # 관찰 세트에서 제외 — 5초 스크레이프·cAdvisor 도 함께 걷어냈다.
     - job_name: spring-apps
       metrics_path: /management/prometheus
       scrape_interval: 15s
@@ -39,42 +37,35 @@ scrape_configs:
           - targets: [sulmun2yong-web-1:8080]
             labels:
                 application: sulmun2yong-web
-                instance: web-1
+                instance: survey-drawing-1
           - targets: [sulmun2yong-web-2:8080]
             labels:
                 application: sulmun2yong-web
-                instance: web-2
+                instance: survey-drawing-2
 
     # ────────── 도메인 서비스 4개 (게이트웨이·인증·결제·모금) → /management/prometheus ──────────
     - job_name: domain-services
       metrics_path: /management/prometheus
       scrape_interval: 15s
+      # instance 를 짧은 이름으로 명시 - 미지정 시 "컨테이너명:8080" 이 그대로 노출되어
+      # 대시보드 레전드가 web(web-1·web-2)과 표기 층위가 어긋난다
       static_configs:
           - targets: [sulmun2yong-gateway:8080]
             labels:
                 application: gateway
+                instance: gateway
           - targets: [sulmun2yong-auth:8080]
             labels:
                 application: auth
+                instance: auth
           - targets: [sulmun2yong-payment:8080]
             labels:
                 application: payment
+                instance: payment
           - targets: [sulmun2yong-cofunding:8080]
             labels:
                 application: cofunding
-
-    # ────────── SMS·DLT 사가 컨슈머 2개 → /management/prometheus ──────────
-    # 컨테이너 내부 포트는 compose 의 SERVER_PORT=8080 (yml 기본값 8084·8085 는 로컬 기동용)
-    - job_name: sms-consumers
-      metrics_path: /management/prometheus
-      scrape_interval: 15s
-      static_configs:
-          - targets: [sulmun2yong-drawing-sms-notification-consumer:8080]
-            labels:
-                application: drawing-sms-notification-consumer
-          - targets: [sulmun2yong-dlt-sms-notification-consumer:8080]
-            labels:
-                application: dlt-sms-notification-consumer
+                instance: cofunding
 
     # ────────── Kafka Exporter (외부 브로커 lag/offset) ──────────
     - job_name: kafka-exporter
@@ -96,6 +87,27 @@ scrape_configs:
             labels:
                 exporter: mysqld-exporter
                 instance: cluster-mysql
+
+    # ────────── 파티션 확장 실험 브로커 (tests/partition-scaling) ──────────
+    # 실험 스택이 내려가 있으면 target down — 무해. 10분짜리 실험이라 5s 로 해상도 확보.
+    - job_name: partition-scaling-kafka
+      metrics_path: /metrics
+      scrape_interval: 5s
+      static_configs:
+          - targets: [pscale-kafka-exporter:9308]
+            labels:
+                exporter: kafka-exporter
+                experiment: partition-scaling
+
+    # ────────── 파티션 확장 실험 컨슈머 (무결성 게이지) ──────────
+    # 실험 컨슈머 1번의 experiment_payload_sum·unique·duplicate. 실험 꺼져 있으면 down — 무해.
+    - job_name: partition-scaling-consumer
+      metrics_path: /management/prometheus
+      scrape_interval: 5s
+      static_configs:
+          - targets: [pscale-consumer-1:8080]
+            labels:
+                experiment: partition-scaling
 
     # ────────── Prometheus 자체 메트릭 (디버깅용) ──────────
     - job_name: prometheus
