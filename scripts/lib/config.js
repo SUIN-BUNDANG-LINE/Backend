@@ -32,6 +32,13 @@ export function pickBaseUrl() {
     return BASE_URLS[vu % BASE_URLS.length];
 }
 
+// 버스트 내 분산 — 한 반복(VU)이 http.batch 로 묶어 보내는 요청들을 요청 인덱스로 번갈아 배정한다.
+// pickBaseUrl(VU 기준)만 쓰면 버스트 전체가 같은 JVM 으로 가서, 같은 칸 경합이 JVM 경계를
+// 넘는 일이 없다 — synchronized 의 cross-JVM 검증이 성립하려면 요청 단위로 갈라야 한다.
+export function pickBaseUrlAt(i) {
+    return BASE_URLS[i % BASE_URLS.length];
+}
+
 // 게이트웨이 공유 비밀 — GatewayOnlyFilter 가 전 요청(/management 제외)에서 검사한다
 const GATEWAY_SECRET = __ENV.GATEWAY_SECRET || 'local-dev-secret';
 const TEST_USER_ID = __ENV.TEST_USER_ID || '00000000-0000-4000-8000-000000000001';

@@ -47,7 +47,7 @@
 핵심 요구가 **이벤트 원장 + 다중 fan-out + 리플레이 + 백필**이기 때문:
 - `drawing-completed` 을 `drawing-notification` · `sms-cost-calculator` **두 그룹이 독립 구독** (fan-out)
 - Outbox → Kafka 로그가 **진실의 원천**, `KafkaReplayActuatorEndpoint` 로 비용 재계산(리플레이)
-- 파티션(=6)으로 **순서 유지하며 수평 확장**
+- 파티션(=3)으로 **순서 유지하며 수평 확장**
 - at-least-once + DB커밋 후 offset 커밋으로 유실 없는 전달
 
 이 요구들은 RabbitMQ 클래식 큐로는 어색하거나 불가능하다. (반대로 우리가 라우팅·작업큐 중심이었다면 RabbitMQ가 나았을 것이다.)

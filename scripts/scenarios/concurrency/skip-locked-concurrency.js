@@ -29,7 +29,7 @@ import {
 } from '../../lib/db.js';
 import { startAnnotation, endAnnotation } from '../../lib/annotations.js';
 
-const TOPIC = 'drawing-completed';
+const TOPIC = 'k6-outbox-test';   // 구독자 없는 전용 실험 트랙 (도메인 무관)
 const INJECT_COUNT = Number(__ENV.INJECT_COUNT || 200);
 const TIMEOUT_SEC = Number(__ENV.TIMEOUT_SEC || 120);
 
@@ -48,13 +48,13 @@ export function setup() {
     cleanupTestOutbox();
     const before = getOutboxStatsByTopic(TOPIC);
 
-    const keyPrefix = `skiplocked-${Date.now()}`;
+    const keyPrefix = `k6-skiplocked-${Date.now()}`;
     console.log(`PENDING ${INJECT_COUNT}건 일괄 주입 중...`);
 
     for (let i = 0; i < INJECT_COUNT; i++) {
         const key = `${keyPrefix}-${i}`;
         const payload = JSON.stringify({ test: 'skip-locked', idx: i, key });
-        insertPendingOutbox('TestEvent', TOPIC, key, payload, 90);
+        insertPendingOutbox(TOPIC, key, payload, 90);
     }
 
     const after = getOutboxStatsByTopic(TOPIC);
@@ -84,9 +84,9 @@ export function teardown(data) {
     const final = getOutboxStatsByTopic(TOPIC);
     const newlyPublished = final.PUBLISHED - data.beforePublished;
 
-    // 모든 TEST_K6 행이 retry_count=0인지 확인 (재시도 없이 한 번에 발행)
+    // 주입한 k6 행이 retry_count=0인지 확인 (재시도 없이 한 번에 발행)
     const retryRows = db.query(
-        "SELECT COUNT(*) AS cnt FROM outbox_events WHERE aggregate_type = 'TEST_K6' AND retry_count > 0",
+        "SELECT COUNT(*) AS cnt FROM survey_db.kafka_record_outbox WHERE kafka_record_key LIKE 'k6-%' AND retry_count > 0",
     );
     const retried = Number(retryRows[0].cnt);
 

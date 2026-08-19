@@ -27,7 +27,7 @@ scripts/
 │       └── saga-cost-integrity.js      # SMS 비용 정합 SAGA
 ├── runners/                        # 실행 진입점 .sh (레포 루트에서 실행)
 │   ├── run-all-scenarios.sh            # k6 통합 러너 (happy/failover/all)
-│   ├── run-lock-experiment.sh          # 분산락 Lock OFF vs ON 실험
+
 │   ├── run-e2e.sh                       # consumer E2E (tests/e2e 하네스)
 │   ├── run-load.sh                      # consumer 부하 (tests/e2e/load 하네스)
 │   └── broker-comparison/               # 브로커 비교 데모
@@ -206,7 +206,7 @@ docker run --rm -i \
 ### outbox-relay-recovery.js
 
 - 주입한 `INJECT_COUNT`(기본 100)건이 60초 내 모두 PUBLISHED
-- `outbox_events.aggregate_type='TEST_K6'` 행은 teardown에서 cleanup
+- `kafka_record_outbox.kafka_record_key LIKE 'k6-%'` 행은 teardown에서 cleanup
 
 ### skip-locked-concurrency.js
 

@@ -5,11 +5,11 @@
  *       SKIP LOCKED + JPA hint(-2)로 PENDING을 폴링·발행하는지 검증한다.
  *
  * 흐름:
- *   1. setup: outbox_events에 PENDING 100건 직접 INSERT (created_at = now() - 90s)
+ *   1. setup: kafka_record_outbox에 PENDING 100건 직접 INSERT (created_at = now() - 90s)
  *   2. default: HTTP 트래픽 없음 (DB 주입만으로 Relay 동작 확인)
  *   3. teardown: Relay가 60초 내에 모두 PUBLISHED로 전환했는지 폴링
  *
- * 사전 조건: Relay가 정상 동작하는 토픽이어야 함 (drawing-completed 등)
+ * 사전 조건: Relay가 정상 동작하는 토픽이어야 함 (k6-outbox-test — 전용 실험 트랙)
  *
  * 실행:
  *   ./k6-custom run --env DB_DSN="user:pass@tcp(localhost:13306)/test?parseTime=true" outbox-relay-recovery.js
@@ -26,7 +26,7 @@ import {
 } from '../../lib/db.js';
 import { startAnnotation, endAnnotation } from '../../lib/annotations.js';
 
-const TOPIC = 'drawing-completed';
+const TOPIC = 'k6-outbox-test';   // 구독자 없는 전용 실험 트랙 (도메인 무관)
 const INJECT_COUNT = Number(__ENV.INJECT_COUNT || 100);
 const TIMEOUT_SEC = Number(__ENV.TIMEOUT_SEC || 60);
 
@@ -47,13 +47,13 @@ export const options = {
 export function setup() {
     cleanupTestOutbox();
 
-    const keyPrefix = `relay-test-${Date.now()}`;
+    const keyPrefix = `k6-relay-test-${Date.now()}`;
     console.log(`PENDING ${INJECT_COUNT}건 주입 중... (키 prefix: ${keyPrefix})`);
 
     for (let i = 0; i < INJECT_COUNT; i++) {
         const key = `${keyPrefix}-${i}`;
         const payload = JSON.stringify({ test: true, idx: i, key });
-        insertPendingOutbox('TestEvent', TOPIC, key, payload, 90);
+        insertPendingOutbox(TOPIC, key, payload, 90);
     }
 
     const before = getOutboxStatsByTopic(TOPIC);

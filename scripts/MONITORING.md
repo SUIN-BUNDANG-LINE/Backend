@@ -27,7 +27,7 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 | 대상 대시보드 | `drawing-lock` (primary), `race-comparison`, `cluster-overview` (보조) |
 | 핵심 패널 | Lock Acquire Rate — by Result · Lock Wait Latency p50/p95/p99 · Lock Success Ratio (5m) · 임계구역 진입률 — 전략별 · 추첨 결과/시도 (race-comparison) |
 | 기대 결과 | same_ticket 10 VU → success=1, fail=9 · same_user 10 VU → success=1, fail=9 · diff_tickets 10 VU → success=10 (분산락 mutex 정상). `LOCK_MODE=off`로 동일 endpoint 비교 시 deadlock 27건/회 발생 |
-| 디버깅 PromQL | `sum by (mode, result) (rate(drawing_entry_total[1m]))` · `histogram_quantile(0.95, sum by (le) (rate(drawing_contention_wait_seconds_bucket{mode="REDISSON"}[1m])))` · `sum(drawing_outcome_total{outcome="deadlock"})` |
+| 디버깅 PromQL | `sum by (mode) (rate(drawing_contention_wait_seconds_count[1m]))` · `histogram_quantile(0.95, sum by (le) (rate(drawing_contention_wait_seconds_bucket{mode="REDISSON"}[1m])))` · `sum(drawing_outcome_total{outcome="deadlock"})` |
 
 ### 2. drawing-kafka-fanout
 
@@ -43,9 +43,9 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 | 항목 | 내용 |
 |---|---|
 | 대상 대시보드 | `outbox-pipeline` (primary), `cluster-overview` (보조) |
-| 핵심 패널 | PENDING by aggregate_type & instance · Relay Publish Rate by instance & status · Publish Latency p50/p95/p99 |
+| 핵심 패널 | PENDING by instance · Relay Publish Rate by instance & status · Publish Latency p50/p95/p99 |
 | 기대 결과 | duplicate visitorId 중복 응답 1건만 성공 (4xx), outbox 1건만 INSERT 후 즉시 PUBLISHED |
-| 디버깅 PromQL | `sum by (aggregate_type) (outbox_events_pending)` · `sum by (status, instance) (rate(outbox_relay_publish_total[1m]))` |
+| 디버깅 PromQL | `sum by (instance) (kafka_record_outbox_pending)` · `sum by (status, instance) (rate(outbox_relay_publish_total[1m]))` |
 
 ### 4. outbox-relay-recovery
 
@@ -54,7 +54,7 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 | 대상 대시보드 | `outbox-pipeline` (primary) |
 | 핵심 패널 | PENDING (스파이크 → 60초 내 0) · Publish Rate · Publish Latency p95 |
 | 기대 결과 | INJECT_COUNT=100 → 60초 내 전부 PUBLISHED, FAILED=0 |
-| 디버깅 PromQL | `outbox_events_pending` · `sum(rate(outbox_relay_publish_total{status="success"}[30s]))` · `histogram_quantile(0.95, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket[1m])))` |
+| 디버깅 PromQL | `kafka_record_outbox_pending` · `sum(rate(outbox_relay_publish_total{status="success"}[30s]))` · `histogram_quantile(0.95, sum by (le, topic) (rate(outbox_relay_publish_duration_seconds_bucket[1m])))` |
 
 ### 5. skip-locked-concurrency
 
@@ -63,7 +63,7 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 | 대상 대시보드 | `outbox-pipeline` (primary) |
 | 핵심 패널 | PENDING (200 스파이크 → 0) · Publish Rate by instance (2개 web 인스턴스 분담) · Publish Latency p95 |
 | 기대 결과 | 200건 일괄 INSERT → 전부 PUBLISHED, `retry_count > 0` 행 0개 (SKIP LOCKED 정합성) |
-| 디버깅 PromQL | `outbox_events_pending` · `sum by (instance, status) (rate(outbox_relay_publish_total[30s]))` — 두 인스턴스가 동시 분담하면서 충돌 없는 패턴 확인 |
+| 디버깅 PromQL | `kafka_record_outbox_pending` · `sum by (instance, status) (rate(outbox_relay_publish_total[30s]))` — 두 인스턴스가 동시 분담하면서 충돌 없는 패턴 확인 |
 
 ## 비교 시나리오 절차
 
@@ -73,7 +73,7 @@ k6 부하 시나리오 실행 시 어느 Grafana 대시보드의 어느 패널�
 2. Grafana `race-comparison` 대시보드에서 `drawing_outcome_total{outcome="deadlock"}` 누적 카운트 캡처
 3. `LOCK_MODE=on ./k6 run drawing-concurrency.js` 3회 실행 → After 측정
 4. 동일 대시보드에서 deadlock 추가 발생 없음(0건) 확인
-5. p95 latency, 가용성, `drawing_entry_total{result="failure"}` 비교 표 작성
+5. p95 latency, 가용성, `drawing_outcome_total{outcome="lock_timeout"}` 비교 표 작성
 
 ### P:1 vs P:2 처리량 비교
 

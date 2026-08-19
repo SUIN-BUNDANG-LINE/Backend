@@ -9,7 +9,7 @@
 | 진입점 (scripts/runners/) | 하네스/자산 위치 | 역할 |
 |---|---|---|
 | `run-all-scenarios.sh` | `scripts/{bin,scenarios,lib}/` | k6 통합 러너 (happy/failover/all) |
-| `run-lock-experiment.sh` | `scripts/scenarios/concurrency/` | 분산락 Lock OFF vs ON 실험 |
+| `lock-experiment/run.sh` | `scripts/scenarios/concurrency/` | 경쟁 제어 6자 비교 실험 |
 | `run-e2e.sh` | `tests/e2e/` | SMS 발송-비용 정합 사가 멀티앱 E2E. compose·override·dashboard 는 `tests/e2e/` 에 위치 |
 | `run-load.sh` | `tests/e2e/load/` | Kafka 대용량 특성 실증 부하 테스트. 버스트/랙 산출물도 `tests/e2e/load/` 에 생성 |
 | `broker-comparison/run-comparison.sh` | `tests/broker-comparison/` | Kafka vs RabbitMQ vs Redis Pub/Sub — 내구 보존·리플레이 비교 데모 |

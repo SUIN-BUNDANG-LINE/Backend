@@ -1,9 +1,0 @@
-# Phase 2 보상경로 실증용 — notification 의 SMS mock 을 전건 실패로 강제.
-# 당첨 SMS 가 MAX_RETRY(5) 소진 → DLT → sms-delivery-permanently-failed → cost REVERSED 를 유발한다.
-# 사용: docker compose -f docker-compose.yml -f e2e/phase2/consumers.override.yml \
-#              -f e2e/phase2/notification-fail.override.yml up -d --no-deps drawing-sms-notification-consumer
-
-services:
-    drawing-sms-notification-consumer:
-        environment:
-            SMS_MOCK_FAILURE_RATE: "1.0"

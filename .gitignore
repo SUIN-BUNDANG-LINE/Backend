@@ -60,6 +60,7 @@ k6-custom
 
 # k6 실험 결과 로그 (로컬 산출물)
 scripts/results/
+scripts/lock-experiment/results/
 
 # 도구 산출물
 .playwright-mcp/

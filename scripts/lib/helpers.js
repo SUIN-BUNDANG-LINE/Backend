@@ -1,7 +1,7 @@
 // API 호출 헬퍼 함수
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { pickBaseUrl, authParams, jsonParams } from './config.js';
+import { pickBaseUrl, pickBaseUrlAt, authParams, jsonParams } from './config.js';
 
 // UUID v4 생성
 export function uuidv4() {
@@ -72,7 +72,7 @@ export function startSurvey(surveyId) {
     check(res, { '설문 시작 성공': (r) => r.status === 200 });
 }
 
-// 결제 우회(테스트 전용) — 경품 설문이 PENDING_PAYMENT 에 머무는 것을 IN_PROGRESS 로 강제 전환.
+// 결제 우회(테스트 전용) — 경품 설문이 결제 대기(PENDING_PAYMENT 보드)에 머무는 것을 IN_PROGRESS 로 강제 전환.
 // TEST_AUTH_ENABLED=true 로 뜬 서버의 TestAuthController 활성화 엔드포인트를 호출한다.
 export function activateSurvey(surveyId) {
     const res = http.post(`${pickBaseUrl()}/api/v1/test/surveys/${surveyId}/activate`, null, jsonParams());
@@ -104,15 +104,13 @@ export function submitResponse(surveyId, sectionId, visitorId) {
 }
 
 // 추첨 실행
-// LOCK_MODE=off              → /draw-no-lock          (실험용, 무보호 기준선)
+// LOCK_MODE=default          → /draw-default          (실험용, 기본 판정 — 조건부 UPDATE)
 // LOCK_MODE=serializable     → /draw-serializable     (실험용, 트랜잭션 격리수준 SERIALIZABLE)
-// LOCK_MODE=optimistic-retry → /draw-optimistic-retry (실험용, 낙관적 락 + 재시도 5회)
 // LOCK_MODE=synchronized     → /draw-synchronized     (실험용, JVM 로컬 직렬화)
 // LOCK_MODE=on (기본)        → /draw                  (운영, Redisson 분산락)
 const DRAW_PATHS = {
-    'off': '/api/v1/drawing-board/draw-no-lock',
+    'default': '/api/v1/drawing-board/draw-default',
     'serializable': '/api/v1/drawing-board/draw-serializable',
-    'optimistic-retry': '/api/v1/drawing-board/draw-optimistic-retry',
     'synchronized': '/api/v1/drawing-board/draw-synchronized',
 };
 
@@ -126,6 +124,26 @@ export function doDrawing(participantId, selectedNumber, phoneNumber) {
     const path = DRAW_PATHS[__ENV.LOCK_MODE] || '/api/v1/drawing-board/draw';
 
     return http.post(`${pickBaseUrl()}${path}`, payload, jsonParams());
+}
+
+// 추첨 실행 — 여러 건을 **동시에** 내보낸다.
+// constant-arrival-rate 는 초당 RATE 건을 균등 간격으로 흩뿌리므로, 처리 시간보다 간격이 길면
+// 요청이 겹치지 않아 경합이 아예 생기지 않는다. 버스트로 한꺼번에 쏴야 줄이 선다.
+export function doDrawingBatch(requests) {
+    const path = DRAW_PATHS[__ENV.LOCK_MODE] || '/api/v1/drawing-board/draw';
+    const params = jsonParams();
+    return http.batch(
+        requests.map((r, i) => ({
+            method: 'POST',
+            url: `${pickBaseUrlAt(i)}${path}`,  // 버스트 10건을 인스턴스에 5/5 분산 — cross-JVM 경합 유발
+            body: JSON.stringify({
+                participantId: r.participantId,
+                selectedNumber: r.selectedNumber,
+                phoneNumber: r.phoneNumber,
+            }),
+            params: params,
+        })),
+    );
 }
 
 // 추첨판 정보 조회
@@ -151,7 +169,7 @@ export function setupSurveyWithDrawing(opts = {}) {
 
     const sectionId = saveSurveyWithImmediateDraw(surveyId, opts);
     startSurvey(surveyId);
-    // 경품 설문은 start 시 PENDING_PAYMENT 로 가므로, 테스트 우회로 IN_PROGRESS 로 전환한다.
+    // 경품 설문은 start 시 결제 대기 보드가 서므로, 테스트 우회로 보드 활성 + IN_PROGRESS 전환한다.
     activateSurvey(surveyId);
 
     console.log(`설문 셋업 완료: surveyId=${surveyId}, sectionId=${sectionId}`);
