@@ -1,0 +1,51 @@
+# 파티션 병렬 소비 확장 실험 — 단일 브로커(KRaft).
+# 컨슈머(스프링부트 JVM)는 호스트에서 뜨므로 EXTERNAL 리스너(localhost:19092)를 노출한다.
+# 프로듀서/폴러는 docker exec 로 내부 리스너(pscale-kafka:9092)를 쓴다.
+name: partition-scaling
+
+services:
+    pscale-kafka:
+        image: apache/kafka:3.8.0
+        container_name: pscale-kafka
+        ports:
+            - "19092:19092"
+        environment:
+            KAFKA_NODE_ID: "1"
+            KAFKA_PROCESS_ROLES: broker,controller
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@pscale-kafka:9093
+            KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:19092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://pscale-kafka:9092,EXTERNAL://localhost:19092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            # 토픽은 러너가 사전 생성한다(payment-succeeded 만 6파티션) - 자동 생성 금지
+            KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+            KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+            KAFKA_MIN_INSYNC_REPLICAS: "1"
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+            # 호스트 Docker VM 메모리 여유가 작다 - 실험 부하(수백 msg/s)엔 512M 로 충분
+            KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+
+    # 실험 브로커의 lag/offset 을 기존 모니터링 스택(Prometheus 19090·Grafana 13000)으로 내보낸다.
+    # 모니터링 네트워크(sulmun2yong-cluster)가 없으면(클러스터 compose 미기동) up 이 실패하므로
+    # 그 경우 이 서비스만 빼고 기동한다: docker compose up -d pscale-kafka
+    pscale-kafka-exporter:
+        image: danielqsj/kafka-exporter:v1.8.0
+        container_name: pscale-kafka-exporter
+        # 브로커보다 먼저 뜨면 연결 실패로 즉시 종료하는 이미지라 재시도 필수
+        restart: on-failure
+        command:
+            - --kafka.server=pscale-kafka:9092
+        depends_on:
+            - pscale-kafka
+        networks:
+            - default
+            - monitoring
+
+networks:
+    monitoring:
+        name: sulmun2yong-cluster
+        external: true
