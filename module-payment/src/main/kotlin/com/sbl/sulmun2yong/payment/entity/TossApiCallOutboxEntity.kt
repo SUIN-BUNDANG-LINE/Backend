@@ -44,6 +44,10 @@ class TossApiCallOutboxEntity(
         this.status = TossApiCallStatus.FAILED
     }
 
+    // 멱등키 회차 - 조회로 미완료를 확정한 뒤에만 증가한다
+    val retry: Int
+        get() = retryCount
+
     fun incrementRetry(): Boolean {
         retryCount++
         if (retryCount >= MAX_RETRY_COUNT) {

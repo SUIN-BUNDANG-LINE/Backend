@@ -143,11 +143,13 @@ class TossPaymentsAdapter(
         paymentKey: String,
         orderId: String,
         cancelReason: String,
+        retryCount: Int,
     ): TossConfirmResult {
         val headers =
             HttpHeaders().apply {
                 contentType = MediaType.APPLICATION_JSON
-                set("Idempotency-key", "cancel:$orderId")
+                // 회차를 섞는다 - orderId 만으로는 고정된 실패 응답에서 벗어날 수 없다
+                set("Idempotency-key", "cancel:$orderId:$retryCount")
             }
 
         val request = HttpEntity(TossCancelRequest(cancelReason), headers)

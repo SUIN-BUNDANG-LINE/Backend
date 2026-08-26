@@ -30,8 +30,11 @@ class TossApiCallOutboxRelay(
     @Scheduled(fixedDelay = 10_000)
     fun relayPendingCalls() {
         tossApiCallOutboxService.claimPendingForRelay(BATCH_SIZE, STALE_SECONDS).forEach { call ->
-            runCatching { process(call) }
-                .onFailure { log.error("호출 처리 실패 - 다음 주기 재시도, id={}", call.id, it) }
+            runCatching { process(call) }.onFailure { e ->
+                log.error("호출 처리 실패 - 재시도 카운터 소모, id={}", call.id, e)
+                runCatching { tossApiCallOutboxService.incrementRetry(call.id) }
+                    .onFailure { log.error("재시도 카운터 증가 실패 - id={}", call.id, it) }
+            }
         }
     }
 
@@ -81,7 +84,12 @@ class TossApiCallOutboxRelay(
 
         when (
             val result =
-                tossPaymentsAdapter.cancel(paymentKey, call.tossOrderId, payload.cancelReason)
+                tossPaymentsAdapter.cancel(
+                    paymentKey,
+                    call.tossOrderId,
+                    payload.cancelReason,
+                    call.retry,
+                )
         ) {
             is TossConfirmResult.Approved -> {
                 completeCancel(call)
