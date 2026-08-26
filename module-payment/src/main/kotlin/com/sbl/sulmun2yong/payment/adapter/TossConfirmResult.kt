@@ -13,6 +13,6 @@ sealed class TossConfirmResult {
         val message: String,
     ) : TossConfirmResult()
 
-    // 미확정(타임아웃 & 5xx & 이미 처리됨) - PENDING 유지, 릴레이가 재시도 & 조회로 수렴
+    // 미확정(타임아웃 & 5xx & 이미 처리됨 & 선행 요청 처리 중) - PENDING 유지, 릴레이가 재시도 & 조회로 수렴
     data object Unknown : TossConfirmResult()
 }
