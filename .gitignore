@@ -65,3 +65,4 @@ tests/partition-scaling/results/
 
 # 도구 산출물
 .playwright-mcp/
+.claude/memory/
