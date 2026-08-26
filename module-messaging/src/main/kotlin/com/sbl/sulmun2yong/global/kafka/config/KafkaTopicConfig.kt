@@ -9,6 +9,11 @@ import org.springframework.kafka.core.KafkaAdmin
 
 @Configuration
 class KafkaTopicConfig {
+    private companion object {
+        // 리플레이·감사 창 - 브로커 기본값 의존을 끊고 토픽에 명시한다
+        const val RETENTION_MS_7_DAYS = "604800000"
+    }
+
     @Bean
     fun coFundingExpiredTopic(): NewTopic =
         TopicBuilder
@@ -16,6 +21,7 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 
     @Bean
@@ -25,6 +31,7 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 
     @Bean
@@ -34,6 +41,7 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 
     @Bean
@@ -43,6 +51,7 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 
     @Bean
@@ -52,6 +61,7 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 
     @Bean
@@ -61,6 +71,7 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 
     @Bean
@@ -86,5 +97,6 @@ class KafkaTopicConfig {
             .partitions(3)
             .replicas(3)
             .config(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "2")
+            .config(TopicConfig.RETENTION_MS_CONFIG, RETENTION_MS_7_DAYS)
             .build()
 }
